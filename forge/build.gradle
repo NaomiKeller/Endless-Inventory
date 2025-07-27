@@ -37,7 +37,7 @@ legacyForge {
             server()
         }
         configureEach {
-            jvmArgs '--add-opens', 'java.base/java.lang.ref=ALL-UNNAMED'
+            jvmArg '--add-opens=java.base/java.lang.ref=ALL-UNNAMED'
         }
     }
 
