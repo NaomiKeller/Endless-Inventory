@@ -63,3 +63,12 @@ jar {
             "MixinConfigs": "${mod_id}.mixins.json,${mod_id}.forge.mixins.json"
     ])
 }
+
+processResources {
+    inputs.properties project.properties
+    filteringCharset "UTF-8"
+
+    filesMatching("META-INF/mods.toml") {
+        expand project.properties
+    }
+}
