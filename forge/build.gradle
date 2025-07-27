@@ -36,6 +36,9 @@ legacyForge {
         server {
             server()
         }
+        configureEach {
+            jvmArgs '--add-opens', 'java.base/java.lang.ref=ALL-UNNAMED'
+        }
     }
 
     mods {
