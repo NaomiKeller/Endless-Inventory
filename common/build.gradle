@@ -23,6 +23,22 @@ dependencies {
     annotationProcessor "org.spongepowered:mixin:0.8.7:processor"
 }
 
+configurations {
+    commonJava {
+        canBeResolved = false
+        canBeConsumed = true
+    }
+    commonResources {
+        canBeResolved = false
+        canBeConsumed = true
+    }
+}
+
+artifacts {
+    commonJava sourceSets.main.java.sourceDirectories.singleFile
+    commonResources sourceSets.main.resources.sourceDirectories.singleFile
+}
+
 test {
     useJUnitPlatform()
 }

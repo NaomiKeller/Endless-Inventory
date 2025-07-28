@@ -45,14 +45,28 @@ legacyForge {
     }
 }
 
+configurations {
+    commonJava{
+        canBeResolved = true
+    }
+    commonResources{
+        canBeResolved = true
+    }
+}
+
 sourceSets.main.resources.srcDir 'src/generated/resources'
 
 dependencies {
     implementation project(":common")
-
-
-
     annotationProcessor("org.spongepowered:mixin:0.8.7:processor")
+
+    commonJava project(path: ':common', configuration: 'commonJava')
+    commonResources project(path: ':common', configuration: 'commonResources')
+}
+
+processResources {
+    dependsOn(configurations.commonResources)
+    from(configurations.commonResources)
 }
 
 jar {
