@@ -22,7 +22,9 @@ import net.minecraft.world.item.Item;
 import net.minecraftforge.common.ForgeHooks;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.ModContainer;
+import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.network.PacketDistributor;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -37,6 +39,11 @@ public class ModInitializer extends AbstractModInitializer {
     public static final DeferredRegister<Item> ITEM = DeferredRegister.create(ForgeRegistries.ITEMS,ModInfo.MOD_ID);
 
     public static final DeferredRegister<MenuType<?>> MENU = DeferredRegister.create(ForgeRegistries.MENU_TYPES,ModInfo.MOD_ID);
+
+    public ModInitializer() {
+        // Forge 要求必须提供的无参构造器
+        this(FMLJavaModLoadingContext.get().getModEventBus(), ModLoadingContext.get().getActiveContainer());
+    }
 
     public ModInitializer(IEventBus modEventBus, ModContainer container){
         super.init();
