@@ -5,11 +5,24 @@ plugins {
     id 'idea'
 }
 
+base {
+    archivesName = "${mod_id}-${project.name}-${minecraft_version}"
+}
+
 mixin {
     add(sourceSets.main, "${mod_id}.refmap.json")
 
     config("${mod_id}.mixins.json")
     config("${mod_id}.forge.mixins.json")
+}
+
+configurations {
+    commonJava{
+        canBeResolved = true
+    }
+    commonResources{
+        canBeResolved = true
+    }
 }
 
 legacyForge {
@@ -36,6 +49,9 @@ legacyForge {
         server {
             server()
         }
+        /*configureEach {
+            jvmArg '--add-opens=java.base/java.lang.ref=ALL-UNNAMED'
+        }*/
     }
 
     mods {
@@ -47,13 +63,61 @@ legacyForge {
 
 sourceSets.main.resources.srcDir 'src/generated/resources'
 
+tasks.named('compileJava', JavaCompile) {
+    dependsOn(configurations.commonJava)
+    source(configurations.commonJava)
+}
+
 dependencies {
+    runtimeOnly project(":common")
     implementation project(":common")
 
+    implementation 'org.jetbrains:annotations:24.0.1'
 
+    commonJava project(path: ':common', configuration: 'commonJava')
+    commonResources project(path: ':common', configuration: 'commonResources')
 
     annotationProcessor("org.spongepowered:mixin:0.8.7:processor")
 }
+
+processResources {
+    dependsOn(configurations.commonResources)
+    from(configurations.commonResources)
+}
+processResources {
+    var expandProps = [
+            'version'                      : mod_version,
+            'group'                        : project.group, //Else we target the task's group.
+            'minecraft_version'            : minecraft_version,
+            'minecraft_version_range'      : minecraft_version_range,
+            'fabric_version'               : fabric_version,
+            'fabric_loader_version'        : fabric_loader_version,
+            'mod_name'                     : mod_name,
+            'mod_author'                   : mod_authors,
+            'mod_id'                       : mod_id,
+            'license'                      : mod_license,
+            'description'                  : mod_description,
+            "forge_version"                     :        forge_version,
+            "forge_loader_version_range": forge_loader_version_range,
+            'credits'                      : credits,
+            'java_version'                 : java_version
+    ]
+
+    var jsonExpandProps = expandProps.collectEntries {
+        key, value -> [(key): value instanceof String ? value.replace("\n", "\\\\n") : value]
+    }
+
+    filesMatching(['META-INF/mods.toml']) {
+        expand expandProps
+    }
+
+    filesMatching(['pack.mcmeta', 'fabric.mod.json', '*.mixins.json']) {
+        expand jsonExpandProps
+    }
+
+    inputs.properties(expandProps)
+}
+
 
 jar {
     from project(":common").sourceSets.main.output
