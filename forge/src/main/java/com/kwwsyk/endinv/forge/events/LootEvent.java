@@ -13,6 +13,8 @@ import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.*;
 import net.minecraftforge.event.entity.living.LivingDropsEvent;
+import net.minecraftforge.event.entity.living.LivingExperienceDropEvent;
+import net.minecraftforge.event.entity.player.EntityItemPickupEvent;
 import net.minecraftforge.event.level.BlockEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -69,7 +71,7 @@ public class LootEvent {
                 ItemStack stack = drop.getItem();
                 ItemStack remain = endInv.addItem(stack);
                 stack.split(remain.getCount());
-                if(!stack.isEmpty()) PacketDistributor.sendToPlayer(player,new ItemPickedUpPayload(stack));
+                if(!stack.isEmpty()) ModInfo.getPacketDistributor().sendToPlayer(player,new ItemPickedUpPayload(stack));
                 if (remain.isEmpty()) {
                     drop.remove(Entity.RemovalReason.DISCARDED);
                 } else {
@@ -97,19 +99,19 @@ public class LootEvent {
     }
 
     @SubscribeEvent
-    public static void onPickupItem(ItemEntityPickupEvent.Pre event){
-        Player player = event.getPlayer();
+    public static void onPickupItem(EntityItemPickupEvent event){
+        Player player = event.getEntity();
         if(!(player instanceof ServerPlayer) || !ServerConfig.CONFIG.ENABLE_AUTO_PICK.getAsBoolean() || !isPlayerEnabledAutoPick(player)){
             return;
         }
-        ItemEntity entity = event.getItemEntity();
-        if(entity.hasPickUpDelay() || entity.getTarget()!=null && entity.getTarget()!=player.getUUID()) return;
+        ItemEntity entity = event.getItem();
+        if(entity.hasPickUpDelay()) return;
         ItemStack stack = entity.getItem();
         if(shouldMoveTo(player,stack)){
             ServerLevelEndInv.getEndInvForPlayer(player).ifPresent(endInv->{
                 ItemStack remain = endInv.addItem(stack.copy());
 
-                if(!stack.isEmpty()) PacketDistributor.sendToPlayer((ServerPlayer) player,new ItemPickedUpPayload(stack.copy()));
+                if(!stack.isEmpty()) ModInfo.getPacketDistributor().sendToPlayer((ServerPlayer) player,new ItemPickedUpPayload(stack.copy()));
                 if(remain.isEmpty()){
                     stack.setCount(0);
                 }else {
@@ -126,52 +128,34 @@ public class LootEvent {
     private static boolean shouldMoveTo(Player player, ItemStack stack){
         if(stack.isEmpty()) return false;
         Item item = stack.getItem();
-        switch (item){
-            case SwordItem swordItem -> {
-                return hasSuch(player,swordItem);
-            }
-            case AxeItem axeItem -> {
-                return hasSuch(player,axeItem);
-            }
-            case PickaxeItem such -> {
-                return hasSuch(player,such);
-            }
-            case ShovelItem such -> {
-                return hasSuch(player,such);
-            }
-            case HoeItem such -> {
-                return hasSuch(player,such);
-            }
-            case TridentItem such -> {
-                return hasSuch(player,such);
-            }
-            case ShieldItem such -> {
-                return hasSuch(player,such);
-            }
-            case ShearsItem such -> {
-                return hasSuch(player,such);
-            }
-            case BoatItem such -> {
-                return hasSuch(player,such);
-            }
-            case ElytraItem such -> {
-                return hasSuch(player,such);
-            }
-            case BowItem such -> {
-                return hasSuch(player,such);
-            }
-            case CrossbowItem such -> {
-                return hasSuch(player,such);
-            }
-            case MaceItem such -> {
-                return hasSuch(player,such);
-            }
-            case ArmorItem armorItem -> {
-                return hasOrSwearing(player,armorItem);
-            }
-            default -> {
-                return !canMerge(player,stack);
-            }
+        if(item instanceof SwordItem swordItem){
+            return hasSuch(player,swordItem);
+        }else if(item instanceof AxeItem axeItem){
+            return hasSuch(player,axeItem);
+        }else if(item instanceof PickaxeItem such){
+            return hasSuch(player,such);
+        }else if(item instanceof ShovelItem such){
+            return hasSuch(player,such);
+        }else if(item instanceof HoeItem such){
+            return hasSuch(player,such);
+        }else if(item instanceof TridentItem such){
+            return hasSuch(player,such);
+        }else if(item instanceof ShieldItem such){
+            return hasSuch(player,such);
+        }else if(item instanceof ShearsItem such){
+            return hasSuch(player,such);
+        }else if(item instanceof BoatItem such){
+            return hasSuch(player,such);
+        }else if(item instanceof ElytraItem such){
+            return hasSuch(player,such);
+        }else if(item instanceof BowItem such){
+            return hasSuch(player,such);
+        }else if(item instanceof CrossbowItem such){
+            return hasSuch(player,such);
+        }else if(item instanceof ArmorItem armorItem){
+            return hasOrSwearing(player,armorItem);
+        }else{
+            return !canMerge(player,stack);
         }
     }
 
