@@ -15,14 +15,6 @@ legacyForge {
     }
 }
 
-dependencies {
-    testImplementation platform('org.junit:junit-bom:5.10.0')
-    testImplementation 'org.junit.jupiter:junit-jupiter'
-
-    implementation "org.spongepowered:mixin:0.8.7"
-    annotationProcessor "org.spongepowered:mixin:0.8.7:processor"
-}
-
 configurations {
     commonJava {
         canBeResolved = false
@@ -34,6 +26,16 @@ configurations {
     }
 }
 
+dependencies {
+    testImplementation platform('org.junit:junit-bom:5.10.0')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+
+    implementation 'org.jetbrains:annotations:24.0.1'
+
+    implementation "org.spongepowered:mixin:0.8.7"
+    annotationProcessor "org.spongepowered:mixin:0.8.7:processor"
+}
+
 artifacts {
     commonJava sourceSets.main.java.sourceDirectories.singleFile
     commonResources sourceSets.main.resources.sourceDirectories.singleFile
@@ -41,4 +43,9 @@ artifacts {
 
 test {
     useJUnitPlatform()
+}
+
+jar {
+    archiveBaseName.set("common")
+    from sourceSets.main.output
 }
