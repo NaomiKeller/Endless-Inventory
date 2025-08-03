@@ -30,7 +30,7 @@ public class ScreenDebug {
 
     @SubscribeEvent
     public static void renderScreen(ScreenEvent.Render.Post event){
-        if(!ClientConfig.CONFIG.ENABLE_DEBUG.getAsBoolean()) return;
+        if(!ClientConfig.CONFIG.ENABLE_DEBUG.get()) return;
         Screen screen = event.getScreen();
         com.kwwsyk.endinv.common.client.ScreenDebug.debugInfo(screen,event.getGuiGraphics(),event.getMouseX(),event.getMouseY());
     }

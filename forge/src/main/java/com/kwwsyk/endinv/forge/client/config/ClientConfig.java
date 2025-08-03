@@ -78,11 +78,11 @@ public class ClientConfig {
     public final IClientConfig INSTANCE = new IClientConfig() {
 
         private static IConfigValue<Boolean> convert(ForgeConfigSpec.BooleanValue value){
-            return IConfigValue.of(value::getAsBoolean,value::set);
+            return IConfigValue.of(value,value::set);
         }
 
         private static IConfigValue<Integer> convert(ForgeConfigSpec.IntValue value){
-            return IConfigValue.of(value::getAsInt,value::set);
+            return IConfigValue.of(value,value::set);
         }
 
         @Override
@@ -123,7 +123,7 @@ public class ClientConfig {
         @Override
         public Set<String> hidingPageIds() {
             return PAGE2HIDING.entrySet().stream()
-                    .filter(entry->entry.getValue().getAsBoolean())
+                    .filter(entry->entry.getValue().get())
                     .map(Map.Entry::getKey).collect(Collectors.toSet());
         }
 

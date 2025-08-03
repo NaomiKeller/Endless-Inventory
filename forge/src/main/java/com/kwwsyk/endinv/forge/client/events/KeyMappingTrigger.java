@@ -6,7 +6,6 @@ import com.kwwsyk.endinv.common.network.payloads.toServer.OpenEndInvPayload;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.ClientTickEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -17,7 +16,7 @@ import static com.kwwsyk.endinv.forge.ClientModInitializer.OPEN_MENU_KEY;
 public class KeyMappingTrigger {
 
     @SubscribeEvent
-    public static void keyPressed(ClientTickEvent event){
+    public static void keyPressed(TickEvent.ClientTickEvent event){
         if(event.phase != TickEvent.Phase.END) return;
         Minecraft mc = Minecraft.getInstance();
         LocalPlayer player = mc.player;
