@@ -7,7 +7,6 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.network.FriendlyByteBuf;
 
-import java.nio.charset.Charset;
 import java.util.Objects;
 
 /**Both stored and synced data of player and page, obtained in specific Payloads.
@@ -28,12 +27,12 @@ public record PageData(String pageRegKey, int rows, int columns, SortType sortTy
     );
 
     public static void encode(FriendlyByteBuf o,PageData data){
-        o.writeCharSequence(data.pageRegKey, Charset.defaultCharset());
+        o.writeUtf(data.pageRegKey);
         o.writeInt(data.rows);
         o.writeInt(data.columns);
         o.writeEnum(data.sortType);
         o.writeBoolean(data.reverseSort);
-        o.writeCharSequence(data.search, Charset.defaultCharset());
+        o.writeUtf(data.search);
     }
 
     public static PageData decode(FriendlyByteBuf o){

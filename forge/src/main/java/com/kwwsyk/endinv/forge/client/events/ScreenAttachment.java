@@ -41,7 +41,8 @@ public class ScreenAttachment {
 
     @SubscribeEvent
     public static void opening(ScreenEvent.Opening event){
-        SyncedConfig.readAndSyncClientConfigToServer(false);
+        if(event.getScreen() instanceof AbstractContainerScreen<?>)
+            SyncedConfig.readAndSyncClientConfigToServer(false);
     }
 
     @SubscribeEvent

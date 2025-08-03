@@ -37,7 +37,9 @@ public record SyncedConfig(PageData pageData,boolean attaching,boolean autoPicki
     }
 
     public static SyncedConfig decode(FriendlyByteBuf o){
-        return new SyncedConfig(PageData.decode(o),o.readBoolean(),o.readBoolean());
+        return new SyncedConfig(PageData.decode(o),
+                o.readBoolean(),
+                o.readBoolean());
     }
 
     /**
