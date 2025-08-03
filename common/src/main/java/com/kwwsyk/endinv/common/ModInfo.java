@@ -16,7 +16,7 @@ public final class ModInfo {
 
     private static IServerConfig serverConfig;
 
-    public static SortType.ISortHelper sortHelper;
+    public static SortType.ISortHelper sortHelper = new SortType.ISortHelper() {};
 
     private static IPacketDistributor packetDistributor;
 
