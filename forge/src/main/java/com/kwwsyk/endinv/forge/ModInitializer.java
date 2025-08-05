@@ -12,9 +12,8 @@ import com.kwwsyk.endinv.common.options.IServerConfig;
 import com.kwwsyk.endinv.forge.client.config.ClientConfig;
 import com.kwwsyk.endinv.forge.nbtAttcachment.AttachingCapabilities;
 import com.kwwsyk.endinv.forge.nbtAttcachment.EndInvUuid;
+import com.kwwsyk.endinv.forge.nbtAttcachment.ISyncedConfigImpl;
 import com.kwwsyk.endinv.forge.network.ModPacketHandler;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.NbtOps;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.flag.FeatureFlags;
@@ -31,7 +30,6 @@ import net.minecraftforge.network.PacketDistributor;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 
-import javax.annotation.Nullable;
 import java.util.UUID;
 import java.util.function.Supplier;
 
@@ -119,11 +117,10 @@ public class ModInitializer extends AbstractModInitializer {
     @Override
     protected NbtAttachment<UUID> createEndInvUUID(String name) {
         return new NbtAttachment<UUID>() {
-            @Nullable
             @Override
             public UUID getWith(Player player) {
                 var opt = player.getCapability(AttachingCapabilities.END_INV_UUID).resolve();
-                return opt.map(EndInvUuid::getUuid).orElse(null);
+                return opt.map(EndInvUuid::getUuid).orElse(ModInfo.DEFAULT_UUID);
             }
 
             @Override
@@ -142,29 +139,27 @@ public class ModInitializer extends AbstractModInitializer {
     @Override
     protected NbtAttachment<SyncedConfig> createSyncedConfig(String name) {
         return new NbtAttachment<>() {
-            @Nullable
             @Override
             public SyncedConfig getWith(Player player) {
-                CompoundTag tag = player.getPersistentData().getCompound(name);
-                if (tag.isEmpty()) return null;
-                return SyncedConfig.CODEC.parse(NbtOps.INSTANCE, tag).result().orElse(null);
+                return player.getCapability(AttachingCapabilities.END_INV_CONFIG)
+                        .resolve()
+                        .map(ISyncedConfigImpl::getSyncedConfig)
+                        .orElse(SyncedConfig.DEFAULT);
             }
 
             @Override
             public void setTo(Player player, SyncedConfig syncedConfig) {
-                SyncedConfig.CODEC.encodeStart(NbtOps.INSTANCE, syncedConfig)
-                        .result()
-                        .ifPresent(t -> player.getPersistentData().put(name, (CompoundTag) t));
+                player.getCapability(AttachingCapabilities.END_INV_CONFIG)
+                        .resolve()
+                        .ifPresent(config->config.setSyncedConfig(syncedConfig));
             }
 
             @Override
             public SyncedConfig computeIfAbsent(Player player) {
-                SyncedConfig config = getWith(player);
-                if (config == null) {
-                    config = SyncedConfig.DEFAULT;
-                    setTo(player, config);
-                }
-                return config;
+                return player.getCapability(AttachingCapabilities.END_INV_CONFIG)
+                        .resolve()
+                        .map(ISyncedConfigImpl::getSyncedConfig)
+                        .orElse(SyncedConfig.DEFAULT);
             }
         };
     }

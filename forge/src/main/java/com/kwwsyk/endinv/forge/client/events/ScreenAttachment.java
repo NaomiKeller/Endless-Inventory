@@ -30,7 +30,7 @@ public class ScreenAttachment {
         if(event.getScreen() instanceof AbstractContainerScreen<?> screen){
             Player player = screen.getMinecraft().player;
             if(player==null) return null;
-            if(!getSyncedConfig().computeIfAbsent(player).attaching()) {
+            if(!getSyncedConfig().getWith(player).attaching()) {
                 ATTACHMENT_MANAGER.remove(screen);
                 return null;
             }
@@ -59,7 +59,7 @@ public class ScreenAttachment {
             Player player = screen.getMinecraft().player;
             if(player==null) return;
 
-            SyncedConfig syncedConfig = getSyncedConfig().computeIfAbsent(player);
+            SyncedConfig syncedConfig = getSyncedConfig().getWith(player);
             if(!syncedConfig.checkForAttaching()) return;
 
             ATTACHMENT_MANAGER.computeIfAbsent(screen, screen1 -> {

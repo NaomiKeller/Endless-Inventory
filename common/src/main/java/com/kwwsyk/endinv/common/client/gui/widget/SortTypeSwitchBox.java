@@ -47,7 +47,7 @@ public class SortTypeSwitchBox extends AbstractWidget {
         this.height = open ? singleBoxHeight*(1+ SortType.values().length) : singleBoxHeight;
     }
 
-    public void onClick(double mouseX,double mouseY, int button){
+    public void onClick(double mouseX,double mouseY){
         if(!isOpen){
             setOpen(true);
         }else {
