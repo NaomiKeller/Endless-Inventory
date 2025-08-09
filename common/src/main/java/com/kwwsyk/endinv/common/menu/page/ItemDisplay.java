@@ -40,17 +40,11 @@ public class ItemDisplay extends ItemPage{
         for(int i=0; i< items.size(); ++i){//in the loop is the animation
             ItemStack stack = items.get(i);
             if(ItemStack.isSameItemSameTags(stack,itemStack)){
-                ItemStack ret = itemStack.copyWithCount(count);
                 if(!isInfinite(stack)) {
                     if (count < stack.getCount()) {
                         stack.split(count);
                     } else {
-                        ret.setCount(stack.getCount());
-                        if(srcInv.isRemote()){
-                            stack.setCount(0);
-                        }else {
-                            stack=ItemStack.EMPTY;
-                        }
+                        stack.setCount(0);
                         items.set(i,stack);
                     }
                     setChanged();

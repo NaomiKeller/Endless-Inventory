@@ -16,14 +16,12 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
 import javax.annotation.Nullable;
-import java.util.HashMap;
-import java.util.Map;
 
 import static com.kwwsyk.endinv.common.ModRegistries.NbtAttachments.getSyncedConfig;
 
 @Mod.EventBusSubscriber(value = Dist.CLIENT,modid = ModInfo.MOD_ID)
 public class ScreenAttachment {
-    public static final  Map<AbstractContainerScreen<?>, AttachedScreen<?>> ATTACHMENT_MANAGER = new HashMap<>();
+    public static AttachedScreen<?> ATTACHMENT_MANAGER;
 
     @Nullable
     private static AttachedScreen<?> checkAndGetAttached(ScreenEvent event){
@@ -31,10 +29,10 @@ public class ScreenAttachment {
             Player player = screen.getMinecraft().player;
             if(player==null) return null;
             if(!getSyncedConfig().getWith(player).attaching()) {
-                ATTACHMENT_MANAGER.remove(screen);
+                ATTACHMENT_MANAGER = null;
                 return null;
             }
-            return ATTACHMENT_MANAGER.get(screen);
+            return ATTACHMENT_MANAGER;
         }
         return null;
     }
@@ -49,7 +47,8 @@ public class ScreenAttachment {
     public static void closing(ScreenEvent.Closing event){
         var attached = checkAndGetAttached(event);
         if(attached!=null){
-            ATTACHMENT_MANAGER.remove((AbstractContainerScreen<?>) event.getScreen());
+            ATTACHMENT_MANAGER.closed(new IScreenEvent() {});
+            ATTACHMENT_MANAGER = null;
         }
     }
 
@@ -62,10 +61,12 @@ public class ScreenAttachment {
             SyncedConfig syncedConfig = getSyncedConfig().getWith(player);
             if(!syncedConfig.checkForAttaching()) return;
 
-            ATTACHMENT_MANAGER.computeIfAbsent(screen, screen1 -> {
+            if(ATTACHMENT_MANAGER==null){
                 ModInfo.getPacketDistributor().sendToServer(new OpenEndInvPayload(false));
-                return new AttachedScreen<>(screen);
-            }).init(new IScreenEvent() {
+                ATTACHMENT_MANAGER = new AttachedScreen<>(screen);
+            }
+
+            ATTACHMENT_MANAGER.init(new IScreenEvent() {
                 public void addListener(AbstractWidget widget){
                     event.addListener(widget);
                 }

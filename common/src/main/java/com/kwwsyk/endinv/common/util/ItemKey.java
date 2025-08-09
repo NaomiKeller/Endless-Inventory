@@ -18,7 +18,7 @@ public record ItemKey(Item item, CompoundTag tag) {
     }
 
     public ItemStack toStack(int count){
-        var ret = new ItemStack(item);
+        var ret = new ItemStack(item,count);
         ret.setTag(tag);
         return ret;
     }

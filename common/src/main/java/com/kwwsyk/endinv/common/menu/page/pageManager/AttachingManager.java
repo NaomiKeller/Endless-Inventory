@@ -4,9 +4,12 @@ import com.kwwsyk.endinv.common.EndlessInventory;
 import com.kwwsyk.endinv.common.ModInfo;
 import com.kwwsyk.endinv.common.SourceInventory;
 import com.kwwsyk.endinv.common.menu.page.DisplayPage;
+import com.kwwsyk.endinv.common.menu.page.PageType;
+import com.kwwsyk.endinv.common.menu.page.PageTypeRegistry;
 import com.kwwsyk.endinv.common.network.payloads.PageData;
 import com.kwwsyk.endinv.common.network.payloads.SyncedConfig;
 import com.kwwsyk.endinv.common.network.payloads.toClient.EndInvMetadata;
+import com.kwwsyk.endinv.common.network.payloads.toServer.ItemPageContext;
 import com.kwwsyk.endinv.common.util.SortType;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
@@ -22,10 +25,11 @@ public class AttachingManager implements PageMetaDataManager{
     private final AbstractContainerMenu menu;
     private final EndlessInventory endinv;
     private final ServerPlayer player;
-    private DisplayPage displayingPage;
     //client for page switch
+    private final List<String> PageIdList;
+    private final List<PageType> pageTypeList;
+    private String DisplayingPageId;
     private int displayingPageIndex;
-    public final List<DisplayPage> pages;
     private final PageQuickMoveHandler quickMoveHandler;
     public SortType sortType;
     public String searching;
@@ -37,8 +41,9 @@ public class AttachingManager implements PageMetaDataManager{
         this.menu = menu;
         this.endinv = endinv;
         this.player = player;
-        this.pages = buildPages();
-        SyncedConfig config = getSyncedConfig().computeIfAbsent(player);
+        pageTypeList = PageTypeRegistry.getDisplayPages();
+        PageIdList = pageTypeList.stream().map(tp->tp.registerName).toList();
+        SyncedConfig config = getSyncedConfig().getWith(player);
         init(config.pageData());
         this.quickMoveHandler = new PageQuickMoveHandler(this);
     }
@@ -65,20 +70,20 @@ public class AttachingManager implements PageMetaDataManager{
     }
 
     @Override
+    @Deprecated
     public List<DisplayPage> getPages() {
-        return pages;
+        throw new IllegalStateException("DisplayPage is already client only.");
     }
 
-    @Override
+    @Override@Deprecated
     public DisplayPage getDisplayingPage() {
-        return displayingPage;
+        throw new IllegalStateException("DisplayPage is already client only.");
     }
 
     @Override
     public void switchPageWithIndex(int index) {
-        this.displayingPageIndex = index;
-        this.displayingPage = pages.get(index);
-        this.displayingPage.refreshContents();
+        displayingPageIndex = index;
+        DisplayingPageId = PageIdList.get(index);
     }
 
     @Override
@@ -160,5 +165,35 @@ public class AttachingManager implements PageMetaDataManager{
     @Override
     public int getDisplayingPageIndex() {
         return displayingPageIndex;
+    }
+
+    @Override
+    public void switchPageWithId(String id) {
+        DisplayingPageId = id;
+        for(int i=0; i<PageIdList.size();++i){
+            if(PageIdList.get(i).equals(id)){
+                displayingPageIndex = i;
+            }
+        }
+    }
+
+    @Override @Deprecated
+    public List<DisplayPage> buildPages() {
+        throw new IllegalStateException("Display page is only available on client.");
+    }
+
+    @Override
+    public String getDisplayingPageId() {
+        return DisplayingPageId;
+    }
+
+    @Override
+    public PageType getDisplayingPageType() {
+        return pageTypeList.get(displayingPageIndex);
+    }
+
+    @Override @Deprecated
+    public ItemPageContext getInPageContext() {
+        throw new IllegalStateException("Display page is only available on client.");
     }
 }

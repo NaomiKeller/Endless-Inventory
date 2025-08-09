@@ -8,6 +8,7 @@ import com.kwwsyk.endinv.common.client.option.IClientConfig;
 public abstract class AbstractClientModInitializer {
 
     protected AbstractClientModInitializer(){
+        ModInfo.clientLoaded = true;
         ClientModInfo.setClientConfig(loadClientConfig());
         ClientModInfo.inputHandler = getInputHandler();
         ClientModInfo.containerScreenHelper = getScreenHelper();

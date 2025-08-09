@@ -4,8 +4,8 @@ import com.kwwsyk.endinv.common.ModInfo;
 import com.kwwsyk.endinv.common.client.CachedSrcInv;
 import com.kwwsyk.endinv.common.client.gui.EndlessInventoryScreen;
 import com.kwwsyk.endinv.common.menu.page.pageManager.PageMetaDataManager;
+import com.kwwsyk.endinv.common.network.payloads.toServer.CreativeItemModPayload;
 import com.kwwsyk.endinv.common.network.payloads.toServer.ItemClickPayload;
-import com.kwwsyk.endinv.common.network.payloads.toServer.ItemDisplayItemModPayload;
 import com.kwwsyk.endinv.common.network.payloads.toServer.ItemPageContext;
 import com.kwwsyk.endinv.common.network.payloads.toServer.StarItemPayload;
 import net.minecraft.ChatFormatting;
@@ -101,7 +101,7 @@ public abstract class ItemPage extends DisplayPage {
     }
 
     public void sendChangesToServer() {
-        getPacketDistributor().sendToServer(new ItemPageContext(startIndex,length, getSyncedConfig().computeIfAbsent(meta.getPlayer()).pageData()));
+        getPacketDistributor().sendToServer(new ItemPageContext(startIndex,length, getSyncedConfig().getWith(meta.getPlayer()).pageData()));
     }
 
     public int getStartIndex(){
@@ -250,8 +250,7 @@ public abstract class ItemPage extends DisplayPage {
     public void pageClicked(double XOffset, double YOffset, int button, ClickType clickType) {
         int slot = getSlotForMouseOffset(XOffset,YOffset);
         if(slot>=0&&slot<items.size()) {
-            ItemStack clicked = items.get(slot);
-            var copy = clicked.copy();
+            ItemStack clicked = items.get(slot).copy();
             switch (clickType) {
                 case PICKUP -> handlePickup(clicked, button);
                 case QUICK_MOVE -> handleQuickMove(clicked);
@@ -262,7 +261,7 @@ public abstract class ItemPage extends DisplayPage {
                 default -> {
                 }
             }
-            ModInfo.getPacketDistributor().sendToServer(new ItemClickPayload(copy,button,clickType));
+            ModInfo.getPacketDistributor().sendToServer(new ItemClickPayload(clicked,button,clickType));
             refreshItems();
         }
     }
@@ -317,7 +316,7 @@ public abstract class ItemPage extends DisplayPage {
         if(!carried.isEmpty()){
             ItemStack remain = addItem(carried.copy());
             if(ModInfo.isClientLoaded() && meta.getMenu() instanceof CreativeModeInventoryScreen.ItemPickerMenu){
-                getPacketDistributor().sendToServer(new ItemDisplayItemModPayload(carried.copy(),true));
+                getPacketDistributor().sendToServer(new CreativeItemModPayload(carried.copy(),true));
             }
             meta.getMenu().setCarried(remain);
             setChanged();

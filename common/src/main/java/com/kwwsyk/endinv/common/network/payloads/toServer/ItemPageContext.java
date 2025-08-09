@@ -66,10 +66,11 @@ public record ItemPageContext(int startIndex, int length, PageData pageData) imp
 
     public void handle(ModPacketContext iPayloadContext) {
         ServerPlayer serverPlayer = (ServerPlayer) iPayloadContext.player();
+        assert serverPlayer!=null;
         var optional = ServerLevelEndInv.checkAndGetManagerForPlayer(serverPlayer);
         optional.ifPresent(manager -> {
 
-            if (!Objects.equals(manager.getInPageContext(), this)) {
+            if (!Objects.equals(manager.getPageData(), this.pageData)) {
                 SortType sortType = pageData.sortType();
                 boolean reverseSort = pageData.reverseSort();
                 String search = pageData.search();
@@ -79,7 +80,7 @@ public record ItemPageContext(int startIndex, int length, PageData pageData) imp
                 manager.setSortReversed(reverseSort);
                 manager.setSearching(search);
 
-                manager.getDisplayingPage().setChanged();
+                //manager.getDisplayingPage().setChanged();
 
                 manager.switchPageWithId(pageData().pageRegKey());
             }
