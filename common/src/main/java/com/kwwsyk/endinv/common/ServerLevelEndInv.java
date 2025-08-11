@@ -94,13 +94,11 @@ public final class ServerLevelEndInv {
      */
     public static boolean hasEndInvUuid(Player player){
         UUID optional = ModRegistries.NbtAttachments.getEndInvUUID().getWith(player);
-        if(optional!=null){
-            if(optional== ModInfo.DEFAULT_UUID){
-                LOGGER.warn("Player {} has default endless inventory UUID.", player.getName().getString());
-                return false;
-            }
-            return true;
-        }else return false;
+        if (optional == ModInfo.DEFAULT_UUID) {
+            LOGGER.warn("Player {} has default endless inventory UUID.", player.getName().getString());
+            return false;
+        }
+        return true;
     }
 
     private static EndlessInventory getPlayerDefaultEndInv(Player player){

@@ -81,7 +81,7 @@ public class ScreenDebug {
                 graphics.drawString(mc.font, Component.literal("mouseY: " + mouseY), width - 128, 80, 0xFFFFFF00);
 
                 if(mc.player!=null) {
-                    SyncedConfig syncedConfig = ModRegistries.NbtAttachments.getSyncedConfig().computeIfAbsent(mc.player);
+                    SyncedConfig syncedConfig = ModRegistries.NbtAttachments.getSyncedConfig().getWith(mc.player);
                     PageData pageData = syncedConfig.pageData();
                     graphics.drawString(mc.font, Component.literal("Page data: "), 0, 10, 0xFFFFFF00);
                     graphics.drawString(mc.font, Component.literal("Page: "+pageData.pageRegKey()), 0, 20, 0xFFFFFF00);

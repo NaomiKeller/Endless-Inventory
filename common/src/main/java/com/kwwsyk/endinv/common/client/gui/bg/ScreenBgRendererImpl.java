@@ -2,7 +2,7 @@ package com.kwwsyk.endinv.common.client.gui.bg;
 
 import com.kwwsyk.endinv.common.client.ClientModInfo;
 import com.kwwsyk.endinv.common.client.gui.ScreenFramework;
-import com.kwwsyk.endinv.common.menu.page.pageManager.PageMetaDataManager;
+import com.kwwsyk.endinv.common.client.gui.page.manager.PageManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
@@ -22,7 +22,7 @@ public abstract class ScreenBgRendererImpl implements ScreenBgRenderer{
     protected final int rows;
     protected final int columns;
 
-    protected final PageMetaDataManager manager;
+    protected final PageManager manager;
 
     public ScreenBgRendererImpl(ScreenFramework frameWork){
         this.frameWork = frameWork;

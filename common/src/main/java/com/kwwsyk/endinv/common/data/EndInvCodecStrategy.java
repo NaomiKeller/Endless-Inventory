@@ -4,10 +4,12 @@ import com.kwwsyk.endinv.common.EndInvAffinities;
 import com.kwwsyk.endinv.common.EndlessInventory;
 import com.kwwsyk.endinv.common.util.Accessibility;
 import com.mojang.logging.LogUtils;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtUtils;
 import net.minecraft.nbt.Tag;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -120,7 +122,7 @@ public interface EndInvCodecStrategy {
             return Optional.empty();
         }
         try {
-            return Optional.of(ItemStack.of(compound));
+            return Optional.of(load(compound));
         } catch (Exception e) {
             LOGGER.error("Tried to load invalid item: '{}'", compound, e);
             return Optional.empty();
@@ -131,6 +133,39 @@ public interface EndInvCodecStrategy {
         if (itemStack.isEmpty()) {
             throw new IllegalStateException("Cannot encode empty ItemStack");
         }
-        return itemStack.save(outputTag);
+        return save(itemStack,outputTag);
+    }
+
+    static CompoundTag save(ItemStack stack, CompoundTag compoundTag) {
+        ResourceLocation resourcelocation = BuiltInRegistries.ITEM.getKey(stack.getItem());
+        compoundTag.putString("id", resourcelocation.toString());
+        compoundTag.putInt("Count", (byte)stack.getCount());
+        if (stack.getTag() != null) {
+            compoundTag.put("tag", stack.getTag().copy());
+        }
+
+        return compoundTag;
+    }
+
+    static ItemStack load(CompoundTag compoundTag) {
+        try {
+            var ret = new ItemStack(
+                    BuiltInRegistries.ITEM.get(new ResourceLocation(compoundTag.getString("id"))),
+                    compoundTag.getInt("Count")
+            );
+            if (compoundTag.contains("tag", 10)) {
+                CompoundTag tag = compoundTag.getCompound("tag");
+                ret.getItem().verifyTagAfterLoad(tag);
+            }
+
+            if (ret.getItem().canBeDepleted()) {
+                ret.setDamageValue(ret.getDamageValue());
+            }
+
+            return ret;
+        } catch (RuntimeException runtimeexception) {
+            LOGGER.debug("Tried to load invalid item: {}", compoundTag, runtimeexception);
+            return ItemStack.EMPTY;
+        }
     }
 }

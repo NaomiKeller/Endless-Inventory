@@ -61,7 +61,7 @@ public class EndlessInventoryMenu extends AbstractContainerMenu implements PageM
     public static EndlessInventoryMenu createClient(int id, Inventory playerInv){
         var ret = new EndlessInventoryMenu(id,playerInv,null);
         if (Minecraft.getInstance().player != null) {
-            SyncedConfig config = NbtAttachments.getSyncedConfig().computeIfAbsent(Minecraft.getInstance().player);
+            SyncedConfig config = NbtAttachments.getSyncedConfig().getWith(Minecraft.getInstance().player);
             ret.init(config.pageData());
             ret.addStandardInventorySlots(playerInv, 8, 18 * ret.getRowCount() + 18 + 13);
         }
@@ -73,7 +73,7 @@ public class EndlessInventoryMenu extends AbstractContainerMenu implements PageM
     public static AbstractContainerMenu createServer(int i, Inventory inventory, Player player) {
         EndlessInventory endlessInventory = getEndInvForPlayer(player).orElse(null);
         if(endlessInventory==null) return null;
-        SyncedConfig config = NbtAttachments.getSyncedConfig().computeIfAbsent(player);
+        SyncedConfig config = NbtAttachments.getSyncedConfig().getWith(player);
         var ret = new EndlessInventoryMenu(i,inventory,endlessInventory);
         ret.init(config.pageData());
         ret.addStandardInventorySlots(inventory, 8, 18 * ret.getRowCount() + 18 + 13);
@@ -84,7 +84,7 @@ public class EndlessInventoryMenu extends AbstractContainerMenu implements PageM
         EndlessInventory endInv = ServerLevelEndInv.TEMP_ENDINV_REG.get((ServerPlayer) player);
         if(endInv==null) throw new IllegalStateException("Try to create tmp menu without tmp EndInv.");
         var ret = new EndlessInventoryMenu(i,inventory,endInv);
-        SyncedConfig config = NbtAttachments.getSyncedConfig().computeIfAbsent(player);
+        SyncedConfig config = NbtAttachments.getSyncedConfig().getWith(player);
         ret.init(config.pageData());
         ret.addStandardInventorySlots(inventory, 8, 18 * ret.getRowCount() + 18 + 13);
         return ret;

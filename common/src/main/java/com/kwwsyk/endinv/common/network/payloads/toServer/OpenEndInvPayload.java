@@ -34,7 +34,7 @@ public record OpenEndInvPayload(boolean openNew) implements ModPacketPayload {
     public void handle(ModPacketContext iPayloadContext) {
         ServerPlayer player = (ServerPlayer) iPayloadContext.player();
         if(player==null) return;
-        if(!ModRegistries.NbtAttachments.getSyncedConfig().computeIfAbsent(player).attaching()) return;
+        if(!ModRegistries.NbtAttachments.getSyncedConfig().getWith(player).attaching()) return;
         if(player.containerMenu == player.inventoryMenu && openNew()){
             player.openMenu(new SimpleMenuProvider(EndlessInventoryMenu::createServer, Component.empty()));
         }else if(!openNew()){

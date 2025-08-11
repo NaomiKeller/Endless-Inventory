@@ -77,7 +77,7 @@ public class ScreenFramework {
     public ScreenFramework(EndlessInventoryScreen screen){
         this.screen = screen;
         this.mc = Minecraft.getInstance();
-        this.meta = (PageManager) screen.getPageManager();
+        this.meta = screen.getPageManager();
         this.menu = screen.getMenu();
         this.leftPos = screen.getGuiLeft();
         this.topPos = screen.getGuiTop();

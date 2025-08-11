@@ -97,7 +97,7 @@ public class EndlessInventoryScreen extends AbstractContainerScreen<EndlessInven
     @Override
     public void switchSortTypeTo(SortType type) {
         menu.sortType = type;
-        SyncedConfig.updateSyncedConfig(getSyncedConfig().computeIfAbsent(menu.getPlayer()).sortTypeChanged(type));
+        SyncedConfig.updateSyncedConfig(getSyncedConfig().getWith(menu.getPlayer()).sortTypeChanged(type));
         menu.getDisplayingPage().release();
         menu.getDisplayingPage().sendChangesToServer();
     }
