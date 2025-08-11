@@ -5,8 +5,10 @@ import com.kwwsyk.endinv.common.ModInfo;
 import com.kwwsyk.endinv.common.ServerLevelEndInv;
 import com.kwwsyk.endinv.common.SourceInventory;
 import com.kwwsyk.endinv.common.client.CachedSrcInv;
-import com.kwwsyk.endinv.common.menu.page.DisplayPage;
-import com.kwwsyk.endinv.common.menu.page.ItemPage;
+import com.kwwsyk.endinv.common.client.gui.page.DisplayPage;
+import com.kwwsyk.endinv.common.client.gui.page.ItemPage;
+import com.kwwsyk.endinv.common.menu.page.PageType;
+import com.kwwsyk.endinv.common.menu.page.PageTypeRegistry;
 import com.kwwsyk.endinv.common.menu.page.pageManager.PageMetaDataManager;
 import com.kwwsyk.endinv.common.network.payloads.PageData;
 import com.kwwsyk.endinv.common.network.payloads.SyncedConfig;
@@ -27,6 +29,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import static com.kwwsyk.endinv.common.ModRegistries.*;
@@ -126,11 +129,15 @@ public class EndlessInventoryMenu extends AbstractContainerMenu implements PageM
         }
     }
 
+    public List<DisplayPage> buildPages(){
+        return PageTypeRegistry.getDisplayPages().stream().map(type -> type.buildPage(this)).toList();
+    }
+
     //supposed to be the only method to change displaying page and index value; to sync.
     public void switchPageWithIndex(int index){
         this.displayingPageIndex = index;
         this.displayingPage = this.pages.get(index);
-        SyncedConfig.updateSyncedConfig(NbtAttachments.getSyncedConfig().computeIfAbsent(player).pageKeyChanged(displayingPage.id));
+        SyncedConfig.updateSyncedConfig(NbtAttachments.getSyncedConfig().getWith(player).pageKeyChanged(displayingPage.id));
         this.displayingPage.refreshContents();
     }
 
@@ -173,7 +180,6 @@ public class EndlessInventoryMenu extends AbstractContainerMenu implements PageM
         return this.sourceInventory;
     }
 
-    @Override
     public List<DisplayPage> getPages() {
         return pages;
     }
@@ -330,6 +336,25 @@ public class EndlessInventoryMenu extends AbstractContainerMenu implements PageM
             maxStackSize.set(endlessInventory.getMaxItemStackSize());
             infinityMode.set((endlessInventory.isInfinityMode()?1:0));
         }
+    }
+
+    @Override
+    public String getDisplayingPageId() {
+        return getDisplayingPage().id;
+    }
+
+    @Override
+    public void switchPageWithId(String id) {
+        for(int i=0; i<getPages().size(); ++i){
+            if(Objects.equals(getPages().get(i).id,id)){
+                switchPageWithIndex(i);
+            }
+        }
+    }
+
+    @Override
+    public PageType getDisplayingPageType() {
+        return getDisplayingPage().getPageType();
     }
 
     @Override

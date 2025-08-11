@@ -2,7 +2,7 @@ package com.kwwsyk.endinv.common.client;
 
 import com.kwwsyk.endinv.common.ModRegistries;
 import com.kwwsyk.endinv.common.client.gui.EndlessInventoryScreen;
-import com.kwwsyk.endinv.common.menu.page.ItemPage;
+import com.kwwsyk.endinv.common.client.gui.page.ItemPage;
 import com.kwwsyk.endinv.common.network.payloads.PageData;
 import com.kwwsyk.endinv.common.network.payloads.SyncedConfig;
 import com.mojang.blaze3d.platform.InputConstants;

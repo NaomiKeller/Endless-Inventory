@@ -85,7 +85,7 @@ public record ItemPageContext(int startIndex, int length, PageData pageData) imp
                 manager.switchPageWithId(pageData().pageRegKey());
             }
 
-
+            //== ServerEndInv#sendEndInvContent
             EndlessInventory endInv = (EndlessInventory) manager.getSourceInventory();
             if (getServerConfig().transferMode().get() == ContentTransferMode.PART) {
                 List<ItemStack> view = endInv.getSortedAndFilteredItemView(startIndex, length,

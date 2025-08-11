@@ -2,6 +2,7 @@ package com.kwwsyk.endinv.common.network.payloads.toServer;
 
 import com.kwwsyk.endinv.common.EndlessInventory;
 import com.kwwsyk.endinv.common.ServerLevelEndInv;
+import com.kwwsyk.endinv.common.client.gui.page.ItemPage;
 import com.kwwsyk.endinv.common.menu.page.pageManager.PageQuickMoveHandler;
 import com.kwwsyk.endinv.common.network.payloads.ModPacketContext;
 import com.kwwsyk.endinv.common.network.payloads.ModPacketPayload;
@@ -13,6 +14,12 @@ import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 
+/**Sent when
+ * slot/item clicked in {@link ItemPage}.
+ * @param stack if count of stack is too big, error will occur as the count is parsed to 0;
+ * @param button
+ * @param clickType
+ */
 public record ItemClickPayload(ItemStack stack, int button, ClickType clickType) implements ModPacketPayload {
 
 

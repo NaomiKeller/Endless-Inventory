@@ -1,4 +1,4 @@
-package com.kwwsyk.endinv.common.menu.page;
+package com.kwwsyk.endinv.common.client.gui.page;
 
 
 import com.kwwsyk.endinv.common.SourceInventory;
@@ -6,6 +6,8 @@ import com.kwwsyk.endinv.common.client.CachedSrcInv;
 import com.kwwsyk.endinv.common.client.KeyMappings;
 import com.kwwsyk.endinv.common.client.gui.ScreenFramework;
 import com.kwwsyk.endinv.common.client.gui.bg.ScreenBgRenderer;
+import com.kwwsyk.endinv.common.client.gui.page.manager.PageManager;
+import com.kwwsyk.endinv.common.menu.page.PageType;
 import com.kwwsyk.endinv.common.menu.page.pageManager.PageMetaDataManager;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.Util;
@@ -44,7 +46,7 @@ public abstract class DisplayPage{
     //displayed when hovering on Page switch bar.
     public Component name;
 
-    public PageMetaDataManager meta;
+    public PageManager meta;
 
     public final SourceInventory srcInv;
 
@@ -61,12 +63,12 @@ public abstract class DisplayPage{
 
     //constructor and initialization methods
     /**
-     * Pages are constructed when {@link PageMetaDataManager#buildPages()} is invoked.
+     * Pages are constructed when {@link PageManager#buildPages()} is invoked.
      * @param pageType defines type that is synced, including the item-classify.
      */
     public DisplayPage(PageType pageType,PageMetaDataManager metaDataManager){
         this.mc = Minecraft.getInstance();
-        this.meta = metaDataManager;
+        this.meta = (PageManager) metaDataManager;
         this.menu = metaDataManager.getMenu();
         this.srcInv = CachedSrcInv.INSTANCE;
         this.pageType = pageType;

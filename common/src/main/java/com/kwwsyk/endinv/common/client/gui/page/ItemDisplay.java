@@ -1,7 +1,8 @@
-package com.kwwsyk.endinv.common.menu.page;
+package com.kwwsyk.endinv.common.client.gui.page;
 
 import com.kwwsyk.endinv.common.EndlessInventory;
 import com.kwwsyk.endinv.common.client.CachedSrcInv;
+import com.kwwsyk.endinv.common.menu.page.PageType;
 import com.kwwsyk.endinv.common.menu.page.pageManager.PageMetaDataManager;
 import net.minecraft.world.item.ItemStack;
 

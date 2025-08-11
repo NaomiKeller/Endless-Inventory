@@ -23,7 +23,7 @@ public class SortTypeSwitchBox extends AbstractWidget {
     public SortTypeSwitchBox(SortTypeSwitcher screen,int x, int y, int width, int height){
         super(x,y,width,height, Component.empty());
         this.screen = screen;
-        this.visible = screen.getPageMetadata().getDisplayingPage().hasSortTypeSwitchBar();
+        this.visible = screen.getPageManager().getDisplayingPage().hasSortTypeSwitchBar();
         this.x = x;
         this.y = y;
         this.singleBoxHeight = height;
@@ -79,7 +79,7 @@ public class SortTypeSwitchBox extends AbstractWidget {
         guiGraphics.fill(x+1,y+1,x+width-1,y+singleBoxHeight-1,0xff000000);
         if(isHoveringOnSingleBox(mouseY,y))
             guiGraphics.fillGradient(RenderType.guiOverlay(),x,y,x+width,y+singleBoxHeight,0x80ffffff,0x80ffffff,0);
-        SortType sortType = screen.getPageMetadata().sortType();
+        SortType sortType = screen.getPageManager().sortType();
         String s = sortType.toString();
         guiGraphics.drawString(Minecraft.getInstance().font, s,x+2,y+2,0xffffffff);
         if(isOpen){

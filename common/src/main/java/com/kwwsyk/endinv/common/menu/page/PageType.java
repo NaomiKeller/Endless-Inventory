@@ -1,5 +1,9 @@
 package com.kwwsyk.endinv.common.menu.page;
 
+import com.kwwsyk.endinv.common.client.gui.page.DisplayPage;
+import com.kwwsyk.endinv.common.client.gui.page.ItemDisplay;
+import com.kwwsyk.endinv.common.client.gui.page.ItemEntryDisplay;
+import com.kwwsyk.endinv.common.client.gui.page.StarredItemPage;
 import com.kwwsyk.endinv.common.menu.page.pageManager.PageMetaDataManager;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;

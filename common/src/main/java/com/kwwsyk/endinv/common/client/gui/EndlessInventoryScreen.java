@@ -112,7 +112,7 @@ public class EndlessInventoryScreen extends AbstractContainerScreen<EndlessInven
         return isHoveringOnSortBox;
     }
     @Override
-    public PageMetaDataManager getPageMetadata() {
+    public PageMetaDataManager getPageManager() {
         return menu;
     }
 

@@ -1,8 +1,9 @@
-package com.kwwsyk.endinv.common.menu.page;
+package com.kwwsyk.endinv.common.client.gui.page;
 
 import com.kwwsyk.endinv.common.ModInfo;
 import com.kwwsyk.endinv.common.client.CachedSrcInv;
 import com.kwwsyk.endinv.common.client.gui.EndlessInventoryScreen;
+import com.kwwsyk.endinv.common.menu.page.PageType;
 import com.kwwsyk.endinv.common.menu.page.pageManager.PageMetaDataManager;
 import com.kwwsyk.endinv.common.network.payloads.toServer.CreativeItemModPayload;
 import com.kwwsyk.endinv.common.network.payloads.toServer.ItemClickPayload;
@@ -261,7 +262,9 @@ public abstract class ItemPage extends DisplayPage {
                 default -> {
                 }
             }
-            ModInfo.getPacketDistributor().sendToServer(new ItemClickPayload(clicked,button,clickType));
+            ModInfo.getPacketDistributor().sendToServer(new ItemClickPayload(
+                    clicked.getCount() > 64 ? clicked.copyWithCount(64) : clicked.copy(),
+                    button,clickType));
             refreshItems();
         }
     }

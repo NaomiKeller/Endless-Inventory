@@ -2,8 +2,8 @@ package com.kwwsyk.endinv.common.client.gui;
 
 import com.kwwsyk.endinv.common.SourceInventory;
 import com.kwwsyk.endinv.common.client.CachedSrcInv;
-import com.kwwsyk.endinv.common.menu.page.DisplayPage;
-import com.kwwsyk.endinv.common.menu.page.pageManager.PageMetaDataManager;
+import com.kwwsyk.endinv.common.client.gui.page.DisplayPage;
+import com.kwwsyk.endinv.common.client.gui.page.manager.PageManager;
 import com.kwwsyk.endinv.common.menu.page.pageManager.PageQuickMoveHandler;
 import com.kwwsyk.endinv.common.network.payloads.PageData;
 import com.kwwsyk.endinv.common.network.payloads.SyncedConfig;
@@ -34,7 +34,7 @@ public class AttachedScreen<T extends AbstractContainerMenu> implements SortType
 
     private ScreenFramework frameWork;
 
-    private final PageMetaDataManager pageMetadata = new PageMetaDataManager() {
+    private final PageManager pageMetadata = new PageManager() {
         @Override
         public AbstractContainerMenu getMenu() {
             return screen.getMenu();
@@ -58,7 +58,7 @@ public class AttachedScreen<T extends AbstractContainerMenu> implements SortType
         @Override
         public void switchPageWithIndex(int index) {
             displayingPage = pages.get(index);
-            SyncedConfig.updateSyncedConfig(getSyncedConfig().computeIfAbsent(player).pageKeyChanged(displayingPage.id));
+            SyncedConfig.updateSyncedConfig(getSyncedConfig().getWith(player).pageKeyChanged(displayingPage.id));
             displayingPage.refreshContents();
         }
 
@@ -263,7 +263,7 @@ public class AttachedScreen<T extends AbstractContainerMenu> implements SortType
     }
 
     @Override
-    public PageMetaDataManager getPageMetadata() {
+    public PageManager getPageManager() {
         return pageMetadata;
     }
 

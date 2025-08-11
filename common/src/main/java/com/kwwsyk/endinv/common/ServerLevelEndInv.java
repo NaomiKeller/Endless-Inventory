@@ -35,7 +35,6 @@ public final class ServerLevelEndInv {
         }else return Optional.empty();
     }
 
-
     /**
      * Get player's EndInv, if player has not or has invalid, create new.
      * @param player the player

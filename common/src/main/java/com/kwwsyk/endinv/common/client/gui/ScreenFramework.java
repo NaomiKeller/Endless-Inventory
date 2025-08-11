@@ -7,11 +7,13 @@ import com.kwwsyk.endinv.common.client.gui.bg.FromResource;
 import com.kwwsyk.endinv.common.client.gui.bg.ScreenBgRenderer;
 import com.kwwsyk.endinv.common.client.gui.bg.ScreenRectangleWidgetParam;
 import com.kwwsyk.endinv.common.client.gui.bg.Transparent;
+import com.kwwsyk.endinv.common.client.gui.page.DisplayPage;
+import com.kwwsyk.endinv.common.client.gui.page.ItemPage;
+import com.kwwsyk.endinv.common.client.gui.page.manager.PageManager;
 import com.kwwsyk.endinv.common.client.gui.widget.SortTypeSwitchBox;
 import com.kwwsyk.endinv.common.client.option.TextureMode;
-import com.kwwsyk.endinv.common.menu.page.DisplayPage;
-import com.kwwsyk.endinv.common.menu.page.pageManager.PageMetaDataManager;
 import com.kwwsyk.endinv.common.network.payloads.SyncedConfig;
+import com.kwwsyk.endinv.common.network.payloads.toServer.CreativeItemModPayload;
 import com.kwwsyk.endinv.common.network.payloads.toServer.QuickMoveToPagePayload;
 import com.kwwsyk.endinv.common.network.payloads.toServer.StarItemPayload;
 import com.mojang.blaze3d.platform.InputConstants;
@@ -21,6 +23,7 @@ import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.Slot;
@@ -43,7 +46,7 @@ public class ScreenFramework {
     private static ScreenFramework INSTANCE;
 
     private final Minecraft mc;
-    public final PageMetaDataManager meta;
+    public final PageManager meta;
     public final AbstractContainerScreen<?> screen;
     public final AbstractContainerMenu menu;
     private final SortTypeSwitcher sortTypeSwitcher;
@@ -74,7 +77,7 @@ public class ScreenFramework {
     public ScreenFramework(EndlessInventoryScreen screen){
         this.screen = screen;
         this.mc = Minecraft.getInstance();
-        this.meta = screen.getPageMetadata();
+        this.meta = (PageManager) screen.getPageManager();
         this.menu = screen.getMenu();
         this.leftPos = screen.getGuiLeft();
         this.topPos = screen.getGuiTop();
@@ -102,7 +105,7 @@ public class ScreenFramework {
     public ScreenFramework(AttachedScreen<?> attachedScreen){
         this.screen = attachedScreen.screen;
         this.mc = Minecraft.getInstance();
-        this.meta = attachedScreen.getPageMetadata();
+        this.meta = attachedScreen.getPageManager();
         this.menu = meta.getMenu();
 
         this.leftPos = 20;
@@ -144,7 +147,7 @@ public class ScreenFramework {
         this.reverseSortButton = Button.builder(Component.literal("⇅"),
                         btn->{
                             meta.switchSortReversed();
-                            SyncedConfig.updateSyncedConfig(getSyncedConfig().computeIfAbsent(meta.getPlayer()).ofReverseSort());
+                            SyncedConfig.updateSyncedConfig(getSyncedConfig().getWith(meta.getPlayer()).ofReverseSort());
                             meta.getDisplayingPage().sendChangesToServer();
                         }
                 )
@@ -267,12 +270,25 @@ public class ScreenFramework {
         return null;
     }
 
+    private ItemStack creativeQuickInsertedItem = ItemStack.EMPTY;
     private void slotQuickMoved(Slot clicked){
-        ItemStack itemStack = clicked.getItem();
-        ItemStack remain = meta.getDisplayingPage().tryQuickMoveStackTo(itemStack);
-        clicked.setByPlayer(remain);
-        clicked.onTake(meta.getPlayer(), itemStack);
-        ModInfo.getPacketDistributor().sendToServer(new QuickMoveToPagePayload(clicked.index));
+        ItemStack itemStack = clicked.getItem().copy();
+        if(menu instanceof CreativeModeInventoryScreen.ItemPickerMenu && clicked.index<45) {
+            if(ItemStack.isSameItemSameTags(itemStack,creativeQuickInsertedItem)){
+                return;
+            }else creativeQuickInsertedItem = itemStack;
+            itemStack.setCount(itemStack.getMaxStackSize());
+            meta.getDisplayingPage().tryQuickMoveStackTo(itemStack);
+            ModInfo.getPacketDistributor().sendToServer(new CreativeItemModPayload(itemStack, true));
+        } else {
+            ItemStack remain = meta.getDisplayingPage().tryQuickMoveStackTo(itemStack);
+            clicked.setByPlayer(remain);
+            clicked.onTake(meta.getPlayer(), itemStack);
+            ModInfo.getPacketDistributor().sendToServer(new QuickMoveToPagePayload(clicked.index));
+        }
+        if(meta.getDisplayingPage() instanceof ItemPage itemPage){
+            itemPage.requestContents();
+        }
     }
 
     public boolean mouseClicked(double mouseX, double mouseY, int keyCode){
@@ -327,6 +343,8 @@ public class ScreenFramework {
     }
 
     public boolean mouseReleased(double mouseX, double mouseY, int keyCode){
+        creativeQuickInsertedItem = ItemStack.EMPTY;
+
         DisplayPage displayingPage = meta.getDisplayingPage();
         displayingPage.release();
         if(hasClickedOnPage(mouseX,mouseY)){

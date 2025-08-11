@@ -1,9 +1,10 @@
-package com.kwwsyk.endinv.common.menu.page;
+package com.kwwsyk.endinv.common.client.gui.page;
 
 import com.kwwsyk.endinv.common.client.ClientModInfo;
 import com.kwwsyk.endinv.common.client.gui.EndlessInventoryScreen;
 import com.kwwsyk.endinv.common.client.gui.bg.ScreenBgRenderer;
 import com.kwwsyk.endinv.common.client.option.TextureMode;
+import com.kwwsyk.endinv.common.menu.page.PageType;
 import com.kwwsyk.endinv.common.menu.page.pageManager.PageMetaDataManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
