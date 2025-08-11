@@ -3,13 +3,11 @@ package com.kwwsyk.endinv.common.menu.page.pageManager;
 import com.kwwsyk.endinv.common.EndlessInventory;
 import com.kwwsyk.endinv.common.ModInfo;
 import com.kwwsyk.endinv.common.SourceInventory;
-import com.kwwsyk.endinv.common.client.gui.page.DisplayPage;
 import com.kwwsyk.endinv.common.menu.page.PageType;
 import com.kwwsyk.endinv.common.menu.page.PageTypeRegistry;
 import com.kwwsyk.endinv.common.network.payloads.PageData;
 import com.kwwsyk.endinv.common.network.payloads.SyncedConfig;
 import com.kwwsyk.endinv.common.network.payloads.toClient.EndInvMetadata;
-import com.kwwsyk.endinv.common.network.payloads.toServer.ItemPageContext;
 import com.kwwsyk.endinv.common.util.SortType;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
@@ -67,17 +65,6 @@ public class AttachingManager implements PageMetaDataManager{
     @Override
     public SourceInventory getSourceInventory() {
         return endinv;
-    }
-
-    @Override
-    @Deprecated
-    public List<DisplayPage> getPages() {
-        throw new IllegalStateException("DisplayPage is already client only.");
-    }
-
-    @Override@Deprecated
-    public DisplayPage getDisplayingPage() {
-        throw new IllegalStateException("DisplayPage is already client only.");
     }
 
     @Override
@@ -161,12 +148,6 @@ public class AttachingManager implements PageMetaDataManager{
         ModInfo.getPacketDistributor().sendToPlayer(player,EndInvMetadata.getWith(endinv));
     }
 
-
-    @Override
-    public int getDisplayingPageIndex() {
-        return displayingPageIndex;
-    }
-
     @Override
     public void switchPageWithId(String id) {
         DisplayingPageId = id;
@@ -177,11 +158,6 @@ public class AttachingManager implements PageMetaDataManager{
         }
     }
 
-    @Override @Deprecated
-    public List<DisplayPage> buildPages() {
-        throw new IllegalStateException("Display page is only available on client.");
-    }
-
     @Override
     public String getDisplayingPageId() {
         return DisplayingPageId;
@@ -190,10 +166,5 @@ public class AttachingManager implements PageMetaDataManager{
     @Override
     public PageType getDisplayingPageType() {
         return pageTypeList.get(displayingPageIndex);
-    }
-
-    @Override @Deprecated
-    public ItemPageContext getInPageContext() {
-        throw new IllegalStateException("Display page is only available on client.");
     }
 }
