@@ -139,7 +139,7 @@ public interface EndInvCodecStrategy {
     static CompoundTag save(ItemStack stack, CompoundTag compoundTag) {
         ResourceLocation resourcelocation = BuiltInRegistries.ITEM.getKey(stack.getItem());
         compoundTag.putString("id", resourcelocation.toString());
-        compoundTag.putInt("Count", (byte)stack.getCount());
+        compoundTag.putInt("Count", stack.getCount());
         if (stack.getTag() != null) {
             compoundTag.put("tag", stack.getTag().copy());
         }

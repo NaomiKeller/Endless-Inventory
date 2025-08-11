@@ -273,7 +273,7 @@ public class ScreenFramework {
     private ItemStack creativeQuickInsertedItem = ItemStack.EMPTY;
     private void slotQuickMoved(Slot clicked){
         ItemStack itemStack = clicked.getItem().copy();
-        if(menu instanceof CreativeModeInventoryScreen.ItemPickerMenu && clicked.index<45) {
+        if(menu instanceof CreativeModeInventoryScreen.ItemPickerMenu && clicked.index<45 && menu.slots.size() >= 54) {
             if(ItemStack.isSameItemSameTags(itemStack,creativeQuickInsertedItem)){
                 return;
             }else creativeQuickInsertedItem = itemStack;
