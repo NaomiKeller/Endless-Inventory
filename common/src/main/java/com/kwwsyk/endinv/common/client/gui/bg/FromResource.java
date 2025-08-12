@@ -11,17 +11,7 @@ public abstract class FromResource extends ScreenBgRendererImpl {
 
 
     private static final ResourceLocation CONTAINER_TEXTURE_LOCATION = new ResourceLocation("minecraft","textures/gui/container/generic_54.png");
-    private static final ResourceLocation SCROLLER_SPRITE = new ResourceLocation("minecraft","container/creative_inventory/scroller");
-    private static final ResourceLocation SCROLLER_DISABLED_SPRITE = new ResourceLocation("minecraft","container/creative_inventory/scroller_disabled");
-    private static final ResourceLocation TAB_ITEM_SEARCH_LOCATION = new ResourceLocation("minecraft","textures/gui/container/creative_inventory/tab_item_search.png");
-    private static final ResourceLocation TAB_LEFT_MIDDLE_SPRITE = new ResourceLocation("minecraft","advancements/tabs");
-    private static final ResourceLocation TAB_LEFT_TOP_SELECTED = new ResourceLocation("minecraft","advancements/tabs");
-    private static final ResourceLocation TAB_LEFT_MIDDLE_SELECTED = new ResourceLocation("minecraft","advancements/tabs");
-    private static final ResourceLocation TAB_LEFT_BOTTOM_SELECTED = new ResourceLocation("minecraft","advancements/tabs");
-
-    private static void blitSprite(GuiGraphics graphics, ResourceLocation sprite, int x, int y, int width, int height) {
-        graphics.blit(sprite,x,y,0,0,width,height);
-    }
+    private static final ResourceLocation TABS = new ResourceLocation("minecraft","textures/gui/advancements/tabs.png");
 
     public FromResource(ScreenFramework frameWork){
         super(frameWork);
@@ -150,13 +140,13 @@ public abstract class FromResource extends ScreenBgRendererImpl {
         for (int i = frameWork.firstPageIndex; i < frameWork.firstPageIndex + frameWork.pageBarCount; ++i) {
             if (i == selectedPageIndex) {
                 if (i == 0) {
-                    blitSprite(guiGraphics, TAB_LEFT_TOP_SELECTED, pageX,pageY,32,28);
+                    guiGraphics.blit(TABS,pageX,pageY,0,92,32,28);
                 } else if (i == frameWork.firstPageIndex + frameWork.pageBarCount-1) {
-                    blitSprite(guiGraphics, TAB_LEFT_BOTTOM_SELECTED, pageX,pageY,32,28);
+                    guiGraphics.blit(TABS,pageX,pageY,32,91,32,29);
                 } else
-                    blitSprite(guiGraphics, TAB_LEFT_MIDDLE_SELECTED, pageX,pageY,32,28);
+                    guiGraphics.blit(TABS,pageX,pageY,64,91,32,28);
             } else {
-                blitSprite(guiGraphics, TAB_LEFT_MIDDLE_SPRITE, pageX+4,pageY,32,28);
+                guiGraphics.blit(TABS,pageX+8,pageY,4,64,24,27);
             }
             pageY+=28;
         }

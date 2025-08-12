@@ -131,6 +131,7 @@ public class EndInvSettingScreen extends Screen {
     @Override
     public void render(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         super.render(guiGraphics, mouseX, mouseY, partialTick);
+        renderBackground(guiGraphics);
         for(var entry : renderingEntries){
             if(entry!=null) {
                 entry.render(guiGraphics, partialTick, mouseX, mouseY);
@@ -140,8 +141,11 @@ public class EndInvSettingScreen extends Screen {
 
     @Override
     public void renderBackground(@NotNull GuiGraphics guiGraphics) {
-        super.renderBackground(guiGraphics);
-        guiGraphics.blit(BLANK_LOCATION,leftPos,topPos,0,0,imageWidth,imageHeight);
+        guiGraphics.pose().pushPose();
+        guiGraphics.pose().translate(0,0,-100);
+        guiGraphics.fill(leftPos,topPos,leftPos+imageWidth,topPos+imageHeight,0x88888888);
+        guiGraphics.pose().popPose();
+        //guiGraphics.blit(BLANK_LOCATION,leftPos,topPos,0,0,imageWidth,imageHeight);
     }
 
     @Override
