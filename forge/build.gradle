@@ -28,11 +28,11 @@ configurations {
 legacyForge {
     version = "${minecraft_version}-${forge_version}"
 
-    validateAccessTransformers = true
+    validateAccessTransformers = false
 
     def at = project(':common').file('src/main/resources/META-INF/accesstransformer.cfg')
     if (at.exists()) {
-        accessTransformers = ["src/main/resources/META-INF/accesstransformer.cfg"]
+        accessTransformers.from(at)
     }
     parchment {
         minecraftVersion = parchment_minecraft
@@ -44,7 +44,7 @@ legacyForge {
         }
         data {
             data()
-            programArguments.addAll '--mod', project.mod_id, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
+            programArguments.addAll '--mod', mod_id as String, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
         }
         server {
             server()

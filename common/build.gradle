@@ -6,9 +6,16 @@ plugins {
 
 legacyForge {
     mcpVersion = minecraft_version
-    if (file("src/main/resources/META-INF/accesstransformer.cfg").exists()) {
-        accessTransformers = ["src/main/resources/META-INF/accesstransformer.cfg"]
+
+    validateAccessTransformers = false
+    def at = project(':common').file('src/main/resources/META-INF/accesstransformer.cfg')
+    if (at.exists()) {
+        accessTransformers.from(at)
     }
+    /*if (file("src/main/resources/META-INF/accesstransformer.cfg").exists()) {
+        accessTransformers = ["src/main/resources/META-INF/accesstransformer.cfg"]
+    }*/
+
     parchment {
         minecraftVersion = parchment_minecraft
         mappingsVersion = parchment_version
