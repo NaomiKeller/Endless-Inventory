@@ -267,9 +267,9 @@ public class EndInvSettingScreen extends Screen {
             Font font = EndInvSettingScreen.this.font;
             guiGraphics.drawString(font,tip,leftPos+CONFIG_ENTRY_X_OFFSET,widgetY,0xFFFFFF00);
             Component v = Component.literal(info.get()!=null? info.get().toString():"null");
-            int infoLength = font.width(v.getVisualOrderText());
+            int infoLength = Math.min(font.width(v.getVisualOrderText()), 100);
             //guiGraphics.drawString(font,v,widgetMidX-infoLength/2,widgetY,0xFF00FFFF);
-            AbstractWidget.renderScrollingString(guiGraphics,font,v,widgetMidX-infoLength/2,widgetY,widgetMidX+infoLength/2,widgetY,0xFF00FFFF);
+            AbstractWidget.renderScrollingString(guiGraphics,font,v,widgetMidX-infoLength/2,widgetY,widgetMidX+infoLength/2,widgetY+7,0xFF00FFFF);
         }
 
         @Override
