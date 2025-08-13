@@ -98,7 +98,7 @@ public abstract class DisplayPage{
      */
     public abstract void sendChangesToServer();
 
-    public abstract boolean hasSearchBar();
+    public abstract boolean hasSearchbox();
 
     public abstract boolean hasSortTypeSwitchBar();
 

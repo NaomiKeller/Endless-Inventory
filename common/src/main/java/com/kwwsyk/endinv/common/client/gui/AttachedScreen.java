@@ -176,7 +176,7 @@ public class AttachedScreen<T extends AbstractContainerMenu> implements SortType
 
     //invoked when an ACS is initialized
     public void init(IScreenEvent event){
-        this.frameWork = new ScreenFramework(this);
+        this.frameWork = ScreenFramework.getInstance()==null ? new ScreenFramework(this) : ScreenFramework.getInstance();
 
         frameWork.addWidgetToScreen(event::addListener);
     }

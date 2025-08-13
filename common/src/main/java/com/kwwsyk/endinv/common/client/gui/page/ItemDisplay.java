@@ -28,7 +28,7 @@ public class ItemDisplay extends ItemPage{
     }
 
     @Override
-    public boolean hasSearchBar() {
+    public boolean hasSearchbox() {
         return true;
     }
 

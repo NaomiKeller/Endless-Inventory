@@ -1,4 +1,3 @@
-//todo compare with multi-loader's common build
 plugins {
     id 'java-library'
     id 'idea'

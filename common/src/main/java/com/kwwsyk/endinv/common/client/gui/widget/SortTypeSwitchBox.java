@@ -99,7 +99,7 @@ public class SortTypeSwitchBox extends AbstractWidget {
         guiGraphics.pose().popPose();
     }
     private boolean isHoveringOnSingleBox(int mouseY,int minY){
-        return mouseY>minY && mouseY<minY+singleBoxHeight && isHovered;
+        return mouseY>=minY && mouseY<=minY+singleBoxHeight && isHovered;
     }
 
     @Override

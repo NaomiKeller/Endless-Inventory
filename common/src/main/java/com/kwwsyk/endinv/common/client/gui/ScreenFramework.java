@@ -235,7 +235,7 @@ public class ScreenFramework {
     protected void pageSwitched(int index){
         meta.switchPageWithIndex(index + firstPageIndex);
         //meta.getDisplayingPage().syncContentToServer();
-        this.searchBox.setVisible(meta.getDisplayingPage().hasSearchBar());
+        this.searchBox.setVisible(meta.getDisplayingPage().hasSearchbox());
         this.sortTypeSwitchBox.visible = meta.getDisplayingPage().hasSortTypeSwitchBar();
     }
 
@@ -294,10 +294,13 @@ public class ScreenFramework {
     public boolean mouseClicked(double mouseX, double mouseY, int keyCode){
         if(!searchBoxParam.hasClickedOn((int) mouseX, (int) mouseY)){
             searchBox.setFocused(false);
-        }else if(keyCode==1){
-            searchBox.setValue("");
+        }else {
             searchBox.setFocused(true);//this is what JEI behaves
-            return true;
+            if (keyCode == 1) {
+                searchBox.setValue("");
+                refreshSearchResults();
+                return true;
+            }
         }
         //handle menu item quick move
         boolean flg = inputHandler.isActiveAndMatches(KeyMappings.QUICK_MOVE,InputConstants.Type.MOUSE.getOrCreate(keyCode));
@@ -316,6 +319,7 @@ public class ScreenFramework {
         }
         //
         if(hasClickedOnPage(mouseX,mouseY)){
+            sortTypeSwitchBox.setOpen(false);
             return meta.getDisplayingPage().mouseClicked(mouseX-pageX,mouseY-pageY,keyCode);
         }
         return false;
@@ -385,7 +389,7 @@ public class ScreenFramework {
             return true;
         }
 
-        if(meta.getDisplayingPage().hasSearchBar()){
+        if(meta.getDisplayingPage().hasSearchbox() && this.searchBox.isFocused()){
             String s = this.searchBox.getValue();
             if (this.searchBox.keyPressed(keyCode, scanCode, modifiers)) {
                 if (!Objects.equals(s, this.searchBox.getValue())) {
@@ -400,7 +404,7 @@ public class ScreenFramework {
     }
 
     public boolean charTyped(char codePoint, int modifiers){
-        if (this.ignoreTextInput || !meta.getDisplayingPage().hasSearchBar()) {
+        if (this.ignoreTextInput || !meta.getDisplayingPage().hasSearchbox()) {
             return false;
         } else {
             String s = this.searchBox.getValue();
@@ -423,7 +427,7 @@ public class ScreenFramework {
     public void refreshSearchResults(){
         String searching = searchBox.getValue();
         meta.setSearching(searching);
-        SyncedConfig.updateSyncedConfig(getSyncedConfig().computeIfAbsent(meta.getPlayer()).searchingChanged(searching));
+        SyncedConfig.updateSyncedConfig(getSyncedConfig().getWith(meta.getPlayer()).searchingChanged(searching));
         meta.getDisplayingPage().release();
         meta.getDisplayingPage().sendChangesToServer();
     }
