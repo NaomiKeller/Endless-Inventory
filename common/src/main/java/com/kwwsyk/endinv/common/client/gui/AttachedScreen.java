@@ -164,7 +164,7 @@ public class AttachedScreen<T extends AbstractContainerMenu> implements SortType
         this.pages = pageMetadata.buildPages();
         assert Minecraft.getInstance().player != null;
         this.player = Minecraft.getInstance().player;
-        PageData data = getSyncedConfig().computeIfAbsent(player).pageData();
+        PageData data = getSyncedConfig().getWith(player).pageData();
         this.rows = data.rows();
         this.columns = data.columns();
         this.sortType = data.sortType();

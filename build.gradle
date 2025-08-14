@@ -18,7 +18,7 @@ subprojects {
     }
 
     base {
-        archivesName.set(mod_id)
+        archivesName = "${mod_name}-${minecraft_version}-${mod_version}-${project.name}"
     }
 
     // IDEA no longer automatically downloads sources/javadoc jars for dependencies, so we need to explicitly enable the behavior.

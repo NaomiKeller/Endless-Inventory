@@ -61,6 +61,8 @@ public class ScreenAttachment {
             SyncedConfig syncedConfig = getSyncedConfig().getWith(player);
             if(!syncedConfig.checkForAttaching()) return;
 
+            SyncedConfig.readAndSyncClientConfigToServer(false);
+
             if(ATTACHMENT_MANAGER==null){
                 ModInfo.getPacketDistributor().sendToServer(new OpenEndInvPayload(false));
                 ATTACHMENT_MANAGER = new AttachedScreen<>(screen);
