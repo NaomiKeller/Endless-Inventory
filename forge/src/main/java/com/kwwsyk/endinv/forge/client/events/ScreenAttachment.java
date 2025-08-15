@@ -78,17 +78,16 @@ public class ScreenAttachment {
 
     @SubscribeEvent
     public static void renderPre(ScreenEvent.Render.Pre event){
-        var attached = checkAndGetAttached(event);
-        if(attached!=null){
-            attached.renderPre(new IScreenEvent() {});
+
+        if(ATTACHMENT_MANAGER!=null){
+            ATTACHMENT_MANAGER.renderPre(new IScreenEvent() {});
         }
     }
 
     @SubscribeEvent
     public static void render(ScreenEvent.Render.Post event){
-        var attached = checkAndGetAttached(event);
-        if(attached!=null){
-            attached.render(new IScreenEvent() {
+        if(ATTACHMENT_MANAGER!=null){
+            ATTACHMENT_MANAGER.render(new IScreenEvent() {
                 @Override
                 public double getMouseX() {
                     return event.getMouseX();

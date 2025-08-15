@@ -47,7 +47,16 @@ public final class ServerLevelEndInv {
         }
         if(endlessInventory==null){
             switch (ModInfo.getServerConfig().policyHandlingMissing().get()){
-                case CREATE_PER_PLAYER -> endlessInventory = createForPlayer(player);
+                case CREATE_PER_PLAYER -> {
+                    endlessInventory = levelEndInvData.levelEndInvs
+                            .stream()
+                            .filter(endinv->endinv.owner!=null && endinv.owner.equals(player.getUUID()))
+                            .findFirst()
+                            .orElseGet(() -> createForPlayer(player));
+                    //To prevent an invalid state that an EndInv that its owner is this player but player shall create a new EndInv
+                    // happens often when player lost EndInvUUID when death
+                    ModRegistries.NbtAttachments.getEndInvUUID().setTo(player,endlessInventory.getUuid());
+                }
                 case USE_GLOBAL_SHARED -> {
                     endlessInventory = getFirstPublicEndInv();
                     ModRegistries.NbtAttachments.getEndInvUUID().setTo(player,endlessInventory.getUuid());

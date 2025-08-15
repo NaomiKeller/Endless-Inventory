@@ -7,7 +7,9 @@ import com.kwwsyk.endinv.common.network.payloads.toClient.EndInvContent;
 import com.kwwsyk.endinv.common.network.payloads.toClient.EndInvMetadata;
 import com.kwwsyk.endinv.common.options.ContentTransferMode;
 import com.kwwsyk.endinv.forge.ServerConfig;
+import com.kwwsyk.endinv.forge.nbtAttcachment.AttachingCapabilities;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -21,7 +23,7 @@ public class PlayerEvents {
     public static void tick(TickEvent.PlayerTickEvent event){
         if(event.phase == TickEvent.Phase.END && event.player instanceof ServerPlayer serverPlayer){
             if(tickRefresh) {
-                ModInfo.getPacketDistributor().sendToPlayer(serverPlayer, ModRegistries.NbtAttachments.getSyncedConfig().computeIfAbsent(serverPlayer));
+                ModInfo.getPacketDistributor().sendToPlayer(serverPlayer, ModRegistries.NbtAttachments.getSyncedConfig().getWith(serverPlayer));
                 if(ServerConfig.CONFIG.TRANSFER_MODE.get()== ContentTransferMode.ALL){
                     ServerLevelEndInv.getEndInvForPlayer(serverPlayer).ifPresent(endInv -> {
                         ModInfo.getPacketDistributor().sendToPlayer(serverPlayer,new EndInvContent(endInv.getItemMap()));
@@ -36,6 +38,41 @@ public class PlayerEvents {
     @SubscribeEvent
     public static void onRespawnClone(PlayerEvent.Clone event){
         tickRefresh=true;
+
+        if (event.getEntity().level().isClientSide) return;
+        if (!event.isWasDeath()) {
+            return; // 如果你只在死亡重生时处理
+        }
+
+        Player oldPlayer = event.getOriginal();
+        // 新玩家
+        Player newPlayer = event.getEntity();
+
+        // 只在重生时保留（死亡或传送切维度时可根据需求调整）
+
+
+        // 复制 EndInvUuid
+            //getEndInvUUID().setTo(newPlayer, getEndInvUUID().getWith(oldPlayer));
+        // 复制 ISyncedConfigImpl
+            //getSyncedConfig().setTo(newPlayer, getSyncedConfig().getWith(oldPlayer));
+        try {
+            oldPlayer.reviveCaps();
+            // 复制 EndInvUuid
+            oldPlayer.getCapability(AttachingCapabilities.END_INV_UUID).ifPresent(oldCap -> {
+                newPlayer.getCapability(AttachingCapabilities.END_INV_UUID).ifPresent(newCap -> {
+                    newCap.setUuid(oldCap.getUuid());
+                });
+            });
+
+            // 复制 ISyncedConfigImpl
+            oldPlayer.getCapability(AttachingCapabilities.END_INV_CONFIG).ifPresent(oldCap -> {
+                newPlayer.getCapability(AttachingCapabilities.END_INV_CONFIG).ifPresent(newCap -> {
+                    newCap.setSyncedConfig(oldCap.getSyncedConfig());
+                });
+            });
+        }finally {
+            oldPlayer.invalidateCaps();
+        }
     }
 
     @SubscribeEvent

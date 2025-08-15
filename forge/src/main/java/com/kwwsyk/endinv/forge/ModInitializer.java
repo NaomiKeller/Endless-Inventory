@@ -11,8 +11,8 @@ import com.kwwsyk.endinv.common.network.payloads.SyncedConfig;
 import com.kwwsyk.endinv.common.options.IServerConfig;
 import com.kwwsyk.endinv.forge.client.config.ClientConfig;
 import com.kwwsyk.endinv.forge.nbtAttcachment.AttachingCapabilities;
-import com.kwwsyk.endinv.forge.nbtAttcachment.EndInvUuid;
-import com.kwwsyk.endinv.forge.nbtAttcachment.ISyncedConfigImpl;
+import com.kwwsyk.endinv.forge.nbtAttcachment.IEndInvUuid;
+import com.kwwsyk.endinv.forge.nbtAttcachment.ISyncedConfig;
 import com.kwwsyk.endinv.forge.network.ModPacketHandler;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
@@ -120,7 +120,7 @@ public class ModInitializer extends AbstractModInitializer {
             @Override
             public UUID getWith(Player player) {
                 var opt = player.getCapability(AttachingCapabilities.END_INV_UUID).resolve();
-                return opt.map(EndInvUuid::getUuid).orElse(ModInfo.DEFAULT_UUID);
+                return opt.map(IEndInvUuid::getUuid).orElse(ModInfo.DEFAULT_UUID);
             }
 
             @Override
@@ -131,7 +131,7 @@ public class ModInitializer extends AbstractModInitializer {
 
             @Override
             public UUID computeIfAbsent(Player player) {
-                return player.getCapability(AttachingCapabilities.END_INV_UUID).resolve().map(EndInvUuid::getUuid).orElse(ModInfo.DEFAULT_UUID);
+                return player.getCapability(AttachingCapabilities.END_INV_UUID).resolve().map(IEndInvUuid::getUuid).orElse(ModInfo.DEFAULT_UUID);
             }
         };
     }
@@ -143,7 +143,7 @@ public class ModInitializer extends AbstractModInitializer {
             public SyncedConfig getWith(Player player) {
                 return player.getCapability(AttachingCapabilities.END_INV_CONFIG)
                         .resolve()
-                        .map(ISyncedConfigImpl::getSyncedConfig)
+                        .map(ISyncedConfig::getSyncedConfig)
                         .orElse(SyncedConfig.DEFAULT);
             }
 
@@ -158,7 +158,7 @@ public class ModInitializer extends AbstractModInitializer {
             public SyncedConfig computeIfAbsent(Player player) {
                 return player.getCapability(AttachingCapabilities.END_INV_CONFIG)
                         .resolve()
-                        .map(ISyncedConfigImpl::getSyncedConfig)
+                        .map(ISyncedConfig::getSyncedConfig)
                         .orElse(SyncedConfig.DEFAULT);
             }
         };

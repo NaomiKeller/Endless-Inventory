@@ -25,6 +25,7 @@ import net.minecraftforge.event.entity.living.LivingDropsEvent;
 import net.minecraftforge.event.entity.living.LivingExperienceDropEvent;
 import net.minecraftforge.event.entity.player.EntityItemPickupEvent;
 import net.minecraftforge.event.level.BlockEvent;
+import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
@@ -125,7 +126,7 @@ public class LootEvent {
         }
     }
 
-    @SubscribeEvent
+    @SubscribeEvent(priority = EventPriority.LOWEST)//mostly, the itemEntity should vanish.
     public static void onPickupItem(EntityItemPickupEvent event){
         Player player = event.getEntity();
         if(!(player instanceof ServerPlayer) || !ServerConfig.CONFIG.ENABLE_AUTO_PICK.get() || !isPlayerEnabledAutoPick(player)){
@@ -141,7 +142,7 @@ public class LootEvent {
                 if(!stack.isEmpty()) ModInfo.getPacketDistributor().sendToPlayer((ServerPlayer) player,new ItemPickedUpPayload(stack.copy()));
                 if(remain.isEmpty()){
                     stack.setCount(0);
-                }else {
+                }else {//rare
                     stack.split(remain.getCount());
                 }
             });

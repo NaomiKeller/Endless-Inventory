@@ -6,22 +6,21 @@ import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ICapabilitySerializable;
 import net.minecraftforge.common.util.INBTSerializable;
 import net.minecraftforge.common.util.LazyOptional;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class NBTCapability<N extends INBTSerializable<CompoundTag>> implements ICapabilitySerializable<CompoundTag> {
+public class NBTCapability<T extends INBTSerializable<CompoundTag>> implements ICapabilitySerializable<CompoundTag> {
 
-    N backend;
-    Capability<N> capability;
-    LazyOptional<? super N> optional = LazyOptional.of(()->backend);
+    T backend;
+    Capability<?> capability;
+    LazyOptional<? super T> optional = LazyOptional.of(()->backend);
 
-    public NBTCapability(@NotNull N attachment, Capability<N> capability){
+    public NBTCapability(T attachment, Capability<? super T> capability){
         this.backend = attachment;
         this.capability = capability;
     }
 
     @Override
-    public @NotNull <T> LazyOptional<T> getCapability(@NotNull Capability<T> capability, @Nullable Direction direction) {
+    public <U> LazyOptional<U> getCapability(Capability<U> capability, @Nullable Direction direction) {
         return capability==this.capability ? optional.cast() : LazyOptional.empty();
     }
 

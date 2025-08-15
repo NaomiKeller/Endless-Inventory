@@ -16,8 +16,8 @@ import static com.kwwsyk.endinv.common.AbstractModInitializer.withModLocation;
 @Mod.EventBusSubscriber(modid = ModInfo.MOD_ID,bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class AttachingCapabilities {
 
-    public static Capability<EndInvUuid> END_INV_UUID = CapabilityManager.get(new CapabilityToken<>() {});
-    public static Capability<ISyncedConfigImpl> END_INV_CONFIG = CapabilityManager.get(new CapabilityToken<>() {});
+    public static final Capability<IEndInvUuid> END_INV_UUID = CapabilityManager.get(new CapabilityToken<>() {});
+    public static final Capability<ISyncedConfig> END_INV_CONFIG = CapabilityManager.get(new CapabilityToken<>() {});
 
     @SubscribeEvent
     public static void reg(RegisterCapabilitiesEvent event){
