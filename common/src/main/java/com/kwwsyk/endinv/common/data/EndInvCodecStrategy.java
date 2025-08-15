@@ -155,13 +155,8 @@ public interface EndInvCodecStrategy {
             );
             if (compoundTag.contains("tag", 10)) {
                 CompoundTag tag = compoundTag.getCompound("tag");
-                ret.getItem().verifyTagAfterLoad(tag);
+                ret.setTag(tag);
             }
-
-            if (ret.getItem().canBeDepleted()) {
-                ret.setDamageValue(ret.getDamageValue());
-            }
-
             return ret;
         } catch (RuntimeException runtimeexception) {
             LOGGER.debug("Tried to load invalid item: {}", compoundTag, runtimeexception);
