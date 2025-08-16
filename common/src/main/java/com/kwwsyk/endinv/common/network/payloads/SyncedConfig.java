@@ -78,6 +78,12 @@ public record SyncedConfig(PageData pageData,boolean attaching,boolean autoPicki
             getPacketDistributor().sendToServer(config1);
         }
     }
+
+    /**
+     * Read client config to update player's config.
+     * @param ofMenu if is in {@link com.kwwsyk.endinv.common.menu.EndlessInventoryMenu}
+     * @return Updated local player's config.
+     */
     public static SyncedConfig readClientConfig(boolean ofMenu){
         IClientConfig clientConfig = getClientConfig();
         LocalPlayer player;
@@ -94,7 +100,6 @@ public record SyncedConfig(PageData pageData,boolean attaching,boolean autoPicki
                 columns = Math.min(columns,clientConfig.calculateSuitInColumnCount(screen));
             }
             SyncedConfig config = NbtAttachments.getSyncedConfig().getWith(player);
-            if(config==null) config = DEFAULT;
             return new SyncedConfig(config.pageData.ofRowChanged(rows).ofColumnChanged(columns), clientConfig.attaching().get(), true);
         }else throw new IllegalStateException("Unable to read client config, as running on server or player is not existing.");
     }
@@ -106,7 +111,11 @@ public record SyncedConfig(PageData pageData,boolean attaching,boolean autoPicki
     }
 
     public void handle(ModPacketContext context){
-        ModRegistries.NbtAttachments.getSyncedConfig().setTo(context.player(), this);
+        if(context.player()!=null) {
+            ModRegistries.NbtAttachments.getSyncedConfig().setTo(context.player(), this);
+        }else {
+            ModRegistries.NbtAttachments.getSyncedConfig().setTo(Minecraft.getInstance().player, this);
+        }
     }
 
     public SyncedConfig searchingChanged(String searching) {

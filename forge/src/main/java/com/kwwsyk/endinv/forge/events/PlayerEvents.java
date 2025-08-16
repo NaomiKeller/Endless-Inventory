@@ -36,10 +36,9 @@ public class PlayerEvents {
     }
 
     @SubscribeEvent
-    public static void onRespawnClone(PlayerEvent.Clone event){
+    public static void onRespawnClone(PlayerEvent.Clone event){//serverOnly determined by forge's internal mechanics.
         tickRefresh=true;
 
-        if (event.getEntity().level().isClientSide) return;
         if (!event.isWasDeath()) {
             return; // 如果你只在死亡重生时处理
         }
@@ -68,6 +67,7 @@ public class PlayerEvents {
             oldPlayer.getCapability(AttachingCapabilities.END_INV_CONFIG).ifPresent(oldCap -> {
                 newPlayer.getCapability(AttachingCapabilities.END_INV_CONFIG).ifPresent(newCap -> {
                     newCap.setSyncedConfig(oldCap.getSyncedConfig());
+                    ModInfo.getPacketDistributor().sendToPlayer((ServerPlayer) newPlayer, oldCap.getSyncedConfig());
                 });
             });
         }finally {
