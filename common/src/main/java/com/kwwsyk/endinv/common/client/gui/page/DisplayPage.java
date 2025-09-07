@@ -123,11 +123,11 @@ public abstract class DisplayPage{
     }
 
     public int calculateRowCount(){
-        return Math.max(meta.getItemSize()/ meta.getColumnCount(), CachedSrcInv.INSTANCE.getItemSize()/ meta.getColumnCount());
+        return Math.max(meta.getItemSize()/ meta.columns(), CachedSrcInv.INSTANCE.getItemSize()/ meta.columns());
     }
 
     protected float subtractInputFromScroll(float scrollOffs, double input) {
-        return Mth.clamp(scrollOffs - (float)(input / (double)meta.getRowCount()), 0.0F, 1.0F);
+        return Mth.clamp(scrollOffs - (float)(input / (double)meta.rows()), 0.0F, 1.0F);
     }
 
     public void setChanged() {}

@@ -10,9 +10,9 @@ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.resources.ResourceLocation;
 
 @JeiPlugin
-public class JEICompatibility implements IModPlugin{
+public class JeiCompat implements IModPlugin{
 
-    public JEICompatibility(){}
+    public JeiCompat(){}
 
     @Override
     public ResourceLocation getPluginUid() {

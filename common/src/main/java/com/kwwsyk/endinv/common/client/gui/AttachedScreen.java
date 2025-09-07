@@ -63,12 +63,12 @@ public class AttachedScreen<T extends AbstractContainerMenu> implements SortType
         }
 
         @Override
-        public int getRowCount() {
+        public int rows() {
             return rows;
         }
 
         @Override
-        public int getColumnCount() {
+        public int columns() {
             return columns;
         }
 

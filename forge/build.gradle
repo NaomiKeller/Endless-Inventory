@@ -42,6 +42,11 @@ legacyForge {
         client {
             client()
         }
+        modPack{
+            client()
+            programArguments.addAll '--username','nep'
+            gameDirectory = file('runModpack')
+        }
         data {
             data()
             programArguments.addAll '--mod', mod_id as String, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()

@@ -49,7 +49,7 @@ public interface PageManager extends PageMetaDataManager {
         DisplayPage page = getDisplayingPage();
         return new ItemPageContext(
                 page instanceof ItemPage itemPage ? itemPage.getStartIndex() : 0,
-                getRowCount()*getColumnCount(),
+                rows()* columns(),
                 getPageData()
         );
     }

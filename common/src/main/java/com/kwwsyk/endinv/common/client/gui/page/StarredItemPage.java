@@ -42,7 +42,7 @@ public class StarredItemPage extends ItemPage{
     @Override
     public void refreshContents(int startIndex, int length){
         this.startIndex = startIndex;
-        this.length = Math.min(length, meta.getRowCount()* meta.getColumnCount());
+        this.length = Math.min(length, meta.rows()* meta.columns());
         this.items = NonNullList.withSize(length, ItemStack.EMPTY);
         this.countArray = new int[length];
         refreshItems();
@@ -117,7 +117,7 @@ public class StarredItemPage extends ItemPage{
             if(!isHiddenBySortBox(rowIndex,columnIndex))
                 guiGraphics.renderItemDecorations(Minecraft.getInstance().font, stack,leftPos+columnIndex*18,topPos+rowIndex*18+1, getDisplayAmount(stack.copyWithCount(count)));
             columnIndex++;
-            if(columnIndex>= meta.getColumnCount()){
+            if(columnIndex>= meta.columns()){
                 columnIndex=0;
                 rowIndex++;
             }

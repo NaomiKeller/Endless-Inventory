@@ -7,9 +7,9 @@ import com.kwwsyk.endinv.common.SourceInventory;
 import com.kwwsyk.endinv.common.client.CachedSrcInv;
 import com.kwwsyk.endinv.common.client.gui.page.DisplayPage;
 import com.kwwsyk.endinv.common.client.gui.page.ItemPage;
+import com.kwwsyk.endinv.common.client.gui.page.manager.PageManager;
 import com.kwwsyk.endinv.common.menu.page.PageType;
 import com.kwwsyk.endinv.common.menu.page.PageTypeRegistry;
-import com.kwwsyk.endinv.common.menu.page.pageManager.PageMetaDataManager;
 import com.kwwsyk.endinv.common.network.payloads.PageData;
 import com.kwwsyk.endinv.common.network.payloads.SyncedConfig;
 import com.kwwsyk.endinv.common.util.SortType;
@@ -35,10 +35,16 @@ import java.util.Set;
 import static com.kwwsyk.endinv.common.ModRegistries.*;
 import static com.kwwsyk.endinv.common.ServerLevelEndInv.getEndInvForPlayer;
 
-public class EndlessInventoryMenu extends AbstractContainerMenu implements PageMetaDataManager {
+public class EndlessInventoryMenu extends AbstractContainerMenu implements PageManager {
 
 
     private final SourceInventory sourceInventory;
+
+    private final CraftingContainer craftMatrix = new TransientCraftingContainer(this, 3, 3);
+    private final ResultContainer craftResult = new ResultContainer();
+
+    private static final int CRAFT_GRID_WIDTH = 3;
+    private static final int CRAFT_GRID_HEIGHT = 3;
 
     public final Player player;
     int quickcraftStatus;
@@ -63,7 +69,7 @@ public class EndlessInventoryMenu extends AbstractContainerMenu implements PageM
         if (Minecraft.getInstance().player != null) {
             SyncedConfig config = NbtAttachments.getSyncedConfig().getWith(Minecraft.getInstance().player);
             ret.init(config.pageData());
-            ret.addStandardInventorySlots(playerInv, 8, 18 * ret.getRowCount() + 18 + 13);
+            ret.addStandardInventorySlots(playerInv, 8, 18 * ret.rows() + 18 + 13);
         }
 
         return ret;
@@ -76,7 +82,7 @@ public class EndlessInventoryMenu extends AbstractContainerMenu implements PageM
         SyncedConfig config = NbtAttachments.getSyncedConfig().getWith(player);
         var ret = new EndlessInventoryMenu(i,inventory,endlessInventory);
         ret.init(config.pageData());
-        ret.addStandardInventorySlots(inventory, 8, 18 * ret.getRowCount() + 18 + 13);
+        ret.addStandardInventorySlots(inventory, 8, 18 * ret.rows() + 18 + 13);
         return ret;
     }
 
@@ -86,7 +92,7 @@ public class EndlessInventoryMenu extends AbstractContainerMenu implements PageM
         var ret = new EndlessInventoryMenu(i,inventory,endInv);
         SyncedConfig config = NbtAttachments.getSyncedConfig().getWith(player);
         ret.init(config.pageData());
-        ret.addStandardInventorySlots(inventory, 8, 18 * ret.getRowCount() + 18 + 13);
+        ret.addStandardInventorySlots(inventory, 8, 18 * ret.rows() + 18 + 13);
         return ret;
     }
 
@@ -96,6 +102,19 @@ public class EndlessInventoryMenu extends AbstractContainerMenu implements PageM
         this.player = playerInv.player;
         this.sourceInventory = endlessInventory!=null ? endlessInventory : CachedSrcInv.INSTANCE;
         this.pages = buildPages();
+        // add crafting/result slots and player inventory slots if player inventory provided
+        int craftX = 8;
+        int craftY = 18 * this.rows() + 18; // placed between page and player inventory
+        int resultX = craftX + CRAFT_GRID_WIDTH * 18 + 6;
+        int resultY = craftY + 18; // center vertically
+        this.addSlot(new ResultSlot(this.player, this.craftMatrix, this.craftResult, 0, resultX, resultY));
+        for (int row = 0; row < CRAFT_GRID_HEIGHT; ++row) {
+            for (int col = 0; col < CRAFT_GRID_WIDTH; ++col) {
+                this.addSlot(new Slot(this.craftMatrix, col + row * CRAFT_GRID_WIDTH, craftX + col * 18, craftY + row * 18));
+            }
+        }
+        int invY = craftY + CRAFT_GRID_HEIGHT * 18 + 13;
+        addStandardInventorySlots(playerInv, 8, invY);
         //build data slots
         itemSize.set( endlessInventory!=null ? endlessInventory.getItemSize() : 0);
         maxStackSize.set(endlessInventory!=null? endlessInventory.getMaxItemStackSize() : Integer.MAX_VALUE);
@@ -189,12 +208,12 @@ public class EndlessInventoryMenu extends AbstractContainerMenu implements PageM
         return player;
     }
 
-    public int getRowCount(){
+    public int rows(){
         return  this.rowsData.get();
     }
 
     @Override
-    public int getColumnCount() {
+    public int columns() {
         return 9;
     }
 

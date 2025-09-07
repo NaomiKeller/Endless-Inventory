@@ -74,12 +74,12 @@ public class AttachingManager implements PageMetaDataManager{
     }
 
     @Override
-    public int getRowCount() {
+    public int rows() {
         return rows;
     }
 
     @Override
-    public int getColumnCount() {
+    public int columns() {
         return columns;
     }
 

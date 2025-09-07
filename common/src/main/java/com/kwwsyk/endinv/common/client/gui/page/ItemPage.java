@@ -40,24 +40,35 @@ public abstract class ItemPage extends DisplayPage {
 
     protected int length;
 
+    public void extend(int rows){
+        this.length = rows * meta.columns();
+        refreshContents(this.startIndex,this.length);
+    }
+
+    public void contract(int rows){
+        int newLength = rows * meta.columns();
+        this.length = Math.max(newLength, meta.columns());
+        refreshContents(this.startIndex, this.length);
+    }
+
     protected boolean suppressRefresh = false;
 
     protected List<ItemStack> inQueueStacks = null;
 
     public ItemPage(PageType pageType, PageMetaDataManager metaDataManager) {
         super(pageType,metaDataManager);
-        this.length = meta.getRowCount()* meta.getColumnCount();
+        this.length = meta.rows()* meta.columns();
     }
 
     @Override
     public void scrollTo(float pos) {
-        int startIndex = getRowIndexForScroll(pos)* meta.getColumnCount();
+        int startIndex = getRowIndexForScroll(pos)* meta.columns();
         this.refreshContents(startIndex,this.length);
     }
 
     @Override
     public void refreshContents() {
-        refreshContents(0,meta.getRowCount()*meta.getColumnCount());
+        refreshContents(0,meta.rows()*meta.columns());
     }
 
     /**Change displayed items of EndInv
@@ -66,7 +77,9 @@ public abstract class ItemPage extends DisplayPage {
      */
     public void refreshContents(int startIndex, int length) {
         this.startIndex = startIndex;
-        this.length = Math.min(length, meta.getRowCount()* meta.getColumnCount());
+        this.length = Math.min(length, meta.rows()* meta.columns());
+        // ensure internal invariants
+        if(this.items==null || this.items.size()!=this.length) this.items = NonNullList.withSize(this.length, ItemStack.EMPTY);
         if(items==null || length!=this.items.size()){
             this.items = NonNullList.withSize(length,ItemStack.EMPTY);
         }
@@ -126,8 +139,8 @@ public abstract class ItemPage extends DisplayPage {
     }
 
     public int getSlotForMouseOffset(double XOffset,double YOffset){
-        if(XOffset<0||YOffset<0||XOffset>18* meta.getColumnCount()||YOffset>18* meta.getRowCount()) return -1;
-        return (int)XOffset/18 + meta.getColumnCount()*((int)YOffset/18);
+        if(XOffset<0||YOffset<0||XOffset>18* meta.columns()||YOffset>18* meta.rows()) return -1;
+        return (int)XOffset/18 + meta.columns()*((int)YOffset/18);
     }
 
     public void release(){
@@ -159,7 +172,7 @@ public abstract class ItemPage extends DisplayPage {
             if(!isHiddenBySortBox(rowIndex,columnIndex))
                 guiGraphics.renderItemDecorations(Minecraft.getInstance().font, stack,leftPos+columnIndex*18,topPos+rowIndex*18+1, getDisplayAmount(stack));
             columnIndex++;
-            if(columnIndex>= meta.getColumnCount()){
+            if(columnIndex>= meta.columns()){
                 columnIndex=0;
                 rowIndex++;
             }
@@ -224,8 +237,8 @@ public abstract class ItemPage extends DisplayPage {
         }
     }
     protected void renderSlotHighlight(GuiGraphics graphics, int mouseX, int mouseY, float partialTick){
-        for(int u = 0; u< meta.getColumnCount(); ++u){
-            for(int v = 0; v< meta.getRowCount(); ++v){
+        for(int u = 0; u< meta.columns(); ++u){
+            for(int v = 0; v< meta.rows(); ++v){
                 int x1 = leftPos+18*u-1;
                 int x2 = leftPos+18*u+16;
                 int y1 = topPos+18*v+1;

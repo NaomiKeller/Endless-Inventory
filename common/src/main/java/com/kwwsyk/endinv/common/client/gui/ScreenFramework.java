@@ -83,8 +83,8 @@ public class ScreenFramework {
         this.topPos = screen.getGuiTop();
         this.imageWidth = screen.getXSize();
         this.imageHeight= screen.getYSize();
-        this.rows = meta.getRowCount();
-        this.columns = meta.getColumnCount();
+        this.rows = meta.rows();
+        this.columns = meta.columns();
         this.sortTypeSwitcher = screen;
         this.pageBarCount = Math.min(ClientModInfo.getClientConfig().maxPageBarCount().get(),meta.getPages().size());
         this.pageBarScrollUpButtonParam = new ScreenRectangleWidgetParam(leftPos-32,topPos-16,30,14);
@@ -109,9 +109,9 @@ public class ScreenFramework {
         this.menu = meta.getMenu();
 
         this.leftPos = 20;
-        this.rows = meta.getRowCount();
+        this.rows = meta.rows();
         this.topPos= Math.max((screen.height - rows*18 - 17 -10)/2, 20);
-        this.columns = meta.getColumnCount();
+        this.columns = meta.columns();
 
         this.sortTypeSwitcher = attachedScreen;
         this.pageBarCount = Math.min(ClientModInfo.getClientConfig().maxPageBarCount().get(),meta.getPages().size());

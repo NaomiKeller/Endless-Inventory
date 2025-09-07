@@ -28,7 +28,7 @@ public class ItemEntryDisplay extends ItemDisplay{
 
     public ItemEntryDisplay(PageType pageType, PageMetaDataManager metaDataManager) {
         super(pageType,metaDataManager);
-        this.length = meta.getRowCount();
+        this.length = meta.rows();
     }
 
     @Override
@@ -40,7 +40,7 @@ public class ItemEntryDisplay extends ItemDisplay{
     @Override
     public void refreshContents(int startIndex, int length) {
         this.startIndex = startIndex;
-        this.length = Math.min(length, meta.getRowCount());
+        this.length = Math.min(length, meta.rows());
         if(items==null || length!=this.items.size()){
             this.items = NonNullList.withSize(length,ItemStack.EMPTY);
         }
@@ -63,7 +63,7 @@ public class ItemEntryDisplay extends ItemDisplay{
 
     @Override
     public int getSlotForMouseOffset(double XOffset, double YOffset) {
-        if(XOffset<0||YOffset<0||XOffset>18* meta.getColumnCount()||YOffset>18* meta.getRowCount()) return -1;
+        if(XOffset<0||YOffset<0||XOffset>18* meta.columns()||YOffset>18* meta.rows()) return -1;
         return (int)YOffset/18;
     }
 
@@ -89,7 +89,7 @@ public class ItemEntryDisplay extends ItemDisplay{
             if(!isHiddenBySortBox(rowIndex,columnIndex))
                 guiGraphics.renderItemDecorations(Minecraft.getInstance().font, stack, leftPos,topPos+rowIndex*18+1, getDisplayAmount(stack));
             rowIndex++;
-            if(rowIndex>= meta.getRowCount()) break;
+            if(rowIndex>= meta.rows()) break;
         }
         guiGraphics.pose().popPose();
     }
@@ -107,7 +107,7 @@ public class ItemEntryDisplay extends ItemDisplay{
             }
             Component tip1 = Component.literal(tip.getString());
             int strX1 = strX + font.width(tip.getVisualOrderText());
-            if(strX1 >= x + meta.getColumnCount()*18 -18-3){
+            if(strX1 >= x + meta.columns()*18 -18-3){
                 graphics.drawString(font,Component.literal("..."),strX,y,0xFFFFFF00);
                 break;
             }
@@ -134,9 +134,9 @@ public class ItemEntryDisplay extends ItemDisplay{
     }
 
     protected void renderSlotHighlight(GuiGraphics graphics, int mouseX, int mouseY, float partialTick){
-        for(int v = 0; v< meta.getRowCount(); ++v){
+        for(int v = 0; v< meta.rows(); ++v){
             int x1 = leftPos;
-            int x2 = leftPos + meta.getColumnCount()*18 -2;
+            int x2 = leftPos + meta.columns()*18 -2;
             int y1 = topPos+18*v+1;
             int y2 = topPos+18*v+18;
             if(mouseX>x1 && mouseX<x2 && mouseY>y1 && mouseY<y2){
@@ -152,10 +152,10 @@ public class ItemEntryDisplay extends ItemDisplay{
         int pageX = screenBgRenderer.getScreenFrameWork().pageX;
         int startY = screenBgRenderer.getScreenFrameWork().pageY;
         int bgColor = ClientModInfo.getClientConfig().textureMode().get() == TextureMode.FROM_RESOURCE ? 0xFF8b8b8b : 0x37606037;
-        for(int i = 0; i< meta.getRowCount(); ++i){
-            guiGraphics.fill(pageX,startY,pageX+18* meta.getColumnCount()-2,startY+1,0xFF373737);
-            guiGraphics.fill(pageX,startY+1,pageX+18* meta.getColumnCount()-2,startY+17,bgColor);
-            guiGraphics.fill(pageX,startY+17,pageX+18* meta.getColumnCount()-2,startY+18,0xFFFFFFFF);
+        for(int i = 0; i< meta.rows(); ++i){
+            guiGraphics.fill(pageX,startY,pageX+18* meta.columns()-2,startY+1,0xFF373737);
+            guiGraphics.fill(pageX,startY+1,pageX+18* meta.columns()-2,startY+17,bgColor);
+            guiGraphics.fill(pageX,startY+17,pageX+18* meta.columns()-2,startY+18,0xFFFFFFFF);
             startY+=18;
         }
     }

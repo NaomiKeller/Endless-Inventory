@@ -29,8 +29,8 @@ public abstract class ScreenBgRendererImpl implements ScreenBgRenderer{
         this.screen = frameWork.screen;
         this.imageWidth = 256;
         this.manager = frameWork.meta;
-        this.rows = manager.getRowCount();
-        this.columns = manager.getColumnCount();
+        this.rows = manager.rows();
+        this.columns = manager.columns();
         this.menuLeft = ClientModInfo.containerScreenHelper.getGuiLeft(screen);
         this.menuTop = ClientModInfo.containerScreenHelper.getGuiTop(screen);
         this.pageLeft = frameWork.leftPos;

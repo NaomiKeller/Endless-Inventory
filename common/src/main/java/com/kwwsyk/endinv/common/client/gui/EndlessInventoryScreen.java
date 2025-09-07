@@ -24,7 +24,7 @@ public class EndlessInventoryScreen extends AbstractContainerScreen<EndlessInven
 
     public EndlessInventoryScreen(EndlessInventoryMenu menu, Inventory playerInventory, Component title) {
         super(menu, playerInventory, title);
-        int containerRows = this.menu.getRowCount();
+        int containerRows = this.menu.rows();
         this.imageHeight = 114 + containerRows *18;
         this.inventoryLabelY = this.imageHeight - 94;
     }
@@ -113,7 +113,7 @@ public class EndlessInventoryScreen extends AbstractContainerScreen<EndlessInven
     }
     @Override
     public PageManager getPageManager() {
-        return (PageManager) menu;
+        return menu;
     }
 
     @Override

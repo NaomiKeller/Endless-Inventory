@@ -23,9 +23,9 @@ public interface PageMetaDataManager {
 
     void switchPageWithIndex(int index);
 
-    int getRowCount();
+    int rows();
 
-    int getColumnCount();
+    int columns();
 
     int getItemSize();
 
@@ -41,7 +41,9 @@ public interface PageMetaDataManager {
 
     boolean isSortReversed();
 
-    void switchSortReversed();
+    default void switchSortReversed(){
+        setSortReversed(!isSortReversed());
+    }
 
     void setSortReversed(boolean reversed);
 
@@ -65,7 +67,7 @@ public interface PageMetaDataManager {
     }
 
     default PageData getPageData(){
-        return new PageData(getDisplayingPageId(), getRowCount(),getColumnCount(),sortType(),isSortReversed(),searching());
+        return new PageData(getDisplayingPageId(), rows(), columns(),sortType(),isSortReversed(),searching());
     }
 
 }
