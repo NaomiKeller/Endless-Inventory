@@ -1,18 +1,10 @@
 package com.kwwsyk.endinv.common.network.payloads;
 
 import com.kwwsyk.endinv.common.ModRegistries;
-import com.kwwsyk.endinv.common.client.option.IClientConfig;
 import com.kwwsyk.endinv.common.util.SortType;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
-import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.FriendlyByteBuf;
-
-import static com.kwwsyk.endinv.common.ModInfo.getPacketDistributor;
-import static com.kwwsyk.endinv.common.ModRegistries.NbtAttachments;
-import static com.kwwsyk.endinv.common.client.ClientModInfo.getClientConfig;
 
 /**Synced endless inventory config data across server player (attached) data and
  *  client ClientConfig of player.
@@ -46,63 +38,17 @@ public record SyncedConfig(PageData pageData,boolean attaching,boolean autoPicki
      * Used when player is not viewing EndInv.
      * e.g. player joined world or player opened menu screen with EndInv attaching allowed.
      */
-    public static void readAndSyncClientConfigToServer(boolean ofMenu){
-        if(Minecraft.getInstance().player != null){
-            SyncedConfig config = readClientConfig(ofMenu);
-            updateSyncedConfig(config);
-        }
-    }
 
     /**
      * Used when player changed page param in client page.
      * @param config new config
      */
-    public static void updateSyncedConfig(SyncedConfig config){
-        IClientConfig clientConfig = getClientConfig();
-        LocalPlayer player;
-        if((player = Minecraft.getInstance().player)!=null){
-            int rows = clientConfig.rows().get();
-            int syncedRows = config.pageData.rows();
-            if(rows==0){
-                rows = syncedRows;
-            }
-            int columns = clientConfig.columns().get();
-            if(columns==0){
-                columns = 9;
-            }
-            if(Minecraft.getInstance().screen instanceof AbstractContainerScreen<?> screen && clientConfig.autoSuitColumn().get()){
-                columns = Math.min(columns,clientConfig.calculateSuitInColumnCount(screen));
-            }
-            SyncedConfig config1 = new SyncedConfig(config.pageData.ofRowChanged(rows).ofColumnChanged(columns), config.attaching, config.autoPicking());
-            NbtAttachments.getSyncedConfig().setTo(player,config1);
-            getPacketDistributor().sendToServer(config1);
-        }
-    }
 
     /**
      * Read client config to update player's config.
      * @param ofMenu if is in {@link com.kwwsyk.endinv.common.menu.EndlessInventoryMenu}
      * @return Updated local player's config.
      */
-    public static SyncedConfig readClientConfig(boolean ofMenu){
-        IClientConfig clientConfig = getClientConfig();
-        LocalPlayer player;
-        if((player=Minecraft.getInstance().player)!=null){
-            int rows = clientConfig.rows().get();
-            if(rows==0){
-                rows = clientConfig.calculateDefaultRowCount(ofMenu);
-            }
-            int columns = clientConfig.columns().get();
-            if(columns==0){
-                columns = 9;
-            }
-            if(Minecraft.getInstance().screen instanceof AbstractContainerScreen<?> screen && clientConfig.autoSuitColumn().get()){
-                columns = Math.min(columns,clientConfig.calculateSuitInColumnCount(screen));
-            }
-            SyncedConfig config = NbtAttachments.getSyncedConfig().getWith(player);
-            return new SyncedConfig(config.pageData.ofRowChanged(rows).ofColumnChanged(columns), clientConfig.attaching().get(), true);
-        }else throw new IllegalStateException("Unable to read client config, as running on server or player is not existing.");
-    }
 
 
     @Override
@@ -113,8 +59,6 @@ public record SyncedConfig(PageData pageData,boolean attaching,boolean autoPicki
     public void handle(ModPacketContext context){
         if(context.player()!=null) {
             ModRegistries.NbtAttachments.getSyncedConfig().setTo(context.player(), this);
-        }else {
-            ModRegistries.NbtAttachments.getSyncedConfig().setTo(Minecraft.getInstance().player, this);
         }
     }
 

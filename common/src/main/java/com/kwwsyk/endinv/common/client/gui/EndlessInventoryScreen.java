@@ -2,7 +2,6 @@ package com.kwwsyk.endinv.common.client.gui;
 
 import com.kwwsyk.endinv.common.client.gui.page.manager.PageManager;
 import com.kwwsyk.endinv.common.menu.EndlessInventoryMenu;
-import com.kwwsyk.endinv.common.network.payloads.SyncedConfig;
 import com.kwwsyk.endinv.common.util.SortType;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.events.GuiEventListener;
@@ -97,7 +96,7 @@ public class EndlessInventoryScreen extends AbstractContainerScreen<EndlessInven
     @Override
     public void switchSortTypeTo(SortType type) {
         menu.sortType = type;
-        SyncedConfig.updateSyncedConfig(getSyncedConfig().getWith(menu.getPlayer()).sortTypeChanged(type));
+        com.kwwsyk.endinv.common.client.ClientSyncedConfig.updateSyncedConfig(getSyncedConfig().getWith(menu.getPlayer()).sortTypeChanged(type));
         menu.getDisplayingPage().release();
         menu.getDisplayingPage().sendChangesToServer();
     }

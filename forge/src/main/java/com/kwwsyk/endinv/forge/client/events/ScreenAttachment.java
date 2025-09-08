@@ -40,7 +40,7 @@ public class ScreenAttachment {
     @SubscribeEvent
     public static void opening(ScreenEvent.Opening event){
         if(event.getScreen() instanceof AbstractContainerScreen<?>)
-            SyncedConfig.readAndSyncClientConfigToServer(false);
+            com.kwwsyk.endinv.common.client.ClientSyncedConfig.readAndSyncClientConfigToServer(false);
     }
 
     @SubscribeEvent
@@ -61,7 +61,7 @@ public class ScreenAttachment {
             SyncedConfig syncedConfig = getSyncedConfig().getWith(player);
             if(!syncedConfig.checkForAttaching()) return;
 
-            SyncedConfig.readAndSyncClientConfigToServer(false);
+            com.kwwsyk.endinv.common.client.ClientSyncedConfig.readAndSyncClientConfigToServer(false);
 
             if(ATTACHMENT_MANAGER==null){
                 ModInfo.getPacketDistributor().sendToServer(new OpenEndInvPayload(false));

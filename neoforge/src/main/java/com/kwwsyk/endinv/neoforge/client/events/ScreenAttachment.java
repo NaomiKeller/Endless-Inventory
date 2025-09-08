@@ -42,7 +42,7 @@ public class ScreenAttachment {
 
     @SubscribeEvent
     public static void opening(ScreenEvent.Opening event){
-        SyncedConfig.readAndSyncClientConfigToServer(false);
+        com.kwwsyk.endinv.common.client.ClientSyncedConfig.readAndSyncClientConfigToServer(false);
     }
 
     @SubscribeEvent

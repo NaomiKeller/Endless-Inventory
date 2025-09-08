@@ -12,7 +12,6 @@ import com.kwwsyk.endinv.common.client.gui.page.ItemPage;
 import com.kwwsyk.endinv.common.client.gui.page.manager.PageManager;
 import com.kwwsyk.endinv.common.client.gui.widget.SortTypeSwitchBox;
 import com.kwwsyk.endinv.common.client.option.TextureMode;
-import com.kwwsyk.endinv.common.network.payloads.SyncedConfig;
 import com.kwwsyk.endinv.common.network.payloads.toServer.CreativeItemModPayload;
 import com.kwwsyk.endinv.common.network.payloads.toServer.QuickMoveToPagePayload;
 import com.kwwsyk.endinv.common.network.payloads.toServer.StarItemPayload;
@@ -147,7 +146,7 @@ public class ScreenFramework {
         this.reverseSortButton = Button.builder(Component.literal("⇅"),
                         btn->{
                             meta.switchSortReversed();
-                            SyncedConfig.updateSyncedConfig(getSyncedConfig().getWith(meta.getPlayer()).ofReverseSort());
+                            com.kwwsyk.endinv.common.client.ClientSyncedConfig.updateSyncedConfig(getSyncedConfig().getWith(meta.getPlayer()).ofReverseSort());
                             meta.getDisplayingPage().sendChangesToServer();
                         }
                 )
@@ -427,7 +426,7 @@ public class ScreenFramework {
     public void refreshSearchResults(){
         String searching = searchBox.getValue();
         meta.setSearching(searching);
-        SyncedConfig.updateSyncedConfig(getSyncedConfig().getWith(meta.getPlayer()).searchingChanged(searching));
+        com.kwwsyk.endinv.common.client.ClientSyncedConfig.updateSyncedConfig(getSyncedConfig().getWith(meta.getPlayer()).searchingChanged(searching));
         meta.getDisplayingPage().release();
         meta.getDisplayingPage().sendChangesToServer();
     }

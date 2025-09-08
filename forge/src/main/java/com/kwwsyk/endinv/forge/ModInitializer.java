@@ -111,7 +111,7 @@ public class ModInitializer extends AbstractModInitializer {
 
     @Override
     protected Supplier<MenuType<EndlessInventoryMenu>> createEndInvMenuType() {
-        return ()-> new MenuType<>(EndlessInventoryMenu::createClient, FeatureFlags.DEFAULT_FLAGS);
+        return () -> new MenuType<>(EndlessInventoryMenu::createClient, FeatureFlags.DEFAULT_FLAGS);
     }
 
     @Override

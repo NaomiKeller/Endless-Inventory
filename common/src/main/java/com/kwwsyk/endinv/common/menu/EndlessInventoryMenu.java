@@ -5,6 +5,7 @@ import com.kwwsyk.endinv.common.ModInfo;
 import com.kwwsyk.endinv.common.ServerLevelEndInv;
 import com.kwwsyk.endinv.common.SourceInventory;
 import com.kwwsyk.endinv.common.client.CachedSrcInv;
+import com.kwwsyk.endinv.common.client.ClientSyncedConfig;
 import com.kwwsyk.endinv.common.client.gui.page.DisplayPage;
 import com.kwwsyk.endinv.common.client.gui.page.ItemPage;
 import com.kwwsyk.endinv.common.client.gui.page.manager.PageManager;
@@ -16,7 +17,6 @@ import com.kwwsyk.endinv.common.util.SortType;
 import net.minecraft.CrashReport;
 import net.minecraft.CrashReportCategory;
 import net.minecraft.ReportedException;
-import net.minecraft.client.Minecraft;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.SlotAccess;
@@ -66,11 +66,9 @@ public class EndlessInventoryMenu extends AbstractContainerMenu implements PageM
     //Client constructor
     public static EndlessInventoryMenu createClient(int id, Inventory playerInv){
         var ret = new EndlessInventoryMenu(id,playerInv,null);
-        if (Minecraft.getInstance().player != null) {
-            SyncedConfig config = NbtAttachments.getSyncedConfig().getWith(Minecraft.getInstance().player);
-            ret.init(config.pageData());
-            ret.addStandardInventorySlots(playerInv, 8, 18 * ret.rows() + 18 + 13);
-        }
+        SyncedConfig config = NbtAttachments.getSyncedConfig().getWith(playerInv.player);
+        ret.init(config.pageData());
+        ret.addStandardInventorySlots(playerInv, 8, 18 * ret.rows() + 18 + 13);
 
         return ret;
     }
@@ -136,7 +134,7 @@ public class EndlessInventoryMenu extends AbstractContainerMenu implements PageM
         init(pageData.rows(),pageData.sortType(),pageData.search(),pageData.pageRegKey());//4: reserved rows for inventory.
     }
 
-    private void addStandardInventorySlots(Inventory playerInventory, int x, int y){
+    public void addStandardInventorySlots(Inventory playerInventory, int x, int y){
         for (int l = 0; l < 3; l++) {
             for (int j1 = 0; j1 < 9; j1++) {
                 this.addSlot(new Slot(playerInventory, j1 + l * 9 + 9, x + j1 * 18, y + l * 18 ));
@@ -156,7 +154,7 @@ public class EndlessInventoryMenu extends AbstractContainerMenu implements PageM
     public void switchPageWithIndex(int index){
         this.displayingPageIndex = index;
         this.displayingPage = this.pages.get(index);
-        SyncedConfig.updateSyncedConfig(NbtAttachments.getSyncedConfig().getWith(player).pageKeyChanged(displayingPage.id));
+        ClientSyncedConfig.updateSyncedConfig(NbtAttachments.getSyncedConfig().getWith(player).pageKeyChanged(displayingPage.id));
         this.displayingPage.refreshContents();
     }
 

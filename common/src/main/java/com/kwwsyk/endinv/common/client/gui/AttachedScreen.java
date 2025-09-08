@@ -6,7 +6,6 @@ import com.kwwsyk.endinv.common.client.gui.page.DisplayPage;
 import com.kwwsyk.endinv.common.client.gui.page.manager.PageManager;
 import com.kwwsyk.endinv.common.menu.page.pageManager.PageQuickMoveHandler;
 import com.kwwsyk.endinv.common.network.payloads.PageData;
-import com.kwwsyk.endinv.common.network.payloads.SyncedConfig;
 import com.kwwsyk.endinv.common.util.SortType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -58,7 +57,7 @@ public class AttachedScreen<T extends AbstractContainerMenu> implements SortType
         @Override
         public void switchPageWithIndex(int index) {
             displayingPage = pages.get(index);
-            SyncedConfig.updateSyncedConfig(getSyncedConfig().getWith(player).pageKeyChanged(displayingPage.id));
+            com.kwwsyk.endinv.common.client.ClientSyncedConfig.updateSyncedConfig(getSyncedConfig().getWith(player).pageKeyChanged(displayingPage.id));
             displayingPage.refreshContents();
         }
 
@@ -247,7 +246,7 @@ public class AttachedScreen<T extends AbstractContainerMenu> implements SortType
     @Override
     public void switchSortTypeTo(SortType type) {
         this.sortType = type;
-        SyncedConfig.updateSyncedConfig(getSyncedConfig().computeIfAbsent(player).sortTypeChanged(type));
+        com.kwwsyk.endinv.common.client.ClientSyncedConfig.updateSyncedConfig(getSyncedConfig().getWith(player).sortTypeChanged(type));
         pageMetadata.getDisplayingPage().release();
         pageMetadata.getDisplayingPage().sendChangesToServer();
     }
