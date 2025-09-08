@@ -68,7 +68,7 @@ public abstract class DisplayPage{
      */
     public DisplayPage(PageType pageType,PageMetaDataManager metaDataManager){
         this.mc = Minecraft.getInstance();
-        this.meta = (PageManager) metaDataManager;
+        this.meta = (com.kwwsyk.endinv.common.client.gui.page.manager.PageManager) metaDataManager;
         this.menu = metaDataManager.getMenu();
         this.srcInv = CachedSrcInv.INSTANCE;
         this.pageType = pageType;

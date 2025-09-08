@@ -12,7 +12,6 @@ import java.util.Objects;
 
 public interface PageManager extends PageMetaDataManager {
 
-
     List<DisplayPage> getPages();
 
     DisplayPage getDisplayingPage();

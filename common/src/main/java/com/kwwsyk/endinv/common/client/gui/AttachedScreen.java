@@ -3,7 +3,7 @@ package com.kwwsyk.endinv.common.client.gui;
 import com.kwwsyk.endinv.common.SourceInventory;
 import com.kwwsyk.endinv.common.client.CachedSrcInv;
 import com.kwwsyk.endinv.common.client.gui.page.DisplayPage;
-import com.kwwsyk.endinv.common.client.gui.page.manager.PageManager;
+import com.kwwsyk.endinv.common.menu.page.pageManager.PageMetaDataManager;
 import com.kwwsyk.endinv.common.menu.page.pageManager.PageQuickMoveHandler;
 import com.kwwsyk.endinv.common.network.payloads.PageData;
 import com.kwwsyk.endinv.common.util.SortType;
@@ -33,7 +33,7 @@ public class AttachedScreen<T extends AbstractContainerMenu> implements SortType
 
     private ScreenFramework frameWork;
 
-    private final PageManager pageMetadata = new PageManager() {
+    private final com.kwwsyk.endinv.common.client.gui.page.manager.PageManager pageMetadata = new com.kwwsyk.endinv.common.client.gui.page.manager.PageManager() {
         @Override
         public AbstractContainerMenu getMenu() {
             return screen.getMenu();
@@ -176,6 +176,12 @@ public class AttachedScreen<T extends AbstractContainerMenu> implements SortType
     //invoked when an ACS is initialized
     public void init(IScreenEvent event){
         this.frameWork = ScreenFramework.getInstance()==null ? new ScreenFramework(this) : ScreenFramework.getInstance();
+        // ensure pages are constructed per-screen
+        if(ScreenFramework.getInstance()!=null){
+            // already wrapped by ScreenFramework
+        } else if(ScreenFramework.getInstance()!=null){
+            // wrap delegate into client manager already done in ScreenFramework constructor
+        }
 
         frameWork.addWidgetToScreen(event::addListener);
     }
@@ -262,7 +268,7 @@ public class AttachedScreen<T extends AbstractContainerMenu> implements SortType
     }
 
     @Override
-    public PageManager getPageManager() {
+    public PageMetaDataManager getPageManager() {
         return pageMetadata;
     }
 

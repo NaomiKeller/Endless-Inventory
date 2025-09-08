@@ -1,7 +1,6 @@
 package com.kwwsyk.endinv.common.menu.page.pageManager;
 
 import com.kwwsyk.endinv.common.SourceInventory;
-import com.kwwsyk.endinv.common.client.gui.page.manager.PageManager;
 import com.kwwsyk.endinv.common.menu.page.PageType;
 import com.kwwsyk.endinv.common.network.payloads.PageData;
 import com.kwwsyk.endinv.common.util.SortType;
@@ -11,7 +10,7 @@ import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 
 /**
- * if {@code Dist.isClient}, pageMetaDataManagers shall be able to cast to {@link PageManager}
+ *
  */
 public interface PageMetaDataManager {
 

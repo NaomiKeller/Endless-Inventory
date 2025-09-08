@@ -9,6 +9,7 @@ import com.kwwsyk.endinv.common.client.gui.bg.ScreenRectangleWidgetParam;
 import com.kwwsyk.endinv.common.client.gui.bg.Transparent;
 import com.kwwsyk.endinv.common.client.gui.page.DisplayPage;
 import com.kwwsyk.endinv.common.client.gui.page.ItemPage;
+import com.kwwsyk.endinv.common.client.gui.page.manager.ClientPageManager;
 import com.kwwsyk.endinv.common.client.gui.page.manager.PageManager;
 import com.kwwsyk.endinv.common.client.gui.widget.SortTypeSwitchBox;
 import com.kwwsyk.endinv.common.client.option.TextureMode;
@@ -76,7 +77,8 @@ public class ScreenFramework {
     public ScreenFramework(EndlessInventoryScreen screen){
         this.screen = screen;
         this.mc = Minecraft.getInstance();
-        this.meta = screen.getPageManager();
+        var delegate = screen.getPageManager();
+        this.meta = delegate instanceof PageManager pm ? pm : new ClientPageManager(delegate);
         this.menu = screen.getMenu();
         this.leftPos = screen.getGuiLeft();
         this.topPos = screen.getGuiTop();
@@ -104,7 +106,9 @@ public class ScreenFramework {
     public ScreenFramework(AttachedScreen<?> attachedScreen){
         this.screen = attachedScreen.screen;
         this.mc = Minecraft.getInstance();
-        this.meta = attachedScreen.getPageManager();
+        var delegate = attachedScreen.getPageManager();
+
+        this.meta = delegate instanceof PageManager pm ? pm : new ClientPageManager(delegate);
         this.menu = meta.getMenu();
 
         this.leftPos = 20;

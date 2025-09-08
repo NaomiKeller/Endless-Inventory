@@ -2,7 +2,10 @@
   "package": "com.kwwsyk.endinv.forge.mixin",
   "compatibilityLevel": "JAVA_17",
   "mixins": [
-    "RecipeBookComponentMixin",
+
     "ServerPlaceRecipeMixin"
+  ],
+  "client": [
+    "RecipeBookComponentMixin"
   ]
 }

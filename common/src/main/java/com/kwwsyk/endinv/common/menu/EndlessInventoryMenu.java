@@ -8,9 +8,8 @@ import com.kwwsyk.endinv.common.client.CachedSrcInv;
 import com.kwwsyk.endinv.common.client.ClientSyncedConfig;
 import com.kwwsyk.endinv.common.client.gui.page.DisplayPage;
 import com.kwwsyk.endinv.common.client.gui.page.ItemPage;
-import com.kwwsyk.endinv.common.client.gui.page.manager.PageManager;
 import com.kwwsyk.endinv.common.menu.page.PageType;
-import com.kwwsyk.endinv.common.menu.page.PageTypeRegistry;
+import com.kwwsyk.endinv.common.menu.page.pageManager.PageMetaDataManager;
 import com.kwwsyk.endinv.common.network.payloads.PageData;
 import com.kwwsyk.endinv.common.network.payloads.SyncedConfig;
 import com.kwwsyk.endinv.common.util.SortType;
@@ -35,7 +34,7 @@ import java.util.Set;
 import static com.kwwsyk.endinv.common.ModRegistries.*;
 import static com.kwwsyk.endinv.common.ServerLevelEndInv.getEndInvForPlayer;
 
-public class EndlessInventoryMenu extends AbstractContainerMenu implements PageManager {
+public class EndlessInventoryMenu extends AbstractContainerMenu implements PageMetaDataManager {
 
 
     private final SourceInventory sourceInventory;
@@ -54,10 +53,10 @@ public class EndlessInventoryMenu extends AbstractContainerMenu implements PageM
     private final DataSlot itemSize = DataSlot.standalone();
     private final DataSlot maxStackSize = DataSlot.standalone();
     private final DataSlot infinityMode = DataSlot.standalone();
-    private DisplayPage displayingPage;
+    private DisplayPage displayingPage; // client-only
     //client for page switch
     private int displayingPageIndex;
-    public final List<DisplayPage> pages;
+    public final List<DisplayPage> pages = List.of();
     public SortType sortType;
     public String searching;
     private boolean reverseSort;
@@ -99,7 +98,7 @@ public class EndlessInventoryMenu extends AbstractContainerMenu implements PageM
         super(Menus.getEndInvMenuType(),id);
         this.player = playerInv.player;
         this.sourceInventory = endlessInventory!=null ? endlessInventory : CachedSrcInv.INSTANCE;
-        this.pages = buildPages();
+        // pages are client-side; not built on server
         // add crafting/result slots and player inventory slots if player inventory provided
         int craftX = 8;
         int craftY = 18 * this.rows() + 18; // placed between page and player inventory
@@ -147,11 +146,12 @@ public class EndlessInventoryMenu extends AbstractContainerMenu implements PageM
     }
 
     public List<DisplayPage> buildPages(){
-        return PageTypeRegistry.getDisplayPages().stream().map(type -> type.buildPage(this)).toList();
+        return List.of();
     }
 
     //supposed to be the only method to change displaying page and index value; to sync.
     public void switchPageWithIndex(int index){
+        if(this.pages == null || this.pages.isEmpty() || index < 0 || index >= this.pages.size()) return;
         this.displayingPageIndex = index;
         this.displayingPage = this.pages.get(index);
         ClientSyncedConfig.updateSyncedConfig(NbtAttachments.getSyncedConfig().getWith(player).pageKeyChanged(displayingPage.id));

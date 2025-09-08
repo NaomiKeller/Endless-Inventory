@@ -1,6 +1,5 @@
 package com.kwwsyk.endinv.common.client.gui;
 
-import com.kwwsyk.endinv.common.client.gui.page.manager.PageManager;
 import com.kwwsyk.endinv.common.menu.EndlessInventoryMenu;
 import com.kwwsyk.endinv.common.util.SortType;
 import net.minecraft.client.gui.GuiGraphics;
@@ -31,7 +30,8 @@ public class EndlessInventoryScreen extends AbstractContainerScreen<EndlessInven
     public void init(){
         this.leftPos = (this.width - this.imageWidth) / 2;
         this.topPos = (this.height - this.imageHeight) / 2;
-        this.frameWork = new ScreenFramework(this);
+        var delegate = this.getPageManager();
+        this.frameWork = ScreenFramework.getInstance()!=null ? ScreenFramework.getInstance() : new ScreenFramework(this);
 
         frameWork.addWidgetToScreen(this::addRenderableWidget);
     }
@@ -111,7 +111,7 @@ public class EndlessInventoryScreen extends AbstractContainerScreen<EndlessInven
         return isHoveringOnSortBox;
     }
     @Override
-    public PageManager getPageManager() {
+    public com.kwwsyk.endinv.common.menu.page.pageManager.PageMetaDataManager getPageManager() {
         return menu;
     }
 
