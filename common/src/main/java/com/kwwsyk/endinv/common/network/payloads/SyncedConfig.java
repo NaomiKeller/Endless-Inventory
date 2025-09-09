@@ -34,23 +34,6 @@ public record SyncedConfig(PageData pageData,boolean attaching,boolean autoPicki
                 o.readBoolean());
     }
 
-    /**
-     * Used when player is not viewing EndInv.
-     * e.g. player joined world or player opened menu screen with EndInv attaching allowed.
-     */
-
-    /**
-     * Used when player changed page param in client page.
-     * @param config new config
-     */
-
-    /**
-     * Read client config to update player's config.
-     * @param ofMenu if is in {@link com.kwwsyk.endinv.common.menu.EndlessInventoryMenu}
-     * @return Updated local player's config.
-     */
-
-
     @Override
     public String id() {
         return "endinv_settings";
