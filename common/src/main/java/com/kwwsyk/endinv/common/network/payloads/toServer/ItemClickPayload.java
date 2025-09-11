@@ -6,6 +6,7 @@ import com.kwwsyk.endinv.common.client.gui.page.ItemPage;
 import com.kwwsyk.endinv.common.menu.page.pageManager.PageQuickMoveHandler;
 import com.kwwsyk.endinv.common.network.payloads.ModPacketContext;
 import com.kwwsyk.endinv.common.network.payloads.ModPacketPayload;
+import com.mojang.logging.LogUtils;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -13,6 +14,7 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
+import org.slf4j.Logger;
 
 /**Sent when
  * slot/item clicked in {@link ItemPage}.
@@ -21,6 +23,8 @@ import net.minecraft.world.item.ItemStack;
  * @param clickType
  */
 public record ItemClickPayload(ItemStack stack, int button, ClickType clickType) implements ModPacketPayload {
+
+    private static final Logger LOGGER = LogUtils.getLogger();
 
 
 
@@ -44,8 +48,12 @@ public record ItemClickPayload(ItemStack stack, int button, ClickType clickType)
         Player player = context.player();
         AbstractContainerMenu menu = player.containerMenu;
         ItemStack carried = menu.getCarried();
+        LOGGER.info("ItemClickPayload.handle: player={} clickType={} button={} carriedEmpty={} stack={}", player.getName().getString(), clickType, button, carried.isEmpty(), stack);
         var opt = ServerLevelEndInv.getEndInvForPlayer(player);
-        if(opt.isEmpty()) return;
+        if(opt.isEmpty()) {
+            LOGGER.warn("ItemClickPayload.handle: no EndInv for player={}", player.getName().getString());
+            return;
+        }
         EndlessInventory endInv = opt.get();
 
         switch (clickType){
@@ -57,7 +65,9 @@ public record ItemClickPayload(ItemStack stack, int button, ClickType clickType)
                 } else {
                     int count = Math.min(stack.getCount(),stack.getMaxStackSize());
                     int takenCount = button==0 ? count : (count + 1) / 2;
-                    menu.setCarried(endInv.takeItem(stack,takenCount));
+                    ItemStack taken = endInv.takeItem(stack,takenCount);
+                    LOGGER.info("ItemClickPayload.PICKUP: taken={} from stack={}", taken, stack);
+                    menu.setCarried(taken);
                     if(!stack.isEmpty()) endInv.setChanged();
                 }
             }
@@ -66,19 +76,24 @@ public record ItemClickPayload(ItemStack stack, int button, ClickType clickType)
                 ItemStack inventoryItem = inventory.getItem(button);
                 boolean a = !inventoryItem.isEmpty();
                 boolean b = !stack.isEmpty();
+                LOGGER.info("ItemClickPayload.SWAP: inventoryItem={} clickedStack={}", inventoryItem, stack);
                 if( a && !b ){
                     ItemStack remain = endInv.addItem(inventoryItem);
                     inventory.setItem(button, remain);
+                    LOGGER.info("ItemClickPayload.SWAP: added inventoryItem, remain={}", remain);
                 }
                 if( !a && b ){
                     ItemStack swapping = endInv.takeItem(stack); //take most
                     inventory.setItem(button,swapping);
+                    LOGGER.info("ItemClickPayload.SWAP: took from endInv swapping={}", swapping);
                 }
                 if( a && b ){
                     ItemStack remain =  endInv.addItem(inventoryItem);
+                    LOGGER.info("ItemClickPayload.SWAP: both non-empty, remainFromAdd={}", remain);
                     if(remain.isEmpty()) {
                         ItemStack swapping =  endInv.takeItem(stack); //take most
                         inventory.setItem(button, swapping);
+                        LOGGER.info("ItemClickPayload.SWAP: swap success swapping={}", swapping);
                     }else {
                         inventory.setItem(button,remain);
                     }
@@ -87,6 +102,7 @@ public record ItemClickPayload(ItemStack stack, int button, ClickType clickType)
             }
             case THROW -> {
                 ItemStack thrown = endInv.takeItem(stack);
+                LOGGER.info("ItemClickPayload.THROW: thrown={}", thrown);
                 player.drop(thrown,true);
                 endInv.setChanged();
             }
@@ -98,6 +114,7 @@ public record ItemClickPayload(ItemStack stack, int button, ClickType clickType)
                     ItemStack scanningItem =scanning.getItem();
                     if(ItemStack.isSameItemSameTags(carried,scanningItem)){
                         ItemStack taken = scanning.safeTake(scanningItem.getCount(), scanningItem.getCount(), player);
+                        LOGGER.info("ItemClickPayload.PICKUP_ALL: took {} from slot index={}", taken, index);
                         ItemStack remain = endInv.addItem(taken);
                         if(!remain.isEmpty()) scanning.set(remain);
                         endInv.setChanged();
@@ -107,11 +124,14 @@ public record ItemClickPayload(ItemStack stack, int button, ClickType clickType)
             case CLONE -> {
                 if(player.isCreative() && carried.isEmpty()){
                     menu.setCarried(stack.copyWithCount(stack.getMaxStackSize()));
+                    LOGGER.info("ItemClickPayload.CLONE: cloned stack={}", stack);
                 }
             }
             case QUICK_MOVE -> {
                 ItemStack taken = endInv.takeItem(stack);
+                LOGGER.info("ItemClickPayload.QUICK_MOVE: taken={}", taken);
                 ItemStack remain = new PageQuickMoveHandler(menu).quickMoveFromPage(taken);
+                LOGGER.info("ItemClickPayload.QUICK_MOVE: remain after quickMove={}", remain);
                 endInv.addItem(remain);
                 endInv.setChanged();
             }

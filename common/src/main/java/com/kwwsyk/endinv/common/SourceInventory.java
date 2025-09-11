@@ -1,10 +1,12 @@
 package com.kwwsyk.endinv.common;
 
 import com.kwwsyk.endinv.common.util.*;
+import com.mojang.logging.LogUtils;
 import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
 import net.minecraft.Util;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import org.slf4j.Logger;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -13,6 +15,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public abstract class SourceInventory {
+
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     //item container
     protected Map<ItemKey, ItemState> itemMap;
@@ -134,9 +138,14 @@ public abstract class SourceInventory {
         if(stack.isEmpty()) return ItemStack.EMPTY;
         ItemKey key = ItemKey.asKey(stack);
         ItemState state = itemMap.get(key);
-        if (state == null) return ItemStack.EMPTY;
+        if (state == null) {
+            LOGGER.info("takeItem: no state for {}", key);
+            return ItemStack.EMPTY;
+        }
+        LOGGER.info("takeItem: key={} availableCount={} requestedCount={}", key, state.count(), count);
         //if infinity
         if(state.count() >= maxStackSize && infinityMode){
+            LOGGER.info("takeItem: infinity mode for {} returning {}", key, count);
             setChanged();
             return stack.copyWithCount(count);
         }
@@ -146,8 +155,10 @@ public abstract class SourceInventory {
         if (taken == state.count()) {
             itemMap.remove(key);
             updateLastModTime();
+            LOGGER.info("takeItem: removed all of {} (taken={})", key, taken);
         } else {
             itemMap.put(key, new ItemState(state.count() - taken, updateLastModTime()));
+            LOGGER.info("takeItem: taken={} remaining={} for {}", taken, state.count()-taken, key);
         }
         setChanged();
         return result;

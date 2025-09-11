@@ -9,6 +9,7 @@ import com.kwwsyk.endinv.common.network.payloads.toServer.CreativeItemModPayload
 import com.kwwsyk.endinv.common.network.payloads.toServer.ItemClickPayload;
 import com.kwwsyk.endinv.common.network.payloads.toServer.ItemPageContext;
 import com.kwwsyk.endinv.common.network.payloads.toServer.StarItemPayload;
+import com.mojang.logging.LogUtils;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -23,6 +24,7 @@ import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
 
 import java.util.List;
 
@@ -33,6 +35,8 @@ import static com.kwwsyk.endinv.common.ModRegistries.NbtAttachments.getSyncedCon
  * DisplayPage that has a list of ItemStack, and items are linked to EndInv.
  */
 public abstract class ItemPage extends DisplayPage {
+
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     protected NonNullList<ItemStack> items;
 

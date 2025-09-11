@@ -11,6 +11,8 @@ mixin {
     add(sourceSets.main, "${mod_id}.refmap.json")
 
     config("${mod_id}.mixins.json")
+
+
 }
 
 configurations {
@@ -88,6 +90,15 @@ repositories {
         name = "ModMaven"
         url = "https://modmaven.dev"
     }
+
+    maven {
+        // Add curse maven to repositories
+        name = "Curse Maven"
+        url = "https://www.cursemaven.com"
+        content {
+            includeGroup "curse.maven"
+        }
+    }
 }
 
 dependencies {
@@ -99,6 +110,12 @@ dependencies {
     commonResources project(path: ':common', configuration: 'commonResources')
 
     annotationProcessor("org.spongepowered:mixin:0.8.7:processor")
+
+    //modpack
+    //def f = files('libs/tacz-1.20.1-1.1.4-hotfix-all.jar')
+    //runtimeOnly f
+
+    //runtimeOnly("curse.maven:timeless-and-classics-zero-1028108:6632240-sources-6633203")
 }
 
 dependencies {

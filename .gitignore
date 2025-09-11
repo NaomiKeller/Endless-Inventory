@@ -24,3 +24,8 @@ runs
 run-data
 
 repo
+/forge/runModpack/
+/forge/runModpack/config/
+/forge/runModpack/mods/
+/forge/runModpack/saves/
+/forge/libs/
