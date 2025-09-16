@@ -137,15 +137,17 @@ public abstract class SourceInventory {
     public ItemStack takeItem(ItemStack stack, int count){
         if(stack.isEmpty()) return ItemStack.EMPTY;
         ItemKey key = ItemKey.asKey(stack);
+        LOGGER.debug("EI:takeItem:stack->itemKay, stack={},itemKay = {}",stack,key);
         ItemState state = itemMap.get(key);
         if (state == null) {
-            LOGGER.info("takeItem: no state for {}", key);
+            LOGGER.warn("EI:takeItem: no state for {}", key);
+            LOGGER.debug("EI:Current Source Inventory: Class:{},UUID:{},Items:{}",this.getClass(),uuid,getItemsAsList());
             return ItemStack.EMPTY;
         }
-        LOGGER.info("takeItem: key={} availableCount={} requestedCount={}", key, state.count(), count);
+        LOGGER.info("EI:takeItem: key={} availableCount={} requestedCount={}", key, state.count(), count);
         //if infinity
         if(state.count() >= maxStackSize && infinityMode){
-            LOGGER.info("takeItem: infinity mode for {} returning {}", key, count);
+            LOGGER.info("EI:takeItem: infinity mode for {} returning {}", key, count);
             setChanged();
             return stack.copyWithCount(count);
         }
@@ -155,10 +157,10 @@ public abstract class SourceInventory {
         if (taken == state.count()) {
             itemMap.remove(key);
             updateLastModTime();
-            LOGGER.info("takeItem: removed all of {} (taken={})", key, taken);
+            LOGGER.info("EI:takeItem: removed all of {} (taken={})", key, taken);
         } else {
             itemMap.put(key, new ItemState(state.count() - taken, updateLastModTime()));
-            LOGGER.info("takeItem: taken={} remaining={} for {}", taken, state.count()-taken, key);
+            LOGGER.info("EI:takeItem: taken={} remaining={} for {}", taken, state.count()-taken, key);
         }
         setChanged();
         return result;

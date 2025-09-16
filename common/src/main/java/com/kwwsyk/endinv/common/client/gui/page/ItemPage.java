@@ -279,6 +279,8 @@ public abstract class ItemPage extends DisplayPage {
                 default -> {
                 }
             }
+            LOGGER.info("EI:sending:ItemClickPayload: player={} clickType={} button={} stack={}"
+                    ,meta.getPlayer(),clickType,button, clicked);
             ModInfo.getPacketDistributor().sendToServer(new ItemClickPayload(
                     clicked.getCount() > 64 ? clicked.copyWithCount(64) : clicked.copy(),
                     button,clickType));
