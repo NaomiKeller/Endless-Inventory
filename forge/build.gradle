@@ -1,7 +1,20 @@
+buildscript {
+    repositories {
+        // These repositories are only for Gradle plugins, put any other repositories in the repository block further below
+        maven { url = 'https://repo.spongepowered.org/repository/maven-public/' }
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'org.spongepowered:mixingradle:0.7-SNAPSHOT'
+    }
+}
+
 plugins {
-    id 'net.neoforged.moddev.legacyforge' version '2.0.77'
+    id 'net.minecraftforge.gradle' version '6.+'
     id 'idea'
 }
+
+apply plugin: 'org.spongepowered.mixin'
 
 base {
     archivesName = "${mod_name}-${minecraft_version}-${mod_version}-${project.name}"
@@ -13,64 +26,34 @@ mixin {
     config("${mod_id}.mixins.json")
 }
 
-configurations {
-    commonJava{
-        canBeResolved = true
-    }
-    commonResources{
-        canBeResolved = true
-    }
-}
+minecraft {
+    mappings channel: "official", version: "1.20.1"
 
-legacyForge {
-    version = "${minecraft_version}-${forge_version}"
-
-    validateAccessTransformers = false
-
-    def at = project(':common').file('src/main/resources/META-INF/accesstransformer.cfg')
-    if (at.exists()) {
-        accessTransformers.from(at)
-    }
-    parchment {
-        minecraftVersion = parchment_minecraft
-        mappingsVersion = parchment_version
-    }
     runs {
         client {
-            client()
-        }
-        modPack{
-            client()
-            programArguments.addAll '--username','nep'
-            gameDirectory = file('runModpack')
+
         }
         data {
-            data()
-            programArguments.addAll '--mod', mod_id as String, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
-        }
+            workingDirectory project.file('run-data')
+
+            // Specify the modid for data generation, where to output the resulting resource, and where to look for existing resources.
+            args '--mod', mod_id, '--all', '--output', file('src/generated/resources/'), '--existing', file('src/main/resources/')        }
         server {
-            server()
-
 
         }
-        /*configureEach {
-            jvmArg '--add-opens=java.base/java.lang.ref=ALL-UNNAMED'
-        }*/
-    }
-
-    mods {
-        "${mod_id}" {
-            sourceSet sourceSets.main
+        configureEach {
+             mods {
+                "${mod_id}" {
+                    source(sourceSets.main)
+                    source(project(":common").sourceSets.main)
+                }
+                jvmArg '--add-opens=java.base/java.lang.ref=ALL-UNNAMED'
+            }
         }
     }
 }
 
 sourceSets.main.resources.srcDir 'src/generated/resources'
-
-tasks.named('compileJava', JavaCompile) {
-    dependsOn(configurations.commonJava)
-    source(configurations.commonJava)
-}
 
 repositories {
     maven {
@@ -88,7 +71,6 @@ repositories {
         name = "ModMaven"
         url = "https://modmaven.dev"
     }
-
     maven {
         // Add curse maven to repositories
         name = "Curse Maven"
@@ -104,31 +86,19 @@ dependencies {
 
     implementation 'org.jetbrains:annotations:24.0.1'
 
-    commonJava project(path: ':common', configuration: 'commonJava')
-    commonResources project(path: ':common', configuration: 'commonResources')
-
     annotationProcessor("org.spongepowered:mixin:0.8.7:processor")
 
-    //modpack
-    //def f = files('libs/tacz-1.20.1-1.1.4-hotfix-all.jar')
-    //runtimeOnly f
+    minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
 
-    //runtimeOnly("curse.maven:timeless-and-classics-zero-1028108:6632240-sources-6633203")
-}
-
-dependencies {
     /* other minecraft dependencies are here */
     compileOnly("mezz.jei:jei-${minecraft_version}-forge-api:${jei_version}")
-    // compile against the JEI API but do not include it at runtime
-    modCompileOnly("mezz.jei:jei-${minecraft_version}-forge-api:${jei_version}")
+
     // at runtime, use the full JEI jar for Forge
-    modRuntimeOnly("mezz.jei:jei-${minecraft_version}-forge:${jei_version}")
+    runtimeOnly(fg.deobf("mezz.jei:jei-${minecraft_version}-forge:${jei_version}"))
+
+    //implementation fg.deobf("curse.maven:timeless-and-classics-zero-1028108:6632240-sources-6633203")
 }
 
-processResources {
-    dependsOn(configurations.commonResources)
-    from(configurations.commonResources)
-}
 processResources {
     var expandProps = [
             'version'                      : mod_version,
@@ -142,8 +112,8 @@ processResources {
             'mod_id'                       : mod_id,
             'license'                      : mod_license,
             'description'                  : mod_description,
-            "forge_version"                     :        forge_version,
-            "forge_loader_version_range": forge_loader_version_range,
+            "forge_version"                :        forge_version,
+            "forge_loader_version_range"   : forge_loader_version_range,
             'credits'                      : credits,
             'java_version'                 : java_version
     ]
@@ -169,4 +139,8 @@ jar {
     manifest.attributes([
             "MixinConfigs": "${mod_id}.mixins.json"
     ])
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8' // Use the UTF-8 charset for Java compilation
 }
