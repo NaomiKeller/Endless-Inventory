@@ -106,7 +106,7 @@ public abstract class ItemPage extends DisplayPage {
         }
         for(int i=0; i<this.length; ++i){
             if(i<stacks.size() && stacks.get(i) != null) {
-                this.items.set(i, stacks.get(i)).copy();
+                this.items.set(i, stacks.get(i).copy());
             }else {
                 this.items.set(i,ItemStack.EMPTY);
             }

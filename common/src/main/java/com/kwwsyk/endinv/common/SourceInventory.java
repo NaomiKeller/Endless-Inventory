@@ -4,6 +4,7 @@ import com.kwwsyk.endinv.common.util.*;
 import com.mojang.logging.LogUtils;
 import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
 import net.minecraft.Util;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import org.slf4j.Logger;
@@ -13,6 +14,8 @@ import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static com.kwwsyk.endinv.common.ModInfo.getServerConfig;
 
 public abstract class SourceInventory {
 
@@ -142,7 +145,12 @@ public abstract class SourceInventory {
         if (state == null) {
             LOGGER.warn("EI:takeItem: no state for {}", key);
             LOGGER.debug("EI:Current Source Inventory: Class:{},UUID:{},Items:{}",this.getClass(),uuid,getItemsAsList());
-            return ItemStack.EMPTY;
+            if(getServerConfig().doConvertEmptyTag().get() && stack.getTag()!=null){
+                key = new ItemKey(key.item(),null);
+                if((state=itemMap.get(key))!=null){
+                    LOGGER.info("EI:takeItem: converted ItemKey with empty tag {} to null tag",ItemKey.asKey(stack));
+                }else return ItemStack.EMPTY;
+            }else return ItemStack.EMPTY;
         }
         LOGGER.info("EI:takeItem: key={} availableCount={} requestedCount={}", key, state.count(), count);
         //if infinity
@@ -177,6 +185,9 @@ public abstract class SourceInventory {
     public ItemStack addItem(ItemStack itemStack){
         if(itemStack.isEmpty()) return ItemStack.EMPTY;
         ItemKey key = ItemKey.asKey(itemStack);
+        if(getServerConfig().doConvertEmptyTag().get() && itemStack.getTag()!=null && Objects.equals(itemStack.getTag(),new CompoundTag())){
+            key = new ItemKey(itemStack.getItem(),null);
+        }
         ItemState state = itemMap.get(key);
         int count = itemStack.getCount();
         int original = 0;

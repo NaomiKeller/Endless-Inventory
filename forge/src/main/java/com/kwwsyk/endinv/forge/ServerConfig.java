@@ -18,6 +18,7 @@ public class ServerConfig {
     public final ForgeConfigSpec.EnumValue<ContentTransferMode> TRANSFER_MODE;
     public final ForgeConfigSpec.EnumValue<Accessibility> DEFAULT_ACCESSIBILITY;
     public final ForgeConfigSpec.EnumValue<MissingEndInvPolicy> CREATION_MODE;
+    public final ForgeConfigSpec.BooleanValue CONVERT_EMPTY_TAG;
 
     private ServerConfig(ForgeConfigSpec.Builder builder){
         MAX_STACK_SIZE = builder
@@ -35,6 +36,9 @@ public class ServerConfig {
                 .defineEnum("defaultAccessibility",Accessibility.PUBLIC);
         CREATION_MODE = builder
                 .defineEnum("creationMode",MissingEndInvPolicy.CREATE_PER_PLAYER);
+        CONVERT_EMPTY_TAG = builder
+                .comment("Convert itemstack with empty tag {} to null tag, for the bugs that item cannot be taken/stacked.")
+                .define("convert_empty_tag",true);
     }
 
     static {
@@ -81,6 +85,11 @@ public class ServerConfig {
         @Override
         public IConfigValue<MissingEndInvPolicy> policyHandlingMissing() {
             return IConfigValue.of(CREATION_MODE,CREATION_MODE::set);
+        }
+
+        @Override
+        public IConfigValue<Boolean> doConvertEmptyTag() {
+            return convert(CONVERT_EMPTY_TAG);
         }
     };
 }

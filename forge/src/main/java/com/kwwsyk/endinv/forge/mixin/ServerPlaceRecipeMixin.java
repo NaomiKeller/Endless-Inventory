@@ -16,8 +16,8 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import javax.annotation.Nullable;
 
@@ -30,6 +30,7 @@ public class ServerPlaceRecipeMixin<C extends Container>{
     @Unique
     @Nullable
     private EndlessInventory endInv;
+    @Unique private int ei$lastIndex = Integer.MIN_VALUE; // 记录 moveItemToGrid 中的 i
 
 
     @Inject(method = "recipeClicked", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/inventory/RecipeBookMenu;fillCraftSlotsStackedContents(Lnet/minecraft/world/entity/player/StackedContents;)V"))
@@ -46,21 +47,27 @@ public class ServerPlaceRecipeMixin<C extends Container>{
         }
     }
 
-    @Inject(method = "moveItemToGrid",
-            at = @At("RETURN"),
-            locals = LocalCapture.CAPTURE_FAILSOFT
-    )
-    private void getAttachedItems(Slot slotToFill, ItemStack ingredient, CallbackInfo ci, int i, ItemStack itemstack){
-        if(i!=-1 || endInv==null) return;
-        ItemStack itemStack1 = endInv.takeItem(ingredient,1);
-        //endInv.broadcastChanges(); Don't let it be invoked too many times.
-        if(itemStack1.isEmpty()){
-            return;
-        }
-        if(slotToFill.getItem().isEmpty()){
-            slotToFill.set(itemStack1.copy());
-        }else {
-            slotToFill.getItem().grow(itemStack1.getCount());
-        }
+    @ModifyVariable(method = "moveItemToGrid",
+            at = @At(value = "STORE"), // i 被赋值处
+            ordinal = 0)
+    private int ei$captureIndex(int i) {
+        this.ei$lastIndex = i;
+        return i; // 不篡改
+    }
+
+    // C. 在 RETURN 使用记录的 i，避免本地变量再捕获
+    @Inject(method = "moveItemToGrid", at = @At("RETURN"))
+    private void ei$afterMove(Slot slotToFill, ItemStack ingredient, CallbackInfo ci) {
+        if (this.ei$lastIndex != -1) return;
+        if (endInv == null) return;
+
+        ItemStack taken = endInv.takeItem(ingredient, 1);
+        if (taken.isEmpty()) return;
+
+        ItemStack cur = slotToFill.getItem();
+        if (cur.isEmpty()) slotToFill.set(taken.copy());
+        else cur.grow(taken.getCount());
+
+        // 可按需：endInv.broadcastChanges(); 频率自己把控
     }
 }

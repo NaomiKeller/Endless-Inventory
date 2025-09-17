@@ -15,4 +15,6 @@ public interface IServerConfig {
     IConfigValue<Accessibility> defaultAccessibility();
 
     IConfigValue<MissingEndInvPolicy> policyHandlingMissing();
+
+    IConfigValue<Boolean> doConvertEmptyTag();
 }

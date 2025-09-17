@@ -26,6 +26,7 @@ public abstract class AbstractModInitializer {
         <R extends T> Supplier<R> register(String id, Supplier<R> supplier);
     }
 
+    @SuppressWarnings({"removal"})
     public static ResourceLocation withModLocation(String id){
         return new ResourceLocation(ModInfo.MOD_ID,id);
     }
@@ -67,7 +68,7 @@ public abstract class AbstractModInitializer {
 
     protected abstract Supplier<MenuType<EndlessInventoryMenu>> createEndInvMenuType();
 
-    protected abstract NbtAttachment<UUID> createEndInvUUID(String name);//todo
+    protected abstract NbtAttachment<UUID> createEndInvUUID(String name);
 
     protected abstract NbtAttachment<SyncedConfig> createSyncedConfig(String name);
 
