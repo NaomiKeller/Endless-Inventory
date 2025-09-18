@@ -37,7 +37,7 @@ subprojects {
                     url = 'https://repo.spongepowered.org/repository/maven-public'
                 }
             }
-            filter { includeGroupAndSubgroups('org.spongepowered') }
+            filter { includeGroup('org.spongepowered') }
         }
         exclusiveContent {
             forRepositories(

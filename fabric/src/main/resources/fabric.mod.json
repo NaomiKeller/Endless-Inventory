@@ -15,7 +15,9 @@
   "entrypoints": {
     "fabric-datagen": ["com.kwwsyk.endinv.fabric.client.FabricModInitDataGenerator"],
     "client": ["com.kwwsyk.endinv.fabric.client.FabricModInitClient"],
-    "main": ["com.kwwsyk.endinv.fabric.FabricModInit"]
+    "main": [
+      "com.kwwsyk.endinv.fabric.ModInit"
+    ]
   },
 
   "mixins": [
