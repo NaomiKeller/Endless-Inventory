@@ -2,7 +2,8 @@ package com.kwwsyk.endinv.common.client.gui.page;
 
 import com.kwwsyk.endinv.common.client.ClientModInfo;
 import com.kwwsyk.endinv.common.client.gui.EndlessInventoryScreen;
-import com.kwwsyk.endinv.common.client.gui.bg.ScreenBgRenderer;
+import com.kwwsyk.endinv.common.client.gui.bg.FromResource;
+import com.kwwsyk.endinv.common.client.gui.bg.SFBgRenderer;
 import com.kwwsyk.endinv.common.client.option.TextureMode;
 import com.kwwsyk.endinv.common.menu.page.PageType;
 import com.kwwsyk.endinv.common.menu.page.pageManager.PageMetaDataManager;
@@ -25,6 +26,8 @@ public class ItemEntryDisplay extends ItemDisplay{
      * Used to disable Item name rendering.
      */
     protected boolean jmpTooltip1st = true;
+
+    protected SFBgRenderer.PageBgRender renderer = null;
 
     public ItemEntryDisplay(PageType pageType, PageMetaDataManager metaDataManager) {
         super(pageType,metaDataManager);
@@ -147,16 +150,36 @@ public class ItemEntryDisplay extends ItemDisplay{
     }
 
     @Override
-    public void renderBg(ScreenBgRenderer screenBgRenderer, GuiGraphics guiGraphics, float partialTicks, int mouseX, int mouseY) {
-        screenBgRenderer.getDefaultPageBgRenderer().ifPresent(bgRenderer -> bgRenderer.renderBg(guiGraphics, partialTicks, mouseX, mouseY));
-        int pageX = screenBgRenderer.getScreenFrameWork().pageX;
-        int startY = screenBgRenderer.getScreenFrameWork().pageY;
-        int bgColor = ClientModInfo.getClientConfig().textureMode().get() == TextureMode.FROM_RESOURCE ? 0xFF8b8b8b : 0x37606037;
-        for(int i = 0; i< meta.rows(); ++i){
-            guiGraphics.fill(pageX,startY,pageX+18* meta.columns()-2,startY+1,0xFF373737);
-            guiGraphics.fill(pageX,startY+1,pageX+18* meta.columns()-2,startY+17,bgColor);
-            guiGraphics.fill(pageX,startY+17,pageX+18* meta.columns()-2,startY+18,0xFFFFFFFF);
-            startY+=18;
+    public void renderBg(SFBgRenderer SFBgRenderer, GuiGraphics guiGraphics, float partialTicks, int mouseX, int mouseY) {
+        if (this.renderer == null) renderer = bgRender(SFBgRenderer);
+        renderer.renderBg(guiGraphics, partialTicks, mouseX, mouseY);
+    }
+
+    protected SFBgRenderer.PageBgRender bgRender(SFBgRenderer sfBgRenderer){
+        TextureMode mode = ClientModInfo.getClientConfig().textureMode().get();
+        if(sfBgRenderer instanceof FromResource fromResource){
+            if(mode == TextureMode.DEDICATED_LOCATION) return fromResource.dedicatePageBgRender(FromResource.ITEM_ENTRY_DISPLAY_RESOURCE);
+            return (guiGraphics, partialTicks, mouseX, mouseY) ->{// assert mode = from_resource
+                sfBgRenderer.getDefaultPageBgRenderer().ifPresent(bgRenderer -> bgRenderer.renderBg(guiGraphics, partialTicks, mouseX, mouseY));
+                int pageX = sfBgRenderer.getScreenFrameWork().pageX;
+                int startY = sfBgRenderer.getScreenFrameWork().pageY;
+                for(int i = 0; i< meta.rows(); ++i){
+                    guiGraphics.fill(pageX,startY,pageX+18* meta.columns()-2,startY+1,0xFF373737);
+                    guiGraphics.fill(pageX,startY+1,pageX+18* meta.columns()-2,startY+17,0xFF8b8b8b);
+                    guiGraphics.fill(pageX,startY+17,pageX+18* meta.columns()-2,startY+18,0xFFFFFFFF);
+                    startY+=18;
+                }
+            };
         }
+        return (guiGraphics, partialTicks, mouseX, mouseY) ->{//assert mode = transparent
+            int pageX = sfBgRenderer.getScreenFrameWork().pageX;
+            int startY = sfBgRenderer.getScreenFrameWork().pageY;
+            for(int i = 0; i< meta.rows(); ++i){
+                guiGraphics.fill(pageX,startY,pageX+18* meta.columns()-2,startY+1,0xFF373737);
+                guiGraphics.fill(pageX,startY+1,pageX+18* meta.columns()-2,startY+17,0x37606037);
+                guiGraphics.fill(pageX,startY+17,pageX+18* meta.columns()-2,startY+18,0xFFFFFFFF);
+                startY+=18;
+            }
+        };
     }
 }

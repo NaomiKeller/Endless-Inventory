@@ -17,6 +17,7 @@ import java.util.function.Predicate;
 
 import static net.minecraft.tags.ItemTags.*;
 
+@SuppressWarnings("removal")
 public class PageType {
 
     public static final String DEFAULT_KEY = "all_items";

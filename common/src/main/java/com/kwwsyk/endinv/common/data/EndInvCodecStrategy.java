@@ -147,6 +147,7 @@ public interface EndInvCodecStrategy {
         return compoundTag;
     }
 
+    @SuppressWarnings("removal")
     static ItemStack load(CompoundTag compoundTag) {
         try {
             var ret = new ItemStack(

@@ -9,7 +9,7 @@ import mezz.jei.api.registration.IRecipeTransferRegistration;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.resources.ResourceLocation;
 
-@JeiPlugin
+@JeiPlugin @SuppressWarnings("removal")
 public class JeiCompat implements IModPlugin{
 
     public JeiCompat(){}

@@ -1,17 +1,33 @@
 package com.kwwsyk.endinv.common.client.gui.bg;
 
+import com.kwwsyk.endinv.common.ModInfo;
+import com.kwwsyk.endinv.common.client.ClientModInfo;
 import com.kwwsyk.endinv.common.client.gui.ScreenFramework;
+import com.kwwsyk.endinv.common.client.option.TextureMode;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;
 
-public abstract class FromResource extends ScreenBgRendererImpl {
+@SuppressWarnings("removal")
+public abstract class FromResource extends SFBgRendererImpl {
 
 
-    private static final ResourceLocation CONTAINER_TEXTURE_LOCATION = new ResourceLocation("minecraft","textures/gui/container/generic_54.png");
-    private static final ResourceLocation TABS = new ResourceLocation("minecraft","textures/gui/advancements/tabs.png");
+    public static final ResourceLocation CONTAINER_TEXTURE_RESOURCE = new ResourceLocation("minecraft","textures/gui/container/generic_54.png");
+    public static final ResourceLocation TABS_RESOURCE = new ResourceLocation("minecraft","textures/gui/advancements/tabs.png");
+
+    public static final ResourceLocation DEDICATED_CONTAINER_TEXTURE = new ResourceLocation(ModInfo.MOD_ID,"textures/gui/item_grid.png");
+    public static final ResourceLocation DEDICATED_TABS = new ResourceLocation(ModInfo.MOD_ID,"textures/gui/tabs.png");
+    public static final ResourceLocation ITEM_ENTRY_DISPLAY_RESOURCE = new ResourceLocation(ModInfo.MOD_ID,"textures/gui/item_entry.png");
+
+    private static ResourceLocation getContainerTexture(){
+        return ClientModInfo.getClientConfig().textureMode().get() == TextureMode.DEDICATED_LOCATION ? DEDICATED_CONTAINER_TEXTURE : CONTAINER_TEXTURE_RESOURCE;
+    }
+
+    private static ResourceLocation getTabsTexture(){
+        return ClientModInfo.getClientConfig().textureMode().get() == TextureMode.DEDICATED_LOCATION ? DEDICATED_TABS : TABS_RESOURCE;
+    }
 
     public FromResource(ScreenFramework frameWork){
         super(frameWork);
@@ -33,7 +49,7 @@ public abstract class FromResource extends ScreenBgRendererImpl {
         }
 
         private void renderPlayerInv(GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY, int startX, int startY){
-            guiGraphics.blit(CONTAINER_TEXTURE_LOCATION, startX, startY,
+            guiGraphics.blit(getContainerTexture(), startX, startY,//todo WARN
                     0.0F, 126.0F, imageWidth, 96, 256, 256);
         }
     }
@@ -46,7 +62,9 @@ public abstract class FromResource extends ScreenBgRendererImpl {
         }
     }
 
-    public class GridPageRenderer implements ScreenBgRenderer.BgRenderer{
+    public abstract class PagePainter implements PageBgRender {
+
+        public abstract ResourceLocation texture();
 
         @Override
         public void renderBg(@NotNull GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {
@@ -56,18 +74,18 @@ public abstract class FromResource extends ScreenBgRendererImpl {
             if(columns!=9){
                 renderSpecialBg(guiGraphics,partialTick,mouseX,mouseY,startX,startY);
             }else {
-                guiGraphics.blit(CONTAINER_TEXTURE_LOCATION, startX, startY, 0, 0,
+                guiGraphics.blit(texture(), startX, startY, 0, 0,
                         imageWidth, 17, 256, 256);
                 startY += 17;
                 int rowsToRender = rows;
                 while (rowsToRender > 0) {
                     int height = 18 * Math.min(rowsToRender, 6);
-                    guiGraphics.blit(CONTAINER_TEXTURE_LOCATION, startX, startY,
+                    guiGraphics.blit(texture(), startX, startY,
                             0.0F, 17.0F, imageWidth, height, 256, 256);
                     rowsToRender -= 6;
                     startY += height;
                 }
-                guiGraphics.blit(CONTAINER_TEXTURE_LOCATION,startX,pageTop+17+18*rows,0,124,imageWidth,12,256,256);
+                guiGraphics.blit(texture(),startX,pageTop+17+18*rows,0,124,imageWidth,12,256,256);
             }
 
         }
@@ -76,18 +94,17 @@ public abstract class FromResource extends ScreenBgRendererImpl {
                                      int startX, int startY) {
             int initialX = startX;
 
-
-            guiGraphics.blit(CONTAINER_TEXTURE_LOCATION, startX, startY, 0, 0,
+            guiGraphics.blit(texture(), startX, startY, 0, 0,
                     7, 17, 256, 256);
             startX+=7;
             for (int columnsToRender = columns;columnsToRender>0;columnsToRender-=9) {
                 int width = 18 * Math.min(9,columnsToRender);
-                guiGraphics.blit(CONTAINER_TEXTURE_LOCATION, startX, startY, 7, 0,
-                        width, 17, 256, 256);
+                guiGraphics.blit(texture(), startX, startY, 7, 0,
+                        width, 17, 256,256);
 
                 startX+=width;
             }
-            guiGraphics.blit(CONTAINER_TEXTURE_LOCATION, startX, startY, 168, 0,
+            guiGraphics.blit(texture(), startX, startY, 168, 0,
                     8, 17, 256, 256);
             startX = initialX;
 
@@ -96,40 +113,55 @@ public abstract class FromResource extends ScreenBgRendererImpl {
                 int height = 18*Math.min(rowsToRender,6);
 
 
-                guiGraphics.blit(CONTAINER_TEXTURE_LOCATION, startX, startY, 0, 17,
+                guiGraphics.blit(texture(), startX, startY, 0, 17,
                         7, height, 256, 256);
                 startX+=7;
                 for (int columnsToRender = columns;columnsToRender>0;columnsToRender-=9) {
                     int width = 18 * Math.min(9,columnsToRender);
-                    guiGraphics.blit(CONTAINER_TEXTURE_LOCATION, startX, startY, 7, 17,
+                    guiGraphics.blit(texture(), startX, startY, 7, 17,
                             width, height, 256, 256);
                     startX+=width;
                 }
-                guiGraphics.blit(CONTAINER_TEXTURE_LOCATION, startX, startY, 168, 17,
+                guiGraphics.blit(texture(), startX, startY, 168, 17,
                         8, height, 256, 256);
                 startX = initialX;
                 startY += height;
             }
 
-            guiGraphics.blit(CONTAINER_TEXTURE_LOCATION, startX, startY, 0, 124,
+            guiGraphics.blit(texture(), startX, startY, 0, 124,
                     7, 12, 256, 256);
             startX+=7;
             for (int columnsToRender = columns;columnsToRender>0;columnsToRender-=9) {
                 int width = 18 * Math.min(9,columnsToRender);
-                guiGraphics.blit(CONTAINER_TEXTURE_LOCATION, startX, startY, 7, 124,
+                guiGraphics.blit(texture(), startX, startY, 7, 124,
                         width, 12, 256, 256);
 
                 startX+=width;
             }
-            guiGraphics.blit(CONTAINER_TEXTURE_LOCATION, startX, startY, 168, 124,
+            guiGraphics.blit(texture(), startX, startY, 168, 124,
                     8, 12, 256, 256);
             startX = initialX;
         }
     }
 
     @Override
-    public Optional<BgRenderer> getDefaultPageBgRenderer() {
-        return Optional.of(new GridPageRenderer());
+    public Optional<PageBgRender> getDefaultPageBgRenderer() {
+        return Optional.of(new PagePainter(){
+
+            @Override
+            public ResourceLocation texture() {
+                return getContainerTexture();
+            }
+        });
+    }
+
+    public PagePainter dedicatePageBgRender(ResourceLocation texture){
+        return new PagePainter() {
+            @Override
+            public ResourceLocation texture() {
+                return texture;
+            }
+        };
     }
 
     @Override
@@ -140,13 +172,13 @@ public abstract class FromResource extends ScreenBgRendererImpl {
         for (int i = frameWork.firstPageIndex; i < frameWork.firstPageIndex + frameWork.pageBarCount; ++i) {
             if (i == selectedPageIndex) {
                 if (i == 0) {
-                    guiGraphics.blit(TABS,pageX,pageY,0,92,32,28);
+                    guiGraphics.blit(getTabsTexture(),pageX,pageY,0,92,32,28);
                 } else if (i == frameWork.firstPageIndex + frameWork.pageBarCount-1) {
-                    guiGraphics.blit(TABS,pageX,pageY,32,91,32,29);
+                    guiGraphics.blit(getTabsTexture(),pageX,pageY,32,91,32,29);
                 } else
-                    guiGraphics.blit(TABS,pageX,pageY,64,91,32,28);
+                    guiGraphics.blit(getTabsTexture(),pageX,pageY,64,91,32,28);
             } else {
-                guiGraphics.blit(TABS,pageX+8,pageY,4,64,24,27);
+                guiGraphics.blit(getTabsTexture(),pageX+8,pageY,4,64,24,27);
             }
             pageY+=28;
         }

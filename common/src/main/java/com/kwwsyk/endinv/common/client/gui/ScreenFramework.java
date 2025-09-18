@@ -4,7 +4,7 @@ import com.kwwsyk.endinv.common.ModInfo;
 import com.kwwsyk.endinv.common.client.ClientModInfo;
 import com.kwwsyk.endinv.common.client.KeyMappings;
 import com.kwwsyk.endinv.common.client.gui.bg.FromResource;
-import com.kwwsyk.endinv.common.client.gui.bg.ScreenBgRenderer;
+import com.kwwsyk.endinv.common.client.gui.bg.SFBgRenderer;
 import com.kwwsyk.endinv.common.client.gui.bg.ScreenRectangleWidgetParam;
 import com.kwwsyk.endinv.common.client.gui.bg.Transparent;
 import com.kwwsyk.endinv.common.client.gui.page.DisplayPage;
@@ -54,7 +54,7 @@ public class ScreenFramework {
     private final ScreenRectangleWidgetParam sortBoxParam;
     private final ScreenRectangleWidgetParam configButtonParam;
     private final ScreenRectangleWidgetParam pageBarScrollUpButtonParam,pageBarScrollDownButtonParam;
-    public final ScreenBgRenderer screenBgRenderer;
+    public final SFBgRenderer SFBgRenderer;
     public final int pageBarCount;
     public int firstPageIndex = 0;
     //Always pageBarCount + firstPageIndex <= meta.getPages.size()
@@ -93,7 +93,7 @@ public class ScreenFramework {
         this.configButtonParam = new ScreenRectangleWidgetParam(this.leftPos+this.imageWidth,Math.min(this.topPos+this.imageHeight,screen.height-20),18,18);
         this.searchBoxParam = new ScreenRectangleWidgetParam(this.leftPos + 89, this.topPos + 5, 80, 12);
         this.sortBoxParam = new ScreenRectangleWidgetParam(this.leftPos+8,topPos+5,60,12);
-        this.screenBgRenderer = new FromResource.MenuMode(this,new ScreenRectangleWidgetParam(leftPos-32,topPos+1,32,28));
+        this.SFBgRenderer = new FromResource.MenuMode(this,new ScreenRectangleWidgetParam(leftPos-32,topPos+1,32,28));
 
         pageX = leftPos+8;
         pageY = topPos+17;
@@ -127,7 +127,7 @@ public class ScreenFramework {
         this.pageBarScrollUpButtonParam = new ScreenRectangleWidgetParam(0,topPos,20,14);
         this.pageBarScrollDownButtonParam = new ScreenRectangleWidgetParam(0,topPos+22+28*pageBarCount,20,14);
         this.sortBoxParam = new ScreenRectangleWidgetParam(this.leftPos + 6,topPos + 5,77,12);
-        this.screenBgRenderer = ClientModInfo.getClientConfig().textureMode().get() == TextureMode.FROM_RESOURCE ?
+        this.SFBgRenderer = ClientModInfo.getClientConfig().textureMode().get() != TextureMode.TRANSPARENT ?
                 new FromResource.LeftLayout(this,new ScreenRectangleWidgetParam(leftPos-32,topPos+20,32,28)) :
                 new Transparent(this,new ScreenRectangleWidgetParam(leftPos-32,topPos+20,32,28));
 
@@ -196,8 +196,8 @@ public class ScreenFramework {
     }
 
     public void renderBg(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick){
-        screenBgRenderer.renderBg(guiGraphics,partialTick,mouseX,mouseY);
-        meta.getDisplayingPage().renderBg(screenBgRenderer,guiGraphics,partialTick,mouseX,mouseY);
+        SFBgRenderer.renderBg(guiGraphics,partialTick,mouseX,mouseY);
+        meta.getDisplayingPage().renderBg(SFBgRenderer,guiGraphics,partialTick,mouseX,mouseY);
     }
 
     private boolean isHoveringOnPage;
@@ -227,10 +227,10 @@ public class ScreenFramework {
     }
 
     protected int hasClickedOnPageSwitchBar(double mouseX, double mouseY){
-        double XOffset=mouseX- screenBgRenderer.pageSwitchBarParam().XPos();
-        double YOffset=mouseY- screenBgRenderer.pageSwitchBarParam().YPos();
-        if(XOffset<0 || XOffset> screenBgRenderer.pageSwitchBarParam().XSize() || YOffset<0) return -1;
-        int index = (int)YOffset/ screenBgRenderer.pageSwitchBarParam().YSize();
+        double XOffset=mouseX- SFBgRenderer.pageSwitchBarParam().XPos();
+        double YOffset=mouseY- SFBgRenderer.pageSwitchBarParam().YPos();
+        if(XOffset<0 || XOffset> SFBgRenderer.pageSwitchBarParam().XSize() || YOffset<0) return -1;
+        int index = (int)YOffset/ SFBgRenderer.pageSwitchBarParam().YSize();
         if(index<0||index>=pageBarCount) return -1;
         return index;
     }
@@ -272,8 +272,10 @@ public class ScreenFramework {
 
         return null;
     }
+    
 
     private ItemStack creativeQuickInsertedItem = ItemStack.EMPTY;
+
     private void slotQuickMoved(Slot clicked){
         ItemStack itemStack = clicked.getItem().copy();
         if(menu instanceof CreativeModeInventoryScreen.ItemPickerMenu && clicked.index<45 && menu.slots.size() >= 54) {
@@ -287,7 +289,7 @@ public class ScreenFramework {
             ItemStack remain = meta.getDisplayingPage().tryQuickMoveStackTo(itemStack);
             clicked.setByPlayer(remain);
             clicked.onTake(meta.getPlayer(), itemStack);
-            ModInfo.getPacketDistributor().sendToServer(new QuickMoveToPagePayload(clicked.index));
+            ModInfo.getPacketDistributor().sendToServer(new QuickMoveToPagePayload(menu instanceof CreativeModeInventoryScreen.ItemPickerMenu ? clicked.getSlotIndex() : clicked.index));
         }
         if(meta.getDisplayingPage() instanceof ItemPage itemPage){
             itemPage.requestContents();

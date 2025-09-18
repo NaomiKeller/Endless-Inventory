@@ -6,7 +6,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 
-public abstract class ScreenBgRendererImpl implements ScreenBgRenderer{
+public abstract class SFBgRendererImpl implements SFBgRenderer {
 
     protected final ScreenFramework frameWork;
 
@@ -23,7 +23,7 @@ public abstract class ScreenBgRendererImpl implements ScreenBgRenderer{
 
     protected final com.kwwsyk.endinv.common.client.gui.page.manager.PageManager manager;
 
-    public ScreenBgRendererImpl(ScreenFramework frameWork){
+    public SFBgRendererImpl(ScreenFramework frameWork){
         this.frameWork = frameWork;
         this.screen = frameWork.screen;
         this.imageWidth = 256;

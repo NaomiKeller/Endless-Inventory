@@ -15,6 +15,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static com.kwwsyk.endinv.common.client.gui.bg.FromResource.*;
+
 public class ClientConfig {
 
     public static final ClientConfig CONFIG;
@@ -41,7 +43,11 @@ public class ClientConfig {
         AUTO_SUIT_COLUMN = builder.comment("auto suit in columns if GUI Size is too big.")
                 .define("auto_suit_column",true);
 
-        TEXTURE = builder.comment("Texture mode of EndInv view, transparent or vanilla menu style")
+        TEXTURE = builder
+                .comment("Texture mode of EndInv view, transparent or vanilla menu style")
+                .comment("FROM_RESOURCE uses vanilla textures, grid is "+CONTAINER_TEXTURE_RESOURCE+", tab is "+TABS_RESOURCE+".")
+                .comment("DEDICATED_LOCATION allows using custom texture in resource packs, to use refer such locations: ")
+                .comment("grid: "+DEDICATED_CONTAINER_TEXTURE+", tab: "+DEDICATED_TABS+", item_entry: "+ITEM_ENTRY_DISPLAY_RESOURCE)
                 .defineEnum("texture_mode",TextureMode.FROM_RESOURCE);
 
         ENABLE_DEBUG = builder.comment("Press F3 in screen can show some information of menu screen")

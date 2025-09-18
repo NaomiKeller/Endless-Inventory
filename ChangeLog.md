@@ -36,3 +36,15 @@ Also used a Mixin to monitor item NBT operations.
 
 ### Fix
 Add a configuration: `Convert Empty Tag` and apply it in `SourceInventory #takeItem & #addItem`. Let item with `tag={}` server as `tag=null` 
+
+## 9.18
+- Texture: add `DEDICATED_LOCATION` mode and optimize related loading/performance
+- Creative Mode: fix item taking logic to handle empty NBT tags and improve reliability
+
+### DEDICATED_LOCATION
+DEDICATED_LOCATION allows using custom texture in resource packs, to use refer such locations:  
+In `assets/endless_inventory/textures/gui/*`:
+- `item_grid.png` for common pages, derived from chest menu's generic54.png
+- `tabs.png` for page switch tabs, derived from achievements gui sprites
+- `item_entry.png` for item entry display (enchantment book classify page), derived from generic54 by removing vertical rules to form row strips  
+- - the process is to fill each row of the grid with a long strip, in FromResource mode, `renderBg` method of `ItemEntryDisplay.class` does it so X).

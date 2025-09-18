@@ -6,7 +6,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;
 
-public class Transparent extends ScreenBgRendererImpl {
+public class Transparent extends SFBgRendererImpl {
 
     private static final int PAGE_FRAME_COLOR = 0x80A0A0A0;
     private static final int PAGE_BG_COLOR = 0x30373737;
@@ -17,7 +17,7 @@ public class Transparent extends ScreenBgRendererImpl {
     }
 
 
-    public class GridPageRenderer implements ScreenBgRenderer.BgRenderer{
+    public class GridPageRenderer implements PageBgRender {
 
         @Override
         public void renderBg(@NotNull GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {
@@ -58,7 +58,7 @@ public class Transparent extends ScreenBgRendererImpl {
     }
 
     @Override
-    public Optional<BgRenderer> getDefaultPageBgRenderer() {
+    public Optional<PageBgRender> getDefaultPageBgRenderer() {
         return Optional.of(new GridPageRenderer());
     }
 }

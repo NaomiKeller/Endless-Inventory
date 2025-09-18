@@ -33,7 +33,7 @@ import net.minecraftforge.registries.ForgeRegistries;
 import java.util.UUID;
 import java.util.function.Supplier;
 
-@Mod(ModInfo.MOD_ID)
+@Mod(ModInfo.MOD_ID) @SuppressWarnings("removal")
 public class ModInitializer extends AbstractModInitializer {
 
     public static final DeferredRegister<Item> ITEM = DeferredRegister.create(ForgeRegistries.ITEMS,ModInfo.MOD_ID);

@@ -23,6 +23,7 @@ import java.util.function.Supplier;
 public class ModPacketHandler {
 
     private static final String PROTOCOL_VERSION = "1";
+    @SuppressWarnings("removal")
     public static final SimpleChannel INSTANCE = NetworkRegistry.newSimpleChannel(
             new ResourceLocation(ModInfo.MOD_ID, "main"),
             () -> PROTOCOL_VERSION,

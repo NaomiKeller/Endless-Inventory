@@ -67,7 +67,9 @@ public record ItemClickPayload(ItemStack stack, int button, ClickType clickType)
                     int takenCount = button==0 ? count : (count + 1) / 2;
                     ItemStack taken = endInv.takeItem(stack,takenCount);
                     LOGGER.debug("ItemClickPayload.PICKUP: taken={} from stack={}", taken, stack);
-                    menu.setCarried(taken);
+                    if(player.isCreative()) {
+                        LOGGER.info("Ignored taken item on server thread in Creative mode to prevent duplication.");
+                    }else menu.setCarried(taken);
                     if(!stack.isEmpty()) endInv.setChanged();
                 }
             }

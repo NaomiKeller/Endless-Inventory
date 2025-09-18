@@ -3,5 +3,8 @@ package com.kwwsyk.endinv.common.client.option;
 public enum TextureMode {
 
     FROM_RESOURCE,
-    TRANSPARENT
+    TRANSPARENT,
+    DEDICATED_LOCATION;
+
+
 }

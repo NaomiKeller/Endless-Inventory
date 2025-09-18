@@ -19,6 +19,7 @@ import java.util.List;
 
 import static com.kwwsyk.endinv.common.ModInfo.getPacketDistributor;
 
+@SuppressWarnings("removal")
 public class StarredItemPage extends ItemPage{
 
     public ResourceLocation icon = new ResourceLocation("minecraft","book");

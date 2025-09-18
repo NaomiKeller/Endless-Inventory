@@ -5,7 +5,7 @@ import com.kwwsyk.endinv.common.SourceInventory;
 import com.kwwsyk.endinv.common.client.CachedSrcInv;
 import com.kwwsyk.endinv.common.client.KeyMappings;
 import com.kwwsyk.endinv.common.client.gui.ScreenFramework;
-import com.kwwsyk.endinv.common.client.gui.bg.ScreenBgRenderer;
+import com.kwwsyk.endinv.common.client.gui.bg.SFBgRenderer;
 import com.kwwsyk.endinv.common.client.gui.page.manager.PageManager;
 import com.kwwsyk.endinv.common.menu.page.PageType;
 import com.kwwsyk.endinv.common.menu.page.pageManager.PageMetaDataManager;
@@ -98,6 +98,10 @@ public abstract class DisplayPage{
      */
     public abstract void sendChangesToServer();
 
+    public void requestContents(){
+        sendChangesToServer();
+    }
+
     public abstract boolean hasSearchbox();
 
     public abstract boolean hasSortTypeSwitchBar();
@@ -181,8 +185,8 @@ public abstract class DisplayPage{
     }
 
     //page renderer
-    public void renderBg(ScreenBgRenderer screenBgRenderer, GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {
-        screenBgRenderer.getDefaultPageBgRenderer().ifPresent(bgRenderer -> bgRenderer.renderBg(guiGraphics, partialTick, mouseX, mouseY));
+    public void renderBg(SFBgRenderer SFBgRenderer, GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {
+        SFBgRenderer.getDefaultPageBgRenderer().ifPresent(bgRenderer -> bgRenderer.renderBg(guiGraphics, partialTick, mouseX, mouseY));
     }
 
     public void initRenderer(ScreenFramework framework, int pageXPos, int pageYPos){

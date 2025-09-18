@@ -6,7 +6,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;
 
-public interface ScreenBgRenderer {
+public interface SFBgRenderer {
 
     ScreenFramework getScreenFrameWork();
 
@@ -14,12 +14,12 @@ public interface ScreenBgRenderer {
 
     ScreenRectangleWidgetParam pageSwitchBarParam();
 
-    default Optional<BgRenderer> getDefaultPageBgRenderer(){
+    default Optional<PageBgRender> getDefaultPageBgRenderer(){
         return Optional.empty();
     }
 
     @FunctionalInterface
-    interface BgRenderer{
+    interface PageBgRender {
         void renderBg(@NotNull GuiGraphics guiGraphics, float partialTicks, int mouseX, int mouseY);
     }
 }
