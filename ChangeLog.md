@@ -48,3 +48,6 @@ In `assets/endless_inventory/textures/gui/*`:
 - `tabs.png` for page switch tabs, derived from achievements gui sprites
 - `item_entry.png` for item entry display (enchantment book classify page), derived from generic54 by removing vertical rules to form row strips  
 - - the process is to fill each row of the grid with a long strip, in FromResource mode, `renderBg` method of `ItemEntryDisplay.class` does it so X).
+
+## 9.25
+- Fabric: ported screen attachment lifecycle, client input handlers, and debug overlays to Fabric API events, and refreshed `fabric.mod.json` metadata for the loader entry points.
