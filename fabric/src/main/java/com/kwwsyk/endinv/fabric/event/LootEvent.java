@@ -5,22 +5,67 @@ import com.kwwsyk.endinv.common.ModRegistries;
 import com.kwwsyk.endinv.common.ServerLevelEndInv;
 import com.kwwsyk.endinv.common.network.payloads.toClient.ItemPickedUpPayload;
 import com.kwwsyk.endinv.fabric.ServerConfig;
-import net.fabricmc.fabric.api.loot.v3.LootTableEvents;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.storage.loot.LootParams;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.lang.reflect.Proxy;
 import java.util.List;
 import java.util.Optional;
 
 public final class LootEvent {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(LootEvent.class);
+
     private LootEvent() {
     }
 
     public static void register() {
-        LootTableEvents.MODIFY_DROPS.register((entry, context, drops) -> handleDrops(context, drops));
+        if (!registerModifyDropsCompat()) {
+            LOGGER.debug("Fabric loot modify drops hook unavailable; auto-pickup will fall back to world drops.");
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private static boolean registerModifyDropsCompat() {
+        try {
+            Class<?> eventsClass = Class.forName("net.fabricmc.fabric.api.loot.v3.LootTableEvents");
+            Object event = eventsClass.getField("MODIFY_DROPS").get(null);
+            Class<?> callbackClass = Class.forName("net.fabricmc.fabric.api.loot.v3.LootTableEvents$ModifyDrops");
+            Object listener = Proxy.newProxyInstance(callbackClass.getClassLoader(), new Class<?>[]{callbackClass}, (proxy, method, args) -> {
+                if (args == null || args.length == 0) {
+                    return null;
+                }
+
+                LootParams lootParams = null;
+                List<ItemStack> drops = null;
+                for (Object arg : args) {
+                    if (arg instanceof LootParams params) {
+                        lootParams = params;
+                    } else if (arg instanceof List<?> list) {
+                        if (list.isEmpty() || list.get(0) instanceof ItemStack) {
+                            drops = (List<ItemStack>) list;
+                        }
+                    }
+                }
+
+                if (lootParams != null && drops != null) {
+                    handleDrops(lootParams, drops);
+                }
+
+                return null;
+            });
+            event.getClass().getMethod("register", callbackClass).invoke(event, listener);
+            return true;
+        } catch (ClassNotFoundException e) {
+            return false;
+        } catch (ReflectiveOperationException e) {
+            LOGGER.error("Failed to register Fabric modify drops bridge", e);
+            return false;
+        }
     }
 
     private static void handleDrops(LootParams params, List<ItemStack> drops) {

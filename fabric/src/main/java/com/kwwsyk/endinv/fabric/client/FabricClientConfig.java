@@ -1,14 +1,11 @@
 package com.kwwsyk.endinv.fabric.client;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.google.gson.*;
 import com.kwwsyk.endinv.common.client.option.IClientConfig;
 import com.kwwsyk.endinv.common.client.option.TextureMode;
+import com.kwwsyk.endinv.common.menu.page.PageType;
 import com.kwwsyk.endinv.common.options.IConfigValue;
+import com.kwwsyk.endinv.common.util.SortType;
 import net.fabricmc.loader.api.FabricLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,6 +34,10 @@ public final class FabricClientConfig implements IClientConfig {
     private static final String SCREEN_DEBUG = "screenDebug";
     private static final String MAX_PAGE_BARS = "maxPageBars";
     private static final String HIDDEN_PAGES = "hiddenPages";
+    private static final String PAGE_ID = "pageId";
+    private static final String SEARCH = "search";
+    private static final String SORT_TYPE = "sortType";
+    private static final String REVERSE_SORT = "reverseSort";
 
     private final Path path;
     private final Gson gson = new GsonBuilder().setPrettyPrinting().create();
@@ -49,6 +50,10 @@ public final class FabricClientConfig implements IClientConfig {
     private boolean screenDebug = false;
     private int maxPageBars = 10;
     private final Set<String> hiddenPages = new HashSet<>();
+    private SortType sortType = SortType.DEFAULT;
+    private boolean reverseSort = false;
+    private String activePageId = PageType.DEFAULT_KEY;
+    private String searchQuery = "";
 
     private FabricClientConfig() {
         this.path = FabricLoader.getInstance().getConfigDir().resolve("endless_inventory-client.json");
@@ -92,6 +97,23 @@ public final class FabricClientConfig implements IClientConfig {
             if (json.has(MAX_PAGE_BARS)) {
                 maxPageBars = json.get(MAX_PAGE_BARS).getAsInt();
             }
+            if (json.has(SORT_TYPE)) {
+                try {
+                    sortType = SortType.valueOf(json.get(SORT_TYPE).getAsString());
+                } catch (IllegalArgumentException ex) {
+                    LOGGER.warn("Unknown sort type: {}", json.get(SORT_TYPE).getAsString());
+                    sortType = SortType.DEFAULT;
+                }
+            }
+            if (json.has(REVERSE_SORT)) {
+                reverseSort = json.get(REVERSE_SORT).getAsBoolean();
+            }
+            if (json.has(PAGE_ID)) {
+                activePageId = json.get(PAGE_ID).getAsString();
+            }
+            if (json.has(SEARCH)) {
+                searchQuery = json.get(SEARCH).getAsString();
+            }
             hiddenPages.clear();
             if (json.has(HIDDEN_PAGES) && json.get(HIDDEN_PAGES).isJsonArray()) {
                 JsonArray array = json.getAsJsonArray(HIDDEN_PAGES);
@@ -106,7 +128,7 @@ public final class FabricClientConfig implements IClientConfig {
         }
     }
 
-    private void save() {
+    public void save() {
         try {
             Files.createDirectories(path.getParent());
             JsonObject json = new JsonObject();
@@ -117,6 +139,10 @@ public final class FabricClientConfig implements IClientConfig {
             json.addProperty(TEXTURE, textureMode.name());
             json.addProperty(SCREEN_DEBUG, screenDebug);
             json.addProperty(MAX_PAGE_BARS, maxPageBars);
+            json.addProperty(SORT_TYPE, sortType.name());
+            json.addProperty(REVERSE_SORT, reverseSort);
+            json.addProperty(PAGE_ID, activePageId);
+            json.addProperty(SEARCH, searchQuery);
             JsonArray array = new JsonArray();
             hiddenPages.forEach(array::add);
             json.add(HIDDEN_PAGES, array);
@@ -171,6 +197,26 @@ public final class FabricClientConfig implements IClientConfig {
     }
 
     @Override
+    public IConfigValue<SortType> sortType() {
+        return tracked(() -> sortType, value -> sortType = value);
+    }
+
+    @Override
+    public IConfigValue<Boolean> reverseSort() {
+        return tracked(() -> reverseSort, value -> reverseSort = value);
+    }
+
+    @Override
+    public IConfigValue<String> activePageId() {
+        return tracked(() -> activePageId, value -> activePageId = value);
+    }
+
+    @Override
+    public IConfigValue<String> searchQuery() {
+        return tracked(() -> searchQuery, value -> searchQuery = value);
+    }
+
+    @Override
     public Set<String> hidingPageIds() {
         return Collections.unmodifiableSet(hiddenPages);
     }
@@ -184,9 +230,5 @@ public final class FabricClientConfig implements IClientConfig {
         }
         save();
     }
-
-    @Override
-    public void save() {
-        save();
-    }
 }
+

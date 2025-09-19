@@ -1,5 +1,6 @@
 package com.kwwsyk.endinv.common.client.gui;
 
+import com.kwwsyk.endinv.common.client.CachedConfig;
 import com.kwwsyk.endinv.common.menu.EndlessInventoryMenu;
 import com.kwwsyk.endinv.common.util.SortType;
 import net.minecraft.client.gui.GuiGraphics;
@@ -11,8 +12,6 @@ import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.Slot;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import static com.kwwsyk.endinv.common.ModRegistries.NbtAttachments.getSyncedConfig;
 
 public class EndlessInventoryScreen extends AbstractContainerScreen<EndlessInventoryMenu> implements SortTypeSwitcher {
 
@@ -96,7 +95,7 @@ public class EndlessInventoryScreen extends AbstractContainerScreen<EndlessInven
     @Override
     public void switchSortTypeTo(SortType type) {
         menu.sortType = type;
-        com.kwwsyk.endinv.common.client.ClientSyncedConfig.updateSyncedConfig(getSyncedConfig().getWith(menu.getPlayer()).sortTypeChanged(type));
+        CachedConfig.updateLayout(menu.getPageData());
         menu.getDisplayingPage().release();
         menu.getDisplayingPage().sendChangesToServer();
     }
@@ -140,3 +139,4 @@ public class EndlessInventoryScreen extends AbstractContainerScreen<EndlessInven
         return imageHeight;
     }
 }
+

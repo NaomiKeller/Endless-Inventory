@@ -1,10 +1,12 @@
 package com.kwwsyk.endinv.common.client.gui.page;
 
 import com.kwwsyk.endinv.common.ModInfo;
+import com.kwwsyk.endinv.common.client.CachedConfig;
 import com.kwwsyk.endinv.common.client.CachedSrcInv;
 import com.kwwsyk.endinv.common.client.gui.EndlessInventoryScreen;
 import com.kwwsyk.endinv.common.menu.page.PageType;
 import com.kwwsyk.endinv.common.menu.page.pageManager.PageMetaDataManager;
+import com.kwwsyk.endinv.common.network.payloads.PageData;
 import com.kwwsyk.endinv.common.network.payloads.toServer.CreativeItemModPayload;
 import com.kwwsyk.endinv.common.network.payloads.toServer.ItemClickPayload;
 import com.kwwsyk.endinv.common.network.payloads.toServer.ItemPageContext;
@@ -29,7 +31,6 @@ import org.slf4j.Logger;
 import java.util.List;
 
 import static com.kwwsyk.endinv.common.ModInfo.getPacketDistributor;
-import static com.kwwsyk.endinv.common.ModRegistries.NbtAttachments.getSyncedConfig;
 
 /**
  * DisplayPage that has a list of ItemStack, and items are linked to EndInv.
@@ -119,7 +120,9 @@ public abstract class ItemPage extends DisplayPage {
     }
 
     public void sendChangesToServer() {
-        getPacketDistributor().sendToServer(new ItemPageContext(startIndex,length, getSyncedConfig().getWith(meta.getPlayer()).pageData()));
+        PageData layout = meta.getPageData();
+        CachedConfig.updateLayout(layout);
+        getPacketDistributor().sendToServer(new ItemPageContext(startIndex, length, layout));
     }
 
     public int getStartIndex(){
@@ -404,3 +407,5 @@ public abstract class ItemPage extends DisplayPage {
         }
     }
 }
+
+

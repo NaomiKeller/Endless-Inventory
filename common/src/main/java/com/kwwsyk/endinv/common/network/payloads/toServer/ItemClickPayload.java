@@ -51,7 +51,7 @@ public record ItemClickPayload(ItemStack stack, int button, ClickType clickType)
         LOGGER.debug("EI:ItemClickPayload.handle: player={} clickType={} button={} carriedEmpty={} stack={}", player.getName().getString(), clickType, button, carried.isEmpty(), stack);
         var opt = ServerLevelEndInv.getEndInvForPlayer(player);
         if(opt.isEmpty()) {
-            LOGGER.info("ItemClickPayload.handle: no EndInv for player={}", player.getName().getString());
+            LOGGER.warn("ItemClickPayload.handle: no EndInv for player={}", player.getName().getString());
             return;
         }
         EndlessInventory endInv = opt.get();

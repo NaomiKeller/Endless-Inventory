@@ -7,6 +7,7 @@ import com.kwwsyk.endinv.common.client.KeyMappings;
 import com.kwwsyk.endinv.common.client.option.IClientConfig;
 import com.kwwsyk.endinv.fabric.client.FabricClientConfig;
 import com.kwwsyk.endinv.fabric.client.events.ClientEvents;
+import com.kwwsyk.endinv.fabric.mixin.AbstractContainerScreenAccessor;
 import com.kwwsyk.endinv.fabric.network.FabricNetworking;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.fabricmc.api.ClientModInitializer;
@@ -42,13 +43,13 @@ public class ClientModInit extends AbstractClientModInitializer implements Clien
         return new IInputHandler() {
             @Override
             public boolean isActiveAndMatches(KeyMapping keyMapping, InputConstants.Key key) {
-                return keyMapping.isActiveAndMatches(key);
+                return matchesKey(keyMapping, key);
             }
 
             @Override
             public boolean isActiveAndMatches(KeyMappings.EndInvKey endInvKey, InputConstants.Key key) {
                 KeyMapping mapping = REGISTERED_KEYS.computeIfAbsent(endInvKey, ClientModInit::registerKey);
-                if (!mapping.isActiveAndMatches(key)) {
+                if (!matchesKey(mapping, key)) {
                     return false;
                 }
                 if (!conditionMatches(endInvKey)) {
@@ -67,24 +68,32 @@ public class ClientModInit extends AbstractClientModInitializer implements Clien
         return new IContainerScreenHelper() {
             @Override
             public int getGuiLeft(AbstractContainerScreen<?> screen) {
-                return screen.getGuiLeft();
+                return ((AbstractContainerScreenAccessor) screen).endinv$getLeftPos();
             }
 
             @Override
             public int getGuiTop(AbstractContainerScreen<?> screen) {
-                return screen.getGuiTop();
+                return ((AbstractContainerScreenAccessor) screen).endinv$getTopPos();
             }
 
             @Override
             public int getGuiXSize(AbstractContainerScreen<?> screen) {
-                return screen.getXSize();
+                return ((AbstractContainerScreenAccessor) screen).endinv$getImageWidth();
             }
 
             @Override
             public int getGuiYSize(AbstractContainerScreen<?> screen) {
-                return screen.getYSize();
+                return ((AbstractContainerScreenAccessor) screen).endinv$getImageHeight();
             }
         };
+    }
+
+    private static boolean matchesKey(KeyMapping mapping, InputConstants.Key key) {
+        InputConstants.Type type = key.getType();
+        if (type == InputConstants.Type.MOUSE) {
+            return mapping.matchesMouse(key.getValue());
+        }
+        return mapping.matches(key.getValue(), key.getValue());
     }
 
     private static boolean conditionMatches(KeyMappings.EndInvKey key) {

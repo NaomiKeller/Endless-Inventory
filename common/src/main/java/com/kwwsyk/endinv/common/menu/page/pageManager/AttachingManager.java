@@ -6,7 +6,6 @@ import com.kwwsyk.endinv.common.SourceInventory;
 import com.kwwsyk.endinv.common.menu.page.PageType;
 import com.kwwsyk.endinv.common.menu.page.PageTypeRegistry;
 import com.kwwsyk.endinv.common.network.payloads.PageData;
-import com.kwwsyk.endinv.common.network.payloads.SyncedConfig;
 import com.kwwsyk.endinv.common.network.payloads.toClient.EndInvMetadata;
 import com.kwwsyk.endinv.common.util.SortType;
 import net.minecraft.server.level.ServerPlayer;
@@ -15,8 +14,6 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.List;
-
-import static com.kwwsyk.endinv.common.ModRegistries.NbtAttachments.getSyncedConfig;
 
 public class AttachingManager implements PageMetaDataManager{
 
@@ -41,19 +38,28 @@ public class AttachingManager implements PageMetaDataManager{
         this.player = player;
         pageTypeList = PageTypeRegistry.getDisplayPages();
         PageIdList = pageTypeList.stream().map(tp->tp.registerName).toList();
-        SyncedConfig config = getSyncedConfig().getWith(player);
-        init(config.pageData());
+        this.rows = 9;
+        this.columns = 9;
+        this.sortType = SortType.DEFAULT;
+        this.searching = "";
+        this.reverseSort = false;
+        if (!PageIdList.isEmpty()) {
+            this.displayingPageIndex = 0;
+            this.DisplayingPageId = PageIdList.get(0);
+        } else {
+            this.displayingPageIndex = 0;
+            this.DisplayingPageId = PageType.DEFAULT_KEY;
+        }
         this.quickMoveHandler = new PageQuickMoveHandler(this);
     }
-    private void init(int rows, int columns, SortType sortType, String searching, String type){
-        this.rows = rows;
-        this.columns = columns;
-        this.sortType = sortType;
-        this.searching = searching;
-        this.switchPageWithId(type);
-    }
-    private void init(PageData data){
-        init(data.rows(),data.columns(),data.sortType(),data.search(),data.pageRegKey());
+
+    public void applyPageData(PageData data){
+        this.rows = data.rows();
+        this.columns = data.columns();
+        this.sortType = data.sortType();
+        this.searching = data.search();
+        this.reverseSort = data.reverseSort();
+        this.switchPageWithId(data.pageRegKey());
     }
 
 
@@ -168,3 +174,5 @@ public class AttachingManager implements PageMetaDataManager{
         return pageTypeList.get(displayingPageIndex);
     }
 }
+
+

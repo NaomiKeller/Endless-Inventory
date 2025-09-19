@@ -1,21 +1,13 @@
 package com.kwwsyk.endinv.fabric.network;
 
 import com.kwwsyk.endinv.common.AbstractModInitializer;
+import com.kwwsyk.endinv.common.client.CachedConfig;
 import com.kwwsyk.endinv.common.network.payloads.ModPacketContext;
 import com.kwwsyk.endinv.common.network.payloads.ModPacketPayload;
 import com.kwwsyk.endinv.common.network.payloads.SyncedConfig;
-import com.kwwsyk.endinv.common.network.payloads.toClient.EndInvContent;
-import com.kwwsyk.endinv.common.network.payloads.toClient.EndInvMetadata;
-import com.kwwsyk.endinv.common.network.payloads.toClient.ItemPickedUpPayload;
-import com.kwwsyk.endinv.common.network.payloads.toClient.SetItemDisplayContentPayload;
-import com.kwwsyk.endinv.common.network.payloads.toClient.SetStarredPagePayload;
-import com.kwwsyk.endinv.common.network.payloads.toServer.CreativeItemModPayload;
-import com.kwwsyk.endinv.common.network.payloads.toServer.ItemClickPayload;
-import com.kwwsyk.endinv.common.network.payloads.toServer.ItemPageContext;
-import com.kwwsyk.endinv.common.network.payloads.toServer.OpenEndInvPayload;
-import com.kwwsyk.endinv.common.network.payloads.toServer.QuickMoveToPagePayload;
-import com.kwwsyk.endinv.common.network.payloads.toServer.StarItemPayload;
-import net.fabricmc.fabric.api.networking.v1.ClientPlayNetworking;
+import com.kwwsyk.endinv.common.network.payloads.toClient.*;
+import com.kwwsyk.endinv.common.network.payloads.toServer.*;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.network.FriendlyByteBuf;
@@ -93,7 +85,12 @@ public final class FabricNetworking {
     private static void registerClientReceiver(PayloadRegistration<? extends ModPacketPayload> registration) {
         ClientPlayNetworking.registerGlobalReceiver(registration.id(), (client, handler, buf, responseSender) -> {
             ModPacketPayload payload = registration.decode(buf);
-            client.execute(() -> payload.handle(context(client.player)));
+            client.execute(() -> {
+                payload.handle(context(client.player));
+                if (payload instanceof SyncedConfig config) {
+                    CachedConfig.acceptServerFlags(config);
+                }
+            });
         });
     }
 
@@ -126,3 +123,4 @@ public final class FabricNetworking {
         }
     }
 }
+

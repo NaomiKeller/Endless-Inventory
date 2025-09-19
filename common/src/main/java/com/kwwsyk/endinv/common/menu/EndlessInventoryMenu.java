@@ -4,35 +4,38 @@ import com.kwwsyk.endinv.common.EndlessInventory;
 import com.kwwsyk.endinv.common.ModInfo;
 import com.kwwsyk.endinv.common.ServerLevelEndInv;
 import com.kwwsyk.endinv.common.SourceInventory;
+import com.kwwsyk.endinv.common.client.CachedConfig;
 import com.kwwsyk.endinv.common.client.CachedSrcInv;
-import com.kwwsyk.endinv.common.client.ClientSyncedConfig;
 import com.kwwsyk.endinv.common.client.gui.page.DisplayPage;
 import com.kwwsyk.endinv.common.client.gui.page.ItemPage;
 import com.kwwsyk.endinv.common.menu.page.PageType;
 import com.kwwsyk.endinv.common.menu.page.pageManager.PageMetaDataManager;
 import com.kwwsyk.endinv.common.network.payloads.PageData;
-import com.kwwsyk.endinv.common.network.payloads.SyncedConfig;
 import com.kwwsyk.endinv.common.util.SortType;
 import net.minecraft.CrashReport;
 import net.minecraft.CrashReportCategory;
 import net.minecraft.ReportedException;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
+import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.SlotAccess;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.flag.FeatureFlagSet;
 import net.minecraft.world.inventory.*;
 import net.minecraft.world.item.ItemStack;
-import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-import static com.kwwsyk.endinv.common.ModRegistries.*;
+import static com.kwwsyk.endinv.common.ModRegistries.Items;
+import static com.kwwsyk.endinv.common.ModRegistries.Menus;
 import static com.kwwsyk.endinv.common.ServerLevelEndInv.getEndInvForPlayer;
+
 
 public class EndlessInventoryMenu extends AbstractContainerMenu implements PageMetaDataManager {
 
@@ -63,23 +66,38 @@ public class EndlessInventoryMenu extends AbstractContainerMenu implements PageM
 
 
     //Client constructor
+    //should be only invoked on client thread
     public static EndlessInventoryMenu createClient(int id, Inventory playerInv){
-        var ret = new EndlessInventoryMenu(id,playerInv,null);
-        SyncedConfig config = NbtAttachments.getSyncedConfig().getWith(playerInv.player);
-        ret.init(config.pageData());
-        ret.addStandardInventorySlots(playerInv, 8, 18 * ret.rows() + 18 + 13);
-
+        PageData layout = CachedConfig.resolveLayout(null, true);
+        var ret = new EndlessInventoryMenu(id, playerInv, null);
+        ret.init(layout);
+        ret.switchPageWithId(layout.pageRegKey());
+        ret.buildSlotLayout(playerInv);
         return ret;
     }
 
+    public static MenuProvider provide(int rows){
+        return new MenuProvider() {
+            @Override
+            public Component getDisplayName() {
+                return Component.empty();
+            }
+
+            @Override @Nullable
+            public AbstractContainerMenu createMenu(int id, Inventory inventory, Player player) {
+                return createServer(id,inventory,player,rows);
+            }
+        };
+    }
+
     //Server constructor
-    public static AbstractContainerMenu createServer(int i, Inventory inventory, Player player) {
+    @Nullable
+    public static AbstractContainerMenu createServer(int i, Inventory inventory, Player player, int rows) {
         EndlessInventory endlessInventory = getEndInvForPlayer(player).orElse(null);
         if(endlessInventory==null) return null;
-        SyncedConfig config = NbtAttachments.getSyncedConfig().getWith(player);
-        var ret = new EndlessInventoryMenu(i,inventory,endlessInventory);
-        ret.init(config.pageData());
-        ret.addStandardInventorySlots(inventory, 8, 18 * ret.rows() + 18 + 13);
+        var ret = new EndlessInventoryMenu(i, inventory, endlessInventory);
+        ret.init(new PageData(rows,9));
+        ret.buildSlotLayout(inventory);
         return ret;
     }
 
@@ -87,31 +105,17 @@ public class EndlessInventoryMenu extends AbstractContainerMenu implements PageM
         EndlessInventory endInv = ServerLevelEndInv.TEMP_ENDINV_REG.get((ServerPlayer) player);
         if(endInv==null) throw new IllegalStateException("Try to create tmp menu without tmp EndInv.");
         var ret = new EndlessInventoryMenu(i,inventory,endInv);
-        SyncedConfig config = NbtAttachments.getSyncedConfig().getWith(player);
-        ret.init(config.pageData());
-        ret.addStandardInventorySlots(inventory, 8, 18 * ret.rows() + 18 + 13);
+        ret.init(PageData.DEFAULT);
+        ret.buildSlotLayout(inventory);
         return ret;
     }
 
     //Common constructor
-    public EndlessInventoryMenu(int id , Inventory playerInv, EndlessInventory endlessInventory){
+    public EndlessInventoryMenu(int id , Inventory playerInv,@Nullable EndlessInventory endlessInventory){
         super(Menus.getEndInvMenuType(),id);
         this.player = playerInv.player;
         this.sourceInventory = endlessInventory!=null ? endlessInventory : CachedSrcInv.INSTANCE;
-        // pages are client-side; not built on server
-        // add crafting/result slots and player inventory slots if player inventory provided
-        int craftX = 8;
-        int craftY = 18 * this.rows() + 18; // placed between page and player inventory
-        int resultX = craftX + CRAFT_GRID_WIDTH * 18 + 6;
-        int resultY = craftY + 18; // center vertically
-        this.addSlot(new ResultSlot(this.player, this.craftMatrix, this.craftResult, 0, resultX, resultY));
-        for (int row = 0; row < CRAFT_GRID_HEIGHT; ++row) {
-            for (int col = 0; col < CRAFT_GRID_WIDTH; ++col) {
-                this.addSlot(new Slot(this.craftMatrix, col + row * CRAFT_GRID_WIDTH, craftX + col * 18, craftY + row * 18));
-            }
-        }
-        int invY = craftY + CRAFT_GRID_HEIGHT * 18 + 13;
-        addStandardInventorySlots(playerInv, 8, invY);
+        // pages are client-side; slots are built after layout initialization
         //build data slots
         itemSize.set( endlessInventory!=null ? endlessInventory.getItemSize() : 0);
         maxStackSize.set(endlessInventory!=null? endlessInventory.getMaxItemStackSize() : Integer.MAX_VALUE);
@@ -122,18 +126,37 @@ public class EndlessInventoryMenu extends AbstractContainerMenu implements PageM
         addDataSlot(infinityMode);
     }
 
-    private void init(int rows, SortType sortType, String searching, String key){
-        rowsData.set(rows);
-        this.sortType = sortType;
-        this.searching = searching;
-        this.switchPageWithId(key);
+    public void applyPageData(PageData pageData){
+        init(pageData);
     }
 
     private void init(PageData pageData){
-        init(pageData.rows(),pageData.sortType(),pageData.search(),pageData.pageRegKey());//4: reserved rows for inventory.
+        int rows = Math.max(1, pageData.rows());
+        rowsData.set(rows);
+        this.sortType = pageData.sortType();
+        this.searching = pageData.search();
+        this.reverseSort = pageData.reverseSort();
     }
 
-    public void addStandardInventorySlots(Inventory playerInventory, int x, int y){
+    private void buildSlotLayout(Inventory playerInventory) {
+        if (!this.slots.isEmpty()) {
+            return;
+        }
+        int craftX = 8;
+        int craftY = 18 * this.rows() + 18;
+        int resultX = craftX + CRAFT_GRID_WIDTH * 18 + 6;
+        int resultY = craftY + 18;
+        this.addSlot(new ResultSlot(this.player, this.craftMatrix, this.craftResult, 0, resultX, resultY));
+        for (int row = 0; row < CRAFT_GRID_HEIGHT; ++row) {
+            for (int col = 0; col < CRAFT_GRID_WIDTH; ++col) {
+                this.addSlot(new Slot(this.craftMatrix, col + row * CRAFT_GRID_WIDTH, craftX + col * 18, craftY + row * 18));
+            }
+        }
+        int invY = craftY + CRAFT_GRID_HEIGHT * 18 + 13;
+        addStandardInventorySlots(playerInventory, 8, invY);
+    }
+
+    private void addStandardInventorySlots(Inventory playerInventory, int x, int y){
         for (int l = 0; l < 3; l++) {
             for (int j1 = 0; j1 < 9; j1++) {
                 this.addSlot(new Slot(playerInventory, j1 + l * 9 + 9, x + j1 * 18, y + l * 18 ));
@@ -145,16 +168,11 @@ public class EndlessInventoryMenu extends AbstractContainerMenu implements PageM
         }
     }
 
-    public List<DisplayPage> buildPages(){
-        return List.of();
-    }
-
     //supposed to be the only method to change displaying page and index value; to sync.
     public void switchPageWithIndex(int index){
-        if(this.pages == null || this.pages.isEmpty() || index < 0 || index >= this.pages.size()) return;
+        if(this.pages.isEmpty() || index < 0 || index >= this.pages.size()) return;
         this.displayingPageIndex = index;
         this.displayingPage = this.pages.get(index);
-        ClientSyncedConfig.updateSyncedConfig(NbtAttachments.getSyncedConfig().getWith(player).pageKeyChanged(displayingPage.id));
         this.displayingPage.refreshContents();
     }
 
@@ -223,7 +241,7 @@ public class EndlessInventoryMenu extends AbstractContainerMenu implements PageM
      * @param clickType {@link ClickType}
      * @param player player performing menu click
      */
-    public void clicked(int slotId, int button, @NotNull ClickType clickType, @NotNull Player player) {
+    public void clicked(int slotId, int button, ClickType clickType, Player player) {
         try {
             if(clickType==ClickType.QUICK_CRAFT){
                 MenuClickHandler.handleQuickCraft(this,slotId,button,player);
@@ -275,12 +293,12 @@ public class EndlessInventoryMenu extends AbstractContainerMenu implements PageM
     private SlotAccess createCarriedSlotAccess() {
         return new SlotAccess() {
             @Override
-            public @NotNull ItemStack get() {
+            public ItemStack get() {
                 return EndlessInventoryMenu.this.getCarried();
             }
 
             @Override
-            public boolean set(@NotNull ItemStack itemStack) {
+            public boolean set(ItemStack itemStack) {
                 EndlessInventoryMenu.this.setCarried(itemStack);
                 return true;
             }
@@ -288,7 +306,7 @@ public class EndlessInventoryMenu extends AbstractContainerMenu implements PageM
     }
 
     @Override
-    public @NotNull ItemStack quickMoveStack(@NotNull Player player, int index) {
+    public ItemStack quickMoveStack(Player player, int index) {
         ItemStack itemstack = ItemStack.EMPTY;
         Slot slot = this.slots.get(index);
         if (slot.hasItem()) {
@@ -375,7 +393,7 @@ public class EndlessInventoryMenu extends AbstractContainerMenu implements PageM
     }
 
     @Override
-    public boolean stillValid(@NotNull Player player) {
+    public boolean stillValid(Player player) {
         return true;
     }
 

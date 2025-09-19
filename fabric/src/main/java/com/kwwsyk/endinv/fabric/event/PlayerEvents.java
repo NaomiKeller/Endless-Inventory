@@ -3,13 +3,14 @@ package com.kwwsyk.endinv.fabric.event;
 import com.kwwsyk.endinv.common.ModInfo;
 import com.kwwsyk.endinv.common.ModRegistries;
 import com.kwwsyk.endinv.common.ServerLevelEndInv;
+import com.kwwsyk.endinv.common.network.payloads.SyncedConfig;
 import com.kwwsyk.endinv.common.network.payloads.toClient.EndInvContent;
 import com.kwwsyk.endinv.common.network.payloads.toClient.EndInvMetadata;
 import com.kwwsyk.endinv.common.options.ContentTransferMode;
-import com.kwwsyk.endinv.common.network.payloads.SyncedConfig;
 import com.kwwsyk.endinv.fabric.ServerConfig;
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 
@@ -27,7 +28,7 @@ public final class PlayerEvents {
 
     public static void register() {
         ServerTickEvents.END_SERVER_TICK.register(PlayerEvents::flushSync);
-        ServerPlayerEvents.JOIN.register(PlayerEvents::scheduleSync);
+        ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> scheduleSync(handler.player));
         ServerPlayerEvents.COPY_FROM.register(PlayerEvents::copyFromOldPlayer);
     }
 

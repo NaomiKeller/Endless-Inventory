@@ -1,10 +1,8 @@
 package com.kwwsyk.endinv.common.client;
 
-import com.kwwsyk.endinv.common.ModRegistries;
 import com.kwwsyk.endinv.common.client.gui.EndlessInventoryScreen;
 import com.kwwsyk.endinv.common.client.gui.page.ItemPage;
 import com.kwwsyk.endinv.common.network.payloads.PageData;
-import com.kwwsyk.endinv.common.network.payloads.SyncedConfig;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -81,8 +79,7 @@ public class ScreenDebug {
                 graphics.drawString(mc.font, Component.literal("mouseY: " + mouseY), width - 128, 80, 0xFFFFFF00);
 
                 if(mc.player!=null) {
-                    SyncedConfig syncedConfig = ModRegistries.NbtAttachments.getSyncedConfig().getWith(mc.player);
-                    PageData pageData = syncedConfig.pageData();
+                    PageData pageData = CachedConfig.currentLayout();
                     graphics.drawString(mc.font, Component.literal("Page data: "), 0, 10, 0xFFFFFF00);
                     graphics.drawString(mc.font, Component.literal("Page: "+pageData.pageRegKey()), 0, 20, 0xFFFFFF00);
                     graphics.drawString(mc.font, Component.literal("Rows: "+pageData.rows()), 10, 30, 0xFFFFFF00);
@@ -120,3 +117,6 @@ public class ScreenDebug {
         }
     }
 }
+
+
+

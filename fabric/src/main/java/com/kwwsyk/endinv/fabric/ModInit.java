@@ -9,9 +9,12 @@ import com.kwwsyk.endinv.common.network.IPacketDistributor;
 import com.kwwsyk.endinv.common.network.payloads.SyncedConfig;
 import com.kwwsyk.endinv.common.options.IServerConfig;
 import com.kwwsyk.endinv.fabric.event.FabricEvents;
+import com.kwwsyk.endinv.fabric.nbtAttachment.FabricNbtStorage;
 import com.kwwsyk.endinv.fabric.network.FabricNetworking;
 import net.fabricmc.api.ModInitializer;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtOps;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.flag.FeatureFlags;
@@ -20,8 +23,6 @@ import net.minecraft.world.item.Item;
 
 import java.util.UUID;
 import java.util.function.Supplier;
-
-import static com.kwwsyk.endinv.common.AbstractModInitializer.withModLocation;
 
 public class ModInit extends AbstractModInitializer implements ModInitializer {
 
@@ -56,6 +57,7 @@ public class ModInit extends AbstractModInitializer implements ModInitializer {
     protected RegistryCallback<Item> itemReg() {
         return new RegistryCallback<>() {
             @Override
+            @SuppressWarnings("unchecked")
             public <R extends Item> Supplier<R> register(String id, Supplier<R> supplier) {
                 ResourceLocation location = withModLocation(id);
                 R item = supplier.get();
@@ -69,6 +71,7 @@ public class ModInit extends AbstractModInitializer implements ModInitializer {
     protected RegistryCallback<MenuType<?>> menuReg() {
         return new RegistryCallback<>() {
             @Override
+            @SuppressWarnings("unchecked")
             public <R extends MenuType<?>> Supplier<R> register(String id, Supplier<R> supplier) {
                 ResourceLocation location = withModLocation(id);
                 R type = supplier.get();
@@ -88,22 +91,23 @@ public class ModInit extends AbstractModInitializer implements ModInitializer {
         return new NbtAttachment<>() {
             @Override
             public UUID getWith(Player player) {
-                var data = player.getPersistentData();
-                return data.hasUUID(name) ? data.getUUID(name) : ModInfo.DEFAULT_UUID;
+                UUID uuid = FabricNbtStorage.getUuid(player);
+                return uuid != null ? uuid : ModInfo.DEFAULT_UUID;
             }
 
             @Override
             public void setTo(Player player, UUID uuid) {
-                player.getPersistentData().putUUID(name, uuid);
+                FabricNbtStorage.setUuid(player, uuid);
             }
 
             @Override
             public UUID computeIfAbsent(Player player) {
-                var data = player.getPersistentData();
-                if (!data.hasUUID(name)) {
-                    data.putUUID(name, ModInfo.DEFAULT_UUID);
+                UUID uuid = FabricNbtStorage.getUuid(player);
+                if (uuid == null) {
+                    FabricNbtStorage.setUuid(player, ModInfo.DEFAULT_UUID);
+                    return ModInfo.DEFAULT_UUID;
                 }
-                return data.getUUID(name);
+                return uuid;
             }
         };
     }
@@ -113,22 +117,24 @@ public class ModInit extends AbstractModInitializer implements ModInitializer {
         return new NbtAttachment<>() {
             @Override
             public SyncedConfig getWith(Player player) {
-                var data = player.getPersistentData();
-                if (!data.contains(name, net.minecraft.nbt.Tag.TAG_COMPOUND)) {
+                if (!FabricNbtStorage.hasCompound(player, name)) {
                     return SyncedConfig.DEFAULT;
                 }
-                var compound = data.getCompound(name);
-                return SyncedConfig.CODEC.parse(net.minecraft.nbt.NbtOps.INSTANCE, compound)
+                CompoundTag compound = FabricNbtStorage.getCompound(player, name).copy();
+                return SyncedConfig.CODEC.parse(NbtOps.INSTANCE, compound)
                         .resultOrPartial(ModInit::logCodecError)
                         .orElse(SyncedConfig.DEFAULT);
             }
 
             @Override
             public void setTo(Player player, SyncedConfig syncedConfig) {
-                var data = player.getPersistentData();
-                SyncedConfig.CODEC.encodeStart(net.minecraft.nbt.NbtOps.INSTANCE, syncedConfig)
+                SyncedConfig.CODEC.encodeStart(NbtOps.INSTANCE, syncedConfig)
                         .resultOrPartial(ModInit::logCodecError)
-                        .ifPresent(tag -> data.put(name, (net.minecraft.nbt.CompoundTag) tag));
+                        .ifPresent(tag -> {
+                            if (tag instanceof CompoundTag compound) {
+                                FabricNbtStorage.setCompound(player, name, compound.copy());
+                            }
+                        });
             }
 
             @Override

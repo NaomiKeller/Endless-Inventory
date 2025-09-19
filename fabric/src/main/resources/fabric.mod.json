@@ -2,17 +2,14 @@
   "schemaVersion": 1,
   "id": "endless_inventory",
   "version": "${version}",
-
   "name": "Endless Inventory",
   "description": "This mod provides an RPG like inventory space, allowing player to store endless items.\nAnd do something else.",
   "authors": [
     "Kay_Zhang"
   ],
   "contact": {},
-
   "license": "MIT",
   "icon": "assets/endless_inventory/icon.png",
-
   "environment": "*",
   "entrypoints": {
     "main": [
@@ -22,15 +19,9 @@
       "com.kwwsyk.endinv.fabric.ClientModInit"
     ]
   },
-
   "mixins": [
     "fabric.mixins.json"
-    ,{
-      "config": "fabric.client.mixins.json",
-      "environment": "client"
-    }
   ],
-
   "depends": {
     "fabricloader": ">=${loader_version}",
     "fabric": "*",

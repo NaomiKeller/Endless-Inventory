@@ -1,10 +1,8 @@
 package com.kwwsyk.endinv.common.item;
 
-import com.kwwsyk.endinv.common.menu.EndlessInventoryMenu;
-import net.minecraft.network.chat.Component;
+import com.kwwsyk.endinv.common.client.ClientModInfo;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
-import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -19,9 +17,8 @@ public class TestEndInv extends Item {
 
     @Override
     public @NotNull InteractionResultHolder<ItemStack> use(Level level, @NotNull Player player, @NotNull InteractionHand hand) {
-        if(!level.isClientSide) {
-            player.openMenu(new SimpleMenuProvider(EndlessInventoryMenu::createServer,
-                    Component.literal("test")));
+        if(level.isClientSide) {
+            ClientModInfo.sendOpenMenu();
         }
         return InteractionResultHolder.success(player.getItemInHand(hand));
     }
