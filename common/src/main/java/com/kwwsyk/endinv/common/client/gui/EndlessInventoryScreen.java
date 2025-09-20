@@ -1,12 +1,16 @@
 package com.kwwsyk.endinv.common.client.gui;
 
+import com.kwwsyk.endinv.common.ModInfo;
 import com.kwwsyk.endinv.common.client.CachedConfig;
 import com.kwwsyk.endinv.common.menu.EndlessInventoryMenu;
+import com.kwwsyk.endinv.common.network.payloads.toServer.ToggleCraftingPayload;
 import com.kwwsyk.endinv.common.util.SortType;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.Slot;
@@ -16,23 +20,62 @@ import org.jetbrains.annotations.Nullable;
 public class EndlessInventoryScreen extends AbstractContainerScreen<EndlessInventoryMenu> implements SortTypeSwitcher {
 
 
+    private static final ResourceLocation CRAFTING_TEXTURE = ResourceLocation.fromNamespaceAndPath("minecraft", "textures/gui/container/crafting_table.png");
     private ScreenFramework frameWork;
+    private Button craftingToggleButton;
+    private boolean craftingVisible;
     public boolean isHoveringOnSortBox;
 
     public EndlessInventoryScreen(EndlessInventoryMenu menu, Inventory playerInventory, Component title) {
         super(menu, playerInventory, title);
-        int containerRows = this.menu.rows();
-        this.imageHeight = 114 + containerRows *18;
+        recalcDimensions();
+    }
+
+    private void recalcDimensions() {
+        int baseRows = menu.getBaseRows();
+        this.imageHeight = 114 + baseRows * 18;
         this.inventoryLabelY = this.imageHeight - 94;
     }
 
     public void init(){
+        super.init();
+        craftingVisible = menu.isCraftingVisible();
+        recalcDimensions();
         this.leftPos = (this.width - this.imageWidth) / 2;
         this.topPos = (this.height - this.imageHeight) / 2;
-        var delegate = this.getPageManager();
-        this.frameWork = ScreenFramework.getInstance()!=null ? ScreenFramework.getInstance() : new ScreenFramework(this);
+        var existing = ScreenFramework.getInstance();
+        if (existing != null) {
+            existing.onClose();
+        }
+        this.frameWork = new ScreenFramework(this);
 
         frameWork.addWidgetToScreen(this::addRenderableWidget);
+        addCraftingToggleButton();
+    }
+
+    private void addCraftingToggleButton() {
+        Component label = craftingVisible ? Component.literal("Hide Craft") : Component.literal("Show Craft");
+        int width = 60;
+        int x = this.leftPos + this.imageWidth - width - 4;
+        int y = this.topPos + 5;
+        this.craftingToggleButton = Button.builder(label, b -> toggleCrafting())
+                .pos(x, y)
+                .size(width, 20)
+                .build();
+        addRenderableWidget(this.craftingToggleButton);
+    }
+
+    private void toggleCrafting() {
+        craftingVisible = !craftingVisible;
+        menu.setCraftingVisible(craftingVisible);
+        ModInfo.getPacketDistributor().sendToServer(new ToggleCraftingPayload(craftingVisible));
+        this.init();
+    }
+
+    private void drawCraftingBackground(GuiGraphics guiGraphics) {
+        int craftX = this.leftPos + 8;
+        int craftY = this.topPos + 18 * menu.getVisibleRows() + 18;
+        guiGraphics.blit(CRAFTING_TEXTURE, craftX - 1, craftY - 1, 29, 15, 141, 58);
     }
 
     public void render(@NotNull GuiGraphics gui, int mouseX, int mouseY, float partialTick){
@@ -91,13 +134,19 @@ public class EndlessInventoryScreen extends AbstractContainerScreen<EndlessInven
     @Override
     protected void renderBg(@NotNull GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {
         this.frameWork.renderBg(guiGraphics,mouseX,mouseY,partialTick);
+        if (menu.isCraftingVisible()) {
+            drawCraftingBackground(guiGraphics);
+        }
     }
     @Override
     public void switchSortTypeTo(SortType type) {
         menu.sortType = type;
         CachedConfig.updateLayout(menu.getPageData());
-        menu.getDisplayingPage().release();
-        menu.getDisplayingPage().sendChangesToServer();
+        if (frameWork != null && frameWork.meta != null) {
+            var page = frameWork.meta.getDisplayingPage();
+            page.release();
+            page.sendChangesToServer();
+        }
     }
 
     @Override
@@ -139,4 +188,7 @@ public class EndlessInventoryScreen extends AbstractContainerScreen<EndlessInven
         return imageHeight;
     }
 }
+
+
+
 

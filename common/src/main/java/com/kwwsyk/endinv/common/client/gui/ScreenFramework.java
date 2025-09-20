@@ -87,8 +87,8 @@ public class ScreenFramework {
         this.imageWidth = screen.getXSize();
         this.imageHeight = screen.getYSize();
         PageData layout = CachedConfig.resolveLayout(screen, true);
-        this.rows = Math.max(1, layout.rows());
         this.columns = Math.max(1, layout.columns());
+        this.rows = Math.max(1, meta.rows());
         this.sortTypeSwitcher = screen;
         SortType sort = layout.sortType() != null ? layout.sortType() : SortType.DEFAULT;
         meta.setSortType(sort);

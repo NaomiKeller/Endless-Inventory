@@ -107,7 +107,7 @@ public class ScreenDebug {
         if(button==InputConstants.KEY_F4){
             hideMenu=!hideMenu;
         }
-        if(screen instanceof EndlessInventoryScreen EIS && EIS.getMenu().getDisplayingPage() instanceof ItemPage itemPage){
+        if(screen instanceof EndlessInventoryScreen EIS && EIS.getFrameWork() != null && EIS.getFrameWork().meta.getDisplayingPage() instanceof ItemPage itemPage){
             if(button == InputConstants.KEY_R){
                 itemPage.tryRequestContents();
             }

@@ -82,6 +82,7 @@ public class ModPacketHandler {
         INSTANCE.registerMessage(i++, OpenEndInvPayload.class,OpenEndInvPayload::encode,OpenEndInvPayload::decode,convert(OpenEndInvPayload::handle));
         INSTANCE.registerMessage(i++, QuickMoveToPagePayload.class,QuickMoveToPagePayload::encode,QuickMoveToPagePayload::decode,convert(QuickMoveToPagePayload::handle));
         INSTANCE.registerMessage(i++, StarItemPayload.class,StarItemPayload::encode,StarItemPayload::decode,convert(StarItemPayload::handle));
+        INSTANCE.registerMessage(i++, ToggleCraftingPayload.class, ToggleCraftingPayload::encode, ToggleCraftingPayload::decode, convert(ToggleCraftingPayload::handle));
 
         INSTANCE.registerMessage(i, SyncedConfig.class,SyncedConfig::encode,SyncedConfig::decode,convertBi(SyncedConfig::handle));
     }
@@ -92,7 +93,8 @@ public class ModPacketHandler {
 
     @SubscribeEvent
     public static void onCommonSetup(FMLCommonSetupEvent event) {
-        // ← 在这里安全注册 channel
+        // register channel during common setup
         event.enqueueWork(ModPacketHandler::register);
     }
 }
+
