@@ -1,4 +1,4 @@
-﻿package com.kwwsyk.endinv.common.client.gui.bg;
+package com.kwwsyk.endinv.common.client.gui.bg;
 
 import com.kwwsyk.endinv.common.ModInfo;
 import com.kwwsyk.endinv.common.client.ClientModInfo;

@@ -160,10 +160,10 @@ public class EndlessInventoryMenu extends AbstractContainerMenu implements PageM
         if (!this.slots.isEmpty()) {
             return;
         }
-        int craftX = 8;
+        int craftX = 30;
         int craftRowsForPosition = Math.max(1, baseRows - CRAFTING_ROWS);
-        int craftY = 18 * craftRowsForPosition + 18;
-        int resultX = craftX + CRAFT_GRID_WIDTH * 18 + 6;
+        int craftY = 18 * craftRowsForPosition + 18 + 5;
+        int resultX = craftX + CRAFT_GRID_WIDTH * 18 + 40;
         int resultY = craftY + 18;
         this.addSlot(new CraftingResultSlot(this.player, this.craftMatrix, this.craftResult, 0, resultX, resultY));
         for (int row = 0; row < CRAFT_GRID_HEIGHT; ++row) {
