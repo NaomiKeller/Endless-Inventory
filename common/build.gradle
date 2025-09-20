@@ -12,6 +12,7 @@ buildscript {
 plugins {
     id 'net.minecraftforge.gradle' version '6.+'
     id 'idea'
+    id 'org.parchmentmc.librarian.forgegradle' version '1.+'
 }
 
 java {
@@ -19,7 +20,7 @@ java {
 }
 
 minecraft {
-    mappings channel: "official", version: "1.20.1"
+    mappings channel: "parchment", version: "2023.09.03-1.20.1"
 }
 
 configurations {
@@ -31,6 +32,10 @@ configurations {
         canBeResolved = false
         canBeConsumed = true
     }
+}
+
+repositories {
+    maven { url = 'https://maven.parchmentmc.org' }
 }
 
 dependencies {
