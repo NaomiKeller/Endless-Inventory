@@ -1,4 +1,4 @@
-package com.kwwsyk.endinv.common.client.gui;
+﻿package com.kwwsyk.endinv.common.client.gui;
 
 import com.kwwsyk.endinv.common.ModInfo;
 import com.kwwsyk.endinv.common.client.CachedConfig;
@@ -55,9 +55,9 @@ public class EndlessInventoryScreen extends AbstractContainerScreen<EndlessInven
 
     private void addCraftingToggleButton() {
         Component label = craftingVisible ? Component.literal("Hide Craft") : Component.literal("Show Craft");
-        int width = 60;
-        int x = this.leftPos + this.imageWidth - width - 4;
-        int y = this.topPos + 5;
+        int width = 70;
+        int x = this.leftPos + this.imageWidth - width - 8;
+        int y = this.topPos + 20;
         this.craftingToggleButton = Button.builder(label, b -> toggleCrafting())
                 .pos(x, y)
                 .size(width, 20)

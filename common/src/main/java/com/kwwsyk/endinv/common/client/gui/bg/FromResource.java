@@ -1,9 +1,10 @@
-package com.kwwsyk.endinv.common.client.gui.bg;
+﻿package com.kwwsyk.endinv.common.client.gui.bg;
 
 import com.kwwsyk.endinv.common.ModInfo;
 import com.kwwsyk.endinv.common.client.ClientModInfo;
 import com.kwwsyk.endinv.common.client.gui.ScreenFramework;
 import com.kwwsyk.endinv.common.client.option.TextureMode;
+import com.kwwsyk.endinv.common.menu.EndlessInventoryMenu;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
@@ -44,7 +45,9 @@ public abstract class FromResource extends SFBgRendererImpl {
         public void renderBg(@NotNull GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {
             super.renderBg(guiGraphics, partialTick, mouseX, mouseY);
 
-            int startY = menuTop + 17 + rows*18;
+            int baseRows = frameWork.menu instanceof EndlessInventoryMenu endless ? endless.getBaseRows() : rows;
+
+            int startY = menuTop + 17 + baseRows*18;
             renderPlayerInv(guiGraphics,partialTick,mouseX,mouseY,menuLeft,startY);
         }
 
