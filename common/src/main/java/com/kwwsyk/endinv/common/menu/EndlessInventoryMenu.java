@@ -9,6 +9,7 @@ import com.kwwsyk.endinv.common.client.CachedSrcInv;
 import com.kwwsyk.endinv.common.menu.page.PageType;
 import com.kwwsyk.endinv.common.menu.page.PageTypeRegistry;
 import com.kwwsyk.endinv.common.menu.page.pageManager.PageMetaDataManager;
+import com.kwwsyk.endinv.common.menu.page.pageManager.PageQuickMoveHandler;
 import com.kwwsyk.endinv.common.network.payloads.PageData;
 import com.kwwsyk.endinv.common.util.SortType;
 import net.minecraft.CrashReport;
@@ -40,7 +41,7 @@ import static com.kwwsyk.endinv.common.ModRegistries.Menus;
 import static com.kwwsyk.endinv.common.ServerLevelEndInv.getEndInvForPlayer;
 
 
-public class EndlessInventoryMenu extends AbstractContainerMenu implements PageMetaDataManager {
+public class EndlessInventoryMenu extends AbstractContainerMenu implements PageMetaDataManager, PageQuickMoveHandler.PageQuickMoveOverride {
 
 
     private final SourceInventory sourceInventory;
@@ -500,11 +501,13 @@ public class EndlessInventoryMenu extends AbstractContainerMenu implements PageM
     private boolean moveStackIntoCrafter(ItemStack stack) {
         int before = stack.getCount();
         boolean moved = this.moveItemStackTo(stack, CRAFT_SLOT_START, CRAFT_SLOT_END, false);
-        if (moved && stack.getCount() != before) {
-            craftMatrix.setChanged();
-            updateCraftingResult();
+        if (!moved || stack.getCount() == before) {
+            return false;
         }
-        return moved;
+        // Prevent ghost copies on the client by only flagging a move when the stack actually shrank.
+        craftMatrix.setChanged();
+        updateCraftingResult();
+        return true;
     }
 
     @Override
@@ -588,16 +591,16 @@ public class EndlessInventoryMenu extends AbstractContainerMenu implements PageM
         if (stack.isEmpty()) {
             return stack;
         }
-        if (craftingVisible && this.moveItemStackTo(stack, CRAFT_SLOT_START, CRAFT_SLOT_END, false)) {
-            craftMatrix.setChanged();
-            updateCraftingResult();
-        }
+
+        boolean crafterAccepted = craftingVisible && moveStackIntoCrafter(stack);
+        // Let the simulated transfer mirror the server: only spill into the inventory when there is a real remainder after filling the crafter.
         if (!stack.isEmpty()) {
-            if (!this.moveItemStackTo(stack, PLAYER_INV_START, PLAYER_INV_START + PLAYER_INV_SLOT_COUNT, false)) {
+            boolean movedToMain = this.moveItemStackTo(stack, PLAYER_INV_START, PLAYER_INV_START + PLAYER_INV_SLOT_COUNT, false);
+            if (!movedToMain) {
                 this.moveItemStackTo(stack, PLAYER_INV_START + PLAYER_INV_SLOT_COUNT, PLAYER_INV_END, false);
             }
         }
-        return stack;
+        return crafterAccepted && stack.isEmpty() ? ItemStack.EMPTY : stack;
     }
 
 
@@ -637,7 +640,7 @@ public class EndlessInventoryMenu extends AbstractContainerMenu implements PageM
     }
 
     /**
-     *Send operation will be accomplished in {@link AbstractContainerMenu#broadcastChanges()}
+     * Send operation will be accomplished in {@link AbstractContainerMenu#broadcastChanges()}
      */
     @Override
     public PageData getPageData() {

@@ -92,7 +92,7 @@ public class ScreenFramework {
         this.columns = Math.max(1, layout.columns());
         this.rows = Math.max(1, meta.rows());
         this.sortTypeSwitcher = screen;
-        SortType sort = layout.sortType() != null ? layout.sortType() : SortType.DEFAULT;
+        SortType sort = layout.sortType();
         meta.setSortType(sort);
         meta.setSortReversed(layout.reverseSort());
         meta.setSearching(layout.search());
