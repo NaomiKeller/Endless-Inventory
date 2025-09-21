@@ -1,5 +1,12 @@
 # Repository Guidelines
 
+##
+USER：
+- don't do useless outskirt operations that do not affect the purpose of my instructions, e.g. change my botton's liter component
+or something's description that I have written, or add empty lines.
+- do not change the encode of files (java files encode in utf-8 do not change)
+- Do not add sorttype reversesort search initialpagetype to clientconfig
+
 ## Project Structure & Module Organization
 - `common/` centralizes shared gameplay logic and resources that each loader consumes; align new code and assets here first.
 - Loader wrappers live in `fabric/`, `forge/`, and `neoforge/`, each providing entry points, mixins, and dev run configs under `src/main/java` and `runs/`.

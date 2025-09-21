@@ -2,9 +2,10 @@ plugins {
     id 'fabric-loom' version '1.9-SNAPSHOT'
     id 'idea'
     id 'java'
-
 }
-
+base {
+    archivesName = "${mod_name}-${minecraft_version}-${mod_version}-${project.name}"
+}
 loom {
     def aw = project(':common').file("src/main/resources/${mod_id}.accesswidener")
     if (aw.exists()) {
@@ -28,17 +29,22 @@ loom {
         }
     }
 }
-
 fabricApi {
     configureDataGeneration {
         client = true
     }
 }
-
-
+sourceSets {
+    main {
+        resources.srcDir project(':common').file('src/main/resources')
+    }
+}
 dependencies {
     compileOnly 'com.google.code.findbugs:jsr305:3.0.2'
-    implementation(project(":common"))
+    implementation(project(":common")) {
+        exclude group: "net.minecraftforge"
+    }
+    include project(':common')
     // To change the versions see the gradle.properties file
     minecraft "com.mojang:minecraft:${minecraft_version}"
     mappings loom.layered {
@@ -47,24 +53,19 @@ dependencies {
     }
     modImplementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${fabric_version}"
-
-    implementation "org.spongepowered:mixin:0.8.7"
     annotationProcessor "org.spongepowered:mixin:0.8.7:processor"
 }
-
 processResources {
     inputs.property "version", project.version
     inputs.property "minecraft_version", minecraft_version
     inputs.property "loader_version", fabric_loader_version
     filteringCharset "UTF-8"
-
     filesMatching("fabric.mod.json") {
         expand "version": project.version,
                 "minecraft_version": minecraft_version,
                 "loader_version": fabric_loader_version
     }
 }
-
 def targetJavaVersion = 17
 tasks.withType(JavaCompile).configureEach {
     // ensure that the encoding is set to UTF-8, no matter what the system default is
@@ -76,7 +77,6 @@ tasks.withType(JavaCompile).configureEach {
         it.options.release.set(targetJavaVersion)
     }
 }
-
 java {
     def javaVersion = JavaVersion.toVersion(targetJavaVersion)
     if (JavaVersion.current() < javaVersion) {
@@ -87,9 +87,9 @@ java {
     // If you remove this line, sources will not be generated.
     withSourcesJar()
 }
-
 jar {
     from("LICENSE") {
         rename { "${it}_${project.archivesBaseName}"}
     }
 }
+

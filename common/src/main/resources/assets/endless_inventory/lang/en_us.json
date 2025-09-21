@@ -43,6 +43,7 @@
 
   "endinv.setting.entry.FROM_RESOURCE": "Menu Texture",
   "endinv.setting.entry.TRANSPARENT": "Transparent",
+  "endinv.setting.entry.DEDICATED_LOCATION": "Custom Texture",
 
   "endless_inventory.configuration.ItemCapacity": "Item Capacity Configurations",
   "endless_inventory.configuration.maxStackSize": "Max Item Stack Size in End Inv",

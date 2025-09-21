@@ -1,6 +1,7 @@
 package com.kwwsyk.endinv.common.client.gui;
 
 import com.kwwsyk.endinv.common.SourceInventory;
+import com.kwwsyk.endinv.common.client.CachedConfig;
 import com.kwwsyk.endinv.common.client.CachedSrcInv;
 import com.kwwsyk.endinv.common.client.gui.page.DisplayPage;
 import com.kwwsyk.endinv.common.menu.page.pageManager.PageMetaDataManager;
@@ -17,7 +18,6 @@ import net.minecraft.world.item.ItemStack;
 
 import java.util.List;
 
-import static com.kwwsyk.endinv.common.ModRegistries.NbtAttachments.getSyncedConfig;
 
 /**The UI that controls interaction with Endless Inventory in client side.
  * Attached by an {@link AbstractContainerScreen<T>}
@@ -57,7 +57,7 @@ public class AttachedScreen<T extends AbstractContainerMenu> implements SortType
         @Override
         public void switchPageWithIndex(int index) {
             displayingPage = pages.get(index);
-            com.kwwsyk.endinv.common.client.ClientSyncedConfig.updateSyncedConfig(getSyncedConfig().getWith(player).pageKeyChanged(displayingPage.id));
+            CachedConfig.updateLayout(getPageData());
             displayingPage.refreshContents();
         }
 
@@ -163,13 +163,14 @@ public class AttachedScreen<T extends AbstractContainerMenu> implements SortType
         this.pages = pageMetadata.buildPages();
         assert Minecraft.getInstance().player != null;
         this.player = Minecraft.getInstance().player;
-        PageData data = getSyncedConfig().getWith(player).pageData();
+        PageData data = CachedConfig.resolveLayout(screen, false);
         this.rows = data.rows();
         this.columns = data.columns();
         this.sortType = data.sortType();
-        this.searching= data.search();
+        this.searching = data.search();
+        this.reverseSort = data.reverseSort();
         this.pageMetadata.switchPageWithId(data.pageRegKey());
-
+        CachedConfig.updateLayout(data);
         this.quickMoveHandler = new PageQuickMoveHandler(this.pageMetadata);
     }
 
@@ -252,7 +253,7 @@ public class AttachedScreen<T extends AbstractContainerMenu> implements SortType
     @Override
     public void switchSortTypeTo(SortType type) {
         this.sortType = type;
-        com.kwwsyk.endinv.common.client.ClientSyncedConfig.updateSyncedConfig(getSyncedConfig().getWith(player).sortTypeChanged(type));
+        CachedConfig.updateLayout(pageMetadata.getPageData());
         pageMetadata.getDisplayingPage().release();
         pageMetadata.getDisplayingPage().sendChangesToServer();
     }
@@ -285,3 +286,18 @@ public class AttachedScreen<T extends AbstractContainerMenu> implements SortType
         return List.of(new Rect2i(frameWork.leftPos, frameWork.topPos, frameWork.imageWidth, frameWork.imageHeight));
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

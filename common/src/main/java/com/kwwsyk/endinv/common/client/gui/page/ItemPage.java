@@ -1,10 +1,12 @@
 package com.kwwsyk.endinv.common.client.gui.page;
 
 import com.kwwsyk.endinv.common.ModInfo;
+import com.kwwsyk.endinv.common.client.CachedConfig;
 import com.kwwsyk.endinv.common.client.CachedSrcInv;
 import com.kwwsyk.endinv.common.client.gui.EndlessInventoryScreen;
 import com.kwwsyk.endinv.common.menu.page.PageType;
 import com.kwwsyk.endinv.common.menu.page.pageManager.PageMetaDataManager;
+import com.kwwsyk.endinv.common.network.payloads.PageData;
 import com.kwwsyk.endinv.common.network.payloads.toServer.CreativeItemModPayload;
 import com.kwwsyk.endinv.common.network.payloads.toServer.ItemClickPayload;
 import com.kwwsyk.endinv.common.network.payloads.toServer.ItemPageContext;
@@ -29,7 +31,6 @@ import org.slf4j.Logger;
 import java.util.List;
 
 import static com.kwwsyk.endinv.common.ModInfo.getPacketDistributor;
-import static com.kwwsyk.endinv.common.ModRegistries.NbtAttachments.getSyncedConfig;
 
 /**
  * DisplayPage that has a list of ItemStack, and items are linked to EndInv.
@@ -62,6 +63,16 @@ public abstract class ItemPage extends DisplayPage {
     public ItemPage(PageType pageType, PageMetaDataManager metaDataManager) {
         super(pageType,metaDataManager);
         this.length = meta.rows()* meta.columns();
+    }
+
+    /**
+     * Adjust the number of slots maintained by the item page so it matches the latest menu layout.
+     */
+    @Override
+    public void resize(int rows) {
+        int targetRows = Math.max(1, rows);
+        this.length = targetRows * meta.columns();
+        refreshContents(this.startIndex, this.length);
     }
 
     @Override
@@ -119,7 +130,9 @@ public abstract class ItemPage extends DisplayPage {
     }
 
     public void sendChangesToServer() {
-        getPacketDistributor().sendToServer(new ItemPageContext(startIndex,length, getSyncedConfig().getWith(meta.getPlayer()).pageData()));
+        PageData layout = meta.getPageData();
+        CachedConfig.updateLayout(layout);
+        getPacketDistributor().sendToServer(new ItemPageContext(startIndex, length, layout));
     }
 
     public int getStartIndex(){
@@ -204,7 +217,7 @@ public abstract class ItemPage extends DisplayPage {
         String suffix;
 
         if(count == this.meta.getMaxStackSize() && meta.enableInfinity()){
-            return "∞";
+            return "\u221E";
         }
 
         if (count >= 1_000_000_000) {
@@ -323,7 +336,7 @@ public abstract class ItemPage extends DisplayPage {
         setChanged();
     }
     @Override
-    public ItemStack tryQuickMoveStackTo(ItemStack stack) {
+    public ItemStack tryInsertItem(ItemStack stack) {
         var remain = addItem(stack);
         refreshContents();
         return remain;
@@ -404,3 +417,5 @@ public abstract class ItemPage extends DisplayPage {
         }
     }
 }
+
+

@@ -2,6 +2,8 @@ package com.kwwsyk.endinv.common.client.gui.page.manager;
 
 import com.kwwsyk.endinv.common.SourceInventory;
 import com.kwwsyk.endinv.common.client.gui.page.DisplayPage;
+import com.kwwsyk.endinv.common.client.gui.page.ItemPage;
+import com.kwwsyk.endinv.common.menu.EndlessInventoryMenu;
 import com.kwwsyk.endinv.common.menu.page.PageType;
 import com.kwwsyk.endinv.common.menu.page.PageTypeRegistry;
 import com.kwwsyk.endinv.common.menu.page.pageManager.PageMetaDataManager;
@@ -18,6 +20,7 @@ public class ClientPageManager implements PageManager {
     private final PageMetaDataManager delegate;
     private final List<DisplayPage> pages;
     private DisplayPage displayingPage;
+    private EndlessInventoryMenu.ClientPageBinding currentBinding;
 
     public ClientPageManager(PageMetaDataManager delegate){
         this.delegate = delegate;
@@ -52,10 +55,31 @@ public class ClientPageManager implements PageManager {
 
     @Override
     public void switchPageWithIndex(int index) {
-        delegate.switchPageWithIndex(index);
-        if(index>=0 && index<pages.size()){
-            this.displayingPage = pages.get(index);
-            this.displayingPage.refreshContents();
+        if (index < 0 || index >= pages.size()) {
+            return;
+        }
+        switchTo(pages.get(index));
+    }
+
+    private void switchTo(DisplayPage page) {
+        if (page == null) {
+            return;
+        }
+        bindPage(page);
+        delegate.switchPageWithId(page.id);
+    }
+
+    private void bindPage(DisplayPage page) {
+        this.displayingPage = page;
+        if (delegate instanceof EndlessInventoryMenu menu) {
+            if (currentBinding != null) {
+                menu.clearClientPageBinding(currentBinding);
+            }
+            currentBinding = new DisplayPageBinding(page);
+            menu.bindClientPage(currentBinding);
+        } else {
+            currentBinding = null;
+            page.refreshContents();
         }
     }
 
@@ -131,9 +155,9 @@ public class ClientPageManager implements PageManager {
 
     @Override
     public void switchPageWithId(String id) {
-        for(int i=0;i<pages.size();++i){
-            if(Objects.equals(pages.get(i).id,id)){
-                switchPageWithIndex(i);
+        for (DisplayPage page : pages) {
+            if (Objects.equals(page.id, id)) {
+                switchTo(page);
                 return;
             }
         }
@@ -166,4 +190,57 @@ public class ClientPageManager implements PageManager {
         return -1;
     }
 
+
+    private static class DisplayPageBinding implements EndlessInventoryMenu.ClientPageBinding {
+        private final DisplayPage page;
+
+        private DisplayPageBinding(DisplayPage page) {
+            this.page = page;
+        }
+
+        @Override
+        public String pageId() {
+            return page.id;
+        }
+
+        @Override
+        public PageType pageType() {
+            return page.getPageType();
+        }
+
+        @Override
+        public void onPageSelected() {
+            page.refreshContents();
+        }
+
+        @Override
+        public void scrollTo(float pos) {
+            page.scrollTo(pos);
+        }
+
+        @Override
+        public ItemStack quickMoveIntoPage(ItemStack stack) {
+            return page.tryInsertItem(stack);
+        }
+
+        @Override
+        public void markPageChanged() {
+            page.setChanged();
+        }
+
+        @Override
+        public ItemStack extractForPickupAll(ItemStack template, int maxCount) {
+            return page.tryExtractItem(template, maxCount);
+        }
+
+        @Override
+        public void refreshAfterMenuInteraction(SourceInventory source) {
+            if (page instanceof ItemPage itemPage) {
+                itemPage.refreshItems();
+            } else {
+                page.refreshContents();
+            }
+        }
+    }
 }
+

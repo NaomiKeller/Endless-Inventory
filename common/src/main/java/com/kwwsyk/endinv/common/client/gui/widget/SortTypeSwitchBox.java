@@ -2,6 +2,7 @@ package com.kwwsyk.endinv.common.client.gui.widget;
 
 import com.kwwsyk.endinv.common.client.gui.SortTypeSwitcher;
 import com.kwwsyk.endinv.common.client.gui.bg.ScreenRectangleWidgetParam;
+import com.kwwsyk.endinv.common.client.gui.page.manager.PageManager;
 import com.kwwsyk.endinv.common.util.SortType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -14,23 +15,26 @@ import org.jetbrains.annotations.NotNull;
 public class SortTypeSwitchBox extends AbstractWidget {
 
     public SortTypeSwitcher screen;
+    private final PageManager pageManager;
     private int x;
     private int y;
     private final int singleBoxHeight;
     private boolean isOpen;
 
     
-    public SortTypeSwitchBox(SortTypeSwitcher screen,int x, int y, int width, int height){
+    public SortTypeSwitchBox(SortTypeSwitcher screen, PageManager pageManager, int x, int y, int width, int height){
         super(x,y,width,height, Component.empty());
         this.screen = screen;
-        this.visible = screen.getPageManager().getDisplayingPageType() != null;
+        this.pageManager = pageManager;
+        this.visible = pageManager.getDisplayingPageType() != null;
         this.x = x;
         this.y = y;
         this.singleBoxHeight = height;
     }
 
-    public SortTypeSwitchBox(SortTypeSwitcher screen, ScreenRectangleWidgetParam sortTypeSwitchBoxParam){
+    public SortTypeSwitchBox(SortTypeSwitcher screen, PageManager pageManager, ScreenRectangleWidgetParam sortTypeSwitchBoxParam){
         this(screen,
+                pageManager,
                 sortTypeSwitchBoxParam.XPos(),
                 sortTypeSwitchBoxParam.YPos(),
                 sortTypeSwitchBoxParam.XSize(),
@@ -79,7 +83,7 @@ public class SortTypeSwitchBox extends AbstractWidget {
         guiGraphics.fill(x+1,y+1,x+width-1,y+singleBoxHeight-1,0xff000000);
         if(isHoveringOnSingleBox(mouseY,y))
             guiGraphics.fillGradient(RenderType.guiOverlay(),x,y,x+width,y+singleBoxHeight,0x80ffffff,0x80ffffff,0);
-        SortType sortType = screen.getPageManager().sortType();
+        SortType sortType = pageManager.sortType();
         String s = sortType.toString();
         guiGraphics.drawString(Minecraft.getInstance().font, s,x+2,y+2,0xffffffff);
         if(isOpen){

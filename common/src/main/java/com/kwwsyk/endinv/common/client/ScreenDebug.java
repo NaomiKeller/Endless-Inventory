@@ -1,10 +1,8 @@
 package com.kwwsyk.endinv.common.client;
 
-import com.kwwsyk.endinv.common.ModRegistries;
 import com.kwwsyk.endinv.common.client.gui.EndlessInventoryScreen;
 import com.kwwsyk.endinv.common.client.gui.page.ItemPage;
 import com.kwwsyk.endinv.common.network.payloads.PageData;
-import com.kwwsyk.endinv.common.network.payloads.SyncedConfig;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -81,8 +79,7 @@ public class ScreenDebug {
                 graphics.drawString(mc.font, Component.literal("mouseY: " + mouseY), width - 128, 80, 0xFFFFFF00);
 
                 if(mc.player!=null) {
-                    SyncedConfig syncedConfig = ModRegistries.NbtAttachments.getSyncedConfig().getWith(mc.player);
-                    PageData pageData = syncedConfig.pageData();
+                    PageData pageData = CachedConfig.currentLayout();
                     graphics.drawString(mc.font, Component.literal("Page data: "), 0, 10, 0xFFFFFF00);
                     graphics.drawString(mc.font, Component.literal("Page: "+pageData.pageRegKey()), 0, 20, 0xFFFFFF00);
                     graphics.drawString(mc.font, Component.literal("Rows: "+pageData.rows()), 10, 30, 0xFFFFFF00);
@@ -110,13 +107,34 @@ public class ScreenDebug {
         if(button==InputConstants.KEY_F4){
             hideMenu=!hideMenu;
         }
-        if(screen instanceof EndlessInventoryScreen EIS && EIS.getMenu().getDisplayingPage() instanceof ItemPage itemPage){
-            if(button == InputConstants.KEY_R){
-                itemPage.tryRequestContents();
+        if(screen instanceof EndlessInventoryScreen EIS && EIS.getFrameWork() != null){
+            int step = Screen.hasShiftDown() ? 10 : 1;
+            int dx = 0;
+            int dy = 0;
+            if(button == InputConstants.KEY_UP){
+                dy = -step;
+            } else if(button == InputConstants.KEY_DOWN){
+                dy = step;
+            } else if(button == InputConstants.KEY_LEFT){
+                dx = -step;
+            } else if(button == InputConstants.KEY_RIGHT){
+                dx = step;
             }
-            if(button == InputConstants.KEY_T){
-                itemPage.setChanged();
+            if(dx != 0 || dy != 0){
+                // Nudge the framework and page together so debug movements stay aligned.
+                EIS.getFrameWork().move(dx, dy);
+            }
+            if(EIS.getFrameWork().meta.getDisplayingPage() instanceof ItemPage itemPage){
+                if(button == InputConstants.KEY_R){
+                    itemPage.tryRequestContents();
+                }
+                if(button == InputConstants.KEY_T){
+                    itemPage.setChanged();
+                }
             }
         }
     }
 }
+
+
+

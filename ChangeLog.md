@@ -37,6 +37,11 @@ Also used a Mixin to monitor item NBT operations.
 ### Fix
 Add a configuration: `Convert Empty Tag` and apply it in `SourceInventory #takeItem & #addItem`. Let item with `tag={}` server as `tag=null` 
 
+
+## 9.19
+- Refactored SyncedConfig to only carry attaching/auto-pick flags and moved page layout storage into local client config, with servers updating via ItemPageContext.
+- Updated EndlessInventory menu and client UI to bootstrap from cached PageData so screens open without extra server round-trips.
+- Expanded Fabric client config/network hooks to persist sort/search preferences and keep cached flags in sync when packets arrive.
 ## 9.18
 - Texture: add `DEDICATED_LOCATION` mode and optimize related loading/performance
 - Creative Mode: fix item taking logic to handle empty NBT tags and improve reliability
@@ -48,3 +53,18 @@ In `assets/endless_inventory/textures/gui/*`:
 - `tabs.png` for page switch tabs, derived from achievements gui sprites
 - `item_entry.png` for item entry display (enchantment book classify page), derived from generic54 by removing vertical rules to form row strips  
 - - the process is to fill each row of the grid with a long strip, in FromResource mode, `renderBg` method of `ItemEntryDisplay.class` does it so X).
+
+## 9.25
+- Fabric: ported screen attachment lifecycle, client input handlers, and debug overlays to Fabric API events, and refreshed `fabric.mod.json` metadata for the loader entry points.
+
+## 9.26
+- Fabric: finished port by wiring client events, networking handlers, and mixins to the updated Fabric API so the module now compiles cleanly.
+- Fabric: added accessor/mixin shims for screen widgets and player persistent data so config toggles persist without Forge APIs.
+- Fabric: implemented reflection fallback for loot event hooks and centralized NBT helpers shared with the common module.
+
+## 9.21 1.1.0-SNAPSHOT-2
+- Added a crafter menu into Endless Inventory Menu which is for Jei's recipe handler.
+
+### after release
+- Rearranged the JAR filename so the loader name (Forge/Fabric) is prefixed for easier version identification.
+

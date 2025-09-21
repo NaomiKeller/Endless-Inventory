@@ -2,8 +2,15 @@
   "required": true,
   "minVersion": "0.8",
   "package": "com.kwwsyk.endinv.fabric.mixin",
-  "compatibilityLevel": "JAVA_21",
+  "compatibilityLevel": "JAVA_17",
   "mixins": [
+    "PlayerPersistentDataMixin"
+  ],
+  "client": [
+    "AbstractContainerScreenAccessor",
+    "AbstractContainerScreenMixin",
+    "GuiEventListenerMixin",
+    "ScreenAccessor"
   ],
   "injectors": {
     "defaultRequire": 1

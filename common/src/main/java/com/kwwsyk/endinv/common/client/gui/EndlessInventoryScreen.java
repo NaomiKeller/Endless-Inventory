@@ -1,39 +1,105 @@
 package com.kwwsyk.endinv.common.client.gui;
 
+import com.kwwsyk.endinv.common.ModInfo;
+import com.kwwsyk.endinv.common.client.CachedConfig;
 import com.kwwsyk.endinv.common.menu.EndlessInventoryMenu;
+import com.kwwsyk.endinv.common.network.payloads.toServer.ToggleCraftingPayload;
 import com.kwwsyk.endinv.common.util.SortType;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.CycleButton;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.Slot;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import static com.kwwsyk.endinv.common.ModRegistries.NbtAttachments.getSyncedConfig;
-
+@SuppressWarnings("removal")
 public class EndlessInventoryScreen extends AbstractContainerScreen<EndlessInventoryMenu> implements SortTypeSwitcher {
-
-
+    private static final ResourceLocation CRAFTING_TEXTURE = new ResourceLocation("minecraft", "textures/gui/container/crafting_table.png");
     private ScreenFramework frameWork;
+    private CycleButton<Boolean> craftingToggleButton;
+    private boolean craftingVisible;
     public boolean isHoveringOnSortBox;
 
     public EndlessInventoryScreen(EndlessInventoryMenu menu, Inventory playerInventory, Component title) {
         super(menu, playerInventory, title);
-        int containerRows = this.menu.rows();
-        this.imageHeight = 114 + containerRows *18;
+        recalcDimensions();
+    }
+
+    private void recalcDimensions() {
+        int baseRows = menu.getBaseRows();
+        this.imageHeight = 114 + baseRows * 18;
         this.inventoryLabelY = this.imageHeight - 94;
     }
 
     public void init(){
+        super.init();
+        craftingVisible = menu.isCraftingVisible();
+        recalcDimensions();
         this.leftPos = (this.width - this.imageWidth) / 2;
         this.topPos = (this.height - this.imageHeight) / 2;
-        var delegate = this.getPageManager();
-        this.frameWork = ScreenFramework.getInstance()!=null ? ScreenFramework.getInstance() : new ScreenFramework(this);
+        var existing = ScreenFramework.getInstance();
+        if (existing != null) {
+            existing.onClose();
+        }
+        this.frameWork = new ScreenFramework(this);
 
         frameWork.addWidgetToScreen(this::addRenderableWidget);
+        addCraftingToggleButton();
+    }
+
+    private void addCraftingToggleButton() {
+        int width = 70;
+        this.craftingToggleButton = CycleButton.onOffBuilder()
+                .withInitialValue(false)
+                .create(0,0,width,20,Component.literal("Crafter"), (it,on)->{
+                    toggleCrafting();
+                    if(it.getValue()!=craftingVisible) it.setValue(craftingVisible);
+                });
+        updateCraftingToggleButtonPosition();
+        addRenderableWidget(this.craftingToggleButton);
+    }
+
+    /**
+     * Keeps the crafting toggle anchored to the screen chrome after layout changes.
+     */
+    private void updateCraftingToggleButtonPosition() {
+        if (this.craftingToggleButton == null) {
+            return;
+        }
+        int width = this.craftingToggleButton.getWidth();
+        int x = this.leftPos + this.imageWidth - width - 8;
+        int y = this.topPos - 20;
+        this.craftingToggleButton.setX(x);
+        this.craftingToggleButton.setY(y);
+    }
+
+    /**
+     * Toggle crafter visibility and realign the surrounding widgets without rebuilding the screen.
+     */
+    private void toggleCrafting() {
+        craftingVisible = !craftingVisible;
+        menu.setCraftingVisible(craftingVisible);
+        ModInfo.getPacketDistributor().sendToServer(new ToggleCraftingPayload(craftingVisible));
+        int previousTop = this.topPos;
+        recalcDimensions();
+        this.leftPos = (this.width - this.imageWidth) / 2;
+        this.topPos = (this.height - this.imageHeight) / 2;
+        updateCraftingToggleButtonPosition();
+        if (frameWork != null) {
+            frameWork.resizePageRows(menu.getVisibleRows());
+            frameWork.move(0, this.topPos - previousTop);
+        }
+    }
+
+    private void drawCraftingBackground(GuiGraphics guiGraphics) {
+        int craftX = this.leftPos;
+        int craftY = this.topPos + 18 * menu.getVisibleRows() + 18;
+        guiGraphics.blit(CRAFTING_TEXTURE, craftX , craftY , 0, 12, 176, 58);
     }
 
     public void render(@NotNull GuiGraphics gui, int mouseX, int mouseY, float partialTick){
@@ -92,13 +158,19 @@ public class EndlessInventoryScreen extends AbstractContainerScreen<EndlessInven
     @Override
     protected void renderBg(@NotNull GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {
         this.frameWork.renderBg(guiGraphics,mouseX,mouseY,partialTick);
+        if (menu.isCraftingVisible()) {
+            drawCraftingBackground(guiGraphics);
+        }
     }
     @Override
     public void switchSortTypeTo(SortType type) {
         menu.sortType = type;
-        com.kwwsyk.endinv.common.client.ClientSyncedConfig.updateSyncedConfig(getSyncedConfig().getWith(menu.getPlayer()).sortTypeChanged(type));
-        menu.getDisplayingPage().release();
-        menu.getDisplayingPage().sendChangesToServer();
+        CachedConfig.updateLayout(menu.getPageData());
+        if (frameWork != null && frameWork.meta != null) {
+            var page = frameWork.meta.getDisplayingPage();
+            page.release();
+            page.sendChangesToServer();
+        }
     }
 
     @Override
@@ -140,3 +212,4 @@ public class EndlessInventoryScreen extends AbstractContainerScreen<EndlessInven
         return imageHeight;
     }
 }
+

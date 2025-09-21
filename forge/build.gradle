@@ -12,12 +12,13 @@ buildscript {
 plugins {
     id 'net.minecraftforge.gradle' version '6.+'
     id 'idea'
+    id 'org.parchmentmc.librarian.forgegradle' version '1.+'
 }
 
 apply plugin: 'org.spongepowered.mixin'
 
 base {
-    archivesName = "${mod_name}-${minecraft_version}-${mod_version}-${project.name}"
+    archivesName = "${mod_name}-${project.name}-${minecraft_version}-${mod_version}"
 }
 
 mixin {
@@ -27,7 +28,7 @@ mixin {
 }
 
 minecraft {
-    mappings channel: "official", version: "1.20.1"
+    mappings channel: "parchment", version: "2023.09.03-1.20.1"
 
     runs {
         client {
@@ -56,6 +57,7 @@ minecraft {
 sourceSets.main.resources.srcDir 'src/generated/resources'
 
 repositories {
+    maven { url = 'https://maven.parchmentmc.org' }
     maven {
         // location of the maven that hosts JEI files before January 2023
         name = "Progwml6's maven"
