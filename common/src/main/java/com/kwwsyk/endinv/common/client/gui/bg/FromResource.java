@@ -4,6 +4,7 @@ import com.kwwsyk.endinv.common.ModInfo;
 import com.kwwsyk.endinv.common.client.ClientModInfo;
 import com.kwwsyk.endinv.common.client.gui.ScreenFramework;
 import com.kwwsyk.endinv.common.client.option.TextureMode;
+import com.kwwsyk.endinv.common.menu.EndlessInventoryMenu;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
@@ -44,7 +45,9 @@ public abstract class FromResource extends SFBgRendererImpl {
         public void renderBg(@NotNull GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {
             super.renderBg(guiGraphics, partialTick, mouseX, mouseY);
 
-            int startY = menuTop + 17 + rows*18;
+            int baseRows = frameWork.menu instanceof EndlessInventoryMenu endless ? endless.getBaseRows() : rows;
+
+            int startY = menuTop + 17 + baseRows*18;
             renderPlayerInv(guiGraphics,partialTick,mouseX,mouseY,menuLeft,startY);
         }
 
@@ -174,9 +177,9 @@ public abstract class FromResource extends SFBgRendererImpl {
                 if (i == 0) {
                     guiGraphics.blit(getTabsTexture(),pageX,pageY,0,92,32,28);
                 } else if (i == frameWork.firstPageIndex + frameWork.pageBarCount-1) {
-                    guiGraphics.blit(getTabsTexture(),pageX,pageY,32,91,32,29);
-                } else
                     guiGraphics.blit(getTabsTexture(),pageX,pageY,64,91,32,28);
+                } else
+                    guiGraphics.blit(getTabsTexture(),pageX,pageY,32,91,32,29);
             } else {
                 guiGraphics.blit(getTabsTexture(),pageX+8,pageY,4,64,24,27);
             }

@@ -1,7 +1,7 @@
 package com.kwwsyk.endinv.forge.client.events;
 
 import com.kwwsyk.endinv.common.ModInfo;
-import com.kwwsyk.endinv.common.network.payloads.toServer.OpenEndInvPayload;
+import com.kwwsyk.endinv.common.client.ClientModInfo;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraftforge.api.distmarker.Dist;
@@ -22,8 +22,7 @@ public class KeyMappingTrigger {
         if (player == null) return;
 
         while (OPEN_MENU_KEY.get().consumeClick()) {
-            com.kwwsyk.endinv.common.client.ClientSyncedConfig.readAndSyncClientConfigToServer(true);
-            ModInfo.getPacketDistributor().sendToServer(new OpenEndInvPayload(true));
+            ClientModInfo.sendOpenMenu();
         }
     }
 }

@@ -1,6 +1,7 @@
 package com.kwwsyk.endinv.forge.client.events;
 
 import com.kwwsyk.endinv.common.ModInfo;
+import com.kwwsyk.endinv.common.client.CachedConfig;
 import com.kwwsyk.endinv.common.client.gui.AttachedScreen;
 import com.kwwsyk.endinv.common.client.gui.EndlessInventoryScreen;
 import com.kwwsyk.endinv.common.client.gui.IScreenEvent;
@@ -40,7 +41,7 @@ public class ScreenAttachment {
     @SubscribeEvent
     public static void opening(ScreenEvent.Opening event){
         if(event.getScreen() instanceof AbstractContainerScreen<?>)
-            com.kwwsyk.endinv.common.client.ClientSyncedConfig.readAndSyncClientConfigToServer(false);
+            CachedConfig.readAndSyncClientConfigToServer(false);
     }
 
     @SubscribeEvent
@@ -61,10 +62,10 @@ public class ScreenAttachment {
             SyncedConfig syncedConfig = getSyncedConfig().getWith(player);
             if(!syncedConfig.checkForAttaching()) return;
 
-            com.kwwsyk.endinv.common.client.ClientSyncedConfig.readAndSyncClientConfigToServer(false);
+            CachedConfig.readAndSyncClientConfigToServer(false);
 
             if(ATTACHMENT_MANAGER==null){
-                ModInfo.getPacketDistributor().sendToServer(new OpenEndInvPayload(false));
+                ModInfo.getPacketDistributor().sendToServer(new OpenEndInvPayload());
                 ATTACHMENT_MANAGER = new AttachedScreen<>(screen);
             }
 

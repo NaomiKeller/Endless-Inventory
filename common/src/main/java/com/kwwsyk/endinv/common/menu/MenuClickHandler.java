@@ -291,7 +291,7 @@ public abstract class MenuClickHandler {
                     }
                 }
                 if(carried.getCount() < carried.getMaxStackSize()){
-                    ItemStack taken = EIM.getDisplayingPage().tryExtractItem(carried,carried.getMaxStackSize()-carried.getCount());
+                    ItemStack taken = EIM.tryExtractFromPage(carried, carried.getMaxStackSize() - carried.getCount());
                     carried.grow(taken.getCount());
                     carried.setCount(Math.min(carried.getCount(), carried.getMaxStackSize()));
                 }

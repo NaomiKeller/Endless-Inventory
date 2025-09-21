@@ -4,8 +4,6 @@ import com.kwwsyk.endinv.common.client.option.IClientConfig;
 import com.kwwsyk.endinv.common.client.option.TextureMode;
 import com.kwwsyk.endinv.common.menu.page.PageTypeRegistry;
 import com.kwwsyk.endinv.common.options.IConfigValue;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraftforge.common.ForgeConfigSpec;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -62,17 +60,6 @@ public class ClientConfig {
                     .define("hide_pages." + id, false);
             PAGE2HIDING.put(id,pageEntry);
         }
-    }
-
-    public int calculateDefaultRowCount(boolean ofMenu){
-        Minecraft mc = Minecraft.getInstance();
-        int height = mc.getWindow().getGuiScaledHeight();
-        return Math.max(Math.floorDiv(height-60,18)-(ofMenu?4:0),0);
-    }
-    public int calculateSuitInColumnCount(AbstractContainerScreen<?> screen){
-        int leftPos = screen.getGuiLeft();
-        int width = leftPos - 20 - 6 -6;
-        return Math.max(0,Math.floorDiv(width,18));
     }
 
     static {

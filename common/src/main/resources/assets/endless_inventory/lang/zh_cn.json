@@ -40,6 +40,7 @@
   "endinv.setting.max_page_bar": "最大选页侧栏数",
   "endinv.setting.entry.FROM_RESOURCE": "Menu样式",
   "endinv.setting.entry.TRANSPARENT": "透明",
+  "endinv.setting.entry.DEDICATED_LOCATION": "自定义材质",
 
   "endless_inventory.configuration.ItemCapacity": "物品容量设置",
   "endless_inventory.configuration.maxStackSize": "最大物品堆叠",

@@ -12,6 +12,7 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.InventoryMenu;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import org.slf4j.Logger;
@@ -51,7 +52,7 @@ public record ItemClickPayload(ItemStack stack, int button, ClickType clickType)
         LOGGER.debug("EI:ItemClickPayload.handle: player={} clickType={} button={} carriedEmpty={} stack={}", player.getName().getString(), clickType, button, carried.isEmpty(), stack);
         var opt = ServerLevelEndInv.getEndInvForPlayer(player);
         if(opt.isEmpty()) {
-            LOGGER.info("ItemClickPayload.handle: no EndInv for player={}", player.getName().getString());
+            LOGGER.warn("ItemClickPayload.handle: no EndInv for player={}", player.getName().getString());
             return;
         }
         EndlessInventory endInv = opt.get();
@@ -67,7 +68,7 @@ public record ItemClickPayload(ItemStack stack, int button, ClickType clickType)
                     int takenCount = button==0 ? count : (count + 1) / 2;
                     ItemStack taken = endInv.takeItem(stack,takenCount);
                     LOGGER.debug("ItemClickPayload.PICKUP: taken={} from stack={}", taken, stack);
-                    if(player.isCreative()) {
+                    if(player.isCreative() && (menu instanceof InventoryMenu)) {
                         LOGGER.info("Ignored taken item on server thread in Creative mode to prevent duplication.");
                     }else menu.setCarried(taken);
                     if(!stack.isEmpty()) endInv.setChanged();
