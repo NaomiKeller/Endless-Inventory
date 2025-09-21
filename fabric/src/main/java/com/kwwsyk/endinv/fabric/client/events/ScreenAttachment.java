@@ -5,7 +5,6 @@ import com.kwwsyk.endinv.common.client.CachedConfig;
 import com.kwwsyk.endinv.common.client.gui.AttachedScreen;
 import com.kwwsyk.endinv.common.client.gui.EndlessInventoryScreen;
 import com.kwwsyk.endinv.common.client.gui.IScreenEvent;
-import com.kwwsyk.endinv.common.network.payloads.PageData;
 import com.kwwsyk.endinv.common.network.payloads.SyncedConfig;
 import com.kwwsyk.endinv.common.network.payloads.toServer.OpenEndInvPayload;
 import com.kwwsyk.endinv.fabric.mixin.ScreenAccessor;
@@ -20,7 +19,6 @@ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.world.entity.player.Player;
 
 import javax.annotation.Nullable;
-import java.util.Objects;
 
 import static com.kwwsyk.endinv.common.ModRegistries.NbtAttachments.getSyncedConfig;
 
@@ -56,52 +54,40 @@ public final class ScreenAttachment {
                 return;
             }
 
-            CachedConfig.readAndSyncClientConfigToServer(false);
+            //CachedConfig.readAndSyncClientConfigToServer(false);
 
-            if (attachment == null || attachment.screen != screen) {
-                AttachedScreen<?> next = new AttachedScreen<>(container);
-                int rows = CachedConfig.currentLayout().rows();
-                if (rows <= 0) {
-                    rows = PageData.DEFAULT.rows();
-                }
-                // Keep rows in sync when attaching so client preview matches server layout.
-                ModInfo.getPacketDistributor().sendToServer(new OpenEndInvPayload(false, rows));
-                attachment = next;
+            if (attachment == null) {
+                ModInfo.getPacketDistributor().sendToServer(new OpenEndInvPayload());
+                attachment = new AttachedScreen<>(container);
             }
 
-            AttachedScreen<?> current = Objects.requireNonNull(attachment);
-            current.init(new IScreenEvent() {
+            attachment.init(new IScreenEvent() {
                 @Override
                 public void addListener(AbstractWidget widget) {
                     ((ScreenAccessor) screen).endinv$invokeAddRenderableWidget(widget);
                 }
             });
 
-            ScreenEvents.remove(screen).register(s -> detach(current));
-            ScreenEvents.beforeRender(screen).register((s, graphics, mouseX, mouseY, delta) -> preRender(current));
-            ScreenEvents.afterRender(screen).register((s, graphics, mouseX, mouseY, delta) -> render(current, graphics, mouseX, mouseY, delta));
+            ScreenEvents.remove(screen).register(s -> {
+                if(attachment!=null){
+                    attachment.closed(new IScreenEvent() {});
+                    attachment = null;
+                }
+            });
 
-            ScreenMouseEvents.allowMouseClick(screen).register((s, mouseX, mouseY, button) -> allowMouseClick(current, mouseX, mouseY, button));
-            ScreenMouseEvents.allowMouseRelease(screen).register((s, mouseX, mouseY, button) -> allowMouseRelease(current, mouseX, mouseY, button));
-            ScreenMouseEvents.allowMouseScroll(screen).register((s, mouseX, mouseY, horizontal, vertical) -> allowMouseScroll(current, mouseX, mouseY, horizontal, vertical));
+            ScreenEvents.beforeRender(screen).register((s, graphics, mouseX, mouseY, delta) -> preRender(attachment));
+            ScreenEvents.afterRender(screen).register((s, graphics, mouseX, mouseY, delta) -> render(attachment, graphics, mouseX, mouseY, delta));
 
-            ScreenKeyboardEvents.allowKeyPress(screen).register((s, keyCode, scanCode, modifiers) -> allowKeyPress(current, keyCode, scanCode, modifiers));
+            ScreenMouseEvents.allowMouseClick(screen).register((s, mouseX, mouseY, button) -> allowMouseClick(attachment, mouseX, mouseY, button));
+            ScreenMouseEvents.allowMouseRelease(screen).register((s, mouseX, mouseY, button) -> allowMouseRelease(attachment, mouseX, mouseY, button));
+            ScreenMouseEvents.allowMouseScroll(screen).register((s, mouseX, mouseY, horizontal, vertical) -> allowMouseScroll(attachment, mouseX, mouseY, horizontal, vertical));
+
+            ScreenKeyboardEvents.allowKeyPress(screen).register((s, keyCode, scanCode, modifiers) -> allowKeyPress(attachment, keyCode, scanCode, modifiers));
         });
     }
 
-    private static void detach(AttachedScreen<?> expected) {
-        if (attachment == expected) {
-            expected.closed(new IScreenEvent() {
-            });
-            attachment = null;
-        }
-    }
-
     private static void preRender(AttachedScreen<?> expected) {
-        if (attachment == expected) {
-            expected.renderPre(new IScreenEvent() {
-            });
-        }
+        expected.renderPre(new IScreenEvent() {});
     }
 
     private static void render(AttachedScreen<?> expected, GuiGraphics graphics, double mouseX, double mouseY, float delta) {
@@ -193,6 +179,7 @@ public final class ScreenAttachment {
         if (attachment != expected || !isAttachmentActive(expected)) {
             return true;
         }
+        boolean[] canceled = new boolean[]{false};
         expected.mouseScrolled(new IScreenEvent() {
             @Override
             public double getMouseX() {
@@ -213,8 +200,13 @@ public final class ScreenAttachment {
             public double getScrollDeltaX() {
                 return horizontal;
             }
+
+            @Override
+            public void setCanceled(boolean canceled1){
+                canceled[0] = canceled1;
+            }
         });
-        return true;
+        return !canceled[0];
     }
 
     private static boolean allowKeyPress(AttachedScreen<?> expected, int keyCode, int scanCode, int modifiers) {

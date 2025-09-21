@@ -336,11 +336,24 @@ public class ScreenFramework {
             ItemStack remain = meta.getDisplayingPage().tryInsertItem(itemStack);
             clicked.setByPlayer(remain);
             clicked.onTake(meta.getPlayer(), itemStack);
-            ModInfo.getPacketDistributor().sendToServer(new QuickMoveToPagePayload(menu instanceof CreativeModeInventoryScreen.ItemPickerMenu ? clicked.getContainerSlot() : clicked.index));
+            ModInfo.getPacketDistributor().sendToServer(
+                    new QuickMoveToPagePayload(
+                            menu instanceof CreativeModeInventoryScreen.ItemPickerMenu ? getItemPickerMenuSlotOffset(clicked)
+                                    : clicked.index
+                    )
+            );
+            //ModInfo.getPacketDistributor().sendToServer(new QuickMoveToPagePayload(clicked.index));
         }// ↑ should use slot.getContainerSlot() instead of getSlotIndex()
         if (meta.getDisplayingPage() instanceof ItemPage itemPage) {
             itemPage.requestContents();
         }
+    }
+
+    private int getItemPickerMenuSlotOffset(Slot clicked){
+        int originalIndex = clicked.index;
+        if(originalIndex==0 && clicked.getContainerSlot() >0) return clicked.getContainerSlot();
+        if(originalIndex<45) return originalIndex;
+        return originalIndex - 9;
     }
 
     public boolean mouseClicked(double mouseX, double mouseY, int keyCode) {

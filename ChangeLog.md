@@ -62,3 +62,9 @@ In `assets/endless_inventory/textures/gui/*`:
 - Fabric: added accessor/mixin shims for screen widgets and player persistent data so config toggles persist without Forge APIs.
 - Fabric: implemented reflection fallback for loot event hooks and centralized NBT helpers shared with the common module.
 
+## 9.21 1.1.0-SNAPSHOT-2
+- Added a crafter menu into Endless Inventory Menu which is for Jei's recipe handler.
+
+### after release
+- Rearranged the JAR filename so the loader name (Forge/Fabric) is prefixed for easier version identification.
+
