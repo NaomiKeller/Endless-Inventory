@@ -107,12 +107,30 @@ public class ScreenDebug {
         if(button==InputConstants.KEY_F4){
             hideMenu=!hideMenu;
         }
-        if(screen instanceof EndlessInventoryScreen EIS && EIS.getFrameWork() != null && EIS.getFrameWork().meta.getDisplayingPage() instanceof ItemPage itemPage){
-            if(button == InputConstants.KEY_R){
-                itemPage.tryRequestContents();
+        if(screen instanceof EndlessInventoryScreen EIS && EIS.getFrameWork() != null){
+            int step = Screen.hasShiftDown() ? 10 : 1;
+            int dx = 0;
+            int dy = 0;
+            if(button == InputConstants.KEY_UP){
+                dy = -step;
+            } else if(button == InputConstants.KEY_DOWN){
+                dy = step;
+            } else if(button == InputConstants.KEY_LEFT){
+                dx = -step;
+            } else if(button == InputConstants.KEY_RIGHT){
+                dx = step;
             }
-            if(button == InputConstants.KEY_T){
-                itemPage.setChanged();
+            if(dx != 0 || dy != 0){
+                // Nudge the framework and page together so debug movements stay aligned.
+                EIS.getFrameWork().move(dx, dy);
+            }
+            if(EIS.getFrameWork().meta.getDisplayingPage() instanceof ItemPage itemPage){
+                if(button == InputConstants.KEY_R){
+                    itemPage.tryRequestContents();
+                }
+                if(button == InputConstants.KEY_T){
+                    itemPage.setChanged();
+                }
             }
         }
     }

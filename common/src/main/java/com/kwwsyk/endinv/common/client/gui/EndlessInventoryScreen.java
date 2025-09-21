@@ -6,7 +6,7 @@ import com.kwwsyk.endinv.common.menu.EndlessInventoryMenu;
 import com.kwwsyk.endinv.common.network.payloads.toServer.ToggleCraftingPayload;
 import com.kwwsyk.endinv.common.util.SortType;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.CycleButton;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
@@ -18,11 +18,9 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class EndlessInventoryScreen extends AbstractContainerScreen<EndlessInventoryMenu> implements SortTypeSwitcher {
-
-
     private static final ResourceLocation CRAFTING_TEXTURE = ResourceLocation.fromNamespaceAndPath("minecraft", "textures/gui/container/crafting_table.png");
     private ScreenFramework frameWork;
-    private Button craftingToggleButton;
+    private CycleButton<Boolean> craftingToggleButton;
     private boolean craftingVisible;
     public boolean isHoveringOnSortBox;
 
@@ -54,22 +52,42 @@ public class EndlessInventoryScreen extends AbstractContainerScreen<EndlessInven
     }
 
     private void addCraftingToggleButton() {
-        Component label = craftingVisible ? Component.literal("Hide Craft") : Component.literal("Show Craft");
         int width = 70;
+        this.craftingToggleButton = CycleButton.onOffBuilder()
+                .withInitialValue(false)
+                .create(0,0,width,20,Component.literal("Crafter"), (it,on)->{
+                    toggleCrafting();
+                    if(it.getValue()!=craftingVisible) it.setValue(craftingVisible);
+                });
+        updateCraftingToggleButtonPosition();
+        addRenderableWidget(this.craftingToggleButton);
+    }
+
+    private void updateCraftingToggleButtonPosition() {
+        if (this.craftingToggleButton == null) {
+            return;
+        }
+        int width = this.craftingToggleButton.getWidth();
         int x = this.leftPos + this.imageWidth - width - 8;
         int y = this.topPos - 20;
-        this.craftingToggleButton = Button.builder(label, b -> toggleCrafting())
-                .pos(x, y)
-                .size(width, 20)
-                .build();
-        addRenderableWidget(this.craftingToggleButton);
+        this.craftingToggleButton.setX(x);
+        this.craftingToggleButton.setY(y);
     }
 
     private void toggleCrafting() {
         craftingVisible = !craftingVisible;
         menu.setCraftingVisible(craftingVisible);
         ModInfo.getPacketDistributor().sendToServer(new ToggleCraftingPayload(craftingVisible));
-        this.init();
+        // Refresh layout without reinitialising widgets so we avoid duplicate elements.
+        int previousTop = this.topPos;
+        recalcDimensions();
+        this.leftPos = (this.width - this.imageWidth) / 2;
+        this.topPos = (this.height - this.imageHeight) / 2;
+        updateCraftingToggleButtonPosition();
+        if (frameWork != null) {
+            frameWork.resizePageRows(menu.getVisibleRows());
+            frameWork.move(0, this.topPos - previousTop);
+        }
     }
 
     private void drawCraftingBackground(GuiGraphics guiGraphics) {

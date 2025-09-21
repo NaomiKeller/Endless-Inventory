@@ -220,7 +220,7 @@ public class ClientPageManager implements PageManager {
 
         @Override
         public ItemStack quickMoveIntoPage(ItemStack stack) {
-            return page.tryQuickMoveStackTo(stack);
+            return page.tryInsertItem(stack);
         }
 
         @Override

@@ -177,9 +177,9 @@ public abstract class FromResource extends SFBgRendererImpl {
                 if (i == 0) {
                     guiGraphics.blit(getTabsTexture(),pageX,pageY,0,92,32,28);
                 } else if (i == frameWork.firstPageIndex + frameWork.pageBarCount-1) {
-                    guiGraphics.blit(getTabsTexture(),pageX,pageY,32,91,32,29);
-                } else
                     guiGraphics.blit(getTabsTexture(),pageX,pageY,64,91,32,28);
+                } else
+                    guiGraphics.blit(getTabsTexture(),pageX,pageY,32,91,32,29);
             } else {
                 guiGraphics.blit(getTabsTexture(),pageX+8,pageY,4,64,24,27);
             }

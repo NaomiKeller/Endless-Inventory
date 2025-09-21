@@ -28,11 +28,7 @@ public record QuickMoveToPagePayload(int slotId) implements ModPacketPayload {
         var optional = ServerLevelEndInv.checkAndGetManagerForPlayer(player);
         optional.ifPresent(manager -> {
             AbstractContainerMenu menu = manager.getMenu();
-            int slotId1 = slotId;
-            /*if(menu instanceof InventoryMenu && player.isCreative() && slotId>=45){//if player is in CreativeInventoryScreen$ItemPickerManu
-                slotId1 = slotId - 9;
-            }*/
-            Slot slot = menu.getSlot(slotId1);
+            Slot slot = menu.getSlot(slotId);
             manager.slotQuickMoved(slot);
         });
     }

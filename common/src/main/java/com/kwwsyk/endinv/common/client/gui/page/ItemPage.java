@@ -66,6 +66,14 @@ public abstract class ItemPage extends DisplayPage {
     }
 
     @Override
+    public void resize(int rows) {
+        // Align the cached item grid with the new visible row count from the screen layout.
+        int targetRows = Math.max(1, rows);
+        this.length = targetRows * meta.columns();
+        refreshContents(this.startIndex, this.length);
+    }
+
+    @Override
     public void scrollTo(float pos) {
         int startIndex = getRowIndexForScroll(pos)* meta.columns();
         this.refreshContents(startIndex,this.length);
@@ -326,7 +334,7 @@ public abstract class ItemPage extends DisplayPage {
         setChanged();
     }
     @Override
-    public ItemStack tryQuickMoveStackTo(ItemStack stack) {
+    public ItemStack tryInsertItem(ItemStack stack) {
         var remain = addItem(stack);
         refreshContents();
         return remain;

@@ -29,9 +29,18 @@ import java.util.function.Predicate;
 import static com.kwwsyk.endinv.common.client.ClientModInfo.inputHandler;
 import static net.minecraft.client.gui.screens.Screen.hasShiftDown;
 
-/**
+/**<p>A widget of {@link ScreenFramework} , serving render and input events.<br>
+ * The specified work of showing {@code EndlessInventory (EndInv)}'s content and handle item interactions are mainly handled by {@link ItemPage}</p>
  *
- */
+ * <em>Server-sync duties</em>: only interactions inner page are handled by page itself.<br>
+ * <ul>e.g.
+ *     <li>Inner page ops: {@link #mouseClicked},{@link #keyPressed}(when mouse is hovering on it): call packet sending itself.</li>
+ *     <li>Outer page ops: {@link #tryInsertItem},{@link #tryExtractItem}: call packet sending by invoker.</li>
+ * </ul>
+ *
+ * @since 1.0.0
+ * @author K.Z
+ * */
 public abstract class DisplayPage{
 
 
@@ -58,6 +67,11 @@ public abstract class DisplayPage{
     protected ScreenFramework framework;
     protected int leftPos;
     protected int topPos;
+    protected int renderOffsetX;
+    protected int renderOffsetY;
+    private boolean rendererInitialized;
+    private int lastFrameworkPageX;
+    private int lastFrameworkPageY;
     //if holding on the page view shall not change temporarily.
     protected boolean holdOn = false;
 
@@ -118,6 +132,10 @@ public abstract class DisplayPage{
         return itemClassify;
     }
 
+    public PageType getPageType() {
+        return pageType;
+    }
+
     public int getRowIndexForScroll(float scrollOffs) {
         return Math.max((int)((double)(scrollOffs * (float)calculateRowCount()) + 0.5), 0);
     }
@@ -136,53 +154,45 @@ public abstract class DisplayPage{
 
     public void setChanged() {}
 
-
-    public ItemStack tryQuickMoveStackTo(ItemStack stack){
-        var remain =  srcInv.addItem(stack);
-        refreshContents();
-        return remain;
+    /**
+     * Used by outer page item operations that move items in, e.g. quick_move (shift/ctrl-click).<br>
+     * Server-sync tasks like sending packet should be completed by caller.
+     * @param stack the itemstack quick moved TO page
+     * @return <em>REMAIN item in case the EndInv cannot contain the item.Mostly it's {@link ItemStack#EMPTY}</em>
+     */
+    public ItemStack tryInsertItem(ItemStack stack){
+        return srcInv.addItem(stack);
     }
 
+    /**
+     * Used by outer page item operations that move items out, e.g. pickup-all (double-click in menu).<br>
+     * @param item itemstack to take
+     * @param count count to take
+     * @return the taken itemstack
+     */
     public ItemStack tryExtractItem(ItemStack item, int count){
-        return ItemStack.EMPTY;
+        return srcInv.takeItem(item,count);
     }
 
+    /**{@inheritDoc}
+     * Set freeze the page view like disable sort/arrangement of items
+     */
     public void setHoldOn(){
         if(!holdOn){
             holdOn = true;
         }
     }
 
+    /**{@inheritDoc}
+     * Set unfreeze page view and
+     *  may call rearrangement like sort of items
+     */
     public void release(){
         if(holdOn){
             holdOn = false;
         }
     }
 
-    public PageType getPageType() {
-        return pageType;
-    }
-
-    //click handler
-
-    /**Check if it has double-clicked on one object: item slot or other widgets.
-     * @param clickInterval time interval of two clicks
-     * @return true if it should be seen as double-clicked
-     */
-    public abstract boolean doubleClickedOnOne(double XOffset, double YOffset, double lastX, double lastY, long clickInterval);
-
-    public abstract void pageClicked(double XOffset, double YOffset, int keyCode, ClickType clickType);
-
-    public abstract void handleStarItem(double XOffset, double YOffset);
-
-    /**Used to handle mouse clicked/dragged on page and page has slots
-     * @param XOffset the relative X coordinate to page left pos
-     * @param YOffset the relative Y coordinate to page top pos
-     * @return the slot id in page or -1 with no slot.
-     */
-    public int getSlotForMouseOffset(double XOffset,double YOffset){
-        return -1;
-    }
 
     //page renderer
     public void renderBg(SFBgRenderer SFBgRenderer, GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {
@@ -191,8 +201,31 @@ public abstract class DisplayPage{
 
     public void initRenderer(ScreenFramework framework, int pageXPos, int pageYPos){
         this.framework = framework;
-        this.leftPos = pageXPos;
-        this.topPos = pageYPos;
+        if (!rendererInitialized) {
+            this.leftPos = pageXPos;
+            this.topPos = pageYPos;
+            this.renderOffsetX = 0;
+            this.renderOffsetY = 0;
+            this.rendererInitialized = true;
+        } else {
+            this.leftPos = pageXPos + renderOffsetX;
+            this.topPos = pageYPos + renderOffsetY;
+        }
+
+        this.lastFrameworkPageX = pageXPos;
+        this.lastFrameworkPageY = pageYPos;
+    }
+
+    public void move(int deltaX, int deltaY) {
+        // Maintain manual offsets relative to the framework anchor for debug adjustments.
+        this.renderOffsetX += deltaX;
+        this.renderOffsetY += deltaY;
+        this.leftPos = lastFrameworkPageX + renderOffsetX;
+        this.topPos = lastFrameworkPageY + renderOffsetY;
+    }
+
+    public void resize(int rows) {
+        // Default implementation allows subclasses to react to row changes when needed.
     }
 
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick){
@@ -223,6 +256,26 @@ public abstract class DisplayPage{
     }
 
     //page click handler
+    //click handler
+
+    /**Check if it has double-clicked on one object: item slot or other widgets.
+     * @param clickInterval time interval of two clicks
+     * @return true if it should be seen as double-clicked
+     */
+    public abstract boolean doubleClickedOnOne(double XOffset, double YOffset, double lastX, double lastY, long clickInterval);
+
+    public abstract void pageClicked(double XOffset, double YOffset, int keyCode, ClickType clickType);
+
+    public abstract void handleStarItem(double XOffset, double YOffset);
+
+    /**Used to handle mouse clicked/dragged on page and page has slots
+     * @param XOffset the relative X coordinate to page left pos
+     * @param YOffset the relative Y coordinate to page top pos
+     * @return the slot id in page or -1 with no slot.
+     */
+    public int getSlotForMouseOffset(double XOffset,double YOffset){
+        return -1;
+    }
 
     private boolean doubleClick;
     private int lastClickedButton;

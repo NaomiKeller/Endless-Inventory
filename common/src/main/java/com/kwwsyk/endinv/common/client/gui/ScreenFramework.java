@@ -52,22 +52,24 @@ public class ScreenFramework {
     public final AbstractContainerScreen<?> screen;
     public final AbstractContainerMenu menu;
     private final SortTypeSwitcher sortTypeSwitcher;
-    private final ScreenRectangleWidgetParam searchBoxParam;
-    private final ScreenRectangleWidgetParam sortBoxParam;
-    private final ScreenRectangleWidgetParam configButtonParam;
-    private final ScreenRectangleWidgetParam pageBarScrollUpButtonParam, pageBarScrollDownButtonParam;
-    public final SFBgRenderer SFBgRenderer;
+    private ScreenRectangleWidgetParam searchBoxParam;
+    private ScreenRectangleWidgetParam sortBoxParam;
+    private ScreenRectangleWidgetParam configButtonParam;
+    private ScreenRectangleWidgetParam pageBarScrollUpButtonParam, pageBarScrollDownButtonParam;
+    public SFBgRenderer SFBgRenderer;
     public final int pageBarCount;
     public int firstPageIndex = 0;
     //Always pageBarCount + firstPageIndex <= meta.getPages.size()
-    public final int leftPos, topPos;
-    public final int imageWidth, imageHeight;
-    public final int pageX;
-    public final int pageY;
-    private final int rows;
+    public int leftPos, topPos;
+    public int imageWidth, imageHeight;
+    private int pageX;
+    private int pageY;
+    private int rows;
     private final int columns;
     private final int pageXSize;
-    private final int pageYSize;
+    private int pageYSize;
+    private int pageOffsetX;
+    private int pageOffsetY;
     private int roughMouseX;
     private int roughMouseY;
     private EditBox searchBox;
@@ -112,6 +114,37 @@ public class ScreenFramework {
         meta.getDisplayingPage().refreshContents();
         INSTANCE = this;
     }
+
+    public int getPageX() {
+        // Combine the static anchor and the debug offset for consistent hit tests.
+        return pageX + pageOffsetX;
+    }
+
+    public int getPageY() {
+        // Combine the static anchor and the debug offset for consistent hit tests.
+        return pageY + pageOffsetY;
+    }
+
+    public void move(int deltaX, int deltaY) {
+        // Support debug nudging without rebuilding the widget tree.
+        this.pageOffsetX += deltaX;
+        this.pageOffsetY += deltaY;
+        DisplayPage current = meta.getDisplayingPage();
+        if (current != null) {
+            current.move(deltaX, deltaY);
+        }
+    }
+
+    public void resizePageRows(int rows) {
+        // Mirror menu row changes so the client page layout stays aligned with the server menu.
+        this.rows = Math.max(1, rows);
+        this.pageYSize = this.rows * 18;
+        DisplayPage current = meta.getDisplayingPage();
+        if (current != null) {
+            current.resize(this.rows);
+        }
+    }
+
 
     public ScreenFramework(AttachedScreen<?> attachedScreen) {
         this.screen = attachedScreen.screen;
@@ -220,7 +253,7 @@ public class ScreenFramework {
 
         isHoveringOnPage = hasClickedOnPage(mouseX, mouseY);
 
-        meta.getDisplayingPage().initRenderer(this, pageX, pageY);
+        meta.getDisplayingPage().initRenderer(this, getPageX(), getPageY());
         meta.getDisplayingPage().render(guiGraphics, mouseX, mouseY, partialTick);
 
         if (searchBox.isHovered() && !searchBox.isFocused()) guiGraphics.renderTooltip(mc.font, List.of(
@@ -235,8 +268,8 @@ public class ScreenFramework {
     }
 
     protected boolean hasClickedOnPage(double mouseX, double mouseY) {
-        return mouseX >= (double) pageX && mouseX <= (double) pageX + pageXSize
-                && mouseY >= (double) pageY && mouseY <= (double) pageY + pageYSize
+        return mouseX >= (double) getPageX() && mouseX <= (double) getPageX() + pageXSize
+                && mouseY >= (double) getPageY() && mouseY <= (double) getPageY() + pageYSize
                 && !sortTypeSwitcher.isHoveringOnSortBox();
     }
 
@@ -297,10 +330,10 @@ public class ScreenFramework {
                 return;
             } else creativeQuickInsertedItem = itemStack;
             itemStack.setCount(itemStack.getMaxStackSize());
-            meta.getDisplayingPage().tryQuickMoveStackTo(itemStack);
+            meta.getDisplayingPage().tryInsertItem(itemStack);
             ModInfo.getPacketDistributor().sendToServer(new CreativeItemModPayload(itemStack, true));
         } else {
-            ItemStack remain = meta.getDisplayingPage().tryQuickMoveStackTo(itemStack);
+            ItemStack remain = meta.getDisplayingPage().tryInsertItem(itemStack);
             clicked.setByPlayer(remain);
             clicked.onTake(meta.getPlayer(), itemStack);
             ModInfo.getPacketDistributor().sendToServer(new QuickMoveToPagePayload(menu instanceof CreativeModeInventoryScreen.ItemPickerMenu ? clicked.getSlotIndex() : clicked.index));
@@ -339,7 +372,7 @@ public class ScreenFramework {
         //
         if (hasClickedOnPage(mouseX, mouseY)) {
             sortTypeSwitchBox.setOpen(false);
-            return meta.getDisplayingPage().mouseClicked(mouseX - pageX, mouseY - pageY, keyCode);
+            return meta.getDisplayingPage().mouseClicked(mouseX - getPageX(), mouseY - getPageY(), keyCode);
         }
         return false;
     }
@@ -360,7 +393,7 @@ public class ScreenFramework {
         }
 
         if (hasClickedOnPage(mouseX, mouseY)) {
-            return meta.getDisplayingPage().mouseDragged(mouseX - pageX, mouseY - pageY, button, dragX, dragY);
+            return meta.getDisplayingPage().mouseDragged(mouseX - getPageX(), mouseY - getPageY(), button, dragX, dragY);
         }
         return false;
     }
@@ -371,7 +404,7 @@ public class ScreenFramework {
         DisplayPage displayingPage = meta.getDisplayingPage();
         displayingPage.release();
         if (hasClickedOnPage(mouseX, mouseY)) {
-            return displayingPage.mouseReleased(mouseX - pageX, mouseY - pageY, keyCode);
+            return displayingPage.mouseReleased(mouseX - getPageX(), mouseY - getPageY(), keyCode);
         }
         return false;
     }
@@ -379,7 +412,7 @@ public class ScreenFramework {
 
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollY) {
         if (hasClickedOnPage(mouseX, mouseY)) {
-            return meta.getDisplayingPage().mouseScrolled(mouseX - pageX, mouseY = pageY, scrollY);
+            return meta.getDisplayingPage().mouseScrolled(mouseX - getPageX(), mouseY = getPageY(), scrollY);
         }
         return false;
     }
@@ -401,7 +434,7 @@ public class ScreenFramework {
 
         boolean flag = false;
         if (isHoveringOnPage) {
-            flag = meta.getDisplayingPage().keyPressed(keyCode, scanCode, modifiers, roughMouseX - pageX, roughMouseY - pageY);
+            flag = meta.getDisplayingPage().keyPressed(keyCode, scanCode, modifiers, roughMouseX - getPageX(), roughMouseY - getPageY());
         }
         if (flag) {
             this.ignoreTextInput = true;

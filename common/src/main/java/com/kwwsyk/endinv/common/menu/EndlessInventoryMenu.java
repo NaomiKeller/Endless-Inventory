@@ -15,8 +15,10 @@ import net.minecraft.CrashReport;
 import net.minecraft.CrashReportCategory;
 import net.minecraft.ReportedException;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.game.ClientboundContainerSetSlotPacket;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
+import net.minecraft.world.Container;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.SlotAccess;
 import net.minecraft.world.entity.player.Inventory;
@@ -24,10 +26,13 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.flag.FeatureFlagSet;
 import net.minecraft.world.inventory.*;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.CraftingRecipe;
+import net.minecraft.world.item.crafting.RecipeType;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashSet;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 import static com.kwwsyk.endinv.common.ModRegistries.Items;
@@ -45,6 +50,14 @@ public class EndlessInventoryMenu extends AbstractContainerMenu implements PageM
 
     private static final int CRAFT_GRID_WIDTH = 3;
     private static final int CRAFT_GRID_HEIGHT = 3;
+    private static final int RESULT_SLOT_INDEX = 0;
+    private static final int CRAFT_SLOT_START = RESULT_SLOT_INDEX + 1;
+    private static final int CRAFT_SLOT_COUNT = CRAFT_GRID_WIDTH * CRAFT_GRID_HEIGHT;
+    private static final int CRAFT_SLOT_END = CRAFT_SLOT_START + CRAFT_SLOT_COUNT;
+    private static final int PLAYER_INV_SLOT_COUNT = 27;
+    private static final int HOTBAR_SLOT_COUNT = 9;
+    private static final int PLAYER_INV_START = CRAFT_SLOT_END;
+    private static final int PLAYER_INV_END = PLAYER_INV_START + PLAYER_INV_SLOT_COUNT + HOTBAR_SLOT_COUNT;
 
     public final Player player;
     int quickcraftStatus;
@@ -207,6 +220,14 @@ public class EndlessInventoryMenu extends AbstractContainerMenu implements PageM
         }
         craftMatrix.setChanged();
         craftResult.setChanged();
+    }
+
+    @Override
+    public void slotsChanged(Container container) {
+        if (container == this.craftMatrix) {
+            this.updateCraftingResult();
+        }
+        super.slotsChanged(container);
     }
 
     public boolean isCraftingVisible() {
@@ -393,21 +414,95 @@ public class EndlessInventoryMenu extends AbstractContainerMenu implements PageM
         };
     }
 
+    // Shift-click routing is reshaped to prioritize crafting slots while keeping the page storage in sync.
     @Override
     public ItemStack quickMoveStack(Player player, int index) {
-        ItemStack moved = ItemStack.EMPTY;
         Slot slot = this.slots.get(index);
-        if (slot.hasItem()) {
-            ItemStack slotStack = slot.getItem();
-            if (slotStack.getItem() == Items.getTestEndInv()) {
-                return ItemStack.EMPTY;
-            }
-            moved = slotStack.copy();
-            ItemStack remain = quickMoveIntoPage(slotStack.copy());
-            slot.setByPlayer(remain);
+        if (!slot.hasItem()) {
+            return ItemStack.EMPTY;
         }
 
+        ItemStack slotStack = slot.getItem();
+        if (slotStack.getItem() == Items.getTestEndInv()) {
+            return ItemStack.EMPTY;
+        }
+
+        ItemStack original = slotStack.copy();
+        boolean handled;
+
+        if (index == RESULT_SLOT_INDEX) {
+            handled = handleQuickMoveResult(slot, slotStack, original);
+        } else if (isCrafterSlot(index)) {
+            handled = handleQuickMoveFromCrafterSlot(slot, slotStack);
+        } else if (isPlayerInventorySlot(index)) {
+            handled = handleQuickMoveFromPlayerInventory(slotStack);
+        } else {
+            handled = this.moveItemStackTo(slotStack, PLAYER_INV_START, PLAYER_INV_END, false);
+        }
+
+        if (!handled) {
+            return ItemStack.EMPTY;
+        }
+
+        if (slotStack.isEmpty()) {
+            slot.setByPlayer(ItemStack.EMPTY);
+        } else {
+            slot.setChanged();
+        }
+
+        if (slotStack.getCount() == original.getCount()) {
+            return ItemStack.EMPTY;
+        }
+
+        slot.onTake(player, slotStack);
+        if (index == RESULT_SLOT_INDEX) {
+            player.drop(slotStack, false);
+        }
+
+        return original;
+
+    }
+
+
+
+    private boolean isPlayerInventorySlot(int index) {
+        // Recognize player inventory range for quick-move routing when shift-clicking.
+        return index >= PLAYER_INV_START && index < PLAYER_INV_END;
+    }
+
+    private boolean isCrafterSlot(int index) {
+        // Recognize crafting grid indices so we can special-case the crafter behaviour.
+        return index >= CRAFT_SLOT_START && index < CRAFT_SLOT_END;
+    }
+
+    private boolean handleQuickMoveFromCrafterSlot(Slot slot, ItemStack stack) {
+        // Allow reclaiming crafting ingredients by sending them back to the player's inventory.
+        boolean moved = this.moveItemStackTo(stack, PLAYER_INV_START, PLAYER_INV_END, false);
+        if (moved) {
+            craftMatrix.setChanged();
+            updateCraftingResult();
+        }
         return moved;
+    }
+
+    private boolean moveStackIntoCrafter(ItemStack stack) {
+        // Try to top up the craft grid before considering other storage targets.
+        int before = stack.getCount();
+        boolean moved = this.moveItemStackTo(stack, CRAFT_SLOT_START, CRAFT_SLOT_END, false);
+        if (moved && stack.getCount() != before) {
+            craftMatrix.setChanged();
+            updateCraftingResult();
+        }
+        return moved;
+    }
+
+    @Override
+
+    public boolean canTakeItemForPickAll(ItemStack stack, Slot slot) {
+        if (slot.container == this.craftResult) {
+            return false;
+        }
+        return super.canTakeItemForPickAll(stack, slot);
     }
 
     private ItemStack quickMoveIntoPage(ItemStack stack) {
@@ -539,9 +634,6 @@ public class EndlessInventoryMenu extends AbstractContainerMenu implements PageM
 
     @Override
     public void switchPageWithId(String id) {
-        if (id == null) {
-            return;
-        }
         PageType type = PageTypeRegistry.byId(id);
         if (type != null) {
             applySelectedPage(type);
@@ -554,10 +646,70 @@ public class EndlessInventoryMenu extends AbstractContainerMenu implements PageM
     }
 
     @Override
+    public void removed(Player player) {
+        super.removed(player);
+        returnCraftingToPlayer();
+    }
+
+    @Override
     public boolean stillValid(Player player) {
         return true;
     }
 
+
+    private int insertStackIntoPage(ItemStack stack) {
+        if (stack.isEmpty()) {
+            return 0;
+        }
+        ItemStack attempt = stack.copy();
+        ItemStack remainder = quickMoveIntoPage(attempt);
+        int inserted = stack.getCount() - remainder.getCount();
+        if (inserted > 0) {
+            stack.shrink(inserted);
+        }
+        return inserted;
+    }
+
+    private boolean handleQuickMoveResult(Slot slot, ItemStack stack, ItemStack original) {
+        // Keep vanilla crafting behaviour by routing crafted output back into the player's inventory when possible.
+        boolean moved = this.moveItemStackTo(stack, PLAYER_INV_START, PLAYER_INV_END, true)
+                || this.moveItemStackTo(stack, PLAYER_INV_START, PLAYER_INV_END, false);
+        if (!moved) {
+            insertStackIntoPage(stack);
+        }
+        slot.onQuickCraft(stack, original);
+        updateCraftingResult();
+        return true;
+    }
+
+    private boolean handleQuickMoveFromPlayerInventory(ItemStack stack) {
+        // When the crafter is visible we only feed it; otherwise we sync with the endless inventory page.
+        if (craftingVisible) {
+            return moveStackIntoCrafter(stack);
+        }
+        return insertStackIntoPage(stack) > 0;
+    }
+
+    private void updateCraftingResult() {
+        if (!(this.player instanceof ServerPlayer serverPlayer)) {
+            return;
+        }
+        var level = serverPlayer.level();
+        ItemStack resultStack = ItemStack.EMPTY;
+        Optional<CraftingRecipe> optional = serverPlayer.server.getRecipeManager().getRecipeFor(RecipeType.CRAFTING, this.craftMatrix, level);
+        if (optional.isPresent()) {
+            CraftingRecipe recipe = optional.get();
+            if (this.craftResult.setRecipeUsed(level, serverPlayer, recipe)) {
+                ItemStack assembled = recipe.assemble(this.craftMatrix, level.registryAccess());
+                if (assembled.isItemEnabled(level.enabledFeatures())) {
+                    resultStack = assembled;
+                }
+            }
+        }
+        this.craftResult.setItem(RESULT_SLOT_INDEX, resultStack);
+        this.setRemoteSlot(RESULT_SLOT_INDEX, resultStack);
+        serverPlayer.connection.send(new ClientboundContainerSetSlotPacket(this.containerId, this.incrementStateId(), RESULT_SLOT_INDEX, resultStack));
+    }
 
     private class CraftingGridSlot extends Slot {
         CraftingGridSlot(CraftingContainer matrix, int slot, int x, int y) {
@@ -581,6 +733,28 @@ public class EndlessInventoryMenu extends AbstractContainerMenu implements PageM
         }
     }
 
+    @Override
+    public void slotQuickMoved(Slot clicked) {
+        // Handle ctrl-click quick move by pushing items straight into the endless inventory pages.
+        if (!clicked.hasItem()) {
+            return;
+        }
+        ItemStack stack = clicked.getItem();
+        int moved = insertStackIntoPage(stack);
+        if (moved <= 0) {
+            return;
+        }
+        if (stack.isEmpty()) {
+            clicked.setByPlayer(ItemStack.EMPTY);
+        } else {
+            clicked.setChanged();
+        }
+        clicked.onTake(player, stack);
+        if (clicked.container == craftMatrix || clicked.container == craftResult) {
+            craftMatrix.setChanged();
+            updateCraftingResult();
+        }
+    }
     public interface ClientPageBinding {
         String pageId();
 

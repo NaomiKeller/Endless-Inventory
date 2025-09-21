@@ -161,8 +161,8 @@ public class ItemEntryDisplay extends ItemDisplay{
             if(mode == TextureMode.DEDICATED_LOCATION) return fromResource.dedicatePageBgRender(FromResource.ITEM_ENTRY_DISPLAY_RESOURCE);
             return (guiGraphics, partialTicks, mouseX, mouseY) ->{// assert mode = from_resource
                 sfBgRenderer.getDefaultPageBgRenderer().ifPresent(bgRenderer -> bgRenderer.renderBg(guiGraphics, partialTicks, mouseX, mouseY));
-                int pageX = sfBgRenderer.getScreenFrameWork().pageX;
-                int startY = sfBgRenderer.getScreenFrameWork().pageY;
+                int pageX = sfBgRenderer.getScreenFrameWork().getPageX();
+                int startY = sfBgRenderer.getScreenFrameWork().getPageY();
                 for(int i = 0; i< meta.rows(); ++i){
                     guiGraphics.fill(pageX,startY,pageX+18* meta.columns()-2,startY+1,0xFF373737);
                     guiGraphics.fill(pageX,startY+1,pageX+18* meta.columns()-2,startY+17,0xFF8b8b8b);
@@ -172,8 +172,8 @@ public class ItemEntryDisplay extends ItemDisplay{
             };
         }
         return (guiGraphics, partialTicks, mouseX, mouseY) ->{//assert mode = transparent
-            int pageX = sfBgRenderer.getScreenFrameWork().pageX;
-            int startY = sfBgRenderer.getScreenFrameWork().pageY;
+            int pageX = sfBgRenderer.getScreenFrameWork().getPageX();
+            int startY = sfBgRenderer.getScreenFrameWork().getPageY();
             for(int i = 0; i< meta.rows(); ++i){
                 guiGraphics.fill(pageX,startY,pageX+18* meta.columns()-2,startY+1,0xFF373737);
                 guiGraphics.fill(pageX,startY+1,pageX+18* meta.columns()-2,startY+17,0x37606037);
