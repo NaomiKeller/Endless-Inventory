@@ -139,10 +139,6 @@ public final class FabricClientConfig implements IClientConfig {
             json.addProperty(TEXTURE, textureMode.name());
             json.addProperty(SCREEN_DEBUG, screenDebug);
             json.addProperty(MAX_PAGE_BARS, maxPageBars);
-            json.addProperty(SORT_TYPE, sortType.name());
-            json.addProperty(REVERSE_SORT, reverseSort);
-            json.addProperty(PAGE_ID, activePageId);
-            json.addProperty(SEARCH, searchQuery);
             JsonArray array = new JsonArray();
             hiddenPages.forEach(array::add);
             json.add(HIDDEN_PAGES, array);
@@ -194,26 +190,6 @@ public final class FabricClientConfig implements IClientConfig {
     @Override
     public IConfigValue<Integer> maxPageBarCount() {
         return tracked(() -> maxPageBars, value -> maxPageBars = value);
-    }
-
-    @Override
-    public IConfigValue<SortType> sortType() {
-        return tracked(() -> sortType, value -> sortType = value);
-    }
-
-    @Override
-    public IConfigValue<Boolean> reverseSort() {
-        return tracked(() -> reverseSort, value -> reverseSort = value);
-    }
-
-    @Override
-    public IConfigValue<String> activePageId() {
-        return tracked(() -> activePageId, value -> activePageId = value);
-    }
-
-    @Override
-    public IConfigValue<String> searchQuery() {
-        return tracked(() -> searchQuery, value -> searchQuery = value);
     }
 
     @Override

@@ -5,6 +5,7 @@ import com.kwwsyk.endinv.common.client.CachedConfig;
 import com.kwwsyk.endinv.common.client.gui.AttachedScreen;
 import com.kwwsyk.endinv.common.client.gui.EndlessInventoryScreen;
 import com.kwwsyk.endinv.common.client.gui.IScreenEvent;
+import com.kwwsyk.endinv.common.network.payloads.PageData;
 import com.kwwsyk.endinv.common.network.payloads.SyncedConfig;
 import com.kwwsyk.endinv.common.network.payloads.toServer.OpenEndInvPayload;
 import com.kwwsyk.endinv.fabric.mixin.ScreenAccessor;
@@ -58,8 +59,14 @@ public final class ScreenAttachment {
             CachedConfig.readAndSyncClientConfigToServer(false);
 
             if (attachment == null || attachment.screen != screen) {
-                ModInfo.getPacketDistributor().sendToServer(new OpenEndInvPayload(false));
-                attachment = new AttachedScreen<>(container);
+                AttachedScreen<?> next = new AttachedScreen<>(container);
+                int rows = CachedConfig.currentLayout().rows();
+                if (rows <= 0) {
+                    rows = PageData.DEFAULT.rows();
+                }
+                // Keep rows in sync when attaching so client preview matches server layout.
+                ModInfo.getPacketDistributor().sendToServer(new OpenEndInvPayload(false, rows));
+                attachment = next;
             }
 
             AttachedScreen<?> current = Objects.requireNonNull(attachment);
