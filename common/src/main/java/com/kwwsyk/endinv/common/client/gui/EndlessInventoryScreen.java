@@ -63,6 +63,9 @@ public class EndlessInventoryScreen extends AbstractContainerScreen<EndlessInven
         addRenderableWidget(this.craftingToggleButton);
     }
 
+    /**
+     * Keeps the crafting toggle anchored to the screen chrome after layout changes.
+     */
     private void updateCraftingToggleButtonPosition() {
         if (this.craftingToggleButton == null) {
             return;
@@ -74,11 +77,13 @@ public class EndlessInventoryScreen extends AbstractContainerScreen<EndlessInven
         this.craftingToggleButton.setY(y);
     }
 
+    /**
+     * Toggle crafter visibility and realign the surrounding widgets without rebuilding the screen.
+     */
     private void toggleCrafting() {
         craftingVisible = !craftingVisible;
         menu.setCraftingVisible(craftingVisible);
         ModInfo.getPacketDistributor().sendToServer(new ToggleCraftingPayload(craftingVisible));
-        // Refresh layout without reinitialising widgets so we avoid duplicate elements.
         int previousTop = this.topPos;
         recalcDimensions();
         this.leftPos = (this.width - this.imageWidth) / 2;
@@ -206,7 +211,4 @@ public class EndlessInventoryScreen extends AbstractContainerScreen<EndlessInven
         return imageHeight;
     }
 }
-
-
-
 

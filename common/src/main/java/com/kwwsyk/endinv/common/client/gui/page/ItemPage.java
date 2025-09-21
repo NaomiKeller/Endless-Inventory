@@ -65,9 +65,11 @@ public abstract class ItemPage extends DisplayPage {
         this.length = meta.rows()* meta.columns();
     }
 
+    /**
+     * Adjust the number of slots maintained by the item page so it matches the latest menu layout.
+     */
     @Override
     public void resize(int rows) {
-        // Align the cached item grid with the new visible row count from the screen layout.
         int targetRows = Math.max(1, rows);
         this.length = targetRows * meta.columns();
         refreshContents(this.startIndex, this.length);
@@ -215,7 +217,7 @@ public abstract class ItemPage extends DisplayPage {
         String suffix;
 
         if(count == this.meta.getMaxStackSize() && meta.enableInfinity()){
-            return "∞";
+            return "\u221E";
         }
 
         if (count >= 1_000_000_000) {

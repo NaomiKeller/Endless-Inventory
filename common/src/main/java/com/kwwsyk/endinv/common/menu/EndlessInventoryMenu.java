@@ -414,7 +414,10 @@ public class EndlessInventoryMenu extends AbstractContainerMenu implements PageM
         };
     }
 
-    // Shift-click routing is reshaped to prioritize crafting slots while keeping the page storage in sync.
+    /**
+     * Handles vanilla quick-move (shift-click) transfers, prioritising crafter slots before the player inventory
+     * and falling back to the endless inventory page when needed.
+     */
     @Override
     public ItemStack quickMoveStack(Player player, int index) {
         Slot slot = this.slots.get(index);
@@ -465,18 +468,24 @@ public class EndlessInventoryMenu extends AbstractContainerMenu implements PageM
 
 
 
+    /**
+     * @return true when the quick-move source slot belongs to the player inventory range.
+     */
     private boolean isPlayerInventorySlot(int index) {
-        // Recognize player inventory range for quick-move routing when shift-clicking.
         return index >= PLAYER_INV_START && index < PLAYER_INV_END;
     }
 
+    /**
+     * @return true when the slot index falls inside the 3x3 crafter grid.
+     */
     private boolean isCrafterSlot(int index) {
-        // Recognize crafting grid indices so we can special-case the crafter behaviour.
         return index >= CRAFT_SLOT_START && index < CRAFT_SLOT_END;
     }
 
+    /**
+     * Push a stack back into the player inventory when it originated from the crafter grid.
+     */
     private boolean handleQuickMoveFromCrafterSlot(Slot slot, ItemStack stack) {
-        // Allow reclaiming crafting ingredients by sending them back to the player's inventory.
         boolean moved = this.moveItemStackTo(stack, PLAYER_INV_START, PLAYER_INV_END, false);
         if (moved) {
             craftMatrix.setChanged();
@@ -485,8 +494,10 @@ public class EndlessInventoryMenu extends AbstractContainerMenu implements PageM
         return moved;
     }
 
+    /**
+     * Try to populate the crafter grid before resorting to storing items in the endless inventory page.
+     */
     private boolean moveStackIntoCrafter(ItemStack stack) {
-        // Try to top up the craft grid before considering other storage targets.
         int before = stack.getCount();
         boolean moved = this.moveItemStackTo(stack, CRAFT_SLOT_START, CRAFT_SLOT_END, false);
         if (moved && stack.getCount() != before) {
@@ -497,7 +508,6 @@ public class EndlessInventoryMenu extends AbstractContainerMenu implements PageM
     }
 
     @Override
-
     public boolean canTakeItemForPickAll(ItemStack stack, Slot slot) {
         if (slot.container == this.craftResult) {
             return false;
@@ -570,10 +580,26 @@ public class EndlessInventoryMenu extends AbstractContainerMenu implements PageM
         ItemStack request = template.copy();
         return this.sourceInventory.takeItem(request, count);
     }
-    public ItemStack quickMoveFromPage(ItemStack stack){
-        moveItemStackTo(stack,0,this.slots.size()-1,true);
+
+    /**
+     * Send stacks from the current page into the crafter (when visible) and then the player inventory.
+     */
+    public ItemStack quickMoveFromPage(ItemStack stack) {
+        if (stack.isEmpty()) {
+            return stack;
+        }
+        if (craftingVisible && this.moveItemStackTo(stack, CRAFT_SLOT_START, CRAFT_SLOT_END, false)) {
+            craftMatrix.setChanged();
+            updateCraftingResult();
+        }
+        if (!stack.isEmpty()) {
+            if (!this.moveItemStackTo(stack, PLAYER_INV_START, PLAYER_INV_START + PLAYER_INV_SLOT_COUNT, false)) {
+                this.moveItemStackTo(stack, PLAYER_INV_START + PLAYER_INV_SLOT_COUNT, PLAYER_INV_END, false);
+            }
+        }
         return stack;
     }
+
 
     @Override
     public SortType sortType() {
@@ -670,8 +696,10 @@ public class EndlessInventoryMenu extends AbstractContainerMenu implements PageM
         return inserted;
     }
 
+    /**
+     * Route crafted results into the player inventory first, falling back to the endless inventory page.
+     */
     private boolean handleQuickMoveResult(Slot slot, ItemStack stack, ItemStack original) {
-        // Keep vanilla crafting behaviour by routing crafted output back into the player's inventory when possible.
         boolean moved = this.moveItemStackTo(stack, PLAYER_INV_START, PLAYER_INV_END, true)
                 || this.moveItemStackTo(stack, PLAYER_INV_START, PLAYER_INV_END, false);
         if (!moved) {
@@ -682,8 +710,10 @@ public class EndlessInventoryMenu extends AbstractContainerMenu implements PageM
         return true;
     }
 
+    /**
+     * Determine the quick-move destination for items grabbed from the player inventory.
+     */
     private boolean handleQuickMoveFromPlayerInventory(ItemStack stack) {
-        // When the crafter is visible we only feed it; otherwise we sync with the endless inventory page.
         if (craftingVisible) {
             return moveStackIntoCrafter(stack);
         }
@@ -733,9 +763,11 @@ public class EndlessInventoryMenu extends AbstractContainerMenu implements PageM
         }
     }
 
+    /**
+     * Handle ctrl-click quick move by pushing items straight into the endless inventory pages.
+     */
     @Override
     public void slotQuickMoved(Slot clicked) {
-        // Handle ctrl-click quick move by pushing items straight into the endless inventory pages.
         if (!clicked.hasItem()) {
             return;
         }

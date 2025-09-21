@@ -216,16 +216,20 @@ public abstract class DisplayPage{
         this.lastFrameworkPageY = pageYPos;
     }
 
+    /**
+     * Apply a relative offset so debug adjustments survive screen refreshes.
+     */
     public void move(int deltaX, int deltaY) {
-        // Maintain manual offsets relative to the framework anchor for debug adjustments.
         this.renderOffsetX += deltaX;
         this.renderOffsetY += deltaY;
         this.leftPos = lastFrameworkPageX + renderOffsetX;
         this.topPos = lastFrameworkPageY + renderOffsetY;
     }
 
+    /**
+     * Hook for page implementations that need to respond to a change in visible rows.
+     */
     public void resize(int rows) {
-        // Default implementation allows subclasses to react to row changes when needed.
     }
 
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick){
