@@ -68,3 +68,6 @@ In `assets/endless_inventory/textures/gui/*`:
 ### after release
 - Rearranged the JAR filename so the loader name (Forge/Fabric) is prefixed for easier version identification.
 
+## 9.23 1.1.0-Pre1
+- \[Forge] Implemented EndlessInventory's JEI recipe transfer.
+- \[MAYBE] Updated readme
