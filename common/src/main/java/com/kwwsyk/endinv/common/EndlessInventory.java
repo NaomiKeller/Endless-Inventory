@@ -13,13 +13,11 @@ import org.slf4j.Logger;
 import javax.annotation.Nonnegative;
 import javax.annotation.Nullable;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**An item container may have endless storage.*/
 public class EndlessInventory extends SourceInventory {
 
     private static final Logger LOGGER = LogUtils.getLogger();
-
 
     @SuppressWarnings("unchecked")
     private final List<ItemStack>[] sortedViews = new List[SortType.values().length];

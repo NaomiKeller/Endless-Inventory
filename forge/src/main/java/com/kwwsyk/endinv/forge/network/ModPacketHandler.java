@@ -11,6 +11,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.DistExecutor;
+import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.network.NetworkEvent;
@@ -84,14 +85,10 @@ public class ModPacketHandler {
         INSTANCE.registerMessage(i++, QuickMoveToPagePayload.class,QuickMoveToPagePayload::encode,QuickMoveToPagePayload::decode,convert(QuickMoveToPagePayload::handle));
         INSTANCE.registerMessage(i++, StarItemPayload.class,StarItemPayload::encode,StarItemPayload::decode,convert(StarItemPayload::handle));
         INSTANCE.registerMessage(i++, ToggleCraftingPayload.class, ToggleCraftingPayload::encode, ToggleCraftingPayload::decode, convert(ToggleCraftingPayload::handle));
-        INSTANCE.registerMessage(i++, JeiTransferRecipePayload.class, JeiTransferRecipePayload::encode, JeiTransferRecipePayload::decode, convert(JeiTransferRecipePayload::handle));
+        if(ModList.get().isLoaded("jei")) INSTANCE.registerMessage(i++, JeiTransferRecipePayload.class, JeiTransferRecipePayload::encode, JeiTransferRecipePayload::decode, convert(JeiTransferRecipePayload::handle));
 
         INSTANCE.registerMessage(i, SyncedConfig.class,SyncedConfig::encode,SyncedConfig::decode,convertBi(SyncedConfig::handle));
     }
-
-    /*static {
-        register();
-    }*/
 
     @SubscribeEvent
     public static void onCommonSetup(FMLCommonSetupEvent event) {

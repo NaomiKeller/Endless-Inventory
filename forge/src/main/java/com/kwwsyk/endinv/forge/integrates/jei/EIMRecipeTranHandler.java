@@ -74,6 +74,17 @@ public class EIMRecipeTranHandler implements IRecipeTransferHandler<EndlessInven
         return RecipeTypes.CRAFTING;
     }
 
+    //TODO PROBLEM: unable to handle some shaped recipe. Such as (CraftingTable)XXO;XXO;OOO->XXX;XOO;OOO, which means crucial EMPTY slots are ignored.
+    // An other example: (Door)XXO;XXO;XXO->XXX;XXX;OOO.
+    // Some shaped recipe can process successfully:
+    /*My other concern is this:
+       if the length of SrcInv’s item list—which can reach into the thousands—is the dominant factor N,
+       then the process seems to have time complexity as high as O(N²).
+       It would be better to reduce it to O(N).
+       That being the case, chooseBestCandidate and countAvailableOfType are quite confusing, and you should add more comments to them.
+       In addition, prioritize items in the inventory; if plain items (without NBT) in the inventory already satisfy the requirement,
+       there is no need to consider the items on the Page.
+    * */
     /**
      * @param container   the container to act on
      * @param recipe      the raw recipe instance
@@ -108,7 +119,7 @@ public class EIMRecipeTranHandler implements IRecipeTransferHandler<EndlessInven
             }
 
             if (player.level().isClientSide) {
-                container.setCraftingVisible(true);
+                container.setCraftingVisible(true);//is crafter visible on server now? or needn't consider it
                 ModInfo.getPacketDistributor().sendToServer(new JeiTransferRecipePayload(container.containerId, recipe.getId(), maxTransfer));
             } else {
                 performTransfer(container, recipe, plan, player);

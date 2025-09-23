@@ -103,6 +103,7 @@ public class EndlessInventoryScreen extends AbstractContainerScreen<EndlessInven
     }
 
     public void render(@NotNull GuiGraphics gui, int mouseX, int mouseY, float partialTick){
+        this.renderBackground(gui);
         frameWork.renderPre(gui,mouseX,mouseY,partialTick);
 
         super.render(gui,mouseX,mouseY,partialTick);
