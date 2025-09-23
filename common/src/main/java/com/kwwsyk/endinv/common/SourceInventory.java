@@ -17,6 +17,9 @@ import java.util.stream.Stream;
 
 import static com.kwwsyk.endinv.common.ModInfo.getServerConfig;
 
+/**Holder of core and shared ({@link EndlessInventory}&{@link com.kwwsyk.endinv.common.client.CachedSrcInv} endless INVENTORY logic.
+ * TODO improve the logic to be THREAD-SAFE and EFFECTIVE
+ */
 public abstract class SourceInventory {
 
     private static final Logger LOGGER = LogUtils.getLogger();
@@ -137,7 +140,7 @@ public abstract class SourceInventory {
      * @param count the max count of items taken away | 拿走的最大数目
      * @return taken items | 被拿走的物品
      */
-    public ItemStack takeItem(ItemStack stack, int count){
+    public ItemStack takeItem(ItemStack stack, int count){//todo thread-safe take
         if(stack.isEmpty()) return ItemStack.EMPTY;
         ItemKey key = ItemKey.asKey(stack);
         LOGGER.debug("EI:takeItem:stack->itemKay, stack={},itemKay = {}",stack,key);
@@ -182,7 +185,7 @@ public abstract class SourceInventory {
      * @param itemStack to add
      * @return Remain item copied, or {@link ItemStack#EMPTY} if all inserted.
      */
-    public ItemStack addItem(ItemStack itemStack){
+    public ItemStack addItem(ItemStack itemStack){//todo thread-safe add
         if(itemStack.isEmpty()) return ItemStack.EMPTY;
         ItemKey key = ItemKey.asKey(itemStack);
         if(getServerConfig().doConvertEmptyTag().get() && itemStack.getTag()!=null && Objects.equals(itemStack.getTag(),new CompoundTag())){
@@ -223,7 +226,7 @@ public abstract class SourceInventory {
 
     //item handler: item view methods
 
-    protected List<ItemStack> getSortedView(SortType type, boolean reverse) {
+    protected List<ItemStack> getSortedView(SortType type, boolean reverse) {//todo effective
         var ret = itemMap.entrySet().stream()
                 .map(e -> e.getKey().toStack(e.getValue().count()))
                 .sorted(ModInfo.sortHelper.getComparator(type, this))
@@ -233,7 +236,7 @@ public abstract class SourceInventory {
     }
 
     public List<ItemStack> getSortedAndFilteredItemView(int startIndex, int length, SortType sortType, boolean reverse, @Nullable Predicate<ItemStack> classify, String search){
-        Stream<ItemStack> base = getSortedView(sortType,reverse).stream();
+        Stream<ItemStack> base = getSortedView(sortType,reverse).stream();//todo effective
         List<ItemStack> filtered = base
                 .filter(classify!=null?classify:is->true)
                 .filter(stack -> SearchUtil.matchesSearch(stack,search))

@@ -15,7 +15,13 @@ import javax.annotation.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 
-
+/**An item container may have endless storage.
+ * TODO EFFECTIVITY
+ *  on hand in ADDing and TAKing item(s)
+ *  other hand is let it able to handle A-VERY-BIG storage, like when the size of itemMap reaches 2147483647
+ * TODO THREAD-SAFETY
+ *  the item ADD and TAKE may be invoked a lot on server. think how to make a thread-safe big item container and manager.
+ */
 public class EndlessInventory extends SourceInventory {
 
     private static final Logger LOGGER = LogUtils.getLogger();

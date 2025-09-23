@@ -4,7 +4,7 @@ plugins {
     id 'java'
 }
 base {
-    archivesName = "${mod_name}-${minecraft_version}-${mod_version}-${project.name}"
+    archivesName = "${mod_name}-${project.name}-${minecraft_version}-${mod_version}"
 }
 loom {
     def aw = project(':common').file("src/main/resources/${mod_id}.accesswidener")

@@ -229,8 +229,10 @@ public class ClientPageManager implements PageManager {
         }
 
         @Override
-        public ItemStack extractForPickupAll(ItemStack template, int maxCount) {
-            return page.tryExtractItem(template, maxCount);
+        public ItemStack extractItemFromPage(ItemStack template, int maxCount) {
+            var ret = page.tryExtractItem(template, maxCount);
+            page.refreshContents();
+            return ret;
         }
 
         @Override

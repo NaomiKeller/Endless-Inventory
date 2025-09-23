@@ -30,11 +30,9 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.CraftingRecipe;
 import net.minecraft.world.item.crafting.RecipeType;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.TestOnly;
 
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 import static com.kwwsyk.endinv.common.ModRegistries.Items;
 import static com.kwwsyk.endinv.common.ModRegistries.Menus;
@@ -187,6 +185,29 @@ public class EndlessInventoryMenu extends AbstractContainerMenu implements PageM
         }
         int invY = 18 * baseRows + 31;
         addStandardInventorySlots(playerInventory, 8, invY);
+    }
+
+    public List<Slot> getCraftingSlots(){
+        return slots.subList(1,1+9);
+    }
+
+    public List<Slot> getPlayerInvSlots(){
+        return slots.subList(10,10+36);
+    }
+
+    @TestOnly
+    public void validateSlotStatus() throws IllegalStateException{
+        for(Slot slot : getCraftingSlots()){
+            if(!(slot instanceof CraftingGridSlot)) throw new IllegalStateException("getCraftingSlots do not correspond menu's crafter slots.");
+        }
+        for(Slot slot : getPlayerInvSlots()){
+            if(!(slot.container instanceof Inventory)) throw new IllegalStateException("getPlayerInvSlots contains slots whose container is not inventory");
+        }
+        if(!(slots.get(0) instanceof CraftingGridSlot)) throw new IllegalStateException("the first slot is not Crafter's result slot, check ADD SLOT process");
+    }
+
+    public boolean isCrafterEnabled(){
+        return true;
     }
 
     public void setCraftingVisible(boolean visible) {
@@ -578,7 +599,7 @@ public class EndlessInventoryMenu extends AbstractContainerMenu implements PageM
             return ItemStack.EMPTY;
         }
         if (clientPage != null) {
-            return clientPage.extractForPickupAll(template.copy(), count);
+            return clientPage.extractItemFromPage(template.copy(), count);
         }
         ItemStack request = template.copy();
         return this.sourceInventory.takeItem(request, count);
@@ -803,7 +824,7 @@ public class EndlessInventoryMenu extends AbstractContainerMenu implements PageM
 
         void markPageChanged();
 
-        ItemStack extractForPickupAll(ItemStack template, int maxCount);
+        ItemStack extractItemFromPage(ItemStack template, int maxCount);
 
         void refreshAfterMenuInteraction(SourceInventory source);
     }
