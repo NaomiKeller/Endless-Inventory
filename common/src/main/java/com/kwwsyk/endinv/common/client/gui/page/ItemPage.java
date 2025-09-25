@@ -45,17 +45,6 @@ public abstract class ItemPage extends DisplayPage {
 
     protected int length;
 
-    public void extend(int rows){
-        this.length = rows * meta.columns();
-        refreshContents(this.startIndex,this.length);
-    }
-
-    public void contract(int rows){
-        int newLength = rows * meta.columns();
-        this.length = Math.max(newLength, meta.columns());
-        refreshContents(this.startIndex, this.length);
-    }
-
     protected boolean suppressRefresh = false;
 
     protected List<ItemStack> inQueueStacks = null;
