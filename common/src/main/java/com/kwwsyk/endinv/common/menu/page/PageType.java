@@ -1,9 +1,6 @@
 package com.kwwsyk.endinv.common.menu.page;
 
-import com.kwwsyk.endinv.common.client.gui.page.DisplayPage;
-import com.kwwsyk.endinv.common.client.gui.page.ItemDisplay;
-import com.kwwsyk.endinv.common.client.gui.page.ItemEntryDisplay;
-import com.kwwsyk.endinv.common.client.gui.page.StarredItemPage;
+import com.kwwsyk.endinv.common.client.gui.page.*;
 import com.kwwsyk.endinv.common.menu.page.pageManager.PageMetaDataManager;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
@@ -22,6 +19,13 @@ public class PageType {
 
     public static final String DEFAULT_KEY = "all_items";
 
+    private static final List<Predicate<ItemStack>> equipmentSubclassifications = List.of(
+            is-> is.getItem() instanceof ArmorItem armor && armor.getType()==ArmorItem.Type.HELMET,
+            is-> is.getItem() instanceof ArmorItem armor && armor.getType()==ArmorItem.Type.CHESTPLATE,
+            is-> is.getItem() instanceof ArmorItem armor && armor.getType()==ArmorItem.Type.LEGGINGS,
+            is-> is.getItem() instanceof ArmorItem armor && armor.getType()==ArmorItem.Type.BOOTS
+    );
+
     public static final List<TagKey<Item>> WEAPON_TAGS = new ArrayList<>();
     public static final List<TagKey<Item>> TOOL_TAGS = new ArrayList<>();
     public static final List<TagKey<Item>> EQUIPPABLE_TAGS = new ArrayList<>();
@@ -30,7 +34,10 @@ public class PageType {
     public static final PageType BLOCK_ITEMS = createClassifiedPage("block_items",(stack)->stack.getItem() instanceof BlockItem,"stone");
     public static final PageType WEAPONS = createClassifiedPage("weapons",PageType::isWeapon,"iron_sword");
     public static final PageType TOOLS = createClassifiedPage("tools",PageType::isTool,"iron_pickaxe");
-    public static final PageType EQUIPMENTS = createClassifiedPage("equipments",PageType::isDefenceEquipment,"iron_chestplate");
+    public static final PageType EQUIPMENTS = new PageType(
+            (type,manager)->new SegClassifyItemDisplay(type,manager,equipmentSubclassifications,false,true),
+            "equipments",PageType::isDefenceEquipment,new ResourceLocation("minecraft","iron_chestplate")
+    );
     public static final PageType CONSUMABLE = createClassifiedPage("consumable",PageType::isFoodOrPotion,"bread");
     public static final PageType ENCHANTED_BOOKS = createItemEntry("enchanted_books",stack->stack.getItem() instanceof EnchantedBookItem,"enchanted_book");
     public static final PageType BOOKMARK = new PageType(StarredItemPage::new,"bookmark",null,new ResourceLocation("minecraft","book"));

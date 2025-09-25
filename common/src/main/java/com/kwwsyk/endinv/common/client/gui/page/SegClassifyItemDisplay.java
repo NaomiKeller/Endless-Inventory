@@ -68,7 +68,7 @@ public class SegClassifyItemDisplay extends ItemDisplay {
                 int y = topPos + rowIndex * 18;
                 guiGraphics.fill(leftPos, y, leftPos + columns * 18 - 2, y + 1, 0xFF5A5A5A);
             }
-            ItemStack stack = items.get(i);
+            ItemStack stack = items.get(i);//todo in debug, break point here items is not seg-ged view.
             if (stack.isEmpty() && !stack.is(Items.AIR)) {
                 renderEmpty(guiGraphics, leftPos + columnIndex * 18, topPos + rowIndex * 18 + 1, stack);
             }
@@ -225,9 +225,7 @@ public class SegClassifyItemDisplay extends ItemDisplay {
         if (segment.isEmpty()) {
             return;
         }
-        for (ItemStack stack : segment) {
-            target.add(stack);
-        }
+        target.addAll(segment);
         int columns = meta.columns();
         if (columns <= 0) {
             return;
@@ -246,6 +244,8 @@ public class SegClassifyItemDisplay extends ItemDisplay {
         int fromIndex = Math.min(startIndex, segmentedView.size());
         int toIndex = Math.min(fromIndex + length, segmentedView.size());
         List<ItemStack> slice = segmentedView.subList(fromIndex, toIndex);
-        initializeContents(slice);
-    }
+        initializeContents(slice);//debug: here slice is normal (no bug)
+        //todo BUG: in game the page doesn't show seg-ged,
+        // the reason seems to be that #initializeContents will change the content of this.items instead of
+    }//debug: this.items here is seg-ged view why in render items change back to un-seg-ged view?
 }

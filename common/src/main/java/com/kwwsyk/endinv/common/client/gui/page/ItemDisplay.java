@@ -1,6 +1,5 @@
 package com.kwwsyk.endinv.common.client.gui.page;
 
-import com.kwwsyk.endinv.common.EndlessInventory;
 import com.kwwsyk.endinv.common.client.CachedSrcInv;
 import com.kwwsyk.endinv.common.menu.page.PageType;
 import com.kwwsyk.endinv.common.menu.page.pageManager.PageMetaDataManager;
@@ -68,9 +67,6 @@ public class ItemDisplay extends ItemPage{
             }
             this.items.set(index, itemStack);
         }
-        //then affect server
-        ItemStack result = srcInv.takeItem(itemStack,count);
-        if(srcInv instanceof EndlessInventory) ret=result;
         return ret;
     }
 
@@ -87,7 +83,7 @@ public class ItemDisplay extends ItemPage{
         {
             for (int i = 0; i < this.length; ++i) {
                 ItemStack itemStack1 = this.items.get(i);
-            if (ItemStack.isSameItemSameTags(itemStack1, itemStack)) {
+                if (ItemStack.isSameItemSameTags(itemStack1, itemStack)) {
                     if(!isFull(itemStack1)) {
                         int additional = itemStack1.getCount();
                         int max = meta.getMaxStackSize();
