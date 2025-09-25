@@ -7,15 +7,14 @@ import com.kwwsyk.endinv.common.network.payloads.toServer.ItemClickPayload;
 import com.mojang.logging.LogUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.util.Mth;
 import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import org.slf4j.Logger;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.function.Predicate;
 
 import static com.kwwsyk.endinv.common.ModInfo.getPacketDistributor;
@@ -34,7 +33,14 @@ public class SegClassifyItemDisplay extends ItemDisplay {
     private final boolean keepClassifiedItemInNextSeg;
 
     private final List<ItemStack> segmentedView = new ArrayList<>();
-    private final Set<Integer> segmentStartSlots = new HashSet<>();
+    /**
+     * Slot indexes inside {@link #segmentedView} that represent the first column of each segment.
+     * This list preserves insertion order so we can translate them into row numbers for the
+     * currently displayed slice during {@link #updateDisplayedSlice()}.
+     */
+    private final List<Integer> segmentStartSlots = new ArrayList<>();
+    /** Row indexes (relative to the currently rendered page) that should render a separator line. */
+    private final List<Integer> pageSeparatorRows = new ArrayList<>();
 
     public SegClassifyItemDisplay(PageType pageType,
                                   PageMetaDataManager metaDataManager,
@@ -62,20 +68,18 @@ public class SegClassifyItemDisplay extends ItemDisplay {
         int rowIndex = 0;
         int columnIndex = 0;
         int columns = meta.columns();
-        for (int i = 0; i < items.size(); ++i) {
-            int globalSlot = startIndex + i;
-            if (columnIndex == 0 && segmentStartSlots.contains(globalSlot) && globalSlot != 0) {
+        for (ItemStack item : items) {
+            if (columnIndex == 0 && pageSeparatorRows.contains(rowIndex)) {
                 int y = topPos + rowIndex * 18;
                 guiGraphics.fill(leftPos, y, leftPos + columns * 18 - 2, y + 1, 0xFF5A5A5A);
             }
-            ItemStack stack = items.get(i);//todo in debug, break point here items is not seg-ged view.
-            if (stack.isEmpty() && !stack.is(Items.AIR)) {
-                renderEmpty(guiGraphics, leftPos + columnIndex * 18, topPos + rowIndex * 18 + 1, stack);
+            if (item.isEmpty() && !item.is(Items.AIR)) {
+                renderEmpty(guiGraphics, leftPos + columnIndex * 18, topPos + rowIndex * 18 + 1, item);
             }
-            guiGraphics.renderItem(stack, leftPos + columnIndex * 18, topPos + rowIndex * 18 + 1, columnIndex + rowIndex * 180);
+            guiGraphics.renderItem(item, leftPos + columnIndex * 18, topPos + rowIndex * 18 + 1, columnIndex + rowIndex * 180);
             if (!isHiddenBySortBox(rowIndex, columnIndex)) {
-                guiGraphics.renderItemDecorations(Minecraft.getInstance().font, stack,
-                        leftPos + columnIndex * 18, topPos + rowIndex * 18 + 1, getDisplayAmount(stack));
+                guiGraphics.renderItemDecorations(Minecraft.getInstance().font, item,
+                        leftPos + columnIndex * 18, topPos + rowIndex * 18 + 1, getDisplayAmount(item));
             }
             columnIndex++;
             if (columnIndex >= columns) {
@@ -164,6 +168,7 @@ public class SegClassifyItemDisplay extends ItemDisplay {
     private void rebuildSegments(List<ItemStack> source) {
         segmentedView.clear();
         segmentStartSlots.clear();
+        pageSeparatorRows.clear();
         List<ItemStack> filtered = new ArrayList<>();
         for (ItemStack stack : source) {
             if (stack == null || stack.isEmpty()) {
@@ -241,11 +246,33 @@ public class SegClassifyItemDisplay extends ItemDisplay {
     }
 
     private void updateDisplayedSlice() {
+        int columns = Math.max(1, meta.columns());
         int fromIndex = Math.min(startIndex, segmentedView.size());
         int toIndex = Math.min(fromIndex + length, segmentedView.size());
         List<ItemStack> slice = segmentedView.subList(fromIndex, toIndex);
-        initializeContents(slice);//debug: here slice is normal (no bug)
-        //todo BUG: in game the page doesn't show seg-ged,
-        // the reason seems to be that #initializeContents will change the content of this.items instead of
-    }//debug: this.items here is seg-ged view why in render items change back to un-seg-ged view?
+        initializeContents(slice);
+        pageSeparatorRows.clear();
+        if (!segmentStartSlots.isEmpty()) {
+            int firstRow = fromIndex / columns;
+            int rowEndExclusive = Mth.positiveCeilDiv(Math.max(toIndex, fromIndex), columns);
+            for (Integer start : segmentStartSlots) {
+                if (start == null) {
+                    continue;
+                }
+                int row = start / columns;
+                if (row <= firstRow) {
+                    continue;
+                }
+                if (row < rowEndExclusive) {
+                    int relative = row - firstRow;
+                    if (!pageSeparatorRows.contains(relative)) {
+                        pageSeparatorRows.add(relative);
+                    }
+                }
+            }
+            if (!pageSeparatorRows.isEmpty()) {
+                pageSeparatorRows.sort(Integer::compareTo);
+            }
+        }
+    }
 }
