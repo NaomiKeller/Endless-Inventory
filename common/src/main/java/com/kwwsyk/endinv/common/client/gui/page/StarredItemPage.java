@@ -1,17 +1,13 @@
 package com.kwwsyk.endinv.common.client.gui.page;
 
-import com.kwwsyk.endinv.common.EndlessInventory;
-import com.kwwsyk.endinv.common.ServerLevelEndInv;
 import com.kwwsyk.endinv.common.menu.page.PageType;
 import com.kwwsyk.endinv.common.menu.page.pageManager.PageMetaDataManager;
-import com.kwwsyk.endinv.common.network.payloads.toClient.SetStarredPagePayload;
 import com.kwwsyk.endinv.common.network.payloads.toServer.StarItemPayload;
 import com.kwwsyk.endinv.common.util.ItemStackLike;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.core.NonNullList;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
@@ -32,7 +28,7 @@ public class StarredItemPage extends ItemPage{
     public void starItem(ItemStack stack, boolean isAdding){
         if(stack.isEmpty()) return;
         getPacketDistributor().sendToServer(new StarItemPayload(stack,isAdding));
-        requestContents();
+        requestRemoteContents();
     }
 
     @Override
@@ -41,28 +37,21 @@ public class StarredItemPage extends ItemPage{
     }
 
     @Override
-    public void refreshContents(int startIndex, int length){
+    public void initializeContents(int startIndex, int length){
         this.startIndex = startIndex;
         this.length = Math.min(length, meta.rows()* meta.columns());
         this.items = NonNullList.withSize(length, ItemStack.EMPTY);
         this.countArray = new int[length];
-        refreshItems();
+        this.refreshItems();
     }
 
-    public static void sendContentToClient(ServerPlayer player) {
-        ServerLevelEndInv.getEndInvForPlayer(player).ifPresent((endinv)->{
-            var items = endinv.getStarredItems();
-            getPacketDistributor().sendToPlayer(player,new SetStarredPagePayload(items));
-        });
-    }
-
-    public void refreshItems(){
-        if(srcInv.isRemote()){
-            requestContents();
-        }else {
-            var items = ((EndlessInventory)srcInv).getStarredItems(startIndex,length);
-            initializeAsMap(items);
-        }
+    /**
+     * The <em>refresh</em> method of ItemPage, this method shall keep the startIndex and length and fill {@link #items}
+     * with such and srcInv.
+     */
+    @Override
+    public void refreshItems() {
+        requestRemoteContents();
     }
 
     public void initializeContents(@NotNull List<ItemStack> stacks){
@@ -91,7 +80,7 @@ public class StarredItemPage extends ItemPage{
         }
     }
 
-    public void requestContents(){
+    public void requestRemoteContents(){
         sendChangesToServer();
     }
 
@@ -132,6 +121,14 @@ public class StarredItemPage extends ItemPage{
         if(slot>=0&&slot<items.size()) {
             ItemStack clicked = items.get(slot);
             starItem(clicked,false);
+        }
+    }
+
+    public void release(){
+        if(holdOn){
+            holdOn = false;
+            if(inQueueStacks==null) return;
+            initializeContents(inQueueStacks);
         }
     }
 }

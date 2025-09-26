@@ -2,7 +2,7 @@ package com.kwwsyk.endinv.common.client.gui.page.manager;
 
 import com.kwwsyk.endinv.common.SourceInventory;
 import com.kwwsyk.endinv.common.client.gui.page.DisplayPage;
-import com.kwwsyk.endinv.common.client.gui.page.ItemPage;
+import com.kwwsyk.endinv.common.client.gui.page.ItemDisplay;
 import com.kwwsyk.endinv.common.menu.EndlessInventoryMenu;
 import com.kwwsyk.endinv.common.menu.page.PageType;
 import com.kwwsyk.endinv.common.menu.page.PageTypeRegistry;
@@ -79,7 +79,7 @@ public class ClientPageManager implements PageManager {
             menu.bindClientPage(currentBinding);
         } else {
             currentBinding = null;
-            page.refreshContents();
+            page.initializeContents();
         }
     }
 
@@ -210,7 +210,7 @@ public class ClientPageManager implements PageManager {
 
         @Override
         public void onPageSelected() {
-            page.refreshContents();
+            page.initializeContents();
         }
 
         @Override
@@ -231,16 +231,16 @@ public class ClientPageManager implements PageManager {
         @Override
         public ItemStack extractItemFromPage(ItemStack template, int maxCount) {
             var ret = page.tryExtractItem(template, maxCount);
-            page.refreshContents();
+            page.initializeContents();
             return ret;
         }
 
         @Override
         public void refreshAfterMenuInteraction(SourceInventory source) {
-            if (page instanceof ItemPage itemPage) {
-                itemPage.refreshItems();
+            if (page instanceof ItemDisplay itemPage) {
+                itemPage.readCachedItems();
             } else {
-                page.refreshContents();
+                page.initializeContents();
             }
         }
     }

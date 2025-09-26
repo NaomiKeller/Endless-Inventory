@@ -10,7 +10,7 @@ public class ClientModInfo {
 
     public static IInputHandler inputHandler;
 
-    public static IContainerScreenHelper containerScreenHelper;//todo
+    public static IContainerScreenHelper containerScreenHelper;
 
     public static IClientConfig getClientConfig() {
         return clientConfig;

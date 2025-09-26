@@ -40,7 +40,9 @@ public record EndInvMetadata(int itemSize, int maxStackSize, boolean infinityMod
     public void handle(ModPacketContext context) {
         CachedSrcInv.INSTANCE.syncMetadata(this);
 
-        //todo
+//        if (ScreenFramework.getInstance() != null && ScreenFramework.getInstance().meta.getDisplayingPage() instanceof ItemDisplay itemDisplay) {
+//            itemDisplay.readCachedItems();
+//        }
     }
 
 

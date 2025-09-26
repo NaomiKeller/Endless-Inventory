@@ -79,6 +79,7 @@ public class EndlessInventory extends SourceInventory {
     }
 
     public void setChanged() {
+        super.setChanged();
         ServerLevelEndInv.levelEndInvData.setDirty();
     }
 

@@ -71,3 +71,7 @@ In `assets/endless_inventory/textures/gui/*`:
 ## 9.23 1.1.0-Pre1
 - \[Forge] Implemented EndlessInventory's JEI recipe transfer.
 - \[MAYBE] Updated readme
+
+## 9.26 1.1.0-Pre2
+Changed core logic of DisplayPage,ItemPage and their subclasses and some payloads to let pages item modify and some other logic clearer and well-organized.   
+* Coincidentally, the bug of SegClassifyItemDisplay's items un-seg-geg bug is incidentally fixed.

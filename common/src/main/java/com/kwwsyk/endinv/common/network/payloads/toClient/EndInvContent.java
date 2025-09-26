@@ -1,7 +1,7 @@
 package com.kwwsyk.endinv.common.network.payloads.toClient;
 
 import com.kwwsyk.endinv.common.client.CachedSrcInv;
-import com.kwwsyk.endinv.common.client.gui.page.ItemPage;
+import com.kwwsyk.endinv.common.client.gui.page.ItemDisplay;
 import com.kwwsyk.endinv.common.network.payloads.ModPacketContext;
 import com.kwwsyk.endinv.common.network.payloads.ModPacketPayload;
 import com.kwwsyk.endinv.common.util.ItemKey;
@@ -39,8 +39,8 @@ public record EndInvContent(Map<ItemKey, ItemState> itemMap) implements ModPacke
 
         ModPacketPayload.getClientPageMeta().ifPresent(
                 mng->{
-                    if(mng.getDisplayingPage() instanceof ItemPage itemPage){
-                        itemPage.initializeContents(CachedSrcInv.INSTANCE);
+                    if(mng.getDisplayingPage() instanceof ItemDisplay itemPage){
+                        itemPage.readCachedItems();//9.25 update: packet invoke page item refresh, item refresh should not send packet (ItemPageContext)
                     }
                 }
         );

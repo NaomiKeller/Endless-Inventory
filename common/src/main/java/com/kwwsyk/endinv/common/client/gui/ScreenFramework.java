@@ -111,7 +111,7 @@ public class ScreenFramework {
         pageXSize = columns * 18;
         pageYSize = rows * 18;
         addWidgets();
-        meta.getDisplayingPage().refreshContents();
+        meta.getDisplayingPage().initializeContents();
         INSTANCE = this;
     }
 
@@ -179,7 +179,7 @@ public class ScreenFramework {
         pageXSize = columns * 18;
         pageYSize = rows * 18;
         addWidgets();
-        meta.getDisplayingPage().refreshContents();
+        meta.getDisplayingPage().initializeContents();
         INSTANCE = this;
     }
 
@@ -344,11 +344,21 @@ public class ScreenFramework {
             );
             //ModInfo.getPacketDistributor().sendToServer(new QuickMoveToPagePayload(clicked.index));
         }// ↑ should use slot.getContainerSlot() instead of getSlotIndex()
-        if (meta.getDisplayingPage() instanceof ItemPage itemPage) {
-            itemPage.requestContents();
-        }
+        if (meta.getDisplayingPage() instanceof ItemPage itemPage) {//or I should add DisplayPage#ItemQuickMovedIn
+            itemPage.requestRemoteContents();//send such payloads will not let server send contents
+        }//another aspect is to check whether contents are synced across server and client
     }
 
+    /**<p>Get correspond slot index between client creative menu and server player's inventory menu</p>
+     * When client player is in {@link CreativeModeInventoryScreen.ItemPickerMenu} player on server only holds {@link net.minecraft.world.inventory.InventoryMenu}<br>
+     * <p>
+     * In {@code ItemPickerMenu} there are two situations:<br>
+     *     1.When player is picking items in tab, there are 9*5+9 slots, slot in hotbar starts with index 45 ends with 53.<br>
+     *     2.When player is in "Survival Inventory", the {@code slot.index} is always 0, only {@link Slot#getContainerSlot()} is valid.<br>
+     *     To be noticed, {@link Slot#getSlotIndex()} returns same value {@code Slot.slot} but it only exists in Forge's lib. This means use this in Fabric running will throw {@link NoSuchMethodError}</p>
+     * @param clicked slot clicked in Inventory by creative player on client.
+     * @return slot index that can locate correspond inventory slot used in {@link QuickMoveToPagePayload}
+     */
     private int getItemPickerMenuSlotOffset(Slot clicked){
         int originalIndex = clicked.index;
         if(originalIndex==0 && clicked.getContainerSlot() >0) return clicked.getContainerSlot();

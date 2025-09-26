@@ -3,6 +3,7 @@ package com.kwwsyk.endinv.common.client;
 import com.kwwsyk.endinv.common.ModInfo;
 import com.kwwsyk.endinv.common.SourceInventory;
 import com.kwwsyk.endinv.common.network.payloads.toClient.EndInvMetadata;
+import com.kwwsyk.endinv.common.options.ContentTransferMode;
 import com.kwwsyk.endinv.common.util.ItemKey;
 import com.kwwsyk.endinv.common.util.ItemState;
 import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
@@ -17,6 +18,9 @@ import java.util.Map;
 public class CachedSrcInv extends SourceInventory {
 
     public static final CachedSrcInv INSTANCE = new CachedSrcInv();
+    private int itemSize;
+    //controls whether itemSize data is valid when transfermode==all.
+    private boolean validSize;
 
     private CachedSrcInv(){
         super(ModInfo.DEFAULT_UUID);
@@ -24,6 +28,18 @@ public class CachedSrcInv extends SourceInventory {
 
     public void initializeContents(Map<ItemKey, ItemState> itemMap){
         overwriteItems(new Object2ObjectLinkedOpenHashMap<>(itemMap));
+        this.itemSize = getItemSize();//here assert transfermode==all //parallelable
+        this.validSize = true;
+    }
+
+    /**
+     * @return Size of Endless Inventory.
+     */
+    @Override
+    public int getItemSize() {
+        if(ModInfo.getServerConfig().transferMode().get()== ContentTransferMode.PART) return itemSize;
+        if(this.validSize) return itemSize;
+        return super.getItemSize();
     }
 
     @Override
@@ -90,7 +106,8 @@ public class CachedSrcInv extends SourceInventory {
 
     @Override
     public void setChanged() {
-
+        super.setChanged();
+        validSize = false;
     }
 
     public long updateLastModTime(){
@@ -98,6 +115,7 @@ public class CachedSrcInv extends SourceInventory {
     }
 
     public void syncMetadata(EndInvMetadata endInvMetadata) {
+        this.itemSize = endInvMetadata.itemSize();
         this.maxStackSize = endInvMetadata.maxStackSize();
         this.infinityMode = endInvMetadata.infinityMode();
         this.accessibility =endInvMetadata.config().accessibility();

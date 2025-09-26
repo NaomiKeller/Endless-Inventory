@@ -29,8 +29,11 @@ import java.util.function.Predicate;
 import static com.kwwsyk.endinv.common.client.ClientModInfo.inputHandler;
 import static net.minecraft.client.gui.screens.Screen.hasShiftDown;
 
-/**<p>A widget of {@link ScreenFramework} , serving render and input events.<br>
- * The specified work of showing {@code EndlessInventory (EndInv)}'s content and handle item interactions are mainly handled by {@link ItemPage}</p>
+/**<p>A widget of {@link ScreenFramework} , serving render and input events.</p>
+ * <p>
+ *     For the main page type, or in version 1.1.0-snapshots(2025 sept) the all pages shown in Menu/AttachedScreen, see {@link ItemPage}.
+ *     The specified work of showing {@code EndlessInventory (EndInv)}'s content and handle item interactions are mainly handled by it</p>
+ * </p>
  *
  * <em>Server-sync duties</em>: only interactions inner page are handled by page itself.<br>
  * <ul>e.g.
@@ -92,13 +95,11 @@ public abstract class DisplayPage{
     }
 
     //abstract methods
-    /**Page
-     *  and content is built here
+    /**Build or reload page contents
      */
-    public abstract void refreshContents();
+    public abstract void initializeContents();
 
-    /**
-     * Controls page's scroll behavior.
+    /**Controls page's scroll behavior.
      * @param pos influent new row index: {@link #getRowIndexForScroll(float)},{@link #getScrollForRowIndex(int)}
      */
     public abstract void scrollTo(float pos);
@@ -108,13 +109,9 @@ public abstract class DisplayPage{
      */
     public abstract boolean canScroll();
 
-    /**Invoked when some inner page fields changes.
+    /**The change usually means pageMetaData changes and called by framework in sort,search,... changes.
      */
     public abstract void sendChangesToServer();
-
-    public void requestContents(){
-        sendChangesToServer();
-    }
 
     public abstract boolean hasSearchbox();
 

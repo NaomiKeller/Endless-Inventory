@@ -8,6 +8,7 @@ import com.kwwsyk.endinv.common.network.payloads.ModPacketContext;
 import com.kwwsyk.endinv.common.network.payloads.ModPacketPayload;
 import com.kwwsyk.endinv.common.network.payloads.PageData;
 import com.kwwsyk.endinv.common.network.payloads.toClient.EndInvContent;
+import com.kwwsyk.endinv.common.network.payloads.toClient.EndInvMetadata;
 import com.kwwsyk.endinv.common.network.payloads.toClient.SetItemDisplayContentPayload;
 import com.kwwsyk.endinv.common.options.ContentTransferMode;
 import com.kwwsyk.endinv.common.util.SortType;
@@ -100,6 +101,7 @@ public record ItemPageContext(int startIndex, int length, PageData pageData) imp
                 for (int i = 0; i < view.size(); ++i) {
                     stacks.set(i, view.get(i));
                 }
+                getPacketDistributor().sendToPlayer(serverPlayer, EndInvMetadata.getWith(endInv));
                 getPacketDistributor().sendToPlayer(serverPlayer, new SetItemDisplayContentPayload(stacks));
             } else if (getServerConfig().transferMode().get() == ContentTransferMode.ALL) {
                 getPacketDistributor().sendToPlayer(serverPlayer, new EndInvContent(endInv.getItemMap()));

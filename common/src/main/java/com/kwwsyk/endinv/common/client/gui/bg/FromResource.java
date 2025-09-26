@@ -52,7 +52,7 @@ public abstract class FromResource extends SFBgRendererImpl {
         }
 
         private void renderPlayerInv(GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY, int startX, int startY){
-            guiGraphics.blit(getContainerTexture(), startX, startY,//todo WARN
+            guiGraphics.blit(getContainerTexture(), startX, startY,//WARN
                     0.0F, 126.0F, imageWidth, 96, 256, 256);
         }
     }

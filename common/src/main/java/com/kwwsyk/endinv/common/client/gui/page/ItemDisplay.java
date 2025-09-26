@@ -4,9 +4,13 @@ import com.kwwsyk.endinv.common.client.CachedSrcInv;
 import com.kwwsyk.endinv.common.menu.page.PageType;
 import com.kwwsyk.endinv.common.menu.page.pageManager.PageMetaDataManager;
 import net.minecraft.world.item.ItemStack;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
+/**Page that displays EndInv's items (directly {@link CachedSrcInv})
+ *
+ */
 public class ItemDisplay extends ItemPage{
 
     public ItemDisplay(PageType pageType, PageMetaDataManager metaDataManager) {
@@ -14,16 +18,33 @@ public class ItemDisplay extends ItemPage{
     }
 
     public void refreshItems(){
-        if(!suppressRefresh) requestContents();
+        if(!suppressRefresh) requestRemoteContents();
+        readCachedItems();
+    }
 
+    public void readCachedItems(){
         List<ItemStack> view = CachedSrcInv.INSTANCE.getSortedAndFilteredItemView(startIndex,length,
                 meta.sortType(), meta.isSortReversed(),
                 getClassify(), meta.searching());
-        initializeContents(view);
+        buildContentsWith(view);
     }
 
-    public void requestContents(){
+    public void requestRemoteContents(){
         sendChangesToServer();
+    }
+
+    public void buildContentsWith(@NotNull List<ItemStack> stacks){
+        if(holdOn){
+            inQueueStacks = stacks;
+            return;
+        }
+        for(int i=0; i<this.length; ++i){
+            if(i<stacks.size() && stacks.get(i) != null) {
+                this.items.set(i, stacks.get(i).copy());
+            }else {
+                this.items.set(i,ItemStack.EMPTY);
+            }
+        }
     }
 
     @Override
@@ -107,4 +128,11 @@ public class ItemDisplay extends ItemPage{
         return ret;
     }
 
+    public void release(){
+        if(holdOn){
+            holdOn = false;
+            if(inQueueStacks==null) return;
+            buildContentsWith(inQueueStacks);
+        }
+    }
 }

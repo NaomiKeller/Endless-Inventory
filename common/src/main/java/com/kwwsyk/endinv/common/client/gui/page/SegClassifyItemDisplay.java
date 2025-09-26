@@ -55,9 +55,6 @@ public class SegClassifyItemDisplay extends ItemDisplay {
 
     @Override
     public void refreshItems() {
-        if (!suppressRefresh) {
-            requestContents();
-        }
         reloadViewFromCache();
     }
 
@@ -68,7 +65,7 @@ public class SegClassifyItemDisplay extends ItemDisplay {
         int rowIndex = 0;
         int columnIndex = 0;
         int columns = meta.columns();
-        for (ItemStack item : items) {
+        for (ItemStack item : items) {//debug: items not seg-ged
             if (columnIndex == 0 && pageSeparatorRows.contains(rowIndex)) {
                 int y = topPos + rowIndex * 18;
                 guiGraphics.fill(leftPos, y, leftPos + columns * 18 - 2, y + 1, 0xFF5A5A5A);
@@ -116,7 +113,7 @@ public class SegClassifyItemDisplay extends ItemDisplay {
         getPacketDistributor().sendToServer(new ItemClickPayload(
                 clicked.getCount() > 64 ? clicked.copyWithCount(64) : clicked.copy(),
                 button, clickType));
-        refreshItems();
+        this.refreshItems();
     }
 
     @Override
@@ -177,7 +174,7 @@ public class SegClassifyItemDisplay extends ItemDisplay {
             filtered.add(stack.copy());
         }
         if (filtered.isEmpty()) {
-            initializeContents(List.of());
+            buildContentsWith(List.of());
             return;
         }
 
@@ -250,7 +247,7 @@ public class SegClassifyItemDisplay extends ItemDisplay {
         int fromIndex = Math.min(startIndex, segmentedView.size());
         int toIndex = Math.min(fromIndex + length, segmentedView.size());
         List<ItemStack> slice = segmentedView.subList(fromIndex, toIndex);
-        initializeContents(slice);
+        buildContentsWith(slice);
         pageSeparatorRows.clear();
         if (!segmentStartSlots.isEmpty()) {
             int firstRow = fromIndex / columns;

@@ -25,15 +25,14 @@ import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 
 import java.util.List;
 
 import static com.kwwsyk.endinv.common.ModInfo.getPacketDistributor;
 
-/**
- * DisplayPage that has a list of ItemStack, and items are linked to EndInv.
+/**Page that holds ItemStack list. It's the main type of pages.
+ *
  */
 public abstract class ItemPage extends DisplayPage {
 
@@ -61,67 +60,56 @@ public abstract class ItemPage extends DisplayPage {
     public void resize(int rows) {
         int targetRows = Math.max(1, rows);
         this.length = targetRows * meta.columns();
-        refreshContents(this.startIndex, this.length);
+        initializeContents(this.startIndex, this.length);
     }
 
     @Override
     public void scrollTo(float pos) {
         int startIndex = getRowIndexForScroll(pos)* meta.columns();
-        this.refreshContents(startIndex,this.length);
+        this.initializeContents(startIndex,this.length);
     }
 
+    /**Build or reload item page's content by SourceInv {@link CachedSrcInv}
+     *  and it will set back to unscrolled status.
+     */
     @Override
-    public void refreshContents() {
-        refreshContents(0,meta.rows()*meta.columns());
+    public void initializeContents() {
+        initializeContents(0,meta.rows()*meta.columns());
     }
 
-    /**Change displayed items of EndInv
-     * @param startIndex the index of the item first displayed in EndInv
+    /**The <em>init</em> method of ItemPage, it will change the startIndex and length of page and init a new {@link #items} list.
+     * Then it invokes {@link #refreshItems()} to build showing items
+     * @param startIndex the index of the item first displayed in EndInv(SrcInv)
      * @param length the count of the item should be displayed, should equal to rows*columns
      */
-    public void refreshContents(int startIndex, int length) {
+    protected void initializeContents(int startIndex, int length) {
         this.startIndex = startIndex;
         this.length = Math.min(length, meta.rows()* meta.columns());
         // ensure internal invariants
         if(this.items==null || this.items.size()!=this.length) this.items = NonNullList.withSize(this.length, ItemStack.EMPTY);
-        if(items==null || length!=this.items.size()){
+        if(length != this.items.size()){
             this.items = NonNullList.withSize(length,ItemStack.EMPTY);
         }
         release();
-        refreshItems();
+        this.refreshItems();
     }
 
+    /**The <em>refresh</em> method of ItemPage, this method shall keep the startIndex and length and fill {@link #items}
+     * with such and srcInv.<br>
+     * This may invoke {@link #requestRemoteContents()} or other send packet methods.
+     * So be caution use this method especially on receiving request-remote-callback packets. Like {@link com.kwwsyk.endinv.common.network.payloads.toClient.EndInvContent}
+     */
     public abstract void refreshItems();
 
-    public void tryRequestContents(){
-        if(!suppressRefresh) this.requestContents();
-    }
+    public abstract void requestRemoteContents();
 
-    public abstract void requestContents();
-
-    public void initializeContents(@NotNull List<ItemStack> stacks){
-        if(holdOn){
-            inQueueStacks = stacks;
-            return;
-        }
-        for(int i=0; i<this.length; ++i){
-            if(i<stacks.size() && stacks.get(i) != null) {
-                this.items.set(i, stacks.get(i).copy());
-            }else {
-                this.items.set(i,ItemStack.EMPTY);
-            }
-        }
-    }
-
-    public void initializeContents(CachedSrcInv srcInv){
-        var view = srcInv.getSortedAndFilteredItemView(startIndex,length, meta.sortType(), meta.isSortReversed(), getClassify(), meta.searching());
-        initializeContents(view);
-    }
-
+    /**The change usually means pageMetaData changes and called by framework in sort,search,... changes.<br>
+     * For ItemPage and ItemDisplay: also used to request contents as sending {@link ItemPageContext} has such side effect.
+     */
     public void sendChangesToServer() {
         PageData layout = meta.getPageData();
         CachedConfig.updateLayout(layout);
-        getPacketDistributor().sendToServer(new ItemPageContext(startIndex, length, layout));
+        getPacketDistributor().sendToServer(new ItemPageContext(startIndex, length, layout));//send this packet will receive a content packet as callback
     }
 
     public int getStartIndex(){
@@ -139,22 +127,12 @@ public abstract class ItemPage extends DisplayPage {
 
     @Override
     public boolean canScroll() {
-        return startIndex>0
-                ||( srcInv instanceof CachedSrcInv cache ? startIndex+length <= cache.getSortedAndFilteredItemView(0,Integer.MAX_VALUE,  meta.sortType(), meta.isSortReversed(), getClassify(), meta.searching()).size()
-                : startIndex+length< meta.getItemSize());
+        return startIndex>0 ||(startIndex+length <= srcInv.getItemSize());
     }
 
     public int getSlotForMouseOffset(double XOffset,double YOffset){
         if(XOffset<0||YOffset<0||XOffset>18* meta.columns()||YOffset>18* meta.rows()) return -1;
         return (int)XOffset/18 + meta.columns()*((int)YOffset/18);
-    }
-
-    public void release(){
-        if(holdOn){
-            holdOn = false;
-            if(inQueueStacks==null) return;
-            initializeContents(inQueueStacks);
-        }
     }
 
     @Override
@@ -206,7 +184,7 @@ public abstract class ItemPage extends DisplayPage {
         String suffix;
 
         if(count == this.meta.getMaxStackSize() && meta.enableInfinity()){
-            return "\u221E";
+            return "∞";
         }
 
         if (count >= 1_000_000_000) {
@@ -286,7 +264,7 @@ public abstract class ItemPage extends DisplayPage {
             ModInfo.getPacketDistributor().sendToServer(new ItemClickPayload(
                     clicked.getCount() > 64 ? clicked.copyWithCount(64) : clicked.copy(),
                     button,clickType));
-            refreshItems();
+            this.refreshItems();
         }
     }
 
@@ -327,7 +305,7 @@ public abstract class ItemPage extends DisplayPage {
     @Override
     public ItemStack tryInsertItem(ItemStack stack) {
         var remain = addItem(stack);
-        refreshContents();
+        initializeContents();
         return remain;
     }
     @Override

@@ -58,7 +58,7 @@ public class AttachedScreen<T extends AbstractContainerMenu> implements SortType
         public void switchPageWithIndex(int index) {
             displayingPage = pages.get(index);
             CachedConfig.updateLayout(getPageData());
-            displayingPage.refreshContents();
+            displayingPage.initializeContents();
         }
 
         @Override

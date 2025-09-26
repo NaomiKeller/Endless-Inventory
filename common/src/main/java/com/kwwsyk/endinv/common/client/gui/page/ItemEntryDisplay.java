@@ -37,22 +37,18 @@ public class ItemEntryDisplay extends ItemDisplay{
     @Override
     public void scrollTo(float pos) {
         int startIndex = getRowIndexForScroll(pos);
-        this.refreshContents(startIndex,this.length);
+        this.initializeContents(startIndex,this.length);
     }
 
     @Override
-    public void refreshContents(int startIndex, int length) {
+    public void initializeContents(int startIndex, int length) {
         this.startIndex = startIndex;
         this.length = Math.min(length, meta.rows());
         if(items==null || length!=this.items.size()){
             this.items = NonNullList.withSize(length,ItemStack.EMPTY);
         }
         release();
-        if(srcInv.isRemote()) {
-            requestContents();
-        }else {
-            refreshItems();
-        }
+        requestRemoteContents();
     }
 
     public void toggleJmpItemName(boolean jmpTooltip1st){

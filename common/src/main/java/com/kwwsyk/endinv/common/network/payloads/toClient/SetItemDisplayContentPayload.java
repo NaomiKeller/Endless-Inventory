@@ -1,6 +1,6 @@
 package com.kwwsyk.endinv.common.network.payloads.toClient;
 
-import com.kwwsyk.endinv.common.client.gui.page.ItemPage;
+import com.kwwsyk.endinv.common.client.gui.page.ItemDisplay;
 import com.kwwsyk.endinv.common.network.payloads.ModPacketContext;
 import com.kwwsyk.endinv.common.network.payloads.ModPacketPayload;
 import net.minecraft.network.FriendlyByteBuf;
@@ -23,10 +23,10 @@ public record SetItemDisplayContentPayload(List<ItemStack> stacks) implements Mo
         return "itemdisplay_content";
     }
 
-    public void handle(ModPacketContext context) {
+    public void handle(ModPacketContext context) {//todo handle such cache
         ModPacketPayload.getClientPageMeta().ifPresent(mng->{
-            if(mng.getDisplayingPage() instanceof ItemPage itemPage){
-                itemPage.initializeContents(stacks);
+            if(mng.getDisplayingPage() instanceof ItemDisplay itemDisplay){
+                itemDisplay.buildContentsWith(stacks);
             }
         });
     }

@@ -59,7 +59,9 @@ public abstract class SourceInventory {
     //abstract methods
     public abstract boolean isRemote();
 
-    public abstract void setChanged();
+    public void setChanged(){
+        markCacheDirty();
+    }
 
     //field accessor
     public UUID getUuid(){
@@ -195,7 +197,6 @@ public abstract class SourceInventory {
                 itemMap.put(key, new ItemState(state.count() - taken, updateLastModTime()));
                 LOGGER.info("EI:takeItem: taken={} remaining={} for {}", taken, state.count()-taken, key);
             }
-            markCacheDirty();
             setChanged();
             return result;
         } finally {
@@ -242,7 +243,6 @@ public abstract class SourceInventory {
             }else {
                 return itemStack.copy();
             }
-            markCacheDirty();
             setChanged();
             return remain;
         } finally {
@@ -254,7 +254,6 @@ public abstract class SourceInventory {
         writeLock.lock();
         try {
             this.itemMap.clear();
-            markCacheDirty();
             updateLastModTime();
             this.setChanged();
         } finally {

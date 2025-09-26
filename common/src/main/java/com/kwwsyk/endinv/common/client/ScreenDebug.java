@@ -126,7 +126,7 @@ public class ScreenDebug {
             }
             if(EIS.getFrameWork().meta.getDisplayingPage() instanceof ItemPage itemPage){
                 if(button == InputConstants.KEY_R){
-                    itemPage.tryRequestContents();
+                    itemPage.requestRemoteContents();
                 }
                 if(button == InputConstants.KEY_T){
                     itemPage.setChanged();
