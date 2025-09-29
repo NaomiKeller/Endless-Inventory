@@ -38,7 +38,9 @@ import static com.kwwsyk.endinv.common.ModRegistries.Items;
 import static com.kwwsyk.endinv.common.ModRegistries.Menus;
 import static com.kwwsyk.endinv.common.ServerLevelEndInv.getEndInvForPlayer;
 
-
+/**The menu who links to EndlessInventory
+ * Implementation: maybe let EIS implements them
+ */
 public class EndlessInventoryMenu extends AbstractContainerMenu implements PageMetaDataManager, PageQuickMoveHandler.PageQuickMoveOverride {
 
 
@@ -196,7 +198,7 @@ public class EndlessInventoryMenu extends AbstractContainerMenu implements PageM
     }
 
     @TestOnly
-    public void validateSlotStatus() throws IllegalStateException{
+    public boolean validateSlotStatus() throws IllegalStateException{
         for(Slot slot : getCraftingSlots()){
             if(!(slot instanceof CraftingGridSlot)) throw new IllegalStateException("getCraftingSlots do not correspond menu's crafter slots.");
         }
@@ -204,6 +206,7 @@ public class EndlessInventoryMenu extends AbstractContainerMenu implements PageM
             if(!(slot.container instanceof Inventory)) throw new IllegalStateException("getPlayerInvSlots contains slots whose container is not inventory");
         }
         if(!(slots.get(0) instanceof CraftingGridSlot)) throw new IllegalStateException("the first slot is not Crafter's result slot, check ADD SLOT process");
+        return true;
     }
 
     public boolean isCrafterEnabled(){

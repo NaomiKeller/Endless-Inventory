@@ -32,7 +32,8 @@ minecraft {
 
     runs {
         client {
-
+//            property 'mixin.env.remapRefMap', 'true'
+//            property 'mixin.env.refMapRemappingFile', "${buildDir}/createSrgToMcp/output.srg"
         }
         data {
             workingDirectory project.file('run-data')
@@ -81,6 +82,10 @@ repositories {
             includeGroup "curse.maven"
         }
     }
+    maven {
+        name = "Curios"
+        url = uri("https://maven.theillusivec4.top/")
+    }
 }
 
 dependencies {
@@ -94,9 +99,13 @@ dependencies {
 
     /* other minecraft dependencies are here */
     compileOnly("mezz.jei:jei-${minecraft_version}-forge-api:${jei_version}")
-
     // at runtime, use the full JEI jar for Forge
     runtimeOnly(fg.deobf("mezz.jei:jei-${minecraft_version}-forge:${jei_version}"))
+
+    runtimeOnly fg.deobf("top.theillusivec4.curios:curios-forge:${curio_version}")
+    compileOnly fg.deobf("top.theillusivec4.curios:curios-forge:${curio_version}:api")
+
+    //runtimeOnly fg.deobf(files("run/fgdeobf/artifacts-forge-9.5.16.jar"))
 
     //implementation fg.deobf("curse.maven:timeless-and-classics-zero-1028108:6632240-sources-6633203")
 }

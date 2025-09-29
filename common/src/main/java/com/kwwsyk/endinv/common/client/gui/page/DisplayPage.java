@@ -91,7 +91,7 @@ public abstract class DisplayPage{
         this.pageType = pageType;
         this.id = pageType.registerName;
         this.itemClassify = pageType.itemClassify;
-        this.name = Component.translatable("page.endinv."+pageType.registerName);
+        this.name = Component.translatableWithFallback("page.endinv."+pageType.registerName, pageType.registerName);
     }
 
     //abstract methods

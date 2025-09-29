@@ -10,6 +10,8 @@ import com.kwwsyk.endinv.common.network.payloads.ModPacketPayload;
 import com.kwwsyk.endinv.common.network.payloads.SyncedConfig;
 import com.kwwsyk.endinv.common.options.IServerConfig;
 import com.kwwsyk.endinv.forge.client.config.ClientConfig;
+import com.kwwsyk.endinv.forge.integrates.curio.CurioInit;
+import com.kwwsyk.endinv.forge.integrates.curio.CurioPageType;
 import com.kwwsyk.endinv.forge.nbtAttcachment.AttachingCapabilities;
 import com.kwwsyk.endinv.forge.nbtAttcachment.IEndInvUuid;
 import com.kwwsyk.endinv.forge.nbtAttcachment.ISyncedConfig;
@@ -22,6 +24,7 @@ import net.minecraft.world.item.Item;
 import net.minecraftforge.common.ForgeHooks;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.ModContainer;
+import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
@@ -62,6 +65,10 @@ public class ModInitializer extends AbstractModInitializer {
             ClientModInitializer.init(modEventBus);
         }
 
+        if(ModList.get().isLoaded("curios")){
+            modEventBus.addListener(CurioInit::registerCapabilities);
+            CurioPageType.register();
+        }
     }
 
     @Override
