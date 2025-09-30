@@ -150,9 +150,10 @@ public class SpecifiedMenuAttachingConfig {
     public static class Parser{
 
         public static final String[] configComments = new String[]{
-                "",
-                "",
-                ""
+                "The list holds menu attachability configs",
+                "The format is \"namespace:id:\"",
+                "Such as \"endless_inventory:endinv_menu:false\" (Meanwhile endinv_menu will never be attached)",
+                "Use \"inventory:true(false)\" for inventory menu."
         };
 
         private final SpecifiedMenuAttachingConfig config;
@@ -189,16 +190,15 @@ public class SpecifiedMenuAttachingConfig {
 
         public boolean parseString(String configEntry){
             var entry = tryParseString(configEntry);
-            if(entry==null) {
+            if(!entry.success) {
                 LOGGER.warn("Menu attachability config parser failed to parse string entry {}.", configEntry);
                 return false;
             }
-            config.configs.entrySet().add(entry);
+            config.putConfig(entry.type,entry.value);
             return true;
         }
 
-        @Nullable
-        public static Map.Entry<MenuType<?>,Boolean> tryParseString(String configEntry){
+        public static ParseStringResult tryParseString(String configEntry){
             try{
                 int LCIndex = lastColon(configEntry);
 
@@ -206,15 +206,18 @@ public class SpecifiedMenuAttachingConfig {
                 String namespaceTxt = configEntry.substring(0,LCIndex).trim();
 
                 boolean value = parseBoolean(boolTxt);
+                ResourceLocation rl = ResourceLocation.parse(namespaceTxt);
 
-                ResourceLocation rl;
-                rl = ResourceLocation.parse(namespaceTxt);
+                if(rl.getPath().equals("inventory") || rl.getPath().equals("inventory_menu")){
+                    return new ParseStringResult(true, null, value);
+                }
+
                 MenuType<?> type = BuiltInRegistries.MENU.get(rl);
-                if(type==null) return null;
+                if(type==null) return ParseStringResult.FAILED;
 
-                return Map.entry(type,value);
+                return new ParseStringResult(true, type, value);
             }catch (Exception e){
-                return null;
+                return ParseStringResult.FAILED;
             }
         }
 
@@ -227,6 +230,23 @@ public class SpecifiedMenuAttachingConfig {
 
         public SpecifiedMenuAttachingConfig getConfig() {
             return config;
+        }
+
+        public static void testConfig(){
+            var a = ModInfo.getServerConfig().specifiedMenuAttachability();
+            var b = a.get();
+            b.fill(true,false);
+            a.set(b);
+        }
+
+        /**
+         * @param success is the parse process successful
+         * @param type menu type, null for inventory menu
+         * @param value such menu type attachable
+         */
+         public record ParseStringResult(boolean success, @Nullable MenuType<?> type, boolean value){
+
+             public static final ParseStringResult FAILED = new ParseStringResult(false,null,false);
         }
     }
 }

@@ -124,6 +124,7 @@ public class ServerConfig {
                 @Override
                 public void set(SpecifiedMenuAttachingConfig config) {
                     SPECIFIED_MENU_ATTACHABLE.set(SpecifiedMenuAttachingConfig.Parser.fromMap(config.getConfigs()));
+                    onSpecifiedMenuAttachabilityChanged();
                 }
             };
         }

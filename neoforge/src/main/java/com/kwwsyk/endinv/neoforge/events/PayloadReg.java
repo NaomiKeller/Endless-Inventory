@@ -84,5 +84,6 @@ public class PayloadReg {
                 EndInvContent.STREAM_CODEC,
                 (pl,cxt)->pl.handle(cxt::player)
         );
+        // Note: This project version does not use StreamCodec here; MenuAttachabilityPayload is handled on Forge/Fabric.
     }
 }

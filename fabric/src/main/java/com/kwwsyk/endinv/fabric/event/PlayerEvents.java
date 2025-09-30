@@ -74,6 +74,17 @@ public final class PlayerEvents {
         SyncedConfig syncedConfig = configAttachment.getWith(player);
         ModInfo.getPacketDistributor().sendToPlayer(player, syncedConfig);
 
+        // Broadcast effective menu attachability on join
+        var serverCfg = ModInfo.getServerConfig();
+        var menuCfg = serverCfg.specifiedMenuAttachability().get();
+        boolean defaultAttach = serverCfg.enableAttaching().get();
+        ModInfo.getPacketDistributor().sendToPlayer(player,
+                new com.kwwsyk.endinv.common.network.payloads.toClient.MenuAttachabilityPayload(
+                        defaultAttach,
+                        menuCfg.isInventoryAttachable(),
+                        menuCfg.getConfigs()
+                ));
+
         if (ServerConfig.INSTANCE.transferMode().get() == ContentTransferMode.ALL) {
             ServerLevelEndInv.getEndInvForPlayer(player).ifPresent(endInv -> {
                 ModInfo.getPacketDistributor().sendToPlayer(player, new EndInvContent(endInv.getItemMap()));

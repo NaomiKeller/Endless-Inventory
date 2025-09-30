@@ -18,6 +18,21 @@ public interface IServerConfig {
         ModInfo.getPacketDistributor().sendToAllPlayer(new SyncedConfig(enableAttaching().get(),enableAutoPick().get()));
     }
 
+    /**
+     * Notify all players that the server's specified menu attachability has changed.
+     * Broadcasts an effective attachability snapshot for client-side checks.
+     */
+    default void onSpecifiedMenuAttachabilityChanged(){
+        var config = specifiedMenuAttachability().get();
+        boolean defaultAttach = enableAttaching().get();
+        var payload = new com.kwwsyk.endinv.common.network.payloads.toClient.MenuAttachabilityPayload(
+                defaultAttach,
+                config.isInventoryAttachable(),
+                config.getConfigs()
+        );
+        ModInfo.getPacketDistributor().sendToAllPlayer(payload);
+    }
+
     IConfigValue<ContentTransferMode> transferMode();
 
     IConfigValue<Accessibility> defaultAccessibility();

@@ -1,10 +1,6 @@
 package com.kwwsyk.endinv.fabric;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.google.gson.*;
 import com.kwwsyk.endinv.common.options.ContentTransferMode;
 import com.kwwsyk.endinv.common.options.IConfigValue;
 import com.kwwsyk.endinv.common.options.IServerConfig;
@@ -28,10 +24,13 @@ public final class ServerConfig implements IServerConfig {
     private static final String MAX_STACK = "maxStackSize";
     private static final String ENABLE_INFINITE = "enableInfinite";
     private static final String ENABLE_AUTO_PICK = "enableAutoPick";
+    private static final String ENABLE_ATTACHING = "enableAttaching";
     private static final String TRANSFER_MODE = "transferMode";
     private static final String DEFAULT_ACCESS = "defaultAccessibility";
     private static final String CREATION_MODE = "creationMode";
     private static final String CONVERT_EMPTY_TAG = "convertEmptyTag";
+    private static final String SPECIFIED_MENU_ATTACH_LIST = "specifiedMenuAttachability"; // ["<menu_id>:<true|false>"]
+    private static final String INVENTORY_ATTACHABLE = "inventoryAttachable";
 
     private final Path path;
     private final Gson gson = new GsonBuilder().setPrettyPrinting().create();
@@ -39,10 +38,12 @@ public final class ServerConfig implements IServerConfig {
     private int maxStackSize = Integer.MAX_VALUE;
     private boolean infinite = false;
     private boolean autoPick = false;
+    private boolean attaching = true;
     private ContentTransferMode transferModeValue = ContentTransferMode.ALL;
     private Accessibility defaultAccess = Accessibility.PUBLIC;
     private MissingEndInvPolicy creationPolicy = MissingEndInvPolicy.CREATE_PER_PLAYER;
     private boolean convertEmpty = true;
+    private com.kwwsyk.endinv.common.options.SpecifiedMenuAttachingConfig specifiedAttach = new com.kwwsyk.endinv.common.options.SpecifiedMenuAttachingConfig();
 
     private ServerConfig() {
         this.path = FabricLoader.getInstance().getConfigDir().resolve("endless_inventory-server.json");
@@ -70,6 +71,9 @@ public final class ServerConfig implements IServerConfig {
             if (json.has(ENABLE_AUTO_PICK) && json.get(ENABLE_AUTO_PICK).isJsonPrimitive()) {
                 autoPick = json.get(ENABLE_AUTO_PICK).getAsBoolean();
             }
+            if (json.has(ENABLE_ATTACHING) && json.get(ENABLE_ATTACHING).isJsonPrimitive()) {
+                attaching = json.get(ENABLE_ATTACHING).getAsBoolean();
+            }
             if (json.has(TRANSFER_MODE) && json.get(TRANSFER_MODE).isJsonPrimitive()) {
                 try {
                     transferModeValue = ContentTransferMode.valueOf(json.get(TRANSFER_MODE).getAsString());
@@ -94,6 +98,21 @@ public final class ServerConfig implements IServerConfig {
             if (json.has(CONVERT_EMPTY_TAG) && json.get(CONVERT_EMPTY_TAG).isJsonPrimitive()) {
                 convertEmpty = json.get(CONVERT_EMPTY_TAG).getAsBoolean();
             }
+
+            // specified menu attachability
+            com.kwwsyk.endinv.common.options.SpecifiedMenuAttachingConfig readCfg = new com.kwwsyk.endinv.common.options.SpecifiedMenuAttachingConfig();
+            if (json.has(SPECIFIED_MENU_ATTACH_LIST) && json.get(SPECIFIED_MENU_ATTACH_LIST).isJsonArray()) {
+                var arr = json.getAsJsonArray(SPECIFIED_MENU_ATTACH_LIST);
+                java.util.List<String> entries = new java.util.ArrayList<>(arr.size());
+                for (var el : arr) if (el.isJsonPrimitive()) entries.add(el.getAsString());
+                readCfg = com.kwwsyk.endinv.common.options.SpecifiedMenuAttachingConfig.Parser.readList(entries);
+            }
+            boolean invAttach = true;
+            if (json.has(INVENTORY_ATTACHABLE) && json.get(INVENTORY_ATTACHABLE).isJsonPrimitive()) {
+                invAttach = json.get(INVENTORY_ATTACHABLE).getAsBoolean();
+            }
+            readCfg.setInventoryAttachable(invAttach);
+            specifiedAttach = readCfg;
         } catch (IOException ex) {
             LOGGER.warn("Failed to read server config, using defaults", ex);
         }
@@ -106,10 +125,18 @@ public final class ServerConfig implements IServerConfig {
             json.addProperty(MAX_STACK, maxStackSize);
             json.addProperty(ENABLE_INFINITE, infinite);
             json.addProperty(ENABLE_AUTO_PICK, autoPick);
+            json.addProperty(ENABLE_ATTACHING, attaching);
             json.addProperty(TRANSFER_MODE, transferModeValue.name());
             json.addProperty(DEFAULT_ACCESS, defaultAccess.name());
             json.addProperty(CREATION_MODE, creationPolicy.name());
             json.addProperty(CONVERT_EMPTY_TAG, convertEmpty);
+            // write specified attachability
+            var arr = new com.google.gson.JsonArray();
+            for (String s : com.kwwsyk.endinv.common.options.SpecifiedMenuAttachingConfig.Parser.fromMap(specifiedAttach.getConfigs())) {
+                arr.add(s);
+            }
+            json.add(SPECIFIED_MENU_ATTACH_LIST, arr);
+            json.addProperty(INVENTORY_ATTACHABLE, specifiedAttach.isInventoryAttachable());
             try (Writer writer = Files.newBufferedWriter(path)) {
                 gson.toJson(json, writer);
             }
@@ -137,7 +164,21 @@ public final class ServerConfig implements IServerConfig {
 
     @Override
     public IConfigValue<Boolean> enableAutoPick() {
-        return tracked(() -> autoPick, value -> autoPick = value);
+        return IConfigValue.of(() -> autoPick, value -> {
+            autoPick = value;
+            save();
+            onAttachingOrAutopickConfigChanged();
+        });
+    }
+
+    @Override
+    public IConfigValue<Boolean> enableAttaching() {
+        return IConfigValue.of(() -> attaching, value -> {
+            attaching = value;
+            save();
+            onAttachingOrAutopickConfigChanged();
+            onSpecifiedMenuAttachabilityChanged();
+        });
     }
 
     @Override
@@ -158,5 +199,16 @@ public final class ServerConfig implements IServerConfig {
     @Override
     public IConfigValue<Boolean> doConvertEmptyTag() {
         return tracked(() -> convertEmpty, value -> convertEmpty = value);
+    }
+
+    @Override
+    public IConfigValue<com.kwwsyk.endinv.common.options.SpecifiedMenuAttachingConfig> specifiedMenuAttachability() {
+        return IConfigValue.of(() -> specifiedAttach, value -> {
+            specifiedAttach.clearConfigs();
+            specifiedAttach.getConfigs().putAll(value.getConfigs());
+            specifiedAttach.setInventoryAttachable(value.isInventoryAttachable());
+            save();
+            onSpecifiedMenuAttachabilityChanged();
+        });
     }
 }

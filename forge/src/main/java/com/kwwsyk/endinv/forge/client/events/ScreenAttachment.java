@@ -2,6 +2,7 @@ package com.kwwsyk.endinv.forge.client.events;
 
 import com.kwwsyk.endinv.common.ModInfo;
 import com.kwwsyk.endinv.common.client.CachedConfig;
+import com.kwwsyk.endinv.common.client.MenuAttachabilityCache;
 import com.kwwsyk.endinv.common.client.gui.AttachingScreen;
 import com.kwwsyk.endinv.common.client.gui.EndlessInventoryScreen;
 import com.kwwsyk.endinv.common.client.gui.IScreenEvent;
@@ -33,6 +34,10 @@ public class ScreenAttachment {
                 ATTACHMENT_MANAGER = null;
                 return null;
             }
+            if(!MenuAttachabilityCache.isAttachable(screen)){
+                ATTACHMENT_MANAGER = null;
+                return null;
+            }
             return ATTACHMENT_MANAGER;
         }
         return null;
@@ -61,19 +66,19 @@ public class ScreenAttachment {
 
             SyncedConfig syncedConfig = getSyncedConfig().getWith(player);
             if(!syncedConfig.checkForAttaching()) return;
+            if(!MenuAttachabilityCache.isAttachable(screen)) return;
 
             CachedConfig.readAndSyncClientConfigToServer(false);
 
             if(ATTACHMENT_MANAGER==null){
                 ModInfo.getPacketDistributor().sendToServer(new OpenEndInvPayload());
                 ATTACHMENT_MANAGER = new AttachingScreen<>(screen);
+                ATTACHMENT_MANAGER.init(new IScreenEvent() {
+                    public void addListener(AbstractWidget widget){
+                        event.addListener(widget);
+                    }
+                });
             }
-
-            ATTACHMENT_MANAGER.init(new IScreenEvent() {
-                public void addListener(AbstractWidget widget){
-                    event.addListener(widget);
-                }
-            });
         }
     }
 

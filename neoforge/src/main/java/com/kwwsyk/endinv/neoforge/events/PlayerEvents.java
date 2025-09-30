@@ -23,6 +23,16 @@ public class PlayerEvents {
         if(event.getEntity() instanceof ServerPlayer serverPlayer){
             if(tickRefresh) {
                 PacketDistributor.sendToPlayer(serverPlayer, ModRegistries.NbtAttachments.getSyncedConfig().computeIfAbsent(serverPlayer));
+                // Send effective menu attachability
+                var serverCfg = ModInfo.getServerConfig();
+                var menuCfg = serverCfg.specifiedMenuAttachability().get();
+                boolean defaultAttach = serverCfg.enableAttaching().get();
+                PacketDistributor.sendToPlayer(serverPlayer,
+                        new com.kwwsyk.endinv.common.network.payloads.toClient.MenuAttachabilityPayload(
+                                defaultAttach,
+                                menuCfg.isInventoryAttachable(),
+                                menuCfg.getConfigs()
+                        ));
                 if(ServerConfig.CONFIG.TRANSFER_MODE.get()== ContentTransferMode.ALL){
                     ServerLevelEndInv.getEndInvForPlayer(serverPlayer).ifPresent(endInv -> {
                         PacketDistributor.sendToPlayer(serverPlayer,new EndInvContent(endInv.getItemMap()));

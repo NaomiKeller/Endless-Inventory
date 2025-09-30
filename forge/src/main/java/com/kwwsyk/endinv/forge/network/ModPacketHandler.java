@@ -77,6 +77,7 @@ public class ModPacketHandler {
         INSTANCE.registerMessage(i++, ItemPickedUpPayload.class,ItemPickedUpPayload::encode,ItemPickedUpPayload::decode,convertClient(ItemPickedUpPayload::handle));
         INSTANCE.registerMessage(i++, SetItemDisplayContentPayload.class,SetItemDisplayContentPayload::encode,SetItemDisplayContentPayload::decode,convertClient(SetItemDisplayContentPayload::handle));
         INSTANCE.registerMessage(i++, SetStarredPagePayload.class,SetStarredPagePayload::encode,SetStarredPagePayload::decode,convertClient(SetStarredPagePayload::handle));
+        INSTANCE.registerMessage(i++, MenuAttachabilityPayload.class, MenuAttachabilityPayload::encode, MenuAttachabilityPayload::decode, convertClient(MenuAttachabilityPayload::handle));
 
         INSTANCE.registerMessage(i++, ItemClickPayload.class,ItemClickPayload::encode,ItemClickPayload::decode,convert(ItemClickPayload::handle));
         INSTANCE.registerMessage(i++, CreativeItemModPayload.class, CreativeItemModPayload::encode, CreativeItemModPayload::decode,convert(CreativeItemModPayload::handle));

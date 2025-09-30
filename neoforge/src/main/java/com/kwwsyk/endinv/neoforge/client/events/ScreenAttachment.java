@@ -35,6 +35,10 @@ public class ScreenAttachment {
                 ATTACHMENT_MANAGER.remove(screen);
                 return null;
             }
+            if(!com.kwwsyk.endinv.common.client.MenuAttachabilityCache.isAttachable(screen)){
+                ATTACHMENT_MANAGER.remove(screen);
+                return null;
+            }
             return ATTACHMENT_MANAGER.get(screen);
         }
         return null;

@@ -53,6 +53,10 @@ public final class ScreenAttachment {
                 attachment = null;
                 return;
             }
+            if (!com.kwwsyk.endinv.common.client.MenuAttachabilityCache.isAttachable(container)) {
+                attachment = null;
+                return;
+            }
 
             //CachedConfig.readAndSyncClientConfigToServer(false);
 
@@ -318,6 +322,10 @@ public final class ScreenAttachment {
             return false;
         }
         if (!getSyncedConfig().getWith(player).attaching()) {
+            attachment = null;
+            return false;
+        }
+        if (!com.kwwsyk.endinv.common.client.MenuAttachabilityCache.isAttachable((AbstractContainerScreen<?>) screen)) {
             attachment = null;
             return false;
         }

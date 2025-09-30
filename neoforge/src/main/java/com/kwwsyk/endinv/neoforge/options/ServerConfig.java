@@ -69,6 +69,12 @@ public class ServerConfig {
         }
 
         @Override
+        public IConfigValue<Boolean> enableAttaching() {
+            // NeoForge config: default to true; can be expanded later
+            return IConfigValue.of(() -> true, v -> {});
+        }
+
+        @Override
         public IConfigValue<ContentTransferMode> transferMode() {
             return IConfigValue.of(TRANSFER_MODE,TRANSFER_MODE::set);
         }
@@ -81,6 +87,12 @@ public class ServerConfig {
         @Override
         public IConfigValue<MissingEndInvPolicy> policyHandlingMissing() {
             return IConfigValue.of(CREATION_MODE,CREATION_MODE::set);
+        }
+
+        @Override
+        public IConfigValue<com.kwwsyk.endinv.common.options.SpecifiedMenuAttachingConfig> specifiedMenuAttachability() {
+            // NeoForge: default empty config
+            return IConfigValue.of(() -> com.kwwsyk.endinv.common.options.SpecifiedMenuAttachingConfig.DEFAULT, v -> {});
         }
     };
 }
