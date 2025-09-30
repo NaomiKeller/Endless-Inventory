@@ -1,5 +1,6 @@
 package com.kwwsyk.endinv.common.network.payloads.toClient;
 
+import com.kwwsyk.endinv.common.client.option.MenuAttachabilityCache;
 import com.kwwsyk.endinv.common.network.payloads.ModPacketContext;
 import com.kwwsyk.endinv.common.network.payloads.ModPacketPayload;
 import com.kwwsyk.endinv.common.options.SpecifiedMenuAttachingConfig;
@@ -62,6 +63,6 @@ public record MenuAttachabilityPayload(
     public void handle(ModPacketContext context) {
         // Client-side cache update
         if (context.player() == null) return;
-        com.kwwsyk.endinv.common.client.MenuAttachabilityCache.accept(this);
+        MenuAttachabilityCache.accept(this);
     }
 }

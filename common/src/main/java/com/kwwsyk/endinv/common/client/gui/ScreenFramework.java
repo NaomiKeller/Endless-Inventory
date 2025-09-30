@@ -1,7 +1,6 @@
 package com.kwwsyk.endinv.common.client.gui;
 
 import com.kwwsyk.endinv.common.ModInfo;
-import com.kwwsyk.endinv.common.client.CachedConfig;
 import com.kwwsyk.endinv.common.client.ClientModInfo;
 import com.kwwsyk.endinv.common.client.KeyMappings;
 import com.kwwsyk.endinv.common.client.gui.bg.FromResource;
@@ -13,6 +12,7 @@ import com.kwwsyk.endinv.common.client.gui.page.ItemPage;
 import com.kwwsyk.endinv.common.client.gui.page.manager.ClientPageManager;
 import com.kwwsyk.endinv.common.client.gui.page.manager.PageManager;
 import com.kwwsyk.endinv.common.client.gui.widget.SortTypeSwitchBox;
+import com.kwwsyk.endinv.common.client.option.CachedConfig;
 import com.kwwsyk.endinv.common.client.option.TextureMode;
 import com.kwwsyk.endinv.common.network.payloads.PageData;
 import com.kwwsyk.endinv.common.network.payloads.toServer.CreativeItemModPayload;

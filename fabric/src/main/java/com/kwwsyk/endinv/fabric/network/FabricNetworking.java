@@ -1,7 +1,7 @@
 package com.kwwsyk.endinv.fabric.network;
 
 import com.kwwsyk.endinv.common.AbstractModInitializer;
-import com.kwwsyk.endinv.common.client.CachedConfig;
+import com.kwwsyk.endinv.common.client.option.CachedConfig;
 import com.kwwsyk.endinv.common.network.payloads.ModPacketContext;
 import com.kwwsyk.endinv.common.network.payloads.ModPacketPayload;
 import com.kwwsyk.endinv.common.network.payloads.SyncedConfig;

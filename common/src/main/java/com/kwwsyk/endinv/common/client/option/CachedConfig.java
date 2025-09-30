@@ -1,8 +1,8 @@
-package com.kwwsyk.endinv.common.client;
+package com.kwwsyk.endinv.common.client.option;
 
 import com.kwwsyk.endinv.common.ModInfo;
 import com.kwwsyk.endinv.common.ModRegistries;
-import com.kwwsyk.endinv.common.client.option.IClientConfig;
+import com.kwwsyk.endinv.common.client.ClientModInfo;
 import com.kwwsyk.endinv.common.menu.page.PageType;
 import com.kwwsyk.endinv.common.network.payloads.PageData;
 import com.kwwsyk.endinv.common.network.payloads.SyncedConfig;

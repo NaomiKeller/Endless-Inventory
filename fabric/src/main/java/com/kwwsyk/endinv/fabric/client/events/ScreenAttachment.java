@@ -1,10 +1,11 @@
 package com.kwwsyk.endinv.fabric.client.events;
 
 import com.kwwsyk.endinv.common.ModInfo;
-import com.kwwsyk.endinv.common.client.CachedConfig;
 import com.kwwsyk.endinv.common.client.gui.AttachingScreen;
 import com.kwwsyk.endinv.common.client.gui.EndlessInventoryScreen;
 import com.kwwsyk.endinv.common.client.gui.IScreenEvent;
+import com.kwwsyk.endinv.common.client.option.CachedConfig;
+import com.kwwsyk.endinv.common.client.option.MenuAttachabilityCache;
 import com.kwwsyk.endinv.common.network.payloads.SyncedConfig;
 import com.kwwsyk.endinv.common.network.payloads.toServer.OpenEndInvPayload;
 import com.kwwsyk.endinv.fabric.mixin.ScreenAccessor;
@@ -53,7 +54,7 @@ public final class ScreenAttachment {
                 attachment = null;
                 return;
             }
-            if (!com.kwwsyk.endinv.common.client.MenuAttachabilityCache.isAttachable(container)) {
+            if (!MenuAttachabilityCache.isAttachable(container)) {
                 attachment = null;
                 return;
             }
@@ -325,7 +326,7 @@ public final class ScreenAttachment {
             attachment = null;
             return false;
         }
-        if (!com.kwwsyk.endinv.common.client.MenuAttachabilityCache.isAttachable((AbstractContainerScreen<?>) screen)) {
+        if (!MenuAttachabilityCache.isAttachable((AbstractContainerScreen<?>) screen)) {
             attachment = null;
             return false;
         }

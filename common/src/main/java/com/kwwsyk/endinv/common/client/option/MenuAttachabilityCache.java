@@ -1,4 +1,4 @@
-package com.kwwsyk.endinv.common.client;
+package com.kwwsyk.endinv.common.client.option;
 
 import com.kwwsyk.endinv.common.network.payloads.toClient.MenuAttachabilityPayload;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;

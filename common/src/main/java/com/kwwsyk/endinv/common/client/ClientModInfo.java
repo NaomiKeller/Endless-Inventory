@@ -1,6 +1,7 @@
 package com.kwwsyk.endinv.common.client;
 
 import com.kwwsyk.endinv.common.ModInfo;
+import com.kwwsyk.endinv.common.client.option.CachedConfig;
 import com.kwwsyk.endinv.common.client.option.IClientConfig;
 import com.kwwsyk.endinv.common.network.payloads.toServer.OpenEndInvPayload;
 

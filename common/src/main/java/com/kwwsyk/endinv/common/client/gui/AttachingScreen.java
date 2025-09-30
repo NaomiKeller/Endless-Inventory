@@ -1,9 +1,9 @@
 package com.kwwsyk.endinv.common.client.gui;
 
 import com.kwwsyk.endinv.common.SourceInventory;
-import com.kwwsyk.endinv.common.client.CachedConfig;
 import com.kwwsyk.endinv.common.client.CachedSrcInv;
 import com.kwwsyk.endinv.common.client.gui.page.DisplayPage;
+import com.kwwsyk.endinv.common.client.option.CachedConfig;
 import com.kwwsyk.endinv.common.menu.page.pageManager.PageMetaDataManager;
 import com.kwwsyk.endinv.common.menu.page.pageManager.PageQuickMoveHandler;
 import com.kwwsyk.endinv.common.network.payloads.PageData;

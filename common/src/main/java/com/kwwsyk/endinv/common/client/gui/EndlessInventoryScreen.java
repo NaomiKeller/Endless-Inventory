@@ -1,7 +1,7 @@
 package com.kwwsyk.endinv.common.client.gui;
 
 import com.kwwsyk.endinv.common.ModInfo;
-import com.kwwsyk.endinv.common.client.CachedConfig;
+import com.kwwsyk.endinv.common.client.option.CachedConfig;
 import com.kwwsyk.endinv.common.menu.EndlessInventoryMenu;
 import com.kwwsyk.endinv.common.network.payloads.toServer.ToggleCraftingPayload;
 import com.kwwsyk.endinv.common.util.SortType;

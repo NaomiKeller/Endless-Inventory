@@ -1,11 +1,11 @@
 package com.kwwsyk.endinv.forge.client.events;
 
 import com.kwwsyk.endinv.common.ModInfo;
-import com.kwwsyk.endinv.common.client.CachedConfig;
-import com.kwwsyk.endinv.common.client.MenuAttachabilityCache;
 import com.kwwsyk.endinv.common.client.gui.AttachingScreen;
 import com.kwwsyk.endinv.common.client.gui.EndlessInventoryScreen;
 import com.kwwsyk.endinv.common.client.gui.IScreenEvent;
+import com.kwwsyk.endinv.common.client.option.CachedConfig;
+import com.kwwsyk.endinv.common.client.option.MenuAttachabilityCache;
 import com.kwwsyk.endinv.common.network.payloads.SyncedConfig;
 import com.kwwsyk.endinv.common.network.payloads.toServer.OpenEndInvPayload;
 import net.minecraft.client.gui.GuiGraphics;
