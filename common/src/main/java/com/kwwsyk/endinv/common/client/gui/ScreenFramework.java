@@ -146,10 +146,10 @@ public class ScreenFramework {
     }
 
 
-    public ScreenFramework(AttachedScreen<?> attachedScreen) {
-        this.screen = attachedScreen.screen;
+    public ScreenFramework(AttachingScreen<?> attachingScreen) {
+        this.screen = attachingScreen.screen;
         this.mc = Minecraft.getInstance();
-        var delegate = attachedScreen.getPageManager();
+        var delegate = attachingScreen.getPageManager();
 
         this.meta = delegate instanceof PageManager pm ? pm : new ClientPageManager(delegate);
         this.menu = meta.getMenu();
@@ -159,7 +159,7 @@ public class ScreenFramework {
         this.topPos = Math.max((screen.height - rows * 18 - 17 - 10) / 2, 20);
         this.columns = meta.columns();
 
-        this.sortTypeSwitcher = attachedScreen;
+        this.sortTypeSwitcher = attachingScreen;
         this.pageBarCount = Math.min(ClientModInfo.getClientConfig().maxPageBarCount().get(), meta.getPages().size());
         this.imageWidth = 13 + 18 * columns;
         this.imageHeight = screen.height;

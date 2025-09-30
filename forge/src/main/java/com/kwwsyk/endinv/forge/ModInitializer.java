@@ -88,6 +88,11 @@ public class ModInitializer extends AbstractModInitializer {
             public void sendToPlayer(ServerPlayer player, ModPacketPayload payload) {
                 ModPacketHandler.INSTANCE.send(PacketDistributor.PLAYER.with(()->player),payload);
             }
+
+            @Override
+            public void sendToAllPlayer(ModPacketPayload payload) {
+                ModPacketHandler.INSTANCE.send(PacketDistributor.ALL.noArg(),payload);
+            }
         };
     }
 

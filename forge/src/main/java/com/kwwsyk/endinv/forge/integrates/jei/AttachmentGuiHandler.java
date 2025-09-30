@@ -1,6 +1,6 @@
 package com.kwwsyk.endinv.forge.integrates.jei;
 
-import com.kwwsyk.endinv.common.client.gui.AttachedScreen;
+import com.kwwsyk.endinv.common.client.gui.AttachingScreen;
 import com.kwwsyk.endinv.forge.client.events.ScreenAttachment;
 import mezz.jei.api.gui.handlers.IGuiContainerHandler;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
@@ -14,9 +14,9 @@ public class AttachmentGuiHandler implements IGuiContainerHandler<AbstractContai
 
     @Override
     public List<Rect2i> getGuiExtraAreas(AbstractContainerScreen<?> containerScreen) {
-        AttachedScreen<?> attachedScreen = ScreenAttachment.ATTACHMENT_MANAGER;
-        if(attachedScreen!=null){
-            return attachedScreen.getArea();
+        AttachingScreen<?> attachingScreen = ScreenAttachment.ATTACHMENT_MANAGER;
+        if(attachingScreen !=null){
+            return attachingScreen.getArea();
         }
         return IGuiContainerHandler.super.getGuiExtraAreas(containerScreen);
     }

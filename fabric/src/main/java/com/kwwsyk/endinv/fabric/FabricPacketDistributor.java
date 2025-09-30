@@ -16,4 +16,9 @@ public class FabricPacketDistributor implements IPacketDistributor {
     public void sendToPlayer(ServerPlayer player, ModPacketPayload payload) {
         FabricNetworking.sendToPlayer(player, payload);
     }
+
+    @Override
+    public void sendToAllPlayer(ModPacketPayload payload) {
+
+    }
 }

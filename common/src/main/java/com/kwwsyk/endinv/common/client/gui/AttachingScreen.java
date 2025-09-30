@@ -8,6 +8,7 @@ import com.kwwsyk.endinv.common.menu.page.pageManager.PageMetaDataManager;
 import com.kwwsyk.endinv.common.menu.page.pageManager.PageQuickMoveHandler;
 import com.kwwsyk.endinv.common.network.payloads.PageData;
 import com.kwwsyk.endinv.common.util.SortType;
+import com.mojang.logging.LogUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
@@ -15,11 +16,13 @@ import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
+import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
 
 import java.util.List;
 
 
-/**The UI that controls interaction with Endless Inventory in client side.
+/**The exceeded screen that controls interaction with Endless Inventory in client side.
  * Attached by an {@link AbstractContainerScreen<T>}
  * @param <T>
  *
@@ -27,7 +30,11 @@ import java.util.List;
  * @since 2025-6-4
  * @version 1.0.5
  */
-public class AttachedScreen<T extends AbstractContainerMenu> implements SortTypeSwitcher{
+public class AttachingScreen<T extends AbstractContainerMenu> implements SortTypeSwitcher{
+
+    public static AttachingScreen<?> INSTANCE;
+
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     public final AbstractContainerScreen<T> screen;
 
@@ -103,7 +110,7 @@ public class AttachedScreen<T extends AbstractContainerMenu> implements SortType
 
         @Override
         public void setSortType(SortType sortType) {
-            AttachedScreen.this.sortType = sortType;
+            AttachingScreen.this.sortType = sortType;
         }
 
         @Override
@@ -128,7 +135,7 @@ public class AttachedScreen<T extends AbstractContainerMenu> implements SortType
 
         @Override
         public void setSearching(String searching) {
-            AttachedScreen.this.searching = searching;
+            AttachingScreen.this.searching = searching;
         }
 
         @Override
@@ -158,7 +165,7 @@ public class AttachedScreen<T extends AbstractContainerMenu> implements SortType
     private boolean reverseSort;
 
     //invoked when an ACS is created or initialized
-    public AttachedScreen(AbstractContainerScreen<T> screen){
+    public AttachingScreen(AbstractContainerScreen<T> screen){
         this.screen = screen;
         this.pages = pageMetadata.buildPages();
         assert Minecraft.getInstance().player != null;
@@ -172,18 +179,12 @@ public class AttachedScreen<T extends AbstractContainerMenu> implements SortType
         this.pageMetadata.switchPageWithId(data.pageRegKey());
         CachedConfig.updateLayout(data);
         this.quickMoveHandler = new PageQuickMoveHandler(this.pageMetadata);
+        INSTANCE = this;
     }
 
     //invoked when an ACS is initialized
     public void init(IScreenEvent event){
         this.frameWork = ScreenFramework.getInstance()==null ? new ScreenFramework(this) : ScreenFramework.getInstance();
-        // ensure pages are constructed per-screen
-        if(ScreenFramework.getInstance()!=null){
-            // already wrapped by ScreenFramework
-        } else if(ScreenFramework.getInstance()!=null){
-            // wrap delegate into client manager already done in ScreenFramework constructor
-        }
-
         frameWork.addWidgetToScreen(event::addListener);
     }
 
@@ -248,6 +249,12 @@ public class AttachedScreen<T extends AbstractContainerMenu> implements SortType
 
     public void closed(IScreenEvent event){
         frameWork.onClose();
+        close("On attached screen closing");
+    }
+
+    public void close(@Nullable String reason){
+        INSTANCE = null;
+        LOGGER.info("Attached Screen {} closed with reason: {}", this, reason);
     }
 
     @Override

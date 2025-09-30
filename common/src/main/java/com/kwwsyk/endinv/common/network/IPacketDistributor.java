@@ -8,4 +8,6 @@ public interface IPacketDistributor {
     void sendToServer(ModPacketPayload payload);
 
     void sendToPlayer(ServerPlayer player, ModPacketPayload payload);
+
+    void sendToAllPlayer(ModPacketPayload payload);
 }

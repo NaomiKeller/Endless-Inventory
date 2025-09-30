@@ -2,7 +2,7 @@ package com.kwwsyk.endinv.fabric.client.events;
 
 import com.kwwsyk.endinv.common.ModInfo;
 import com.kwwsyk.endinv.common.client.CachedConfig;
-import com.kwwsyk.endinv.common.client.gui.AttachedScreen;
+import com.kwwsyk.endinv.common.client.gui.AttachingScreen;
 import com.kwwsyk.endinv.common.client.gui.EndlessInventoryScreen;
 import com.kwwsyk.endinv.common.client.gui.IScreenEvent;
 import com.kwwsyk.endinv.common.network.payloads.SyncedConfig;
@@ -25,7 +25,7 @@ import static com.kwwsyk.endinv.common.ModRegistries.NbtAttachments.getSyncedCon
 public final class ScreenAttachment {
 
     @Nullable
-    private static AttachedScreen<?> attachment;
+    private static AttachingScreen<?> attachment;
 
     private ScreenAttachment() {
     }
@@ -58,7 +58,7 @@ public final class ScreenAttachment {
 
             if (attachment == null) {
                 ModInfo.getPacketDistributor().sendToServer(new OpenEndInvPayload());
-                attachment = new AttachedScreen<>(container);
+                attachment = new AttachingScreen<>(container);
             }
 
             attachment.init(new IScreenEvent() {
@@ -86,11 +86,11 @@ public final class ScreenAttachment {
         });
     }
 
-    private static void preRender(AttachedScreen<?> expected) {
+    private static void preRender(AttachingScreen<?> expected) {
         expected.renderPre(new IScreenEvent() {});
     }
 
-    private static void render(AttachedScreen<?> expected, GuiGraphics graphics, double mouseX, double mouseY, float delta) {
+    private static void render(AttachingScreen<?> expected, GuiGraphics graphics, double mouseX, double mouseY, float delta) {
         if (attachment != expected) {
             return;
         }
@@ -117,7 +117,7 @@ public final class ScreenAttachment {
         });
     }
 
-    private static boolean allowMouseClick(AttachedScreen<?> expected, double mouseX, double mouseY, int button) {
+    private static boolean allowMouseClick(AttachingScreen<?> expected, double mouseX, double mouseY, int button) {
         if (attachment != expected || !isAttachmentActive(expected)) {
             return true;
         }
@@ -146,7 +146,7 @@ public final class ScreenAttachment {
         return !canceled[0];
     }
 
-    private static boolean allowMouseRelease(AttachedScreen<?> expected, double mouseX, double mouseY, int button) {
+    private static boolean allowMouseRelease(AttachingScreen<?> expected, double mouseX, double mouseY, int button) {
         if (attachment != expected || !isAttachmentActive(expected)) {
             return true;
         }
@@ -175,7 +175,7 @@ public final class ScreenAttachment {
         return !canceled[0];
     }
 
-    private static boolean allowMouseScroll(AttachedScreen<?> expected, double mouseX, double mouseY, double horizontal, double vertical) {
+    private static boolean allowMouseScroll(AttachingScreen<?> expected, double mouseX, double mouseY, double horizontal, double vertical) {
         if (attachment != expected || !isAttachmentActive(expected)) {
             return true;
         }
@@ -209,7 +209,7 @@ public final class ScreenAttachment {
         return !canceled[0];
     }
 
-    private static boolean allowKeyPress(AttachedScreen<?> expected, int keyCode, int scanCode, int modifiers) {
+    private static boolean allowKeyPress(AttachingScreen<?> expected, int keyCode, int scanCode, int modifiers) {
         if (attachment != expected || !isAttachmentActive(expected)) {
             return true;
         }
@@ -239,7 +239,7 @@ public final class ScreenAttachment {
     }
 
     public static boolean handleMouseDrag(AbstractContainerScreen<?> screen, double mouseX, double mouseY, int button, double deltaX, double deltaY) {
-        AttachedScreen<?> current = attachment;
+        AttachingScreen<?> current = attachment;
         if (current == null || current.screen != screen || !isAttachmentActive(current)) {
             return false;
         }
@@ -279,7 +279,7 @@ public final class ScreenAttachment {
     }
 
     public static boolean handleCharTyped(Screen screen, char chr, int modifiers) {
-        AttachedScreen<?> current = attachment;
+        AttachingScreen<?> current = attachment;
         if (current == null || current.screen != screen || !isAttachmentActive(current)) {
             return false;
         }
@@ -303,7 +303,7 @@ public final class ScreenAttachment {
         return canceled[0];
     }
 
-    private static boolean isAttachmentActive(AttachedScreen<?> expected) {
+    private static boolean isAttachmentActive(AttachingScreen<?> expected) {
         Screen screen = Minecraft.getInstance().screen;
         if (!(screen instanceof AbstractContainerScreen<?>)) {
             attachment = null;

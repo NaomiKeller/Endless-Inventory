@@ -6,7 +6,7 @@ __branch 1.20.1__
 First release was published in May 2025, supports Neoforge 1.21.1. 
 The version support forge 1.20.1 was released in Aug 15.  
 
-## Sept 2025
+# Sept 2025
 
 ## 9.9
 Switch Forge dev tool from 'legacyforge'(by neoforge group) to 'forgeGradle'(the original forge) as an issue existed in legacyforge.  
@@ -75,3 +75,6 @@ In `assets/endless_inventory/textures/gui/*`:
 ## 9.26 1.1.0-Pre2
 Changed core logic of DisplayPage,ItemPage and their subclasses and some payloads to let pages item modify and some other logic clearer and well-organized.   
 * Coincidentally, the bug of SegClassifyItemDisplay's items un-seg-geg bug is incidentally fixed.
+
+## 9.27 1.1.0-Pre2
+\[Forge] Added curios mod integration: Curio classify page.

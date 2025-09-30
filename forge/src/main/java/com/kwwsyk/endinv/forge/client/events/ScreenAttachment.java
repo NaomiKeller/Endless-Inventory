@@ -2,7 +2,7 @@ package com.kwwsyk.endinv.forge.client.events;
 
 import com.kwwsyk.endinv.common.ModInfo;
 import com.kwwsyk.endinv.common.client.CachedConfig;
-import com.kwwsyk.endinv.common.client.gui.AttachedScreen;
+import com.kwwsyk.endinv.common.client.gui.AttachingScreen;
 import com.kwwsyk.endinv.common.client.gui.EndlessInventoryScreen;
 import com.kwwsyk.endinv.common.client.gui.IScreenEvent;
 import com.kwwsyk.endinv.common.network.payloads.SyncedConfig;
@@ -22,10 +22,10 @@ import static com.kwwsyk.endinv.common.ModRegistries.NbtAttachments.getSyncedCon
 
 @Mod.EventBusSubscriber(value = Dist.CLIENT,modid = ModInfo.MOD_ID)
 public class ScreenAttachment {
-    public static AttachedScreen<?> ATTACHMENT_MANAGER;
+    public static AttachingScreen<?> ATTACHMENT_MANAGER;
 
     @Nullable
-    private static AttachedScreen<?> checkAndGetAttached(ScreenEvent event){
+    private static AttachingScreen<?> checkAndGetAttached(ScreenEvent event){
         if(event.getScreen() instanceof AbstractContainerScreen<?> screen){
             Player player = screen.getMinecraft().player;
             if(player==null) return null;
@@ -66,7 +66,7 @@ public class ScreenAttachment {
 
             if(ATTACHMENT_MANAGER==null){
                 ModInfo.getPacketDistributor().sendToServer(new OpenEndInvPayload());
-                ATTACHMENT_MANAGER = new AttachedScreen<>(screen);
+                ATTACHMENT_MANAGER = new AttachingScreen<>(screen);
             }
 
             ATTACHMENT_MANAGER.init(new IScreenEvent() {

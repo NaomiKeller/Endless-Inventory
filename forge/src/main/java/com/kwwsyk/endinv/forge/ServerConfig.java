@@ -1,12 +1,11 @@
 package com.kwwsyk.endinv.forge;
 
-import com.kwwsyk.endinv.common.options.ContentTransferMode;
-import com.kwwsyk.endinv.common.options.IConfigValue;
-import com.kwwsyk.endinv.common.options.IServerConfig;
-import com.kwwsyk.endinv.common.options.MissingEndInvPolicy;
+import com.kwwsyk.endinv.common.options.*;
 import com.kwwsyk.endinv.common.util.Accessibility;
 import net.minecraftforge.common.ForgeConfigSpec;
 import org.apache.commons.lang3.tuple.Pair;
+
+import java.util.List;
 
 public class ServerConfig {
 
@@ -14,11 +13,14 @@ public class ServerConfig {
     public static final ForgeConfigSpec CONFIG_SPEC;
     public final ForgeConfigSpec.IntValue MAX_STACK_SIZE;
     public final ForgeConfigSpec.BooleanValue ENABLE_INFINITE;
+    public final ForgeConfigSpec.BooleanValue ENABLE_ATTACHING;
     public final ForgeConfigSpec.BooleanValue ENABLE_AUTO_PICK;
     public final ForgeConfigSpec.EnumValue<ContentTransferMode> TRANSFER_MODE;
     public final ForgeConfigSpec.EnumValue<Accessibility> DEFAULT_ACCESSIBILITY;
     public final ForgeConfigSpec.EnumValue<MissingEndInvPolicy> CREATION_MODE;
     public final ForgeConfigSpec.BooleanValue CONVERT_EMPTY_TAG;
+
+    public final ForgeConfigSpec.ConfigValue<List<?>> SPECIFIED_MENU_ATTACHABLE;
 
     private ServerConfig(ForgeConfigSpec.Builder builder){
         MAX_STACK_SIZE = builder
@@ -27,6 +29,9 @@ public class ServerConfig {
         ENABLE_INFINITE = builder
                 .translation("config.endinv.comment.enable_infinite1")
                 .define("ItemCapacity.enableInfinite",false);
+        ENABLE_ATTACHING = builder
+                .comment("Allow players have attached Inventory by menu.")
+                .define("allowAttaching", true);
         ENABLE_AUTO_PICK = builder
                 .comment("Will enable player to auto pick item and exp")
                 .define("autoPickUtility",false);
@@ -39,6 +44,13 @@ public class ServerConfig {
         CONVERT_EMPTY_TAG = builder
                 .comment("Convert itemstack with empty tag {} to null tag, for the bugs that item cannot be taken/stacked.")
                 .define("convert_empty_tag",true);
+
+        SPECIFIED_MENU_ATTACHABLE = builder.comment(SpecifiedMenuAttachingConfig.Parser.configComments)
+                .defineListAllowEmpty(
+                        "Specified menu attach abilities",
+                        List.of(),
+                        (s)-> SpecifiedMenuAttachingConfig.Parser.tryParseString((String) s)!=null
+                );
     }
 
     static {
@@ -57,6 +69,10 @@ public class ServerConfig {
             return IConfigValue.of(value,value::set);
         }
 
+        private static IConfigValue<Boolean> convert(ForgeConfigSpec.BooleanValue value, Runnable onSet){
+            return IConfigValue.of(value,value::set);
+        }
+
         @Override
         public IConfigValue<Integer> getMaxAllowedStackSize() {
             return convert(MAX_STACK_SIZE);
@@ -68,8 +84,13 @@ public class ServerConfig {
         }
 
         @Override
+        public IConfigValue<Boolean> enableAttaching() {
+            return convert(ENABLE_ATTACHING, this::onAttachingOrAutopickConfigChanged);
+        }
+
+        @Override
         public IConfigValue<Boolean> enableAutoPick() {
-            return convert(ENABLE_AUTO_PICK);
+            return convert(ENABLE_AUTO_PICK, this::onAttachingOrAutopickConfigChanged);
         }
 
         @Override
@@ -90,6 +111,21 @@ public class ServerConfig {
         @Override
         public IConfigValue<Boolean> doConvertEmptyTag() {
             return convert(CONVERT_EMPTY_TAG);
+        }
+
+        @Override
+        public IConfigValue<SpecifiedMenuAttachingConfig> specifiedMenuAttachability() {
+            return new IConfigValue<SpecifiedMenuAttachingConfig>() {
+                @Override @SuppressWarnings("unchecked")
+                public SpecifiedMenuAttachingConfig get() {
+                    return SpecifiedMenuAttachingConfig.Parser.readList((List<String>) SPECIFIED_MENU_ATTACHABLE.get());
+                }
+
+                @Override
+                public void set(SpecifiedMenuAttachingConfig config) {
+                    SPECIFIED_MENU_ATTACHABLE.set(SpecifiedMenuAttachingConfig.Parser.fromMap(config.getConfigs()));
+                }
+            };
         }
     };
 }
