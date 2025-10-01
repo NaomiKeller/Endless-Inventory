@@ -25,6 +25,7 @@ mixin {
     add(sourceSets.main, "${mod_id}.refmap.json")
 
     config("${mod_id}.mixins.json")
+    config("${mod_id}.experimental.mixins.json")
 }
 
 minecraft {
@@ -155,7 +156,7 @@ jar {
     finalizedBy('reobfJar')
     from(project(':common').sourceSets.main.output)
     manifest.attributes([
-            "MixinConfigs": "${mod_id}.mixins.json"
+            "MixinConfigs": "${mod_id}.mixins.json,${mod_id}.experimental.mixins.json"
     ])
 }
 

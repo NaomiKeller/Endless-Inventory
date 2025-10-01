@@ -86,7 +86,10 @@ public class ModPacketHandler {
         INSTANCE.registerMessage(i++, QuickMoveToPagePayload.class,QuickMoveToPagePayload::encode,QuickMoveToPagePayload::decode,convert(QuickMoveToPagePayload::handle));
         INSTANCE.registerMessage(i++, StarItemPayload.class,StarItemPayload::encode,StarItemPayload::decode,convert(StarItemPayload::handle));
         INSTANCE.registerMessage(i++, ToggleCraftingPayload.class, ToggleCraftingPayload::encode, ToggleCraftingPayload::decode, convert(ToggleCraftingPayload::handle));
-        if(ModList.get().isLoaded("jei")) INSTANCE.registerMessage(i++, JeiTransferRecipePayload.class, JeiTransferRecipePayload::encode, JeiTransferRecipePayload::decode, convert(JeiTransferRecipePayload::handle));
+        if(ModList.get().isLoaded("jei")) {
+            INSTANCE.registerMessage(i++, JeiTransferRecipePayload.class, JeiTransferRecipePayload::encode, JeiTransferRecipePayload::decode, convert(JeiTransferRecipePayload::handle));
+            INSTANCE.registerMessage(i++, JeiAttachedTransferPayload.class, JeiAttachedTransferPayload::encode, JeiAttachedTransferPayload::decode, convert(JeiAttachedTransferPayload::handle));
+        }
 
         INSTANCE.registerMessage(i, SyncedConfig.class,SyncedConfig::encode,SyncedConfig::decode,convertBi(SyncedConfig::handle));
     }

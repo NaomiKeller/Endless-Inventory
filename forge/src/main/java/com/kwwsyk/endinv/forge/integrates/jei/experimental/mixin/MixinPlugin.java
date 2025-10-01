@@ -1,5 +1,6 @@
 package com.kwwsyk.endinv.forge.integrates.jei.experimental.mixin;
 
+import com.kwwsyk.endinv.forge.StartupConfig;
 import net.minecraftforge.fml.ModList;
 import org.objectweb.asm.tree.ClassNode;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
@@ -47,7 +48,7 @@ public class MixinPlugin implements IMixinConfigPlugin {
      */
     @Override
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
-        return ModList.get().isLoaded("jei");
+        return ModList.get().isLoaded("jei") && StartupConfig.enableJeiAttachedTransfer();
     }
 
     /**
