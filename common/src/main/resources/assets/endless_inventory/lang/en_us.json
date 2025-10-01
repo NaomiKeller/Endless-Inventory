@@ -40,6 +40,10 @@
   "endinv.setting.attaching": "Attaching menu screen",
   "endinv.setting.texture": "Texture mode",
   "endinv.setting.max_page_bar": "Max page switch bars",
+  "endinv.setting.screen_debug": "Screen debug",
+  "endinv.setting.category.general": "General",
+  "endinv.setting.category.pages": "Pages",
+  "endinv.setting.hide_page": "Hide page: %s",
 
   "endinv.setting.entry.FROM_RESOURCE": "Menu Texture",
   "endinv.setting.entry.TRANSPARENT": "Transparent",

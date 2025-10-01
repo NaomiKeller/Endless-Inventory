@@ -86,6 +86,10 @@ repositories {
         name = "Curios"
         url = uri("https://maven.theillusivec4.top/")
     }
+    maven {
+        name = "Cloth Config"
+        url = uri("https://maven.shedaniel.me/")
+    }
 }
 
 dependencies {
@@ -108,6 +112,8 @@ dependencies {
     //runtimeOnly fg.deobf(files("run/fgdeobf/artifacts-forge-9.5.16.jar"))
 
     //implementation fg.deobf("curse.maven:timeless-and-classics-zero-1028108:6632240-sources-6633203")
+
+    implementation fg.deobf("me.shedaniel.cloth:cloth-config-forge:${cloth_config_version}")
 }
 
 processResources {
