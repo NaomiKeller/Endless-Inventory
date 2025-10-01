@@ -7,9 +7,11 @@ import com.kwwsyk.endinv.common.network.payloads.ModPacketPayload;
 import com.kwwsyk.endinv.common.network.payloads.SyncedConfig;
 import com.kwwsyk.endinv.common.network.payloads.toClient.*;
 import com.kwwsyk.endinv.common.network.payloads.toServer.*;
+import com.kwwsyk.endinv.fabric.network.payloads.JeiTransferRecipePayload;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
@@ -47,6 +49,9 @@ public final class FabricNetworking {
         registerServerbound(StarItemPayload.class, StarItemPayload::encode, StarItemPayload::decode, "star_item");
         registerServerbound(ToggleCraftingPayload.class, ToggleCraftingPayload::encode, ToggleCraftingPayload::decode, "toggle_crafting");
         registerServerbound(SyncedConfig.class, SyncedConfig::encode, SyncedConfig::decode, SyncedConfig.DEFAULT.id());
+        if (FabricLoader.getInstance().isModLoaded("jei")) {
+            registerServerbound(JeiTransferRecipePayload.class, JeiTransferRecipePayload::encode, JeiTransferRecipePayload::decode, "jei_transfer_recipe");
+        }
     }
 
     public static void initClient() {

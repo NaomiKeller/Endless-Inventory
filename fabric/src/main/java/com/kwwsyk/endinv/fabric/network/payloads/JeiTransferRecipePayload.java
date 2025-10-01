@@ -1,15 +1,15 @@
-package com.kwwsyk.endinv.forge.network.payloads;
+package com.kwwsyk.endinv.fabric.network.payloads;
 
 import com.kwwsyk.endinv.common.menu.EndlessInventoryMenu;
 import com.kwwsyk.endinv.common.network.payloads.ModPacketContext;
 import com.kwwsyk.endinv.common.network.payloads.ModPacketPayload;
-import com.kwwsyk.endinv.forge.integrates.jei.EIMRecipeTranHandler;
+import com.kwwsyk.endinv.fabric.integrates.jei.EIMRecipeTranHandler;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.crafting.CraftingRecipe;
-import net.minecraftforge.fml.ModList;
 
 import java.util.Optional;
 
@@ -39,7 +39,7 @@ public record JeiTransferRecipePayload(int containerId, ResourceLocation recipeI
         if (!(player instanceof ServerPlayer serverPlayer)) {
             return;
         }
-        if (!ModList.get().isLoaded("jei")) {
+        if (!FabricLoader.getInstance().isModLoaded("jei")) {
             return;
         }
         if (!(serverPlayer.containerMenu instanceof EndlessInventoryMenu menu)) {

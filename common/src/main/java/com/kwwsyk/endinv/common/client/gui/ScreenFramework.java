@@ -186,7 +186,7 @@ public class ScreenFramework {
     private void addWidgets() {
         this.configButton = Button.builder(Component.literal("⚙"),
                         btn -> {
-                            mc.setScreen(new EndInvSettingScreen(screen));
+                            mc.setScreen(ClientModInfo.createConfigScreen(screen));
                         })
                 .pos(this.configButtonParam.XPos(), this.configButtonParam.YPos())
                 .size(this.configButtonParam.XSize(), this.configButtonParam.YSize())
