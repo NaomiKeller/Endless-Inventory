@@ -2,6 +2,7 @@ package com.kwwsyk.endinv.common.client.option;
 
 import com.kwwsyk.endinv.common.network.payloads.toClient.MenuAttachabilityPayload;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.InventoryMenu;
 import net.minecraft.world.inventory.MenuType;
@@ -30,7 +31,7 @@ public final class MenuAttachabilityCache {
 
     public static boolean isAttachable(AbstractContainerScreen<?> screen) {
         AbstractContainerMenu menu = screen.getMenu();
-        if (menu instanceof InventoryMenu) {
+        if (menu instanceof InventoryMenu || menu instanceof CreativeModeInventoryScreen.ItemPickerMenu) {
             return inventoryAttach; // inventory special-case
         }
         MenuType<?> type = menu.getType();

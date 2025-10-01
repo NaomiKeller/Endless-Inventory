@@ -43,10 +43,10 @@ public record OpenEndInvPayload(boolean openNew, int rows, int columns) implemen
     public void handle(ModPacketContext iPayloadContext) {
         ServerPlayer player = (ServerPlayer) iPayloadContext.player();
         if(player==null) return;
-        if(!ModRegistries.NbtAttachments.getSyncedConfig().getWith(player).attaching()) return;
         if(player.containerMenu == player.inventoryMenu && openNew()){
             player.openMenu(EndlessInventoryMenu.provide(rows));
         }else if(!openNew()){
+            if(!ModRegistries.NbtAttachments.getSyncedConfig().getWith(player).attaching()) return;
             ServerLevelEndInv.getEndInvForPlayer(player).ifPresent(endInv->{
                 AttachingManager manager = new AttachingManager(player.containerMenu, endInv ,player);
                 ServerLevelEndInv.PAGE_META_DATA_MANAGER.put(player,manager);

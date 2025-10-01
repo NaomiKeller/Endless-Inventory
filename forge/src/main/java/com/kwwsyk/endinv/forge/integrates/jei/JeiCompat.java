@@ -32,5 +32,11 @@ public class JeiCompat implements IModPlugin{
         IRecipeTransferHandlerHelper transferHelper = registration.getTransferHelper();
 
         registration.addRecipeTransferHandler(new EIMRecipeTranHandler(jeiHelper,transferHelper), RecipeTypes.CRAFTING);
+
+
+    }
+
+    private static boolean isExperimentalFeatureAllowed(){
+        return true;
     }
 }
