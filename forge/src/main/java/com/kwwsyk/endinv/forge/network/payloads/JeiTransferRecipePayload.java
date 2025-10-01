@@ -9,6 +9,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.crafting.CraftingRecipe;
+import net.minecraftforge.fml.ModList;
 
 import java.util.Optional;
 
@@ -36,6 +37,9 @@ public record JeiTransferRecipePayload(int containerId, ResourceLocation recipeI
     public void handle(ModPacketContext context) {
         Player player = context.player();
         if (!(player instanceof ServerPlayer serverPlayer)) {
+            return;
+        }
+        if (!ModList.get().isLoaded("jei")) {
             return;
         }
         if (!(serverPlayer.containerMenu instanceof EndlessInventoryMenu menu)) {

@@ -4,6 +4,7 @@ import com.kwwsyk.endinv.common.menu.EndlessInventoryMenu;
 import com.kwwsyk.endinv.common.network.payloads.ModPacketContext;
 import com.kwwsyk.endinv.common.network.payloads.ModPacketPayload;
 import com.kwwsyk.endinv.fabric.integrates.jei.EIMRecipeTranHandler;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
@@ -36,6 +37,9 @@ public record JeiTransferRecipePayload(int containerId, ResourceLocation recipeI
     public void handle(ModPacketContext context) {
         Player player = context.player();
         if (!(player instanceof ServerPlayer serverPlayer)) {
+            return;
+        }
+        if (!FabricLoader.getInstance().isModLoaded("jei")) {
             return;
         }
         if (!(serverPlayer.containerMenu instanceof EndlessInventoryMenu menu)) {
