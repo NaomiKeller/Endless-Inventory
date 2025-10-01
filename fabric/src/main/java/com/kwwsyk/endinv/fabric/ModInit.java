@@ -9,9 +9,12 @@ import com.kwwsyk.endinv.common.network.IPacketDistributor;
 import com.kwwsyk.endinv.common.network.payloads.SyncedConfig;
 import com.kwwsyk.endinv.common.options.IServerConfig;
 import com.kwwsyk.endinv.fabric.event.FabricEvents;
+import com.kwwsyk.endinv.fabric.integrates.clothconfig.ClothConfigIntegration;
 import com.kwwsyk.endinv.fabric.nbtAttachment.FabricNbtStorage;
 import com.kwwsyk.endinv.fabric.network.FabricNetworking;
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
@@ -32,6 +35,10 @@ public class ModInit extends AbstractModInitializer implements ModInitializer {
         FabricEvents.init();
         super.init();
         com.kwwsyk.endinv.fabric.nbtAttachment.AttachingCapabilities.register();
+        if (FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT
+                && FabricLoader.getInstance().isModLoaded("cloth-config2")) {
+            ClothConfigIntegration.register();
+        }
     }
 
     @Override

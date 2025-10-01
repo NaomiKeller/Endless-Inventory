@@ -4,13 +4,15 @@
   "package": "com.kwwsyk.endinv.fabric.mixin",
   "compatibilityLevel": "JAVA_17",
   "mixins": [
-    "PlayerPersistentDataMixin"
+    "PlayerPersistentDataMixin",
+    "ServerPlaceRecipeMixin"
   ],
   "client": [
     "AbstractContainerScreenAccessor",
     "AbstractContainerScreenMixin",
     "GuiEventListenerMixin",
-    "ScreenAccessor"
+    "ScreenAccessor",
+    "RecipeBookComponentMixin"
   ],
   "injectors": {
     "defaultRequire": 1
