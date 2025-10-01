@@ -10,6 +10,7 @@ import com.kwwsyk.endinv.common.network.payloads.ModPacketPayload;
 import com.kwwsyk.endinv.common.network.payloads.SyncedConfig;
 import com.kwwsyk.endinv.common.options.IServerConfig;
 import com.kwwsyk.endinv.forge.client.config.ClientConfig;
+import com.kwwsyk.endinv.forge.integrates.clothconfig.ClothConfigIntegration;
 import com.kwwsyk.endinv.forge.integrates.curio.CurioInit;
 import com.kwwsyk.endinv.forge.integrates.curio.CurioPageType;
 import com.kwwsyk.endinv.forge.nbtAttcachment.AttachingCapabilities;
@@ -63,6 +64,10 @@ public class ModInitializer extends AbstractModInitializer {
         if(FMLEnvironment.dist.isClient()){
             new ClientModInitializer();
             ClientModInitializer.init(modEventBus);
+
+            if(ModList.get().isLoaded("cloth_config")){
+                ClothConfigIntegration.register(container);
+            }
         }
 
         if(ModList.get().isLoaded("curios")){
