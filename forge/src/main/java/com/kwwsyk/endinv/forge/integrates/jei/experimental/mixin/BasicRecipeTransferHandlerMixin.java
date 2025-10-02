@@ -7,6 +7,7 @@ import com.kwwsyk.endinv.forge.network.payloads.JeiAttachedTransferPayload;
 import mezz.jei.api.gui.ingredient.IRecipeSlotsView;
 import mezz.jei.api.recipe.transfer.IRecipeTransferError;
 import mezz.jei.api.recipe.transfer.IRecipeTransferInfo;
+import mezz.jei.common.network.IConnectionToServer;
 import mezz.jei.common.network.packets.PacketRecipeTransfer;
 import mezz.jei.common.transfer.RecipeTransferOperationsResult;
 import mezz.jei.library.transfer.BasicRecipeTransferHandler;
