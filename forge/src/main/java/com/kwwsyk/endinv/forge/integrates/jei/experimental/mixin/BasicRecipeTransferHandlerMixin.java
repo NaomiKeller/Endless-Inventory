@@ -7,8 +7,6 @@ import com.kwwsyk.endinv.forge.network.payloads.JeiAttachedTransferPayload;
 import mezz.jei.api.gui.ingredient.IRecipeSlotsView;
 import mezz.jei.api.recipe.transfer.IRecipeTransferError;
 import mezz.jei.api.recipe.transfer.IRecipeTransferInfo;
-import mezz.jei.common.network.IConnectionToServer;
-import mezz.jei.common.network.packets.PacketRecipeTransfer;
 import mezz.jei.common.transfer.RecipeTransferOperationsResult;
 import mezz.jei.library.transfer.BasicRecipeTransferHandler;
 import net.minecraft.world.entity.player.Player;
@@ -18,7 +16,6 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
@@ -79,26 +76,29 @@ public abstract class BasicRecipeTransferHandlerMixin<C extends AbstractContaine
         }
     }
 
-    @Redirect(
+    @Inject(
             method = "transferRecipe",
-            at = @At(value = "INVOKE", target = "Lmezz/jei/common/network/IConnectionToServer;sendPacketToServer(Lmezz/jei/common/network/packets/PacketRecipeTransfer;)V")
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lmezz/jei/common/network/IConnectionToServer;sendPacketToServer(Lmezz/jei/common/network/packets/PacketRecipeTransfer;)V"
+            ),
+            cancellable = true
     )
-    private void endinv$redirectTransferPacket(
-            IConnectionToServer connection,
-            PacketRecipeTransfer packet,
+    private void endinv$sendAttachedTransfer(
             C container,
             R recipe,
             IRecipeSlotsView recipeSlotsView,
             Player player,
             boolean maxTransfer,
-            boolean doTransfer
+            boolean doTransfer,
+            CallbackInfoReturnable<IRecipeTransferError> cir
     ) {
         TransferContext context = ENDINV$PLAN.get();
         if (context != null) {
             ENDINV$PLAN.remove();
             ModInfo.getPacketDistributor().sendToServer(new JeiAttachedTransferPayload(context));
-        } else {
-            connection.sendPacketToServer(packet);
+            cir.setReturnValue(null);
+            cir.cancel();
         }
     }
 
