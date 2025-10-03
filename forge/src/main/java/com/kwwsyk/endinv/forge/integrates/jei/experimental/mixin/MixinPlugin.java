@@ -1,8 +1,9 @@
 package com.kwwsyk.endinv.forge.integrates.jei.experimental.mixin;
 
 import com.kwwsyk.endinv.forge.StartupConfig;
-import net.minecraftforge.fml.ModList;
+import com.mojang.logging.LogUtils;
 import org.objectweb.asm.tree.ClassNode;
+import org.slf4j.Logger;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
 import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
 
@@ -10,6 +11,8 @@ import java.util.List;
 import java.util.Set;
 
 public class MixinPlugin implements IMixinConfigPlugin {
+
+    private static final Logger LOGGER = LogUtils.getLogger();
 
 
     /**
@@ -48,7 +51,67 @@ public class MixinPlugin implements IMixinConfigPlugin {
      */
     @Override
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
-        return ModList.get().isLoaded("jei") && StartupConfig.enableJeiAttachedTransfer();
+        try {
+            return StartupConfig.enableJeiAttachedTransfer();
+        } catch (IllegalStateException e) {
+            LOGGER.warn("JEI mixin config accessed before load; reading file directly.");
+            // Fallback to reading the COMMON config directly before Forge loads it
+            // Try typical dev and runtime locations
+            String fileName = "endless_inventory-common.toml";
+            java.nio.file.Path[] candidates = new java.nio.file.Path[]{
+                    java.nio.file.Paths.get("run", "config", fileName),
+                    java.nio.file.Paths.get("config", fileName),
+                    java.nio.file.Paths.get(fileName)
+            };
+            for (java.nio.file.Path p : candidates) {
+                try {
+                    if (java.nio.file.Files.isRegularFile(p)) {
+                        String content = java.nio.file.Files.readString(p);
+                        Boolean val = parseEnableFromToml(content);
+                        if (val != null) {
+                            LOGGER.info("JEI mixin config read from {}: experimental.jeiAttachedRecipeTransfer={}", p, val);
+                            return val;
+                        }
+                    }
+                } catch (Throwable ignored) {
+                }
+            }
+            LOGGER.warn("JEI mixin config not found or unreadable; defaulting to disabled.");
+            return false;
+        }
+    }
+
+    private static Boolean parseEnableFromToml(String content) {
+        // Minimal TOML section/key parser for: [experimental] jeiAttachedRecipeTransfer = true/false
+        boolean inExperimental = false;
+        for (String rawLine : content.split("\r?\n")) {
+            String line = rawLine.trim();
+            if (line.isEmpty() || line.startsWith("#")) continue;
+            if (line.startsWith("[")) {
+                // new section
+                int r = line.indexOf(']');
+                if (r > 1) {
+                    String sect = line.substring(1, r).trim();
+                    inExperimental = "experimental".equals(sect);
+                } else {
+                    inExperimental = false;
+                }
+                continue;
+            }
+            if (!inExperimental) continue;
+            // Strip inline comments
+            int hash = line.indexOf('#');
+            if (hash >= 0) line = line.substring(0, hash).trim();
+            if (line.startsWith("jeiAttachedRecipeTransfer")) {
+                int eq = line.indexOf('=');
+                if (eq >= 0) {
+                    String rhs = line.substring(eq + 1).trim();
+                    if (rhs.equalsIgnoreCase("true")) return Boolean.TRUE;
+                    if (rhs.equalsIgnoreCase("false")) return Boolean.FALSE;
+                }
+            }
+        }
+        return null;
     }
 
     /**

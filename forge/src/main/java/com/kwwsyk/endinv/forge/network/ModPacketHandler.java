@@ -5,6 +5,7 @@ import com.kwwsyk.endinv.common.network.payloads.ModPacketContext;
 import com.kwwsyk.endinv.common.network.payloads.SyncedConfig;
 import com.kwwsyk.endinv.common.network.payloads.toClient.*;
 import com.kwwsyk.endinv.common.network.payloads.toServer.*;
+import com.kwwsyk.endinv.forge.network.payloads.JeiAttachedTransferPayload;
 import com.kwwsyk.endinv.forge.network.payloads.JeiTransferRecipePayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;

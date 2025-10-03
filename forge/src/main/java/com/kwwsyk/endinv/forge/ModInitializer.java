@@ -55,7 +55,7 @@ public class ModInitializer extends AbstractModInitializer {
         ITEM.register(modEventBus);
         MENU.register(modEventBus);
         net.minecraftforge.fml.ModLoadingContext.get().registerConfig(
-                net.minecraftforge.fml.config.ModConfig.Type.STARTUP,
+                net.minecraftforge.fml.config.ModConfig.Type.COMMON,
                 StartupConfig.CONFIG_SPEC);
         net.minecraftforge.fml.ModLoadingContext.get().registerConfig(
                 net.minecraftforge.fml.config.ModConfig.Type.SERVER,
