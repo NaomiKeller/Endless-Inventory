@@ -1,11 +1,17 @@
 package com.kwwsyk.endinv.forge.integrates.jei.experimental;
 
+import com.kwwsyk.endinv.common.ModInfo;
 import com.kwwsyk.endinv.common.ServerLevelEndInv;
 import com.kwwsyk.endinv.common.SourceInventory;
+import com.kwwsyk.endinv.common.client.CachedSrcInv;
 import com.kwwsyk.endinv.common.menu.page.pageManager.PageMetaDataManager;
+import com.kwwsyk.endinv.common.options.ContentTransferMode;
 import com.kwwsyk.endinv.common.util.ItemKey;
 import com.kwwsyk.endinv.forge.client.events.ScreenAttachment;
+import mezz.jei.api.constants.VanillaTypes;
+import mezz.jei.api.gui.ingredient.IRecipeSlotView;
 import mezz.jei.api.gui.ingredient.IRecipeSlotsView;
+import mezz.jei.api.recipe.RecipeIngredientRole;
 import mezz.jei.api.recipe.transfer.IRecipeTransferInfo;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
@@ -14,8 +20,8 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.crafting.CraftingRecipe;
 import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.ShapedRecipe;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -28,7 +34,7 @@ import java.util.*;
 /**
  * Attached Endless Inventory (Screen) Recipe Transfer Handler<br>
  * Transfer items of EndInv in any menu
- */
+ */@SuppressWarnings("removal")
 public final class AEIRecipeTransferHandler {
 
     private AEIRecipeTransferHandler() {
@@ -51,23 +57,36 @@ public final class AEIRecipeTransferHandler {
             Player player,
             boolean maxTransfer,
             IRecipeTransferInfo<C, R> transferInfo,
-            List<Slot> craftingSlots,
+            List<Slot> recipeSlots,//accuracy of field name: use recipeSlots instead of craftingSlots as all recipe types are supported.
             List<Slot> inventorySlots
     ) {
-        if (!(recipe instanceof CraftingRecipe craftingRecipe)) {
-            return Optional.empty();
-        }
+        // Support all recipe types; rely on JEI's provided recipeSlots ordering
         SourceInventory endInv = getClientAttachedInventory(container);
-        if (endInv == null) {
-            return Optional.empty();
+        if (endInv == null && ModInfo.getServerConfig().transferMode().get() == ContentTransferMode.ALL) {
+            endInv = CachedSrcInv.INSTANCE;
         }
-        TransferPlan plan = createTransferPlan(craftingRecipe, craftingSlots, inventorySlots, endInv, maxTransfer);
-        if (plan == null || plan.isMissing() || plan.craftsWanted() <= 0) {
-            return Optional.empty();
+        Ingredient[] layout = buildLayoutFromRecipeSlots(recipeSlotsView, recipeSlots.size());
+        TransferPlan plan = null;
+        if (endInv != null) {
+            if (allEmpty(layout) && recipe instanceof Recipe<?> mcRecipe) {
+                // Fallback to recipe ingredients if the slots view didn't provide inputs
+                plan = createTransferPlan(mcRecipe, recipeSlots, inventorySlots, endInv, maxTransfer);
+            } else {
+                plan = createTransferPlan(layout, recipeSlots, inventorySlots, endInv, maxTransfer);
+            }
+            if (plan.isMissing() || plan.craftsWanted() <= 0) {
+                return Optional.empty();
+            }
         }
-        ResourceLocation recipeId = craftingRecipe.getId();
+        ResourceLocation recipeId;
+        if (recipe instanceof Recipe<?> mcRecipe) {
+            recipeId = mcRecipe.getId();
+        } else {
+            // Best-effort: use JEI's displayed recipe location via slots view hash; fall back to container id scoping
+            recipeId = new ResourceLocation("endless_inventory", "jei/unknown/" + container.containerId);
+        }
         boolean requireCompleteSets = transferInfo.requireCompleteSets(container, recipe);
-        List<Integer> craftingIndexes = craftingSlots.stream().map(slot -> slot.index).toList();
+        List<Integer> craftingIndexes = recipeSlots.stream().map(slot -> slot.index).toList();
         List<Integer> inventoryIndexes = inventorySlots.stream().map(slot -> slot.index).toList();
         return Optional.of(new TransferContext(
                 container.containerId,
@@ -89,44 +108,69 @@ public final class AEIRecipeTransferHandler {
 
     public static void performServerTransfer(
             AbstractContainerMenu container,
-            CraftingRecipe recipe,
-            List<Slot> craftingSlots,
+            Recipe<?> recipe,
+            List<Slot> recipeSlots,
             List<Slot> inventorySlots,
             ServerPlayer player,
-            PageMetaDataManager manager,
+            @Nullable PageMetaDataManager manager,
             boolean maxTransfer,
             boolean requireCompleteSets
     ) {
-        if (manager.getMenu() != container) {
+        SourceInventory endInv;
+        if (manager != null && manager.getMenu() == container) {
+            endInv = manager.getSourceInventory();
+        } else {
+            var opt = ServerLevelEndInv.getEndInvForPlayer(player);
+            if (opt.isEmpty()) {
+                return;
+            }
+            endInv = opt.get();
+        }
+        TransferPlan plan = createTransferPlan(recipe, recipeSlots, inventorySlots, endInv, maxTransfer);
+        if (plan.isMissing() || plan.craftsWanted() <= 0) {
             return;
         }
-        SourceInventory endInv = manager.getSourceInventory();
-        TransferPlan plan = createTransferPlan(recipe, craftingSlots, inventorySlots, endInv, maxTransfer);
-        if (plan == null || plan.isMissing() || plan.craftsWanted() <= 0) {
-            return;
+        performTransfer(container, plan, player, recipeSlots, inventorySlots, endInv);
+        if (manager != null) {
+            manager.sendEndInvData();
+        } else {
+            // Fallback sync when no manager is available (e.g., JEI replaced the screen)
+            var mode = com.kwwsyk.endinv.common.ModInfo.getServerConfig().transferMode().get();
+            switch (mode) {
+                case ALL -> com.kwwsyk.endinv.common.ModInfo.getPacketDistributor()
+                        .sendToPlayer(player, new com.kwwsyk.endinv.common.network.payloads.toClient.EndInvContent(endInv.getItemMap()));
+                case PART -> com.kwwsyk.endinv.common.ModInfo.getPacketDistributor()
+                        .sendToPlayer(player, com.kwwsyk.endinv.common.network.payloads.toClient.EndInvMetadata.getWith((com.kwwsyk.endinv.common.EndlessInventory) endInv));
+            }
         }
-        if (requireCompleteSets && plan.craftsWanted() <= 0) {
-            return;
-        }
-        performTransfer(container, plan, player, craftingSlots, inventorySlots, endInv);
-        manager.sendEndInvData();
     }
 
     @Nullable
-    public static PageMetaDataManager getServerManager(ServerPlayer player) {
+    public static PageMetaDataManager getServerManager(ServerPlayer player) {//todo DO NOT use get manager, use #getEndInvForPlayer
         return ServerLevelEndInv.checkAndGetManagerForPlayer(player).orElse(null);
     }
 
     private static TransferPlan createTransferPlan(
-            CraftingRecipe recipe,
-            List<Slot> craftingSlots,
+            Recipe<?> recipe,
+            List<Slot> recipeSlots,
             List<Slot> inventorySlots,
             SourceInventory endInv,
             boolean maxTransfer
     ) {
-        Ingredient[] layout = buildRecipeLayout(recipe);
+        Ingredient[] layout = buildRecipeLayout(recipe, recipeSlots.size());
+        return createTransferPlan(layout, recipeSlots, inventorySlots, endInv, maxTransfer);
+    }
+
+    private static TransferPlan createTransferPlan(
+            Ingredient[] layout,
+            List<Slot> recipeSlots,
+            List<Slot> inventorySlots,
+            SourceInventory endInv,
+            boolean maxTransfer
+    ) {
         List<ItemStack> pageItems = endInv.getItemsAsList();
-        ItemAvailability availability = ItemAvailability.build(inventorySlots, pageItems);
+        // Only consider EndInv (page) items for AEI transfer planning
+        ItemAvailability availability = ItemAvailability.build(Collections.emptyList(), pageItems);
         Reservation reservation = new Reservation();
         ItemStack[] chosenPerSlot = new ItemStack[layout.length];
         Arrays.fill(chosenPerSlot, ItemStack.EMPTY);
@@ -181,11 +225,11 @@ public final class AEIRecipeTransferHandler {
             AbstractContainerMenu container,
             TransferPlan plan,
             Player player,
-            List<Slot> craftingSlots,
+            List<Slot> recipeSlots,
             List<Slot> inventorySlots,
             SourceInventory endInv
     ) {
-        for (Slot cSlot : craftingSlots) {
+        for (Slot cSlot : recipeSlots) {
             if (!cSlot.hasItem()) continue;
             int count = cSlot.getItem().getCount();
             if (count <= 0) continue;
@@ -196,50 +240,52 @@ public final class AEIRecipeTransferHandler {
         }
 
         Ingredient[] layout = plan.layout();
-        for (int i = 0; i < Math.min(craftingSlots.size(), layout.length); i++) {
+        for (int i = 0; i < Math.min(recipeSlots.size(), layout.length); i++) {
             Ingredient ing = layout[i];
             if (ing.isEmpty()) continue;
-            Slot target = craftingSlots.get(i);
+            Slot target = recipeSlots.get(i);
             int toTake = plan.craftsWanted();
             if (toTake <= 0) continue;
 
             ItemStack chosen = plan.chosenPerSlot()[i];
             ItemStack placedStack = ItemStack.EMPTY;
 
-            for (Slot invSlot : inventorySlots) {
-                if (toTake <= 0) break;
-                if (!invSlot.hasItem()) continue;
-                ItemStack in = invSlot.getItem();
-                if (!(chosen.isEmpty() ? ing.test(in) : sameType(chosen, in))) continue;
-                int can = Math.min(toTake, in.getCount());
-                if (can <= 0) continue;
-                ItemStack taken = invSlot.safeTake(can, can, player);
-                if (!taken.isEmpty()) {
+            // For AEI transfer, pull items from EndInv first
+            ItemStack template = !chosen.isEmpty() ? chosen : (ing.getItems().length > 0 ? ing.getItems()[0] : ItemStack.EMPTY);
+            if (!template.isEmpty()) {
+                ItemStack extracted = endInv.takeItem(template, toTake);
+                if (!extracted.isEmpty()) {
                     if (placedStack.isEmpty()) {
-                        placedStack = taken;
-                    } else if (sameType(placedStack, taken)) {
-                        placedStack.grow(taken.getCount());
+                        placedStack = extracted;
+                    } else if (sameType(placedStack, extracted)) {
+                        placedStack.grow(extracted.getCount());
                     } else {
-                        player.getInventory().placeItemBackInInventory(taken);
-                        break;
+                        player.getInventory().placeItemBackInInventory(extracted);
                     }
-                    toTake -= taken.getCount();
+                    toTake -= extracted.getCount();
                 }
             }
 
+            // If EndInv couldn't fully satisfy (shouldn't happen due to planning), optionally top up from inventory
             if (toTake > 0) {
-                ItemStack template = !chosen.isEmpty() ? chosen : (ing.getItems().length > 0 ? ing.getItems()[0] : ItemStack.EMPTY);
-                if (!template.isEmpty()) {
-                    ItemStack extracted = endInv.takeItem(template, toTake);
-                    if (!extracted.isEmpty()) {
+                for (Slot invSlot : inventorySlots) {
+                    if (toTake <= 0) break;
+                    if (!invSlot.hasItem()) continue;
+                    ItemStack in = invSlot.getItem();
+                    if (!(chosen.isEmpty() ? ing.test(in) : sameType(chosen, in))) continue;
+                    int can = Math.min(toTake, in.getCount());
+                    if (can <= 0) continue;
+                    ItemStack taken = invSlot.safeTake(can, can, player);
+                    if (!taken.isEmpty()) {
                         if (placedStack.isEmpty()) {
-                            placedStack = extracted;
-                        } else if (sameType(placedStack, extracted)) {
-                            placedStack.grow(extracted.getCount());
+                            placedStack = taken;
+                        } else if (sameType(placedStack, taken)) {
+                            placedStack.grow(taken.getCount());
                         } else {
-                            player.getInventory().placeItemBackInInventory(extracted);
+                            player.getInventory().placeItemBackInInventory(taken);
+                            break;
                         }
-                        toTake -= extracted.getCount();
+                        toTake -= taken.getCount();
                     }
                 }
             }
@@ -265,18 +311,21 @@ public final class AEIRecipeTransferHandler {
         return Objects.equals(ta, tb);
     }
 
-    private static Ingredient[] buildRecipeLayout(CraftingRecipe recipe) {
-        Ingredient[] layout = new Ingredient[9];
+    private static Ingredient[] buildRecipeLayout(Recipe<?> recipe, int targetSlots) {
+        Ingredient[] layout = new Ingredient[targetSlots];
         Arrays.fill(layout, Ingredient.EMPTY);
         if (recipe instanceof ShapedRecipe shaped) {
-            int width = Math.min(3, shaped.getWidth());
-            int height = Math.min(3, shaped.getHeight());
+            int gridW = (targetSlots == 9) ? 3 : (targetSlots == 4 ? 2 : shaped.getWidth());
+            int gridH = gridW > 0 ? (targetSlots / gridW) : 0;
+            int width = Math.min(gridW, shaped.getWidth());
+            int height = Math.min(gridH, shaped.getHeight());
             List<Ingredient> ingredients = shaped.getIngredients();
             for (int y = 0; y < height; y++) {
                 for (int x = 0; x < width; x++) {
                     int srcIndex = y * shaped.getWidth() + x;
-                    if (srcIndex < ingredients.size()) {
-                        layout[y * 3 + x] = ingredients.get(srcIndex);
+                    int dstIndex = y * gridW + x;
+                    if (srcIndex < ingredients.size() && dstIndex < targetSlots) {
+                        layout[dstIndex] = ingredients.get(srcIndex);
                     }
                 }
             }
@@ -287,6 +336,29 @@ public final class AEIRecipeTransferHandler {
             }
         }
         return layout;
+    }
+
+    private static Ingredient[] buildLayoutFromRecipeSlots(IRecipeSlotsView slotsView, int targetSlots) {
+        Ingredient[] layout = new Ingredient[targetSlots];
+        Arrays.fill(layout, Ingredient.EMPTY);
+        int i = 0;
+        List<IRecipeSlotView> lst = slotsView.getSlotViews(RecipeIngredientRole.INPUT);
+        for (IRecipeSlotView slotView1 : lst) {
+            if (i >= targetSlots) break;
+            List<ItemStack> stacks = slotView1.getIngredients(VanillaTypes.ITEM_STACK).toList();
+            if (!stacks.isEmpty()) {
+                layout[i] = Ingredient.of(stacks.toArray(new ItemStack[0]));
+            }
+            i++;
+        }
+        return layout;
+    }
+
+    private static boolean allEmpty(Ingredient[] layout) {
+        for (Ingredient ing : layout) {
+            if (!ing.isEmpty()) return false;
+        }
+        return true;
     }
 
     private static Selection chooseBestCandidate(Ingredient ing, ItemAvailability availability, Reservation reservation) {
@@ -505,9 +577,12 @@ public final class AEIRecipeTransferHandler {
         @Nullable
         private static SourceInventory getAttachedInventory(AbstractContainerMenu container) {
             var attachment = ScreenAttachment.ATTACHMENT_MANAGER;
-            if (attachment == null) {
+            if (attachment == null) {//when jei's recipe handler screen is set, it will instantly change to null.
+                if (ModInfo.getServerConfig().transferMode().get() == ContentTransferMode.ALL) {
+                    return CachedSrcInv.INSTANCE;
+                }
                 return null;
-            }
+            }                        //  when TransferMode=PART, let #transferRecipe always return IRecipeTransferError.Type.COSMETIC to (allow dotransfer to) let server try moving item
             if (Minecraft.getInstance().player == null) {
                 return null;
             }

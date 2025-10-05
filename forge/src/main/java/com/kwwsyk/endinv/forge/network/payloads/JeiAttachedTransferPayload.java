@@ -9,7 +9,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.Slot;
-import net.minecraft.world.item.crafting.CraftingRecipe;
+import net.minecraft.world.item.crafting.Recipe;
 import net.minecraftforge.fml.ModList;
 
 import java.util.ArrayList;
@@ -76,14 +76,11 @@ public record JeiAttachedTransferPayload(TransferContext context) implements Mod
         if (optional.isEmpty()) {
             return;
         }
-        CraftingRecipe craftingRecipe = resolve(optional.get());
-        if (craftingRecipe == null) {
+        Recipe<?> recipe = resolve(optional.get());
+        if (recipe == null) {
             return;
         }
         var manager = AEIRecipeTransferHandler.getServerManager(player);
-        if (manager == null || manager.getMenu() != container) {
-            return;
-        }
         List<Slot> craftingSlots = collectSlots(container, context.craftingSlotIndexes());
         List<Slot> inventorySlots = collectSlots(container, context.inventorySlotIndexes());
         if (craftingSlots.size() != context.craftingSlotIndexes().size() ||
@@ -92,7 +89,7 @@ public record JeiAttachedTransferPayload(TransferContext context) implements Mod
         }
         AEIRecipeTransferHandler.performServerTransfer(
                 container,
-                craftingRecipe,
+                recipe,
                 craftingSlots,
                 inventorySlots,
                 player,
@@ -102,14 +99,14 @@ public record JeiAttachedTransferPayload(TransferContext context) implements Mod
         );
     }
 
-    private static CraftingRecipe resolve(Object recipeObj) {
-        if (recipeObj instanceof CraftingRecipe craftingRecipe) {
-            return craftingRecipe;
+    private static Recipe<?> resolve(Object recipeObj) {
+        if (recipeObj instanceof Recipe<?> recipe) {
+            return recipe;
         }
         try {
             Object value = recipeObj.getClass().getMethod("value").invoke(recipeObj);
-            if (value instanceof CraftingRecipe craftingRecipe) {
-                return craftingRecipe;
+            if (value instanceof Recipe<?> recipe) {
+                return recipe;
             }
         } catch (ReflectiveOperationException ignored) {
         }

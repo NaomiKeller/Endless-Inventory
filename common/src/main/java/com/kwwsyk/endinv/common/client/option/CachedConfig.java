@@ -79,7 +79,10 @@ public final class CachedConfig {
             columns = cachedLayout.columns() > 0 ? cachedLayout.columns() : PageData.DEFAULT.columns();
         }
 
-        cachedLayout = new PageData(rows,columns);
+        // Build layout using cached sort/search/page to keep state across screen reopen
+        CachedConfig.rows = rows;
+        CachedConfig.columns = columns;
+        cachedLayout = new PageData(pageRegKey, rows, columns, sortType, reverseSort, searching);
         layoutInitialized = true;
         return cachedLayout;
     }
@@ -92,7 +95,40 @@ public final class CachedConfig {
     }
 
     public static void updateLayout(PageData layout) {
-        cachedLayout = layout;
+        // Keep local cached knobs in sync as the UI changes
+        pageRegKey = layout.pageRegKey();
+        rows = layout.rows();
+        columns = layout.columns();
+        sortType = layout.sortType();
+        reverseSort = layout.reverseSort();
+        searching = layout.search();
+
+        cachedLayout = new PageData(pageRegKey, rows, columns, sortType, reverseSort, searching);
         layoutInitialized = true;
+    }
+
+    // Lightweight in-memory anchors for UI state
+    public static SortType sortType() { return sortType; }
+    public static void setSortType(SortType value) {
+        sortType = value == null ? SortType.DEFAULT : value;
+        cachedLayout = new PageData(pageRegKey, rows, columns, sortType, reverseSort, searching);
+    }
+
+    public static boolean reverseSort() { return reverseSort; }
+    public static void setReverseSort(boolean value) {
+        reverseSort = value;
+        cachedLayout = new PageData(pageRegKey, rows, columns, sortType, reverseSort, searching);
+    }
+
+    public static String searching() { return searching; }
+    public static void setSearching(String value) {
+        searching = value == null ? "" : value;
+        cachedLayout = new PageData(pageRegKey, rows, columns, sortType, reverseSort, searching);
+    }
+
+    public static String pageKey() { return pageRegKey; }
+    public static void setPageKey(String key) {
+        pageRegKey = key == null ? PageType.DEFAULT_KEY : key;
+        cachedLayout = new PageData(pageRegKey, rows, columns, sortType, reverseSort, searching);
     }
 }

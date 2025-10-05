@@ -32,6 +32,7 @@ public record StarItemPayload(ItemStack stack,boolean isAdding) implements ModPa
             }else {
                 endInv.affinities.removeStarredItem(stack());
             }
+            endInv.setChanged();
         });
     }
 }

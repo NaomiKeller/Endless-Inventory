@@ -39,10 +39,13 @@ public record CreativeItemModPayload(ItemStack stack, boolean isAdding) implemen
             PageMetaDataManager manager = optional.get();
             if(isAdding){
                 manager.getSourceInventory().addItem(stack);
-
             }else {
                 ItemStack taken = manager.getSourceInventory().takeItem(stack);
                 if(!taken.isEmpty()) player.containerMenu.setCarried(taken);
+            }
+            // Persist server-side changes for creative modifications
+            if (manager.getSourceInventory() instanceof com.kwwsyk.endinv.common.EndlessInventory ei) {
+                ei.setChanged();
             }
         }
     }

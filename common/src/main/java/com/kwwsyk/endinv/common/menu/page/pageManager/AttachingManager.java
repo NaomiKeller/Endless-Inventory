@@ -151,7 +151,21 @@ public class AttachingManager implements PageMetaDataManager{
 
     @Override
     public void sendEndInvData() {
-        ModInfo.getPacketDistributor().sendToPlayer(player,EndInvMetadata.getWith(endinv));
+        var distributor = ModInfo.getPacketDistributor();
+        var cfg = ModInfo.getServerConfig();
+        distributor.sendToPlayer(player, EndInvMetadata.getWith(endinv));
+        switch (cfg.transferMode().get()) {
+            case ALL -> distributor.sendToPlayer(player, new com.kwwsyk.endinv.common.network.payloads.toClient.EndInvContent(endinv.getItemMap()));
+            case PART -> {
+                int length = rows * columns;
+                var view = endinv.getSortedAndFilteredItemView(0, length, sortType, reverseSort, getDisplayingPageType().itemClassify, searching);
+                net.minecraft.core.NonNullList<net.minecraft.world.item.ItemStack> stacks = net.minecraft.core.NonNullList.withSize(length, net.minecraft.world.item.ItemStack.EMPTY);
+                for (int i = 0; i < view.size() && i < length; ++i) {
+                    stacks.set(i, view.get(i));
+                }
+                distributor.sendToPlayer(player, new com.kwwsyk.endinv.common.network.payloads.toClient.SetItemDisplayContentPayload(stacks));
+            }
+        }
     }
 
     @Override

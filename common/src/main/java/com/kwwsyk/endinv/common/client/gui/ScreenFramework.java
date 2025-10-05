@@ -2,7 +2,6 @@ package com.kwwsyk.endinv.common.client.gui;
 
 import com.kwwsyk.endinv.common.ModInfo;
 import com.kwwsyk.endinv.common.client.ClientModInfo;
-import com.kwwsyk.endinv.common.client.KeyMappings;
 import com.kwwsyk.endinv.common.client.gui.bg.FromResource;
 import com.kwwsyk.endinv.common.client.gui.bg.SFBgRenderer;
 import com.kwwsyk.endinv.common.client.gui.bg.ScreenRectangleWidgetParam;
@@ -17,9 +16,7 @@ import com.kwwsyk.endinv.common.client.option.TextureMode;
 import com.kwwsyk.endinv.common.network.payloads.PageData;
 import com.kwwsyk.endinv.common.network.payloads.toServer.CreativeItemModPayload;
 import com.kwwsyk.endinv.common.network.payloads.toServer.QuickMoveToPagePayload;
-import com.kwwsyk.endinv.common.network.payloads.toServer.StarItemPayload;
 import com.kwwsyk.endinv.common.util.SortType;
-import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -36,12 +33,10 @@ import org.jetbrains.annotations.NotNull;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 
 import static com.kwwsyk.endinv.common.client.ClientModInfo.containerScreenHelper;
-import static com.kwwsyk.endinv.common.client.ClientModInfo.inputHandler;
 
 public class ScreenFramework {
 
@@ -184,17 +179,19 @@ public class ScreenFramework {
     }
 
     private void addWidgets() {
-        this.configButton = Button.builder(Component.literal("⚙"),
+        this.configButton = Button.builder(Component.literal("�?),
                         btn -> {
                             mc.setScreen(ClientModInfo.createConfigScreen(screen));
                         })
                 .pos(this.configButtonParam.XPos(), this.configButtonParam.YPos())
                 .size(this.configButtonParam.XSize(), this.configButtonParam.YSize())
                 .build();
-        this.reverseSortButton = Button.builder(Component.literal("⇅"),
+        this.reverseSortButton = Button.builder(Component.literal("�?),
                         btn -> {
                             meta.switchSortReversed();
-
+                            CachedConfig.setReverseSort(meta.isSortReversed());
+                            CachedConfig.updateLayout(meta.getPageData());
+                            meta.getDisplayingPage().initializeContents();
                             meta.getDisplayingPage().sendChangesToServer();
                         }
                 )
@@ -287,6 +284,8 @@ public class ScreenFramework {
         //meta.getDisplayingPage().syncContentToServer();
         this.searchBox.setVisible(meta.getDisplayingPage().hasSearchbox());
         this.sortTypeSwitchBox.visible = meta.getDisplayingPage().hasSortTypeSwitchBar();
+        CachedConfig.setPageKey(meta.getDisplayingPageId());
+        CachedConfig.updateLayout(meta.getPageData());
     }
 
     private boolean isHovering(Slot slot, double mouseX, double mouseY) {
@@ -333,6 +332,8 @@ public class ScreenFramework {
             meta.getDisplayingPage().tryInsertItem(itemStack);
             ModInfo.getPacketDistributor().sendToServer(new CreativeItemModPayload(itemStack, true));
         } else {
+            boolean canAttach = (screen instanceof EndlessInventoryScreen) || com.kwwsyk.endinv.common.client.option.MenuAttachabilityCache.isAttachable(screen);
+            if (!canAttach) return;
             ItemStack remain = meta.getDisplayingPage().tryInsertItem(itemStack);
             clicked.setByPlayer(remain);
             clicked.onTake(meta.getPlayer(), itemStack);
@@ -342,24 +343,13 @@ public class ScreenFramework {
                                     : clicked.index
                     )
             );
-            //ModInfo.getPacketDistributor().sendToServer(new QuickMoveToPagePayload(clicked.index));
-        }// ↑ should use slot.getContainerSlot() instead of getSlotIndex()
-        if (meta.getDisplayingPage() instanceof ItemPage itemPage) {//or I should add DisplayPage#ItemQuickMovedIn
+        }// should use slot.getContainerSlot() instead of getSlotIndex()
+        if (meta.getDisplayingPage() instanceof ItemPage itemPage) {
             itemPage.requestRemoteContents();//send such payloads will not let server send contents
         }//another aspect is to check whether contents are synced across server and client
     }
 
     /**<p>Get correspond slot index between client creative menu and server player's inventory menu</p>
-     * When client player is in {@link CreativeModeInventoryScreen.ItemPickerMenu} player on server only holds {@link net.minecraft.world.inventory.InventoryMenu}<br>
-     * <p>
-     * In {@code ItemPickerMenu} there are two situations:<br>
-     *     1.When player is picking items in tab, there are 9*5+9 slots, slot in hotbar starts with index 45 ends with 53.<br>
-     *     2.When player is in "Survival Inventory", the {@code slot.index} is always 0, only {@link Slot#getContainerSlot()} is valid.<br>
-     *     To be noticed, {@link Slot#getSlotIndex()} returns same value {@code Slot.slot} but it only exists in Forge's lib. This means use this in Fabric running will throw {@link NoSuchMethodError}</p>
-     * @param clicked slot clicked in Inventory by creative player on client.
-     * @return slot index that can locate correspond inventory slot used in {@link QuickMoveToPagePayload}
-     */
-    private int getItemPickerMenuSlotOffset(Slot clicked){
         int originalIndex = clicked.index;
         if(originalIndex==0 && clicked.getContainerSlot() >0) return clicked.getContainerSlot();
         if(originalIndex<45) return originalIndex;
@@ -502,7 +492,9 @@ public class ScreenFramework {
     public void refreshSearchResults() {
         String searching = searchBox.getValue();
         meta.setSearching(searching);
+        CachedConfig.setSearching(searching);
         CachedConfig.updateLayout(meta.getPageData());
+        meta.getDisplayingPage().initializeContents();
         meta.getDisplayingPage().release();
         meta.getDisplayingPage().sendChangesToServer();
     }

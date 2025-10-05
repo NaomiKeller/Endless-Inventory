@@ -166,9 +166,11 @@ public class EndlessInventoryScreen extends AbstractContainerScreen<EndlessInven
     @Override
     public void switchSortTypeTo(SortType type) {
         menu.sortType = type;
+        CachedConfig.setSortType(type);
         CachedConfig.updateLayout(menu.getPageData());
         if (frameWork != null && frameWork.meta != null) {
             var page = frameWork.meta.getDisplayingPage();
+            page.initializeContents();
             page.release();
             page.sendChangesToServer();
         }

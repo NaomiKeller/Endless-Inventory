@@ -1,5 +1,6 @@
 package com.kwwsyk.endinv.common.client.gui;
 
+import com.kwwsyk.endinv.common.ModInfo;
 import com.kwwsyk.endinv.common.SourceInventory;
 import com.kwwsyk.endinv.common.client.CachedSrcInv;
 import com.kwwsyk.endinv.common.client.gui.page.DisplayPage;
@@ -7,6 +8,7 @@ import com.kwwsyk.endinv.common.client.option.CachedConfig;
 import com.kwwsyk.endinv.common.menu.page.pageManager.PageMetaDataManager;
 import com.kwwsyk.endinv.common.menu.page.pageManager.PageQuickMoveHandler;
 import com.kwwsyk.endinv.common.network.payloads.PageData;
+import com.kwwsyk.endinv.common.network.payloads.toServer.OpenEndInvPayload;
 import com.kwwsyk.endinv.common.util.SortType;
 import com.mojang.logging.LogUtils;
 import net.minecraft.client.Minecraft;
@@ -186,6 +188,9 @@ public class AttachingScreen<T extends AbstractContainerMenu> implements SortTyp
     public void init(IScreenEvent event){
         this.frameWork = ScreenFramework.getInstance()==null ? new ScreenFramework(this) : ScreenFramework.getInstance();
         frameWork.addWidgetToScreen(event::addListener);
+        // Ensure server-side manager attaches for the current menu so actions like quick-move are authoritative
+        CachedConfig.readAndSyncClientConfigToServer(false);
+        ModInfo.getPacketDistributor().sendToServer(new OpenEndInvPayload(false, rows));
     }
 
     public void renderPre(IScreenEvent event) {
@@ -260,7 +265,9 @@ public class AttachingScreen<T extends AbstractContainerMenu> implements SortTyp
     @Override
     public void switchSortTypeTo(SortType type) {
         this.sortType = type;
+        CachedConfig.setSortType(type);
         CachedConfig.updateLayout(pageMetadata.getPageData());
+        pageMetadata.getDisplayingPage().initializeContents();
         pageMetadata.getDisplayingPage().release();
         pageMetadata.getDisplayingPage().sendChangesToServer();
     }
