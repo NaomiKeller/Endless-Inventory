@@ -26,7 +26,7 @@ import static com.kwwsyk.endinv.common.ModRegistries.NbtAttachments.getSyncedCon
 public final class ScreenAttachment {
 
     @Nullable
-    private static AttachingScreen<?> attachment;
+    public static AttachingScreen<?> attachment;
 
     private ScreenAttachment() {
     }

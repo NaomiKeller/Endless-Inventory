@@ -39,9 +39,6 @@ public final class ScreenDebug {
             return;
         }
         Minecraft minecraft = Minecraft.getInstance();
-        if (minecraft == null) {
-            return;
-        }
         graphics.fill(0, 0, screen.width, screen.height, OVERLAY_COLOR);
         graphics.drawString(minecraft.font, HIDE_MESSAGE, 0, 0, 0xFFFFAA00);
     }

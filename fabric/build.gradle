@@ -35,9 +35,9 @@ fabricApi {
     }
 }
 sourceSets {
-    main {
-        resources.srcDir project(':common').file('src/main/resources')
-    }
+//    main {
+//        resources.srcDir project(':common').file('src/main/resources')
+//    }
 }
 
 repositories {
@@ -59,7 +59,8 @@ dependencies {
     implementation(project(":common")) {
         exclude group: "net.minecraftforge"
     }
-    include project(':common')
+    //include(project(":common"))
+    //jarJar project(":common")
     // To change the versions see the gradle.properties file
     minecraft "com.mojang:minecraft:${minecraft_version}"
     mappings loom.layered {
@@ -107,7 +108,9 @@ java {
     // If you remove this line, sources will not be generated.
     withSourcesJar()
 }
+
 jar {
+    from(project(':common').sourceSets.main.output)
     from("LICENSE") {
         rename { "${it}_${project.archivesBaseName}"}
     }

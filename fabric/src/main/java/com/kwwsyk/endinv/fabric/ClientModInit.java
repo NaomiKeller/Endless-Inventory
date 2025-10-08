@@ -16,6 +16,7 @@ import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import org.lwjgl.glfw.GLFW;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -27,7 +28,7 @@ public class ClientModInit extends AbstractClientModInitializer implements Clien
     @Override
     public void onInitializeClient() {
         registerKey(KeyMappings.OPEN_MENU);
-        registerKey(KeyMappings.QUICK_MOVE);
+        registerEmptyKey(KeyMappings.QUICK_MOVE);
         registerKey(KeyMappings.STAR_ITEM);
         FabricNetworking.initClient();
         ClientEvents.register();
@@ -49,16 +50,27 @@ public class ClientModInit extends AbstractClientModInitializer implements Clien
             @Override
             public boolean isActiveAndMatches(KeyMappings.EndInvKey endInvKey, InputConstants.Key key) {
                 KeyMapping mapping = REGISTERED_KEYS.computeIfAbsent(endInvKey, ClientModInit::registerKey);
-                if (!matchesKey(mapping, key)) {
-                    return false;
-                }
                 if (!conditionMatches(endInvKey)) {
                     return false;
                 }
-                if (endInvKey.modifier() == KeyMappings.Modifier.CTRL) {
+
+                boolean boundMatch = matchesKey(mapping, key);
+                if (boundMatch) {
+                    // If user set a dedicated key, do not require extra CTRL.
+                    if (endInvKey.modifier() == KeyMappings.Modifier.CTRL && endInvKey != KeyMappings.QUICK_MOVE) {
+                        return Screen.hasControlDown();
+                    }
+                    return true;
+                }
+
+                // Fallback: if no dedicated key matched and this is QUICK_MOVE,
+                // allow Ctrl + Left Click inside GUI.
+                if (endInvKey == KeyMappings.QUICK_MOVE
+                        && key.getType() == InputConstants.Type.MOUSE
+                        && key.getValue() == GLFW.GLFW_MOUSE_BUTTON_1) {
                     return Screen.hasControlDown();
                 }
-                return true;
+                return false;
             }
         };
     }
@@ -105,6 +117,13 @@ public class ClientModInit extends AbstractClientModInitializer implements Clien
 
     private static KeyMapping registerKey(KeyMappings.EndInvKey key) {
         KeyMapping mapping = new KeyMapping(key.key(), key.type(), key.keyCode(), KeyMappings.CATEGORY);
+        KeyBindingHelper.registerKeyBinding(mapping);
+        REGISTERED_KEYS.put(key, mapping);
+        return mapping;
+    }
+
+    private static KeyMapping registerEmptyKey(KeyMappings.EndInvKey key) {
+        KeyMapping mapping = new KeyMapping(key.key(), InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_UNKNOWN, KeyMappings.CATEGORY);
         KeyBindingHelper.registerKeyBinding(mapping);
         REGISTERED_KEYS.put(key, mapping);
         return mapping;

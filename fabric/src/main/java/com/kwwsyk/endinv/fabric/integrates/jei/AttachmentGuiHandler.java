@@ -14,7 +14,7 @@ public class AttachmentGuiHandler implements IGuiContainerHandler<AbstractContai
 
     @Override
     public List<Rect2i> getGuiExtraAreas(AbstractContainerScreen<?> containerScreen) {
-        AttachingScreen<?> attachingScreen = ScreenAttachment.ATTACHMENT_MANAGER;
+        AttachingScreen<?> attachingScreen = ScreenAttachment.attachment;
         if(attachingScreen !=null){
             return attachingScreen.getArea();
         }
