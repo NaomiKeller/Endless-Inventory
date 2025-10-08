@@ -78,3 +78,12 @@ Changed core logic of DisplayPage,ItemPage and their subclasses and some payload
 
 ## 9.27 1.1.0-Pre2
 \[Forge] Added curios mod integration: Curio classify page.
+
+## 10.8 1.1.0-Pre3
+Fixed:
+- Update is not instant when SortType and search is switched.
+- Fabric: launch and attack
+
+todo: check every feature and utilities to reduce bugs; jei's mixined recipe transfer
+fabric: search; equipment page's arrangement
+forge: quick move item in survival mode will not sync to server, fabric has no such problem
