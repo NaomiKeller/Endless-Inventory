@@ -18,10 +18,13 @@ public class ItemDisplay extends ItemPage{
     }
 
     public void refreshItems(){
-        if(!suppressRefresh) requestRemoteContents();
+        requestRemoteContents();
         readCachedItems();
     }
 
+    /**
+     * Read items data from {@link CachedSrcInv} when transfer mode is {@code ALL} and rebuild the view.
+     */
     public void readCachedItems(){
         List<ItemStack> view = CachedSrcInv.INSTANCE.getSortedAndFilteredItemView(startIndex,length,
                 meta.sortType(), meta.isSortReversed(),
@@ -33,6 +36,10 @@ public class ItemDisplay extends ItemPage{
         sendChangesToServer();
     }
 
+    /**
+     * Build Displayed view with a ItemStack list.
+     * @param stacks itemstack list to fill the view
+     */
     public void buildContentsWith(@NotNull List<ItemStack> stacks){
         if(holdOn){
             inQueueStacks = stacks;

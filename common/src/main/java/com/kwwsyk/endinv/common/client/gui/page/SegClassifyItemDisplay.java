@@ -11,6 +11,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 
 import java.util.ArrayList;
@@ -53,9 +54,39 @@ public class SegClassifyItemDisplay extends ItemDisplay {
         this.keepClassifiedItemInNextSeg = keepClassifiedItemInNextSeg;
     }
 
+    public void readCachedItems() {
+        List<ItemStack> source = CachedSrcInv.INSTANCE.getSortedAndFilteredItemView(
+                0,
+                Integer.MAX_VALUE,
+                meta.sortType(),
+                meta.isSortReversed(),
+                getClassify(),
+                meta.searching());
+        buildContentsWith(source);
+    }
+
+    /**
+     * Build Displayed view with a ItemStack list.
+     *
+     * @param stacks itemstack list to fill the view
+     */
     @Override
-    public void refreshItems() {
-        reloadViewFromCache();
+    public void buildContentsWith(@NotNull List<ItemStack> stacks) {
+        if(holdOn){
+            inQueueStacks = stacks;
+            return;
+        }
+        rebuildSegments(stacks);
+    }
+
+    private void buildContentDirectly(List<ItemStack> stacks){
+        for(int i=0; i<this.length; ++i){
+            if(i<stacks.size() && stacks.get(i) != null) {
+                this.items.set(i, stacks.get(i).copy());
+            }else {
+                this.items.set(i,ItemStack.EMPTY);
+            }
+        }
     }
 
     @Override
@@ -120,7 +151,7 @@ public class SegClassifyItemDisplay extends ItemDisplay {
     public ItemStack takeItem(ItemStack itemStack, int count) {
         setChanged();
         ItemStack result = this.srcInv.takeItem(itemStack, count);
-        reloadViewFromCache();
+        readCachedItems();
         return result;
     }
 
@@ -136,7 +167,7 @@ public class SegClassifyItemDisplay extends ItemDisplay {
         }
         setChanged();
         ItemStack result = srcInv.takeItem(itemStack, count);
-        reloadViewFromCache();
+        readCachedItems();
         return result;
     }
 
@@ -147,19 +178,8 @@ public class SegClassifyItemDisplay extends ItemDisplay {
         }
         setChanged();
         ItemStack remain = srcInv.addItem(itemStack.copy());
-        reloadViewFromCache();
+        readCachedItems();
         return remain;
-    }
-
-    private void reloadViewFromCache() {
-        List<ItemStack> source = CachedSrcInv.INSTANCE.getSortedAndFilteredItemView(
-                0,
-                Integer.MAX_VALUE,
-                meta.sortType(),
-                meta.isSortReversed(),
-                getClassify(),
-                meta.searching());
-        rebuildSegments(source);
     }
 
     private void rebuildSegments(List<ItemStack> source) {
@@ -174,7 +194,7 @@ public class SegClassifyItemDisplay extends ItemDisplay {
             filtered.add(stack.copy());
         }
         if (filtered.isEmpty()) {
-            buildContentsWith(List.of());
+            buildContentDirectly(List.of());
             return;
         }
 
@@ -247,7 +267,7 @@ public class SegClassifyItemDisplay extends ItemDisplay {
         int fromIndex = Math.min(startIndex, segmentedView.size());
         int toIndex = Math.min(fromIndex + length, segmentedView.size());
         List<ItemStack> slice = segmentedView.subList(fromIndex, toIndex);
-        buildContentsWith(slice);
+        buildContentDirectly(slice);
         pageSeparatorRows.clear();
         if (!segmentStartSlots.isEmpty()) {
             int firstRow = fromIndex / columns;

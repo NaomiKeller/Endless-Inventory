@@ -44,8 +44,6 @@ public abstract class ItemPage extends DisplayPage {
 
     protected int length;
 
-    protected boolean suppressRefresh = false;
-
     protected List<ItemStack> inQueueStacks = null;
 
     public ItemPage(PageType pageType, PageMetaDataManager metaDataManager) {
@@ -118,11 +116,6 @@ public abstract class ItemPage extends DisplayPage {
 
     public boolean isEmpty() {
         return items.stream().allMatch(ItemStack::isEmpty);
-    }
-
-    @Override
-    public void setChanged() {
-        this.suppressRefresh = false;
     }
 
     @Override

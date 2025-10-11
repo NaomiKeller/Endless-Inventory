@@ -8,6 +8,10 @@ import net.minecraft.world.item.ItemStack;
 
 import java.util.List;
 
+/**Packet that contains required {@link ItemDisplay}'s content view
+ *  when {@code TransferMode==PART}
+ * @param stacks
+ */
 public record SetItemDisplayContentPayload(List<ItemStack> stacks) implements ModPacketPayload {
 
     public static void encode(SetItemDisplayContentPayload payload, FriendlyByteBuf o){
