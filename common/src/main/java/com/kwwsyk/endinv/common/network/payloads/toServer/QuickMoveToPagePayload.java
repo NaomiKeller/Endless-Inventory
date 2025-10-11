@@ -28,8 +28,10 @@ public record QuickMoveToPagePayload(int slotId) implements ModPacketPayload {
         var optional = ServerLevelEndInv.checkAndGetManagerForPlayer(player);
         optional.ifPresent(manager -> {
             AbstractContainerMenu menu = manager.getMenu();
-            Slot slot = menu.getSlot(slotId);
-            manager.slotQuickMoved(slot);
+            if (slotId >= 0 && slotId < menu.slots.size()) {
+                Slot slot = menu.getSlot(slotId);
+                manager.slotQuickMoved(slot);
+            }
         });
     }
 }
