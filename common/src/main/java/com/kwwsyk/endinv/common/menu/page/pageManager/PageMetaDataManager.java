@@ -58,11 +58,11 @@ public interface PageMetaDataManager {
 
     PageType getDisplayingPageType();
 
-    default void slotQuickMoved(Slot clicked) {
-        ItemStack itemStack = clicked.getItem();
+    default void slotQuickMoved(Slot slot) {
+        ItemStack itemStack = slot.getItem();
         ItemStack remain = getSourceInventory().addItem(itemStack);
-        clicked.setByPlayer(remain);
-        clicked.onTake(getPlayer(), itemStack);
+        slot.setByPlayer(remain);
+        slot.onTake(getPlayer(), itemStack);
     }
 
     default PageData getPageData(){

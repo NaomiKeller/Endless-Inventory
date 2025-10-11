@@ -9,7 +9,7 @@ import net.minecraft.network.FriendlyByteBuf;
  * Synced endless inventory config data shared between client preferences and the server.
  * Only minimal flags remain after refactor; layout data lives purely on the client.
  */
-public record SyncedConfig(boolean attaching, boolean autoPicking) implements ModPacketPayload {//TODO Illegal state exists in game of [false,true] but in fact [false, true], this shall be deprecated.
+public record SyncedConfig(boolean attaching, boolean autoPicking) implements ModPacketPayload {//TODO Illegal state exists in game of [false,true] but in fact [true,false], this shall be deprecated.
 
     public static final SyncedConfig DEFAULT = new SyncedConfig(true, true);
     public static final Codec<SyncedConfig> CODEC = RecordCodecBuilder.create(instance ->

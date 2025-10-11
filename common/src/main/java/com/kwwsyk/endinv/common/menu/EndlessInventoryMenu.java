@@ -794,22 +794,22 @@ public class EndlessInventoryMenu extends AbstractContainerMenu implements PageM
      * Handle ctrl-click quick move by pushing items straight into the endless inventory pages.
      */
     @Override
-    public void slotQuickMoved(Slot clicked) {
-        if (!clicked.hasItem()) {
+    public void slotQuickMoved(Slot slot) {
+        if (!slot.hasItem()) {
             return;
         }
-        ItemStack stack = clicked.getItem();
+        ItemStack stack = slot.getItem();
         int moved = insertStackIntoPage(stack);
         if (moved <= 0) {
             return;
         }
         if (stack.isEmpty()) {
-            clicked.setByPlayer(ItemStack.EMPTY);
+            slot.setByPlayer(ItemStack.EMPTY);
         } else {
-            clicked.setChanged();
+            slot.setChanged();
         }
-        clicked.onTake(player, stack);
-        if (clicked.container == craftMatrix || clicked.container == craftResult) {
+        slot.onTake(player, stack);
+        if (slot.container == craftMatrix || slot.container == craftResult) {
             craftMatrix.setChanged();
             updateCraftingResult();
         }
