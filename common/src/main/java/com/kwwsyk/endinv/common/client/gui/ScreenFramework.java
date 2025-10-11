@@ -342,12 +342,12 @@ public class ScreenFramework {
             ItemStack remain = meta.getDisplayingPage().tryInsertItem(itemStack);
             clicked.setByPlayer(remain);
             clicked.onTake(meta.getPlayer(), itemStack);
-            ModInfo.getPacketDistributor().sendToServer(
-                    new QuickMoveToPagePayload(
-                            menu instanceof CreativeModeInventoryScreen.ItemPickerMenu ? getItemPickerMenuSlotOffset(clicked)
-                                    : clicked.index
-                    )
-            );
+            int payloadId = menu instanceof CreativeModeInventoryScreen.ItemPickerMenu
+                    ? getItemPickerMenuSlotOffset(clicked)
+                    : menu.slots.indexOf(clicked);
+            if (payloadId >= 0) {
+                ModInfo.getPacketDistributor().sendToServer(new QuickMoveToPagePayload(payloadId));
+            }
         }// should use slot.getContainerSlot() instead of getSlotIndex()
         if (meta.getDisplayingPage() instanceof ItemPage itemPage) {
             itemPage.requestRemoteContents();//send such payloads will not let server send contents
