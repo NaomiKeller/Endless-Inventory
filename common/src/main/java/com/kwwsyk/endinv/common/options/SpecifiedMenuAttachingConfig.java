@@ -4,8 +4,12 @@ import com.kwwsyk.endinv.common.ModInfo;
 import com.mojang.logging.LogUtils;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.InventoryMenu;
 import net.minecraft.world.inventory.MenuType;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -84,6 +88,15 @@ public class SpecifiedMenuAttachingConfig {
         if(type==null) return isInventoryAttachable();
         Boolean menuConfig = getMenuConfig(type);
         return menuConfig!=null ? menuConfig : ModInfo.getServerConfig().enableAttaching().get();
+    }
+
+    public boolean isMenuAttachable(AbstractContainerMenu menu){
+        if(menu instanceof InventoryMenu || menu instanceof CreativeModeInventoryScreen.ItemPickerMenu) return isInventoryAttachable();
+        return isMenuAttachable(menu.getType());
+    }
+
+    public boolean attachable(Player player){
+        return isMenuAttachable(player.containerMenu);
     }
 
     /**

@@ -1,6 +1,7 @@
 package com.kwwsyk.endinv.common.client.gui.page;
 
 import com.kwwsyk.endinv.common.client.CachedSrcInv;
+import com.kwwsyk.endinv.common.client.option.CachedConfig;
 import com.kwwsyk.endinv.common.menu.page.PageType;
 import com.kwwsyk.endinv.common.menu.page.pageManager.PageMetaDataManager;
 import com.kwwsyk.endinv.common.network.payloads.toServer.ItemClickPayload;
@@ -58,10 +59,10 @@ public class SegClassifyItemDisplay extends ItemDisplay {
         List<ItemStack> source = CachedSrcInv.INSTANCE.getSortedAndFilteredItemView(
                 0,
                 Integer.MAX_VALUE,
-                meta.sortType(),
-                meta.isSortReversed(),
+                CachedConfig.sortType(),
+                CachedConfig.reverseSort(),
                 getClassify(),
-                meta.searching());
+                CachedConfig.searching());
         buildContentsWith(source);
     }
 

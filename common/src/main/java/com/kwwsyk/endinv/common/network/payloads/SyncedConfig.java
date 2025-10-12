@@ -8,10 +8,17 @@ import net.minecraft.network.FriendlyByteBuf;
 /**
  * Synced endless inventory config data shared between client preferences and the server.
  * Only minimal flags remain after refactor; layout data lives purely on the client.
+ * <p>
+ *     Since 1.1.0, attaching filed only presents player's client attaching config.<br>
+ *     To check whether player is able to attach
+ * </p>
+ *
+ *
+ * @param attaching presents player's client attaching config.
  */
 public record SyncedConfig(boolean attaching, boolean autoPicking) implements ModPacketPayload {//TODO Illegal state exists in game of [false,true] but in fact [true,false], this shall be deprecated.
 
-    public static final SyncedConfig DEFAULT = new SyncedConfig(true, true);
+    public static final SyncedConfig DEFAULT = new SyncedConfig(true, false);
     public static final Codec<SyncedConfig> CODEC = RecordCodecBuilder.create(instance ->
             instance.group(
                     Codec.BOOL.optionalFieldOf("attaching", true).forGetter(SyncedConfig::attaching),

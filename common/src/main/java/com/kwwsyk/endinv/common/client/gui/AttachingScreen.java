@@ -32,7 +32,7 @@ import java.util.List;
  * @since 2025-6-4
  * @version 1.0.5
  */
-public class AttachingScreen<T extends AbstractContainerMenu> implements SortTypeSwitcher{
+public class AttachingScreen<T extends AbstractContainerMenu>{
 
     public static AttachingScreen<?> INSTANCE;
 
@@ -66,7 +66,7 @@ public class AttachingScreen<T extends AbstractContainerMenu> implements SortTyp
         @Override
         public void switchPageWithIndex(int index) {
             displayingPage = pages.get(index);
-            CachedConfig.updateLayout(getPageData());
+            CachedConfig.setDisplayingPageKey(getDisplayingPageId());
             displayingPage.initializeContents();
         }
 
@@ -148,7 +148,6 @@ public class AttachingScreen<T extends AbstractContainerMenu> implements SortTyp
 
     private final PageQuickMoveHandler quickMoveHandler;
 
-    private boolean isHoveringOnSortBox;
 
     private DisplayPage displayingPage;
 
@@ -179,7 +178,6 @@ public class AttachingScreen<T extends AbstractContainerMenu> implements SortTyp
         this.searching = data.search();
         this.reverseSort = data.reverseSort();
         this.pageMetadata.switchPageWithId(data.pageRegKey());
-        CachedConfig.updateLayout(data);
         this.quickMoveHandler = new PageQuickMoveHandler(this.pageMetadata);
         INSTANCE = this;
     }
@@ -194,7 +192,6 @@ public class AttachingScreen<T extends AbstractContainerMenu> implements SortTyp
     }
 
     public void renderPre(IScreenEvent event) {
-        this.isHoveringOnSortBox = false;
     }
 
     public void render(IScreenEvent event) {
@@ -262,32 +259,10 @@ public class AttachingScreen<T extends AbstractContainerMenu> implements SortTyp
         LOGGER.info("Attached Screen {} closed with reason: {}", this, reason);
     }
 
-    @Override
-    public void switchSortTypeTo(SortType type) {
-        this.sortType = type;
-        CachedConfig.setSortType(type);
-        CachedConfig.updateLayout(pageMetadata.getPageData());
-        pageMetadata.getDisplayingPage().initializeContents();
-        pageMetadata.getDisplayingPage().release();
-        pageMetadata.getDisplayingPage().sendChangesToServer();
-    }
-
-    @Override
-    public void setHoveringOnSortBox(boolean isHovering) {
-        this.isHoveringOnSortBox  = isHovering;
-    }
-
-    @Override
-    public boolean isHoveringOnSortBox() {
-        return isHoveringOnSortBox;
-    }
-
-    @Override
     public PageMetaDataManager getPageManager() {
         return pageMetadata;
     }
 
-    @Override
     public AbstractContainerScreen<?> getScreen() {
         return screen;
     }

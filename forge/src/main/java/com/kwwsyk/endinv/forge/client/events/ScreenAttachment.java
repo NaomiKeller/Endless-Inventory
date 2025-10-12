@@ -1,6 +1,7 @@
 package com.kwwsyk.endinv.forge.client.events;
 
 import com.kwwsyk.endinv.common.ModInfo;
+import com.kwwsyk.endinv.common.client.ClientModInfo;
 import com.kwwsyk.endinv.common.client.gui.AttachingScreen;
 import com.kwwsyk.endinv.common.client.gui.EndlessInventoryScreen;
 import com.kwwsyk.endinv.common.client.gui.IScreenEvent;
@@ -30,7 +31,7 @@ public class ScreenAttachment {
         if(event.getScreen() instanceof AbstractContainerScreen<?> screen){
             Player player = screen.getMinecraft().player;
             if(player==null) return null;
-            if(!getSyncedConfig().getWith(player).attaching()) {
+            if(!ClientModInfo.getClientConfig().attaching().get()) {
                 ATTACHMENT_MANAGER = null;
                 return null;
             }

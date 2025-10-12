@@ -20,7 +20,6 @@ import java.util.stream.Stream;
 import static com.kwwsyk.endinv.common.ModInfo.getServerConfig;
 
 /**Holder of core and shared ({@link EndlessInventory}&{@link com.kwwsyk.endinv.common.client.CachedSrcInv} endless INVENTORY logic.
- * TODO improve the logic to be THREAD-SAFE and EFFECTIVE
  */
 public abstract class SourceInventory {
 

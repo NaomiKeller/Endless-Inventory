@@ -1,10 +1,8 @@
 package com.kwwsyk.endinv.common.client.gui;
 
 import com.kwwsyk.endinv.common.ModInfo;
-import com.kwwsyk.endinv.common.client.option.CachedConfig;
 import com.kwwsyk.endinv.common.menu.EndlessInventoryMenu;
 import com.kwwsyk.endinv.common.network.payloads.toServer.ToggleCraftingPayload;
-import com.kwwsyk.endinv.common.util.SortType;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.CycleButton;
 import net.minecraft.client.gui.components.events.GuiEventListener;
@@ -18,12 +16,11 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 @SuppressWarnings("removal")
-public class EndlessInventoryScreen extends AbstractContainerScreen<EndlessInventoryMenu> implements SortTypeSwitcher {
+public class EndlessInventoryScreen extends AbstractContainerScreen<EndlessInventoryMenu> {
     private static final ResourceLocation CRAFTING_TEXTURE = new ResourceLocation("minecraft", "textures/gui/container/crafting_table.png");
     private ScreenFramework frameWork;
     private CycleButton<Boolean> craftingToggleButton;
     private boolean craftingVisible;
-    public boolean isHoveringOnSortBox;
 
     public EndlessInventoryScreen(EndlessInventoryMenu menu, Inventory playerInventory, Component title) {
         super(menu, playerInventory, title);
@@ -163,34 +160,11 @@ public class EndlessInventoryScreen extends AbstractContainerScreen<EndlessInven
             drawCraftingBackground(guiGraphics);
         }
     }
-    @Override
-    public void switchSortTypeTo(SortType type) {
-        menu.sortType = type;
-        CachedConfig.setSortType(type);
-        CachedConfig.updateLayout(menu.getPageData());
-        if (frameWork != null && frameWork.meta != null) {
-            var page = frameWork.meta.getDisplayingPage();
-            page.initializeContents();
-            page.release();
-            page.sendChangesToServer();
-        }
-    }
 
-    @Override
-    public void setHoveringOnSortBox(boolean isHovering) {
-        this.isHoveringOnSortBox = isHovering;
-    }
-
-    @Override
-    public boolean isHoveringOnSortBox() {
-        return isHoveringOnSortBox;
-    }
-    @Override
     public com.kwwsyk.endinv.common.menu.page.pageManager.PageMetaDataManager getPageManager() {
         return menu;
     }
 
-    @Override
     public AbstractContainerScreen<?> getScreen() {
         return this;
     }

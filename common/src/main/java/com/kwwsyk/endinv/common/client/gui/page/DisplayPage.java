@@ -231,7 +231,7 @@ public abstract class DisplayPage{
 
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick){
         renderPage(graphics);
-        if(framework.notHoveringOnSortBox()){
+        if(framework.hoveringOnPage()){
             renderHovering(graphics, mouseX, mouseY, partialTick);
         }
     }

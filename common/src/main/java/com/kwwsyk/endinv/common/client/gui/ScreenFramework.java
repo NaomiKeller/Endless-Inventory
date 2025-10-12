@@ -14,6 +14,7 @@ import com.kwwsyk.endinv.common.client.gui.page.manager.PageManager;
 import com.kwwsyk.endinv.common.client.gui.widget.SortTypeSwitchBox;
 import com.kwwsyk.endinv.common.client.option.CachedConfig;
 import com.kwwsyk.endinv.common.client.option.TextureMode;
+import com.kwwsyk.endinv.common.menu.page.pageManager.PageMetaDataManager;
 import com.kwwsyk.endinv.common.network.payloads.PageData;
 import com.kwwsyk.endinv.common.network.payloads.toServer.CreativeItemModPayload;
 import com.kwwsyk.endinv.common.network.payloads.toServer.QuickMoveToPagePayload;
@@ -51,7 +52,6 @@ public class ScreenFramework {
     public final PageManager meta;
     public final AbstractContainerScreen<?> screen;
     public final AbstractContainerMenu menu;
-    private final SortTypeSwitcher sortTypeSwitcher;
     private ScreenRectangleWidgetParam searchBoxParam;
     private ScreenRectangleWidgetParam sortBoxParam;
     private ScreenRectangleWidgetParam configButtonParam;
@@ -81,9 +81,8 @@ public class ScreenFramework {
     public ScreenFramework(EndlessInventoryScreen screen) {
         this.screen = screen;
         this.mc = Minecraft.getInstance();
-        var delegate = screen.getPageManager();
-        this.meta = delegate instanceof PageManager pm ? pm : new ClientPageManager(delegate);
         this.menu = screen.getMenu();
+        this.meta = menu instanceof PageManager pm ? pm : new ClientPageManager((PageMetaDataManager) menu);
         this.leftPos = screen.getGuiLeft();
         this.topPos = screen.getGuiTop();
         this.imageWidth = screen.getXSize();
@@ -91,13 +90,12 @@ public class ScreenFramework {
         PageData layout = CachedConfig.resolveLayout(screen, true);
         this.columns = Math.max(1, layout.columns());
         this.rows = Math.max(1, meta.rows());
-        this.sortTypeSwitcher = screen;
         SortType sort = layout.sortType();
         meta.setSortType(sort);
         meta.setSortReversed(layout.reverseSort());
         meta.setSearching(layout.search());
         meta.switchPageWithId(layout.pageRegKey());
-        CachedConfig.updateLayout(meta.getPageData());
+        CachedConfig.updateLayoutWith(meta.getPageData());
         this.pageBarCount = Math.min(ClientModInfo.getClientConfig().maxPageBarCount().get(), meta.getPages().size());
         this.pageBarScrollUpButtonParam = new ScreenRectangleWidgetParam(leftPos - 32, topPos - 16, 30, 14);
         this.pageBarScrollDownButtonParam = new ScreenRectangleWidgetParam(leftPos - 32, topPos + 2 + 28 * pageBarCount, 30, 14);
@@ -159,7 +157,6 @@ public class ScreenFramework {
         this.topPos = Math.max((screen.height - rows * 18 - 17 - 10) / 2, 20);
         this.columns = meta.columns();
 
-        this.sortTypeSwitcher = attachingScreen;
         this.pageBarCount = Math.min(ClientModInfo.getClientConfig().maxPageBarCount().get(), meta.getPages().size());
         this.imageWidth = 13 + 18 * columns;
         this.imageHeight = screen.height;
@@ -195,7 +192,7 @@ public class ScreenFramework {
                         btn -> {
                             meta.switchSortReversed();
                             CachedConfig.setReverseSort(meta.isSortReversed());
-                            CachedConfig.updateLayout(meta.getPageData());
+                            CachedConfig.updateLayoutWith(meta.getPageData());
                             meta.getDisplayingPage().initializeContents();
                             meta.getDisplayingPage().sendChangesToServer();
                         }
@@ -206,7 +203,7 @@ public class ScreenFramework {
         this.searchBox = new EditBox(mc.font,
                 this.searchBoxParam.XPos(), this.searchBoxParam.YPos(), this.searchBoxParam.XSize(), this.searchBoxParam.YSize(),
                 Component.translatable("itemGroup.search"));
-        this.sortTypeSwitchBox = new SortTypeSwitchBox(sortTypeSwitcher, meta, sortBoxParam);
+        this.sortTypeSwitchBox = new SortTypeSwitchBox(this, meta, sortBoxParam);
 
         this.searchBox.setValue(meta.searching());
 
@@ -239,7 +236,6 @@ public class ScreenFramework {
     }
 
     public void renderPre(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        sortTypeSwitcher.setHoveringOnSortBox(false);
     }
 
     public void renderBg(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
@@ -272,7 +268,7 @@ public class ScreenFramework {
     protected boolean hasClickedOnPage(double mouseX, double mouseY) {
         return mouseX >= (double) getPageX() && mouseX <= (double) getPageX() + pageXSize
                 && mouseY >= (double) getPageY() && mouseY <= (double) getPageY() + pageYSize
-                && !sortTypeSwitcher.isHoveringOnSortBox();
+                && !sortTypeSwitchBox.isHovered();
     }
 
     protected int hasClickedOnPageSwitchBar(double mouseX, double mouseY) {
@@ -289,8 +285,15 @@ public class ScreenFramework {
         //meta.getDisplayingPage().syncContentToServer();
         this.searchBox.setVisible(meta.getDisplayingPage().hasSearchbox());
         this.sortTypeSwitchBox.visible = meta.getDisplayingPage().hasSortTypeSwitchBar();
-        CachedConfig.setPageKey(meta.getDisplayingPageId());
-        CachedConfig.updateLayout(meta.getPageData());
+        CachedConfig.setDisplayingPageKey(meta.getDisplayingPageId());
+        CachedConfig.updateLayoutWith(meta.getPageData());
+    }
+
+    public void switchSortTypeTo(SortType type) {
+        CachedConfig.setSortType(type);
+        if(meta.getDisplayingPage() instanceof ItemPage page){
+            page.refreshItems();
+        }
     }
 
     private boolean isHovering(Slot slot, double mouseX, double mouseY) {
@@ -308,8 +311,8 @@ public class ScreenFramework {
                 && mouseY < (double) (y + height + 1);
     }
 
-    public boolean notHoveringOnSortBox() {
-        return !sortTypeSwitcher.isHoveringOnSortBox();
+    public boolean hoveringOnPage() {
+        return !sortTypeSwitchBox.isHovered();
     }
 
     @Nullable
@@ -508,7 +511,7 @@ public class ScreenFramework {
         String searching = searchBox.getValue();
         meta.setSearching(searching);
         CachedConfig.setSearching(searching);
-        CachedConfig.updateLayout(meta.getPageData());
+        CachedConfig.updateLayoutWith(meta.getPageData());
         meta.getDisplayingPage().initializeContents();
         meta.getDisplayingPage().release();
         meta.getDisplayingPage().sendChangesToServer();
@@ -517,4 +520,6 @@ public class ScreenFramework {
     public static @Nullable ScreenFramework getInstance() {
         return INSTANCE;
     }
+
+
 }

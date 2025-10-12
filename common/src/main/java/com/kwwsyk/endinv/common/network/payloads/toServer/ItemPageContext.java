@@ -3,7 +3,7 @@ package com.kwwsyk.endinv.common.network.payloads.toServer;
 import com.kwwsyk.endinv.common.EndlessInventory;
 import com.kwwsyk.endinv.common.ServerLevelEndInv;
 import com.kwwsyk.endinv.common.menu.EndlessInventoryMenu;
-import com.kwwsyk.endinv.common.menu.page.pageManager.AttachingManager;
+import com.kwwsyk.endinv.common.menu.page.pageManager.AttachingMonitor;
 import com.kwwsyk.endinv.common.network.payloads.ModPacketContext;
 import com.kwwsyk.endinv.common.network.payloads.ModPacketPayload;
 import com.kwwsyk.endinv.common.network.payloads.PageData;
@@ -78,8 +78,8 @@ public record ItemPageContext(int startIndex, int length, PageData pageData) imp
                 boolean reverseSort = pageData.reverseSort();
                 String search = pageData.search();
 
-                if (manager instanceof AttachingManager attachingManager) {
-                    attachingManager.applyPageData(pageData);
+                if (manager instanceof AttachingMonitor attachingMonitor) {
+                    attachingMonitor.applyPageData(pageData);
                 } else if (manager instanceof EndlessInventoryMenu menuManager) {
                     menuManager.applyPageData(pageData);
                 } else {

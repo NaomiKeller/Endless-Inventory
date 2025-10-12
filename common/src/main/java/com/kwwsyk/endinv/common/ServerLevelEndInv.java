@@ -2,7 +2,7 @@ package com.kwwsyk.endinv.common;
 
 import com.kwwsyk.endinv.common.data.EndlessInventoryData;
 import com.kwwsyk.endinv.common.menu.EndlessInventoryMenu;
-import com.kwwsyk.endinv.common.menu.page.pageManager.AttachingManager;
+import com.kwwsyk.endinv.common.menu.page.pageManager.AttachingMonitor;
 import com.kwwsyk.endinv.common.menu.page.pageManager.PageMetaDataManager;
 import com.kwwsyk.endinv.common.util.Accessibility;
 import com.mojang.logging.LogUtils;
@@ -29,7 +29,7 @@ public final class ServerLevelEndInv {
 
     public static Optional<PageMetaDataManager> checkAndGetManagerForPlayer(ServerPlayer player){
         if(player.containerMenu instanceof EndlessInventoryMenu menu) return Optional.of(menu);
-        if(PAGE_META_DATA_MANAGER.get(player) instanceof AttachingManager manager){
+        if(PAGE_META_DATA_MANAGER.get(player) instanceof AttachingMonitor manager){
             if(manager.getMenu()!=player.containerMenu) return Optional.empty();
             return Optional.of(manager);
         }else return Optional.empty();

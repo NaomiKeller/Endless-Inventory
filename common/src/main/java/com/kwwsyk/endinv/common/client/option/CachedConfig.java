@@ -1,6 +1,5 @@
 package com.kwwsyk.endinv.common.client.option;
 
-import com.kwwsyk.endinv.common.ModInfo;
 import com.kwwsyk.endinv.common.ModRegistries;
 import com.kwwsyk.endinv.common.client.ClientModInfo;
 import com.kwwsyk.endinv.common.menu.page.PageType;
@@ -12,6 +11,12 @@ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.player.LocalPlayer;
 import org.jetbrains.annotations.Nullable;
 
+/**Caches that keep pages' options, including:<br>
+ * <ul>
+ *     <li>options toggled in page (sort, search...)</li>
+ *     <li>data synced from server (attaching)</li>
+ * </ul>
+ */
 public final class CachedConfig {
 
     private static String pageRegKey = PageType.DEFAULT_KEY;
@@ -22,6 +27,7 @@ public final class CachedConfig {
     private static String searching = "";
 
     private static boolean attaching = true;
+    private static boolean autoPicking = false;
 
     private static SyncedConfig cachedFlags = SyncedConfig.DEFAULT;
     private static PageData cachedLayout = PageData.DEFAULT;
@@ -42,13 +48,13 @@ public final class CachedConfig {
         if (player == null) {
             return;
         }
+        //client attaching data
         IClientConfig config = ClientModInfo.getClientConfig();
-        boolean attaching = config.attaching().get();
-        SyncedConfig desired = new SyncedConfig(attaching, cachedFlags.autoPicking());
-        if (!desired.equals(cachedFlags)) {
-            cachedFlags = desired;
-            ModRegistries.NbtAttachments.getSyncedConfig().setTo(player, desired);
-            ModInfo.getPacketDistributor().sendToServer(desired);
+        attaching = config.attaching().get();
+        //server attaching data is prior
+        SyncedConfig serverFlags = ModRegistries.NbtAttachments.getSyncedConfig().getWith(player);
+        if (!serverFlags.equals(cachedFlags)) {
+            cachedFlags = serverFlags;
         }
     }
 
@@ -56,6 +62,11 @@ public final class CachedConfig {
         cachedFlags = flags;
     }
 
+    /**
+     * Compute and update suit row and column count to let AttachingScreen View can fit the {@code screen}
+     * @param ofMenu to specially suit {@code EndlessInventoryMenu}'s view.
+     * @return {@link PageData} recode with updated row, column data.
+     */
     public static PageData resolveLayout(@Nullable AbstractContainerScreen<?> screen, boolean ofMenu) {
         IClientConfig config = ClientModInfo.getClientConfig();
 
@@ -94,14 +105,14 @@ public final class CachedConfig {
         return cachedLayout;
     }
 
-    public static void updateLayout(PageData layout) {
+    public static void updateLayoutWith(PageData newLayout) {
         // Keep local cached knobs in sync as the UI changes
-        pageRegKey = layout.pageRegKey();
-        rows = layout.rows();
-        columns = layout.columns();
-        sortType = layout.sortType();
-        reverseSort = layout.reverseSort();
-        searching = layout.search();
+        pageRegKey = newLayout.pageRegKey();
+        rows = newLayout.rows();
+        columns = newLayout.columns();
+        sortType = newLayout.sortType();
+        reverseSort = newLayout.reverseSort();
+        searching = newLayout.search();
 
         cachedLayout = new PageData(pageRegKey, rows, columns, sortType, reverseSort, searching);
         layoutInitialized = true;
@@ -110,7 +121,7 @@ public final class CachedConfig {
     // Lightweight in-memory anchors for UI state
     public static SortType sortType() { return sortType; }
     public static void setSortType(SortType value) {
-        sortType = value == null ? SortType.DEFAULT : value;
+        sortType = value;
         cachedLayout = new PageData(pageRegKey, rows, columns, sortType, reverseSort, searching);
     }
 
@@ -122,13 +133,13 @@ public final class CachedConfig {
 
     public static String searching() { return searching; }
     public static void setSearching(String value) {
-        searching = value == null ? "" : value;
+        searching = value;
         cachedLayout = new PageData(pageRegKey, rows, columns, sortType, reverseSort, searching);
     }
 
     public static String pageKey() { return pageRegKey; }
-    public static void setPageKey(String key) {
-        pageRegKey = key == null ? PageType.DEFAULT_KEY : key;
+    public static void setDisplayingPageKey(String key) {
+        pageRegKey = key;
         cachedLayout = new PageData(pageRegKey, rows, columns, sortType, reverseSort, searching);
     }
 }

@@ -1,12 +1,14 @@
 package com.kwwsyk.endinv.common.network.payloads.toServer;
 
+import com.kwwsyk.endinv.common.EndlessInventory;
 import com.kwwsyk.endinv.common.ServerLevelEndInv;
-import com.kwwsyk.endinv.common.menu.page.pageManager.PageMetaDataManager;
 import com.kwwsyk.endinv.common.network.payloads.ModPacketContext;
 import com.kwwsyk.endinv.common.network.payloads.ModPacketPayload;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
+
+import java.util.Optional;
 
 /**
  * Used when client item modified in ItemDisplay with {@link net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen.ItemPickerMenu}
@@ -34,19 +36,17 @@ public record CreativeItemModPayload(ItemStack stack, boolean isAdding) implemen
         ServerPlayer player = (ServerPlayer) iPayloadContext.player();
         if(player==null)return;
         if(player.containerMenu.getCarried().isEmpty() && player.isCreative()){
-            var optional = ServerLevelEndInv.checkAndGetManagerForPlayer(player);
-            if(optional.isEmpty()) return;
-            PageMetaDataManager manager = optional.get();
-            if(isAdding){
-                manager.getSourceInventory().addItem(stack);
-            }else {
-                ItemStack taken = manager.getSourceInventory().takeItem(stack);
-                if(!taken.isEmpty()) player.containerMenu.setCarried(taken);
+            Optional<EndlessInventory> optional = ServerLevelEndInv.getEndInvForPlayer(player);
+            if(optional.isPresent()) {
+                EndlessInventory ei = optional.get();
+                if(isAdding){
+                    ei.addItem(stack);
+                }else {
+                    ItemStack taken = ei.takeItem(stack);
+                    if(!taken.isEmpty()) player.containerMenu.setCarried(taken);
+                }
             }
-            // Persist server-side changes for creative modifications
-            if (manager.getSourceInventory() instanceof com.kwwsyk.endinv.common.EndlessInventory ei) {
-                ei.setChanged();
-            }
+
         }
     }
 }

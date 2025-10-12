@@ -87,3 +87,18 @@ Fixed:
 todo: check every feature and utilities to reduce bugs; jei's mixined recipe transfer
 fabric: search; equipment page's arrangement
 forge: quick move item in survival mode will not sync to server, fabric has no such problem
+
+# 10.12 1.1.0-Pre3
+Dev aspect
+- SyncedConfig#attaching only presents player's client attaching config.
+- AttachingManager -> AttachingMonitor and I marked it `reserved`.
+
+Bug: quick-move creative item picker's items seems cannot sync to server.
+    Seems not? But once after jei transfer, creative added items vanished...
+
+# Develop note 10.12 1.1.0-Pre3
+There are no attachability check for EndInv operations in packet handle. So if some bug I left exists or who cheats, 
+player can interact with EndInv without depending on EIM even server's attaching config let the player's menu not attachable.
+
+If I do not make mistakes, `OpenEndInvPayload (server)` and `ScreenAttachment (forge/fabric | client)`
+are the only classes who check attachability.

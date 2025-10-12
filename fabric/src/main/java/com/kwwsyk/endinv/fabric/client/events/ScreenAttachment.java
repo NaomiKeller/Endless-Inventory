@@ -1,12 +1,12 @@
 package com.kwwsyk.endinv.fabric.client.events;
 
 import com.kwwsyk.endinv.common.ModInfo;
+import com.kwwsyk.endinv.common.client.ClientModInfo;
 import com.kwwsyk.endinv.common.client.gui.AttachingScreen;
 import com.kwwsyk.endinv.common.client.gui.EndlessInventoryScreen;
 import com.kwwsyk.endinv.common.client.gui.IScreenEvent;
 import com.kwwsyk.endinv.common.client.option.CachedConfig;
 import com.kwwsyk.endinv.common.client.option.MenuAttachabilityCache;
-import com.kwwsyk.endinv.common.network.payloads.SyncedConfig;
 import com.kwwsyk.endinv.common.network.payloads.toServer.OpenEndInvPayload;
 import com.kwwsyk.endinv.fabric.mixin.ScreenAccessor;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
@@ -49,8 +49,7 @@ public final class ScreenAttachment {
                 return;
             }
 
-            SyncedConfig syncedConfig = getSyncedConfig().getWith(player);
-            if (!syncedConfig.checkForAttaching()) {
+            if (!ClientModInfo.getClientConfig().attaching().get()) {
                 attachment = null;
                 return;
             }

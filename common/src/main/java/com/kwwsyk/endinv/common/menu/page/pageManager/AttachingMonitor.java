@@ -15,7 +15,19 @@ import net.minecraft.world.item.ItemStack;
 
 import java.util.List;
 
-public class AttachingManager implements PageMetaDataManager{
+/**Reserved server side page manager that can monitor players' EI Attaching status.
+ * <br>
+ * Originally it's called {@code AttachingManager} and serves menus like utilities server side.
+ * Because in version 1.0.0 pages are both on server and client same as Minecraft menus.
+ * When I tried to add more client features like resize, the page had been only kept on client.
+ * <p>
+ *     Get it on server: {@link com.kwwsyk.endinv.common.ServerLevelEndInv#checkAndGetManagerForPlayer(ServerPlayer)}
+ * </p>
+ * @since 25.10.12
+ * @author Kay
+ * @version 1.1.0
+ */
+public class AttachingMonitor implements PageMetaDataManager{
 
     private final AbstractContainerMenu menu;
     private final EndlessInventory endinv;
@@ -32,7 +44,7 @@ public class AttachingManager implements PageMetaDataManager{
     private int columns;
     private boolean reverseSort;
 
-    public AttachingManager(AbstractContainerMenu menu, EndlessInventory endinv, ServerPlayer player){
+    public AttachingMonitor(AbstractContainerMenu menu, EndlessInventory endinv, ServerPlayer player){
         this.menu = menu;
         this.endinv = endinv;
         this.player = player;
