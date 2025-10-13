@@ -109,7 +109,5 @@ Forge: Added icon to curios page
 Forge: Added jei mouse click handler, so press R,U... can apply on Page's items.
 todo: fabric
 
-
-## 10.20
-- Ensure Endless Inventory updates always advance the last modified timestamp so quick successive edits keep their ordering.
+Ensure Endless Inventory updates always advance the last modified timestamp so quick successive edits keep their ordering.
 
