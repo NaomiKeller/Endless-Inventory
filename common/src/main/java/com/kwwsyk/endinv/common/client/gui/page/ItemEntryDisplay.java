@@ -5,9 +5,9 @@ import com.kwwsyk.endinv.common.client.gui.EndlessInventoryScreen;
 import com.kwwsyk.endinv.common.client.gui.bg.FromResource;
 import com.kwwsyk.endinv.common.client.gui.bg.SFBgRenderer;
 import com.kwwsyk.endinv.common.client.gui.bg.Transparent;
+import com.kwwsyk.endinv.common.client.gui.page.manager.PageManager;
 import com.kwwsyk.endinv.common.client.option.TextureMode;
 import com.kwwsyk.endinv.common.menu.page.PageType;
-import com.kwwsyk.endinv.common.menu.page.pageManager.PageMetaDataManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -31,7 +31,7 @@ public class ItemEntryDisplay extends ItemDisplay{
 
     protected SFBgRenderer.PageBgRender renderer = null;
 
-    public ItemEntryDisplay(PageType pageType, PageMetaDataManager metaDataManager) {
+    public ItemEntryDisplay(PageType pageType, PageManager metaDataManager) {
         super(pageType,metaDataManager);
         this.length = meta.rows();
     }

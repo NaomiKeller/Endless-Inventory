@@ -3,9 +3,9 @@ package com.kwwsyk.endinv.common.client.gui.page;
 import com.kwwsyk.endinv.common.ModInfo;
 import com.kwwsyk.endinv.common.client.CachedSrcInv;
 import com.kwwsyk.endinv.common.client.gui.EndlessInventoryScreen;
+import com.kwwsyk.endinv.common.client.gui.page.manager.PageManager;
 import com.kwwsyk.endinv.common.client.option.CachedConfig;
 import com.kwwsyk.endinv.common.menu.page.PageType;
-import com.kwwsyk.endinv.common.menu.page.pageManager.PageMetaDataManager;
 import com.kwwsyk.endinv.common.network.payloads.toServer.CreativeItemModPayload;
 import com.kwwsyk.endinv.common.network.payloads.toServer.ItemClickPayload;
 import com.kwwsyk.endinv.common.network.payloads.toServer.ItemPageContext;
@@ -46,8 +46,8 @@ public abstract class ItemPage extends DisplayPage {
 
     protected List<ItemStack> inQueueStacks = null;
 
-    public ItemPage(PageType pageType, PageMetaDataManager metaDataManager) {
-        super(pageType,metaDataManager);
+    public ItemPage(PageType pageType, PageManager manager) {
+        super(pageType, manager);
         this.length = meta.rows()* meta.columns();
     }
 

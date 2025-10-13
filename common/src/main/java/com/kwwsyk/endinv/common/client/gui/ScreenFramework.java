@@ -1,6 +1,8 @@
 package com.kwwsyk.endinv.common.client.gui;
 
 import com.kwwsyk.endinv.common.ModInfo;
+import com.kwwsyk.endinv.common.SourceInventory;
+import com.kwwsyk.endinv.common.client.CachedSrcInv;
 import com.kwwsyk.endinv.common.client.ClientModInfo;
 import com.kwwsyk.endinv.common.client.KeyMappings;
 import com.kwwsyk.endinv.common.client.gui.bg.FromResource;
@@ -9,12 +11,10 @@ import com.kwwsyk.endinv.common.client.gui.bg.ScreenRectangleWidgetParam;
 import com.kwwsyk.endinv.common.client.gui.bg.Transparent;
 import com.kwwsyk.endinv.common.client.gui.page.DisplayPage;
 import com.kwwsyk.endinv.common.client.gui.page.ItemPage;
-import com.kwwsyk.endinv.common.client.gui.page.manager.ClientPageManager;
 import com.kwwsyk.endinv.common.client.gui.page.manager.PageManager;
 import com.kwwsyk.endinv.common.client.gui.widget.SortTypeSwitchBox;
 import com.kwwsyk.endinv.common.client.option.CachedConfig;
 import com.kwwsyk.endinv.common.client.option.TextureMode;
-import com.kwwsyk.endinv.common.menu.page.pageManager.PageMetaDataManager;
 import com.kwwsyk.endinv.common.network.payloads.PageData;
 import com.kwwsyk.endinv.common.network.payloads.toServer.CreativeItemModPayload;
 import com.kwwsyk.endinv.common.network.payloads.toServer.QuickMoveToPagePayload;
@@ -29,6 +29,7 @@ import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
@@ -44,14 +45,14 @@ import java.util.function.Consumer;
 import static com.kwwsyk.endinv.common.client.ClientModInfo.containerScreenHelper;
 import static com.kwwsyk.endinv.common.client.ClientModInfo.inputHandler;
 
-public class ScreenFramework {
+public class ScreenFramework implements PageManager{
 
     private static ScreenFramework INSTANCE;
 
     private final Minecraft mc;
-    public final PageManager meta;
     public final AbstractContainerScreen<?> screen;
     public final AbstractContainerMenu menu;
+
     private ScreenRectangleWidgetParam searchBoxParam;
     private ScreenRectangleWidgetParam sortBoxParam;
     private ScreenRectangleWidgetParam configButtonParam;
@@ -59,13 +60,13 @@ public class ScreenFramework {
     public SFBgRenderer SFBgRenderer;
     public final int pageBarCount;
     public int firstPageIndex = 0;
+
     //Always pageBarCount + firstPageIndex <= meta.getPages.size()
     public int leftPos, topPos;
     public int imageWidth, imageHeight;
     private int pageX;
     private int pageY;
-    private int rows;
-    private final int columns;
+
     private final int pageXSize;
     private int pageYSize;
     private int pageOffsetX;
@@ -77,107 +78,105 @@ public class ScreenFramework {
     private Button reverseSortButton;
     private Button configButton;
     private final List<AbstractWidget> widgets = new ArrayList<>();
+    //page meta data fields
+    private int rows;
+    private final int columns;
+    private DisplayPage displayingPage;
+    public final List<DisplayPage> pages;
 
-    public ScreenFramework(EndlessInventoryScreen screen) {
+    public ScreenFramework(EndlessInventoryScreen screen) {//when opening EIS
+        //------MOST BASE DATA-------
         this.screen = screen;
         this.mc = Minecraft.getInstance();
         this.menu = screen.getMenu();
-        this.meta = menu instanceof PageManager pm ? pm : new ClientPageManager((PageMetaDataManager) menu);
+
+        //---STRUCTURE AND RENDER DATA---
         this.leftPos = screen.getGuiLeft();
         this.topPos = screen.getGuiTop();
         this.imageWidth = screen.getXSize();
         this.imageHeight = screen.getYSize();
+        //row and columns affects the structure
         PageData layout = CachedConfig.resolveLayout(screen, true);
         this.columns = Math.max(1, layout.columns());
-        this.rows = Math.max(1, meta.rows());
-        SortType sort = layout.sortType();
-        meta.setSortType(sort);
-        meta.setSortReversed(layout.reverseSort());
-        meta.setSearching(layout.search());
-        meta.switchPageWithId(layout.pageRegKey());
-        CachedConfig.updateLayoutWith(meta.getPageData());
-        this.pageBarCount = Math.min(ClientModInfo.getClientConfig().maxPageBarCount().get(), meta.getPages().size());
+        this.rows = Math.max(1, layout.rows());
+        //renderer may need structure and widget data --here YES: needs row/col/left/top...
+        this.SFBgRenderer = new FromResource.MenuMode(this, new ScreenRectangleWidgetParam(leftPos - 32, topPos + 1, 32, 28));
+
+        //------WIDGET DATA-------
+        this.pages = buildPages();//is page a widget? but init page bar count indeed needs it.
+        //page switch bar's pos < leftPos in EIS
+        this.pageBarCount = Math.min(ClientModInfo.getClientConfig().maxPageBarCount().get(), getPages().size());
         this.pageBarScrollUpButtonParam = new ScreenRectangleWidgetParam(leftPos - 32, topPos - 16, 30, 14);
         this.pageBarScrollDownButtonParam = new ScreenRectangleWidgetParam(leftPos - 32, topPos + 2 + 28 * pageBarCount, 30, 14);
+        //page switch bar --end--
         this.configButtonParam = new ScreenRectangleWidgetParam(this.leftPos + this.imageWidth, Math.min(this.topPos + this.imageHeight, screen.height - 20), 18, 18);
         this.searchBoxParam = new ScreenRectangleWidgetParam(this.leftPos + 89, this.topPos + 5, 80, 12);
         this.sortBoxParam = new ScreenRectangleWidgetParam(this.leftPos + 8, topPos + 5, 60, 12);
-        this.SFBgRenderer = new FromResource.MenuMode(this, new ScreenRectangleWidgetParam(leftPos - 32, topPos + 1, 32, 28));
 
-        pageX = leftPos + 8;
-        pageY = topPos + 17;
-        pageXSize = columns * 18;
-        pageYSize = rows * 18;
+        //------PAGES-----------
+        //------prepare page data---------
+        this.pageX = leftPos + 8;
+        this.pageY = topPos + 17;
+        this.pageXSize = columns * 18;
+        this.pageYSize = rows * 18;
+        //--base info should be all initialized--
+
+        //---construct and switch displaying pages---
+        switchPageWithId(layout.pageRegKey());
+        //add widgets when base info are all prepared including displayingPage
         addWidgets();
-        meta.getDisplayingPage().initializeContents();
+
         INSTANCE = this;
     }
 
     public ScreenFramework(AttachingScreen<?> attachingScreen) {
+        //------MOST BASE DATA-------
         this.screen = attachingScreen.screen;
         this.mc = Minecraft.getInstance();
+        this.menu = attachingScreen.menu;
 
-        this.meta = attachingScreen.getPageManager();
-        this.menu = meta.getMenu();
-
+        //---STRUCTURE AND RENDER DATA---
+        PageData layout = CachedConfig.resolveLayout(screen, false);
+        this.rows = layout.rows();//row and columns affects the structure
+        this.columns = layout.columns();
         this.leftPos = 20;
-        this.rows = meta.rows();
         this.topPos = Math.max((screen.height - rows * 18 - 17 - 10) / 2, 20);
-        this.columns = meta.columns();
-
-        this.pageBarCount = Math.min(ClientModInfo.getClientConfig().maxPageBarCount().get(), meta.getPages().size());
         this.imageWidth = 13 + 18 * columns;
         this.imageHeight = screen.height;
-        int searchBoxY = this.topPos + 17 + 18 * rows + 12;
-        this.searchBoxParam =
-                new ScreenRectangleWidgetParam(this.leftPos + 1, searchBoxY, Math.min(200, imageWidth), Math.min(20, screen.height - searchBoxY));
-        this.configButtonParam = new ScreenRectangleWidgetParam(0, Math.min(searchBoxY, screen.height - 20), 20, 20);
-        this.pageBarScrollUpButtonParam = new ScreenRectangleWidgetParam(0, topPos, 20, 14);
-        this.pageBarScrollDownButtonParam = new ScreenRectangleWidgetParam(0, topPos + 22 + 28 * pageBarCount, 20, 14);
-        this.sortBoxParam = new ScreenRectangleWidgetParam(this.leftPos + 6, topPos + 5, 77, 12);
+        //renderer may need structure and widget data --here ?
         this.SFBgRenderer = ClientModInfo.getClientConfig().textureMode().get() != TextureMode.TRANSPARENT ?
                 new FromResource.LeftLayout(this, new ScreenRectangleWidgetParam(leftPos - 32, topPos + 20, 32, 28)) :
                 new Transparent(this, new ScreenRectangleWidgetParam(leftPos - 32, topPos + 20, 32, 28));
 
-        pageX = leftPos + 8;
-        pageY = topPos + 17;
-        pageXSize = columns * 18;
-        pageYSize = rows * 18;
+        //---WIDGET DATA---
+        this.pages = buildPages();//is page a widget? but init page bar count indeed needs it.
+        //page switch bar
+        this.pageBarCount = Math.min(ClientModInfo.getClientConfig().maxPageBarCount().get(), getPages().size());
+        this.pageBarScrollUpButtonParam = new ScreenRectangleWidgetParam(0, topPos, 20, 14);
+        this.pageBarScrollDownButtonParam = new ScreenRectangleWidgetParam(0, topPos + 22 + 28 * pageBarCount, 20, 14);
+        //other
+        int searchBoxY = this.topPos + 17 + 18 * rows + 12;
+        this.searchBoxParam = new ScreenRectangleWidgetParam(this.leftPos + 1, searchBoxY, Math.min(200, imageWidth), Math.min(20, screen.height - searchBoxY));
+        this.configButtonParam = new ScreenRectangleWidgetParam(0, Math.min(searchBoxY, screen.height - 20), 20, 20);
+        this.sortBoxParam = new ScreenRectangleWidgetParam(this.leftPos + 6, topPos + 5, 77, 12);
+
+        //------PAGES-----------
+        //------prepare page data---------
+        this.pageX = leftPos + 8;
+        this.pageY = topPos + 17;
+        this.pageXSize = columns * 18;
+        this.pageYSize = rows * 18;
+        //--base info should be all initialized--
+
+        //---construct and switch displaying pages---
+        switchPageWithId(layout.pageRegKey());
+
+        //add widgets when base info are all prepared including displayingPage
         addWidgets();
-        meta.getDisplayingPage().initializeContents();
+
         INSTANCE = this;
     }
 
-
-    public int getPageX() {
-        // Combine the static anchor and the debug offset for consistent hit tests.
-        return pageX + pageOffsetX;
-    }
-
-    public int getPageY() {
-        // Combine the static anchor and the debug offset for consistent hit tests.
-        return pageY + pageOffsetY;
-    }
-
-    public void move(int deltaX, int deltaY) {
-        // Support debug nudging without rebuilding the widget tree.
-        this.pageOffsetX += deltaX;
-        this.pageOffsetY += deltaY;
-        DisplayPage current = meta.getDisplayingPage();
-        if (current != null) {
-            current.move(deltaX, deltaY);
-        }
-    }
-
-    public void resizePageRows(int rows) {
-        // Mirror menu row changes so the client page layout stays aligned with the server menu.
-        this.rows = Math.max(1, rows);
-        this.pageYSize = this.rows * 18;
-        DisplayPage current = meta.getDisplayingPage();
-        if (current != null) {
-            current.resize(this.rows);
-        }
-    }
 
     private void addWidgets() {
         this.configButton = Button.builder(Component.literal("⚙"),
@@ -190,7 +189,7 @@ public class ScreenFramework {
         this.reverseSortButton = Button.builder(Component.literal("⇅"),
                         btn -> {
                             CachedConfig.setReverseSort(!CachedConfig.reverseSort());
-                            if(meta.getDisplayingPage() instanceof ItemPage page){
+                            if(getDisplayingPage() instanceof ItemPage page){
                                 page.refreshItems();
                             }
                         }
@@ -201,11 +200,11 @@ public class ScreenFramework {
         this.searchBox = new EditBox(mc.font,
                 this.searchBoxParam.XPos(), this.searchBoxParam.YPos(), this.searchBoxParam.XSize(), this.searchBoxParam.YSize(),
                 Component.translatable("itemGroup.search"));
-        this.sortTypeSwitchBox = new SortTypeSwitchBox(this, meta, sortBoxParam);
+        this.sortTypeSwitchBox = new SortTypeSwitchBox(this, this, sortBoxParam);
 
-        this.searchBox.setValue(meta.searching());
+        this.searchBox.setValue(searching());
 
-        if (pageBarCount < meta.getPages().size()) {
+        if (pageBarCount < getPages().size()) {
             Button up = Button.builder(Component.literal("^"), btn -> {
                         if (firstPageIndex > 0) firstPageIndex--;
                     })
@@ -213,7 +212,7 @@ public class ScreenFramework {
                     .size(pageBarScrollUpButtonParam.XSize(), pageBarScrollUpButtonParam.YSize())
                     .build();
             Button down = Button.builder(Component.literal("v"), btn -> {
-                        if (firstPageIndex + pageBarCount < meta.getPages().size())
+                        if (firstPageIndex + pageBarCount < getPages().size())
                             firstPageIndex++;
                     })
                     .pos(pageBarScrollDownButtonParam.XPos(), pageBarScrollDownButtonParam.YPos())
@@ -238,8 +237,8 @@ public class ScreenFramework {
 
     public void renderBg(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         SFBgRenderer.renderBg(guiGraphics, partialTick, mouseX, mouseY);
-        meta.getDisplayingPage().initRenderer(this, getPageX(), getPageY());
-        meta.getDisplayingPage().renderBg(SFBgRenderer, guiGraphics, partialTick, mouseX, mouseY);
+        getDisplayingPage().initRenderer(this, getPageX(), getPageY());
+        getDisplayingPage().renderBg(SFBgRenderer, guiGraphics, partialTick, mouseX, mouseY);
     }
 
     private boolean isHoveringOnPage;
@@ -250,8 +249,8 @@ public class ScreenFramework {
 
         isHoveringOnPage = hasClickedOnPage(mouseX, mouseY);
 
-        meta.getDisplayingPage().initRenderer(this, getPageX(), getPageY());
-        meta.getDisplayingPage().render(guiGraphics, mouseX, mouseY, partialTick);
+        getDisplayingPage().initRenderer(this, getPageX(), getPageY());
+        getDisplayingPage().render(guiGraphics, mouseX, mouseY, partialTick);
 
         if (searchBox.isHovered() && !searchBox.isFocused()) guiGraphics.renderTooltip(mc.font, List.of(
                 Component.translatable("search.endinv.prefix.sharp"),
@@ -280,17 +279,17 @@ public class ScreenFramework {
     }
 
     protected void pageSwitched(int index) {
-        meta.switchPageWithIndex(index + firstPageIndex);
-        //meta.getDisplayingPage().syncContentToServer();
-        this.searchBox.setVisible(meta.getDisplayingPage().hasSearchbox());
-        this.sortTypeSwitchBox.visible = meta.getDisplayingPage().hasSortTypeSwitchBar();
-        CachedConfig.setDisplayingPageKey(meta.getDisplayingPageId());
-        CachedConfig.updateLayoutWith(meta.getPageData());
+        switchPageWithIndex(index + firstPageIndex);
+        //getDisplayingPage().syncContentToServer();
+        this.searchBox.setVisible(getDisplayingPage().hasSearchbox());
+        this.sortTypeSwitchBox.visible = getDisplayingPage().hasSortTypeSwitchBar();
+        CachedConfig.setDisplayingPageKey(getDisplayingPageId());
+        CachedConfig.updateLayoutWith(getPageData());
     }
 
     public void switchSortTypeTo(SortType type) {
         CachedConfig.setSortType(type);
-        if(meta.getDisplayingPage() instanceof ItemPage page){
+        if(getDisplayingPage() instanceof ItemPage page){
             page.refreshItems();
         }
     }
@@ -328,7 +327,6 @@ public class ScreenFramework {
 
 
     private ItemStack creativeQuickInsertedItem = ItemStack.EMPTY;
-
     private void slotQuickMoved(Slot clicked) {
         ItemStack itemStack = clicked.getItem().copy();
         if (menu instanceof CreativeModeInventoryScreen.ItemPickerMenu && clicked.index < 45 && menu.slots.size() >= 54) {
@@ -336,14 +334,14 @@ public class ScreenFramework {
                 return;
             } else creativeQuickInsertedItem = itemStack;
             itemStack.setCount(itemStack.getMaxStackSize());
-            meta.getDisplayingPage().tryInsertItem(itemStack);
+            getDisplayingPage().tryInsertItem(itemStack);
             ModInfo.getPacketDistributor().sendToServer(new CreativeItemModPayload(itemStack, true));
         } else {
             boolean canAttach = (screen instanceof EndlessInventoryScreen) || com.kwwsyk.endinv.common.client.option.MenuAttachabilityCache.isAttachable(screen);
             if (!canAttach) return;
-            ItemStack remain = meta.getDisplayingPage().tryInsertItem(itemStack);
+            ItemStack remain = getDisplayingPage().tryInsertItem(itemStack);
             clicked.setByPlayer(remain);
-            clicked.onTake(meta.getPlayer(), itemStack);
+            clicked.onTake(getPlayer(), itemStack);
             int payloadId = menu instanceof CreativeModeInventoryScreen.ItemPickerMenu
                     ? getItemPickerMenuSlotOffset(clicked)
                     : menu.slots.indexOf(clicked);
@@ -351,7 +349,7 @@ public class ScreenFramework {
                 ModInfo.getPacketDistributor().sendToServer(new QuickMoveToPagePayload(payloadId));
             }
         }// should use slot.getContainerSlot() instead of getSlotIndex()
-        if (meta.getDisplayingPage() instanceof ItemPage itemPage) {
+        if (getDisplayingPage() instanceof ItemPage itemPage) {
             itemPage.requestRemoteContents();//send such payloads will not let server send contents
         }//another aspect is to check whether contents are synced across server and client
     }
@@ -402,7 +400,7 @@ public class ScreenFramework {
         //
         if (hasClickedOnPage(mouseX, mouseY)) {
             sortTypeSwitchBox.setOpen(false);
-            return meta.getDisplayingPage().mouseClicked(mouseX - getPageX(), mouseY - getPageY(), keyCode);
+            return getDisplayingPage().mouseClicked(mouseX - getPageX(), mouseY - getPageY(), keyCode);
         }
         return false;
     }
@@ -423,7 +421,7 @@ public class ScreenFramework {
         }
 
         if (hasClickedOnPage(mouseX, mouseY)) {
-            return meta.getDisplayingPage().mouseDragged(mouseX - getPageX(), mouseY - getPageY(), button, dragX, dragY);
+            return getDisplayingPage().mouseDragged(mouseX - getPageX(), mouseY - getPageY(), button, dragX, dragY);
         }
         return false;
     }
@@ -431,7 +429,7 @@ public class ScreenFramework {
     public boolean mouseReleased(double mouseX, double mouseY, int keyCode) {
         creativeQuickInsertedItem = ItemStack.EMPTY;
 
-        DisplayPage displayingPage = meta.getDisplayingPage();
+        DisplayPage displayingPage = getDisplayingPage();
         displayingPage.release();
         if (hasClickedOnPage(mouseX, mouseY)) {
             return displayingPage.mouseReleased(mouseX - getPageX(), mouseY - getPageY(), keyCode);
@@ -442,7 +440,7 @@ public class ScreenFramework {
 
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollY) {
         if (hasClickedOnPage(mouseX, mouseY)) {
-            return meta.getDisplayingPage().mouseScrolled(mouseX - getPageX(), mouseY = getPageY(), scrollY);
+            return getDisplayingPage().mouseScrolled(mouseX - getPageX(), mouseY = getPageY(), scrollY);
         }
         return false;
     }
@@ -457,21 +455,21 @@ public class ScreenFramework {
             if (clicked != null && clicked.hasItem()) {
                 ItemStack itemStack = clicked.getItem();
                 ModInfo.getPacketDistributor().sendToServer(new StarItemPayload(itemStack, true));
-                meta.getDisplayingPage().sendChangesToServer();
+                getDisplayingPage().sendChangesToServer();
                 return true;
             }
         }
 
         boolean flag = false;
         if (isHoveringOnPage) {
-            flag = meta.getDisplayingPage().keyPressed(keyCode, scanCode, modifiers, roughMouseX - getPageX(), roughMouseY - getPageY());
+            flag = getDisplayingPage().keyPressed(keyCode, scanCode, modifiers, roughMouseX - getPageX(), roughMouseY - getPageY());
         }
         if (flag) {
             this.ignoreTextInput = true;
             return true;
         }
 
-        if (meta.getDisplayingPage().hasSearchbox() && this.searchBox.isFocused()) {
+        if (getDisplayingPage().hasSearchbox() && this.searchBox.isFocused()) {
             String s = this.searchBox.getValue();
             if (this.searchBox.keyPressed(keyCode, scanCode, modifiers)) {
                 if (!Objects.equals(s, this.searchBox.getValue())) {
@@ -486,7 +484,7 @@ public class ScreenFramework {
     }
 
     public boolean charTyped(char codePoint, int modifiers) {
-        if (this.ignoreTextInput || !meta.getDisplayingPage().hasSearchbox()) {
+        if (this.ignoreTextInput || !getDisplayingPage().hasSearchbox()) {
             return false;
         } else {
             String s = this.searchBox.getValue();
@@ -509,7 +507,7 @@ public class ScreenFramework {
     public void refreshSearchResults() {
         String searching = searchBox.getValue();
         CachedConfig.setSearching(searching);
-        if(meta.getDisplayingPage() instanceof ItemPage page){
+        if(getDisplayingPage() instanceof ItemPage page){
             page.refreshItems();
         }
     }
@@ -518,5 +516,76 @@ public class ScreenFramework {
         return INSTANCE;
     }
 
+    public int getPageX() {
+        // Combine the static anchor and the debug offset for consistent hit tests.
+        return pageX + pageOffsetX;
+    }
 
+    public int getPageY() {
+        // Combine the static anchor and the debug offset for consistent hit tests.
+        return pageY + pageOffsetY;
+    }
+
+    public void move(int deltaX, int deltaY) {
+        // Support debug nudging without rebuilding the widget tree.
+        this.pageOffsetX += deltaX;
+        this.pageOffsetY += deltaY;
+        DisplayPage current = getDisplayingPage();
+        if (current != null) {
+            current.move(deltaX, deltaY);
+        }
+    }
+
+    public void resizePageRows(int rows) {
+        // Mirror menu row changes so the client page layout stays aligned with the server menu.
+        this.rows = Math.max(1, rows);
+        this.pageYSize = this.rows * 18;
+        DisplayPage current = getDisplayingPage();
+        if (current != null) {
+            current.resize(this.rows);
+        }
+    }
+
+    @Override
+    public AbstractContainerMenu getMenu() {
+        return menu;
+    }
+
+    @Override
+    public SourceInventory getSourceInventory() {
+        return CachedSrcInv.INSTANCE;
+    }
+
+    @Override
+    public Player getPlayer() {
+        return mc.player;
+    }
+
+    @Override
+    public void switchPageWithIndex(int index) {
+        this.displayingPage = pages.get(index);
+        displayingPage.initializeContents();
+    }
+
+    @Override
+    public int rows() {
+        return rows;
+    }
+
+    @Override
+    public int columns() {
+        return columns;
+    }
+
+
+
+    @Override
+    public List<DisplayPage> getPages() {
+        return pages;
+    }
+
+    @Override
+    public DisplayPage getDisplayingPage() {
+        return displayingPage;
+    }
 }

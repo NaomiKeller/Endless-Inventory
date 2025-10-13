@@ -1,7 +1,7 @@
 package com.kwwsyk.endinv.common.menu.page;
 
 import com.kwwsyk.endinv.common.client.gui.page.*;
-import com.kwwsyk.endinv.common.menu.page.pageManager.PageMetaDataManager;
+import com.kwwsyk.endinv.common.client.gui.page.manager.PageManager;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.*;
@@ -50,7 +50,17 @@ public class PageType {
 
     @FunctionalInterface
     public interface PageConstructor {
-        DisplayPage create(PageType pageType, PageMetaDataManager manager);
+        /**
+         * DisplayPage's constructor or it's variation.
+         * Called by {@link com.kwwsyk.endinv.common.client.gui.ScreenFramework}'s constructor
+         *
+         * @since 1.1.0
+         *
+         * @param pageType registered page type
+         * @param manager since 1.1.0, it's always ScreenFramework/
+         * @return
+         */
+        DisplayPage create(PageType pageType, PageManager manager);
     }
 
     public PageType(PageConstructor constructor, String registerName){
@@ -82,12 +92,12 @@ public class PageType {
 
     /**
      * Build new DisplayPage.<p>
-     * Invoke note:
-     *      todo ...
+     * Called by ScreenFramework's constructor on client.
+     *
      * @param meta
      * @return
      */
-    public DisplayPage buildPage(PageMetaDataManager meta){
+    public DisplayPage buildPage(PageManager meta){
         var page =  constructor.create(this, meta);
         if(icon!=null) page.icon = icon;
         return page;

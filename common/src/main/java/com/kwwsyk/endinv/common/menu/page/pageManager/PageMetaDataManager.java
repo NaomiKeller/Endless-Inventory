@@ -6,7 +6,6 @@ import com.kwwsyk.endinv.common.network.payloads.PageData;
 import com.kwwsyk.endinv.common.util.SortType;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 
 /**
@@ -32,7 +31,9 @@ public interface PageMetaDataManager {
 
     boolean enableInfinity();
 
-    ItemStack quickMoveFromPage(ItemStack stack);
+    default ItemStack quickMoveFromPage(ItemStack stack){
+        return new PageQuickMoveHandler(getMenu()).quickMoveFromPage(stack);
+    }
 
     SortType sortType();
 
@@ -57,13 +58,6 @@ public interface PageMetaDataManager {
     void switchPageWithId(String id);
 
     PageType getDisplayingPageType();
-
-    default void slotQuickMoved(Slot slot) {
-        ItemStack itemStack = slot.getItem();
-        ItemStack remain = getSourceInventory().addItem(itemStack);
-        slot.setByPlayer(remain);
-        slot.onTake(getPlayer(), itemStack);
-    }
 
     default PageData getPageData(){
         return new PageData(getDisplayingPageId(), rows(), columns(),sortType(),isSortReversed(),searching());

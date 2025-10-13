@@ -1,9 +1,9 @@
 package com.kwwsyk.endinv.common.client.gui.page;
 
 import com.kwwsyk.endinv.common.client.CachedSrcInv;
+import com.kwwsyk.endinv.common.client.gui.page.manager.PageManager;
 import com.kwwsyk.endinv.common.client.option.CachedConfig;
 import com.kwwsyk.endinv.common.menu.page.PageType;
-import com.kwwsyk.endinv.common.menu.page.pageManager.PageMetaDataManager;
 import com.kwwsyk.endinv.common.network.payloads.toServer.ItemClickPayload;
 import com.mojang.logging.LogUtils;
 import net.minecraft.client.Minecraft;
@@ -45,7 +45,7 @@ public class SegClassifyItemDisplay extends ItemDisplay {
     private final List<Integer> pageSeparatorRows = new ArrayList<>();
 
     public SegClassifyItemDisplay(PageType pageType,
-                                  PageMetaDataManager metaDataManager,
+                                  PageManager metaDataManager,
                                   List<Predicate<ItemStack>> subClassifies,
                                   boolean includeRemainItems,
                                   boolean keepClassifiedItemInNextSeg) {

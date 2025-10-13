@@ -171,7 +171,7 @@ public abstract class FromResource extends SFBgRendererImpl {
     public void renderBg(@NotNull GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {
         int pageX = pageSwitchTabParam.XPos();
         int pageY = pageSwitchTabParam.YPos();
-        int selectedPageIndex = manager.getDisplayingPageIndex();
+        int selectedPageIndex = frameWork.getDisplayingPageIndex();
         for (int i = frameWork.firstPageIndex; i < frameWork.firstPageIndex + frameWork.pageBarCount; ++i) {
             if (i == selectedPageIndex) {
                 if (i == 0) {

@@ -45,7 +45,7 @@ public class Transparent extends SFBgRendererImpl {
     public void renderBg(@NotNull GuiGraphics guiGraphics, float partialTicks, int mouseX, int mouseY) {
         int pageX = pageSwitchTabParam.XPos();
         int pageY = pageSwitchTabParam.YPos();
-        int selectedPageIndex = manager.getDisplayingPageIndex();
+        int selectedPageIndex = frameWork.getDisplayingPageIndex();
         for (int i = frameWork.firstPageIndex; i < frameWork.firstPageIndex+ frameWork.pageBarCount; ++i) {
             if (i == selectedPageIndex) {
                 guiGraphics.fill(pageX,pageY,pageX+32,pageY+28,PAGE_FRAME_COLOR);

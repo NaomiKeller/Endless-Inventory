@@ -1,6 +1,7 @@
 package com.kwwsyk.endinv.forge.integrates.jei;
 
 import com.kwwsyk.endinv.common.client.gui.AttachingScreen;
+import com.kwwsyk.endinv.common.client.gui.ScreenFramework;
 import com.kwwsyk.endinv.common.client.gui.page.DisplayPage;
 import com.kwwsyk.endinv.forge.client.events.ScreenAttachment;
 import com.mojang.logging.LogUtils;
@@ -41,15 +42,14 @@ public class AttachmentGuiHandler implements IGuiContainerHandler<AbstractContai
      * This can also be used to let JEI look up liquids in tanks directly, by returning a FluidStack.
      * Works with any ingredient type that has been registered with {@code IModIngredientRegistration}.
      *
-     * @param containerScreen
      * @param mouseX          the current X position of the mouse in screen coordinates.
      * @param mouseY          the current Y position of the mouse in screen coordinates.
      * @since 11.5.0
      */
     @Override
     public Optional<IClickableIngredient<?>> getClickableIngredientUnderMouse(AbstractContainerScreen<?> containerScreen, double mouseX, double mouseY) {
-        if(ScreenAttachment.ATTACHMENT_MANAGER != null){
-            return Optional.of(new ItemClickEventWrapper(ScreenAttachment.ATTACHMENT_MANAGER.getPageManager().getDisplayingPage(), mouseX, mouseY));
+        if(ScreenFramework.getInstance() != null){
+            return Optional.of(new ItemClickEventWrapper(ScreenFramework.getInstance().getDisplayingPage(), mouseX, mouseY));
         }
         return Optional.empty();
     }
@@ -78,7 +78,7 @@ public class AttachmentGuiHandler implements IGuiContainerHandler<AbstractContai
          * @since 11.5.0
          * @deprecated use {@link #getIngredient()} and {@link #getIngredientType()} instead.
          */
-        @Override @SuppressWarnings({"removal","nonextendable"})
+        @Override @Deprecated @SuppressWarnings({"removal","nonextendable"})
         public ITypedIngredient<ItemStack> getTypedIngredient() {
             return new ITypedIngredient<>() {
                 @Override

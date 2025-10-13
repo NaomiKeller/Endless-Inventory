@@ -8,7 +8,6 @@ import com.kwwsyk.endinv.common.client.gui.ScreenFramework;
 import com.kwwsyk.endinv.common.client.gui.bg.SFBgRenderer;
 import com.kwwsyk.endinv.common.client.gui.page.manager.PageManager;
 import com.kwwsyk.endinv.common.menu.page.PageType;
-import com.kwwsyk.endinv.common.menu.page.pageManager.PageMetaDataManager;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
@@ -83,12 +82,14 @@ public abstract class DisplayPage{
     //constructor and initialization methods
     /**
      * Pages are constructed when {@link PageManager#buildPages()} is invoked.
+     *
      * @param pageType defines type that is synced, including the item-classify.
+     * @param manager
      */
-    public DisplayPage(PageType pageType,PageMetaDataManager metaDataManager){
+    public DisplayPage(PageType pageType, PageManager manager){
         this.mc = Minecraft.getInstance();
-        this.meta = (com.kwwsyk.endinv.common.client.gui.page.manager.PageManager) metaDataManager;
-        this.menu = metaDataManager.getMenu();
+        this.meta = manager;
+        this.menu = manager.getMenu();
         this.srcInv = CachedSrcInv.INSTANCE;
         this.pageType = pageType;
         this.id = pageType.registerName;

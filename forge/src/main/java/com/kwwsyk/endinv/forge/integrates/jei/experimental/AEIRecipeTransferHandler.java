@@ -589,7 +589,7 @@ public final class AEIRecipeTransferHandler {
             if (attachment.getScreen().getMenu() != container) {
                 return null;
             }
-            return attachment.getPageManager().getSourceInventory();
+            return attachment.getFrameWork().getSourceInventory();
         }
     }
 }

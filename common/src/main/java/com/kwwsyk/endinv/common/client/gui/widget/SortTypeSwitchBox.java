@@ -25,7 +25,6 @@ public class SortTypeSwitchBox extends AbstractWidget {
         super(x,y,width,height, Component.empty());
         this.screen = screen;
         this.pageManager = pageManager;
-        this.visible = pageManager.getDisplayingPageType() != null;
         this.singleBoxHeight = height;
     }
 

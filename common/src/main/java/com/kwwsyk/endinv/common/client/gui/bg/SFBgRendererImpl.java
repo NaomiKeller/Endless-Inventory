@@ -21,15 +21,12 @@ public abstract class SFBgRendererImpl implements SFBgRenderer {
     protected final int rows;
     protected final int columns;
 
-    protected final com.kwwsyk.endinv.common.client.gui.page.manager.PageManager manager;
-
     public SFBgRendererImpl(ScreenFramework frameWork){
         this.frameWork = frameWork;
         this.screen = frameWork.screen;
         this.imageWidth = 256;
-        this.manager = frameWork.meta;
-        this.rows = manager.rows();
-        this.columns = manager.columns();
+        this.rows = this.frameWork.rows();
+        this.columns = this.frameWork.columns();
         this.menuLeft = ClientModInfo.containerScreenHelper.getGuiLeft(screen);
         this.menuTop = ClientModInfo.containerScreenHelper.getGuiTop(screen);
         this.pageLeft = frameWork.leftPos;
@@ -39,13 +36,13 @@ public abstract class SFBgRendererImpl implements SFBgRenderer {
     protected void renderPageBarContent(GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY){
         int pageX = pageSwitchTabParam.XPos();
         int pageY = pageSwitchTabParam.YPos();
-        int selectedPageIndex = manager.getDisplayingPageIndex();
+        int selectedPageIndex = frameWork.getDisplayingPageIndex();
         for (int i = frameWork.firstPageIndex; i < frameWork.firstPageIndex+ frameWork.pageBarCount; ++i) {
-            manager.getPages().get(i).renderPageIcon(guiGraphics, pageX + 15, pageY + 5, partialTick);
+            frameWork.getPages().get(i).renderPageIcon(guiGraphics, pageX + 15, pageY + 5, partialTick);
             if (mouseX > pageX && mouseX < pageX + 32 && mouseY > pageY && mouseY < pageY + 28) {
                 guiGraphics.pose().pushPose();
                 guiGraphics.pose().translate(0, 0, 550.0f);
-                guiGraphics.renderTooltip(Minecraft.getInstance().font, manager.getPages().get(i).name, mouseX, mouseY);
+                guiGraphics.renderTooltip(Minecraft.getInstance().font, frameWork.getPages().get(i).name, mouseX, mouseY);
                 guiGraphics.pose().popPose();
             }
             pageY += 28;

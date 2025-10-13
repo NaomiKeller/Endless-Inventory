@@ -1,7 +1,7 @@
 package com.kwwsyk.endinv.common.client.gui.page;
 
+import com.kwwsyk.endinv.common.client.gui.page.manager.PageManager;
 import com.kwwsyk.endinv.common.menu.page.PageType;
-import com.kwwsyk.endinv.common.menu.page.pageManager.PageMetaDataManager;
 import com.kwwsyk.endinv.common.network.payloads.toServer.StarItemPayload;
 import com.kwwsyk.endinv.common.util.ItemStackLike;
 import net.minecraft.client.Minecraft;
@@ -21,7 +21,7 @@ public class StarredItemPage extends ItemPage{
     public ResourceLocation icon = new ResourceLocation("minecraft","book");
     private int[] countArray;
 
-    public StarredItemPage(PageType type, PageMetaDataManager metaDataManager) {
+    public StarredItemPage(PageType type, PageManager metaDataManager) {
         super(type, metaDataManager);
     }
 

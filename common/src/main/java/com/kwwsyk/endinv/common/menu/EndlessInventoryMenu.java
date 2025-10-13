@@ -18,7 +18,6 @@ import net.minecraft.ReportedException;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundContainerSetSlotPacket;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.util.Mth;
 import net.minecraft.world.Container;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.SlotAccess;
@@ -32,7 +31,10 @@ import net.minecraft.world.item.crafting.RecipeType;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.TestOnly;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
 import static com.kwwsyk.endinv.common.ModRegistries.Items;
 import static com.kwwsyk.endinv.common.ModRegistries.Menus;
@@ -73,8 +75,6 @@ public class EndlessInventoryMenu extends AbstractContainerMenu implements PageM
     private int displayingPageIndex;
     private String displayingPageId;
     private PageType displayingPageType;
-    @Nullable
-    private ClientPageBinding clientPage;
     private int baseRows = 1;
     private int visibleRows = 1;
     private boolean craftingVisible = false;
@@ -223,9 +223,6 @@ public class EndlessInventoryMenu extends AbstractContainerMenu implements PageM
         if (!visible) {
             returnCraftingToPlayer();
         }
-        if (clientPage != null) {
-            clientPage.onPageSelected();
-        }
     }
 
     private void returnCraftingToPlayer() {
@@ -290,30 +287,10 @@ public class EndlessInventoryMenu extends AbstractContainerMenu implements PageM
         }
     }
 
-    public void scrollTo(float pos){
-        if (clientPage != null) {
-            clientPage.scrollTo(pos);
-        }
-    }
-
     private void applySelectedPage(PageType type){
         this.displayingPageType = type;
         this.displayingPageId = type.registerName;
         this.displayingPageIndex = Math.max(0, PageTypeRegistry.getIndexOf(this.displayingPageId));
-        if (clientPage != null && Objects.equals(clientPage.pageId(), this.displayingPageId)) {
-            clientPage.onPageSelected();
-        }
-    }
-
-    public void bindClientPage(ClientPageBinding binding){
-        this.clientPage = binding;
-        applySelectedPage(binding.pageType());
-    }
-
-    public void clearClientPageBinding(ClientPageBinding binding){
-        if (this.clientPage == binding) {
-            this.clientPage = null;
-        }
     }
 
     public int getItemSize(){
@@ -324,10 +301,6 @@ public class EndlessInventoryMenu extends AbstractContainerMenu implements PageM
         this.itemSize.set(i);
     }
 
-    public float subtractInputFromScroll(float scrollOffs, double input) {
-        return Mth.clamp(scrollOffs - (float)(input / (double)this.visibleRows), 0.0F, 1.0F);
-    }
-
     public boolean enableInfinity(){
         return infinityMode.get() > 0;
     }
@@ -335,13 +308,6 @@ public class EndlessInventoryMenu extends AbstractContainerMenu implements PageM
     public int getMaxStackSize(){
         return maxStackSize.get();
     }
-
-    @Nullable
-    public ClientPageBinding getClientPage(){
-        return clientPage;
-    }
-
-    public int getDisplayingPageIndex(){return displayingPageIndex;}
 
     @Override
     public AbstractContainerMenu getMenu() {
@@ -391,9 +357,6 @@ public class EndlessInventoryMenu extends AbstractContainerMenu implements PageM
                 default -> {
                     return;
                 }
-            }
-            if (this.getSourceInventory() instanceof EndlessInventory && clientPage != null) {
-                clientPage.refreshAfterMenuInteraction(this.sourceInventory);
             }
             if(this.getSourceInventory() instanceof EndlessInventory endinv){
                 this.setItemSize(endinv.getItemSize());
@@ -546,12 +509,6 @@ public class EndlessInventoryMenu extends AbstractContainerMenu implements PageM
         if (stack.isEmpty()) {
             return ItemStack.EMPTY;
         }
-        if (clientPage != null) {
-            ItemStack remain = clientPage.quickMoveIntoPage(stack);
-            clientPage.markPageChanged();
-            clientPage.refreshAfterMenuInteraction(this.sourceInventory);
-            return remain;
-        }
         ItemStack remain = this.sourceInventory.addItem(stack);
         this.sourceInventory.setChanged();
         return remain;
@@ -592,17 +549,11 @@ public class EndlessInventoryMenu extends AbstractContainerMenu implements PageM
                 }
             }
         }
-        if (clientPage != null) {
-            clientPage.refreshAfterMenuInteraction(this.sourceInventory);
-        }
     }
 
     public ItemStack tryExtractFromPage(ItemStack template, int count) {
         if (count <= 0 || template.isEmpty()) {
             return ItemStack.EMPTY;
-        }
-        if (clientPage != null) {
-            return clientPage.extractItemFromPage(template.copy(), count);
         }
         ItemStack request = template.copy();
         return this.sourceInventory.takeItem(request, count);
@@ -790,30 +741,6 @@ public class EndlessInventoryMenu extends AbstractContainerMenu implements PageM
         }
     }
 
-    /**
-     * Handle ctrl-click quick move by pushing items straight into the endless inventory pages.
-     */
-    @Override
-    public void slotQuickMoved(Slot slot) {
-        if (!slot.hasItem()) {
-            return;
-        }
-        ItemStack stack = slot.getItem();
-        int moved = insertStackIntoPage(stack);
-        if (moved <= 0) {
-            return;
-        }
-        if (stack.isEmpty()) {
-            slot.setByPlayer(ItemStack.EMPTY);
-        } else {
-            slot.setChanged();
-        }
-        slot.onTake(player, stack);
-        if (slot.container == craftMatrix || slot.container == craftResult) {
-            craftMatrix.setChanged();
-            updateCraftingResult();
-        }
-    }
     public interface ClientPageBinding {
         String pageId();
 

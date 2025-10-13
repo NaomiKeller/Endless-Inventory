@@ -125,7 +125,7 @@ public class ScreenDebug {
                 // Nudge the framework and page together so debug movements stay aligned.
                 EIS.getFrameWork().move(dx, dy);
             }
-            if(EIS.getFrameWork().meta.getDisplayingPage() instanceof ItemPage itemPage){
+            if(EIS.getFrameWork().getDisplayingPage() instanceof ItemPage itemPage){
                 if(button == InputConstants.KEY_R){
                     itemPage.requestRemoteContents();
                 }

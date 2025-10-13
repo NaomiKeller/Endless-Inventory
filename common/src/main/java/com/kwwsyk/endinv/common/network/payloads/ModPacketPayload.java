@@ -11,6 +11,6 @@ public interface ModPacketPayload{
     void handle(ModPacketContext context);
 
     static Optional<com.kwwsyk.endinv.common.client.gui.page.manager.PageManager> getClientPageMeta(){
-        return Optional.ofNullable(ScreenFramework.getInstance()).map(fr->fr.meta);
+        return Optional.ofNullable(ScreenFramework.getInstance());
     }
 }
