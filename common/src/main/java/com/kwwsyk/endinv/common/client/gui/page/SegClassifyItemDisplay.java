@@ -121,7 +121,7 @@ public class SegClassifyItemDisplay extends ItemDisplay {
 
     @Override
     public void pageClicked(double XOffset, double YOffset, int button, ClickType clickType) {
-        int slot = getSlotForMouseOffset(XOffset, YOffset);
+        int slot = getSlotByMouseOffset(XOffset, YOffset);
         if (slot < 0 || slot >= items.size()) {
             return;
         }

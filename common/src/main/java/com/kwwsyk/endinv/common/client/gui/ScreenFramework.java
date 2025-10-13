@@ -113,43 +113,11 @@ public class ScreenFramework {
         INSTANCE = this;
     }
 
-    public int getPageX() {
-        // Combine the static anchor and the debug offset for consistent hit tests.
-        return pageX + pageOffsetX;
-    }
-
-    public int getPageY() {
-        // Combine the static anchor and the debug offset for consistent hit tests.
-        return pageY + pageOffsetY;
-    }
-
-    public void move(int deltaX, int deltaY) {
-        // Support debug nudging without rebuilding the widget tree.
-        this.pageOffsetX += deltaX;
-        this.pageOffsetY += deltaY;
-        DisplayPage current = meta.getDisplayingPage();
-        if (current != null) {
-            current.move(deltaX, deltaY);
-        }
-    }
-
-    public void resizePageRows(int rows) {
-        // Mirror menu row changes so the client page layout stays aligned with the server menu.
-        this.rows = Math.max(1, rows);
-        this.pageYSize = this.rows * 18;
-        DisplayPage current = meta.getDisplayingPage();
-        if (current != null) {
-            current.resize(this.rows);
-        }
-    }
-
-
     public ScreenFramework(AttachingScreen<?> attachingScreen) {
         this.screen = attachingScreen.screen;
         this.mc = Minecraft.getInstance();
-        var delegate = attachingScreen.getPageManager();
 
-        this.meta = delegate instanceof PageManager pm ? pm : new ClientPageManager(delegate);
+        this.meta = attachingScreen.getPageManager();
         this.menu = meta.getMenu();
 
         this.leftPos = 20;
@@ -180,6 +148,37 @@ public class ScreenFramework {
         INSTANCE = this;
     }
 
+
+    public int getPageX() {
+        // Combine the static anchor and the debug offset for consistent hit tests.
+        return pageX + pageOffsetX;
+    }
+
+    public int getPageY() {
+        // Combine the static anchor and the debug offset for consistent hit tests.
+        return pageY + pageOffsetY;
+    }
+
+    public void move(int deltaX, int deltaY) {
+        // Support debug nudging without rebuilding the widget tree.
+        this.pageOffsetX += deltaX;
+        this.pageOffsetY += deltaY;
+        DisplayPage current = meta.getDisplayingPage();
+        if (current != null) {
+            current.move(deltaX, deltaY);
+        }
+    }
+
+    public void resizePageRows(int rows) {
+        // Mirror menu row changes so the client page layout stays aligned with the server menu.
+        this.rows = Math.max(1, rows);
+        this.pageYSize = this.rows * 18;
+        DisplayPage current = meta.getDisplayingPage();
+        if (current != null) {
+            current.resize(this.rows);
+        }
+    }
+
     private void addWidgets() {
         this.configButton = Button.builder(Component.literal("⚙"),
                         btn -> {
@@ -190,11 +189,10 @@ public class ScreenFramework {
                 .build();
         this.reverseSortButton = Button.builder(Component.literal("⇅"),
                         btn -> {
-                            meta.switchSortReversed();
-                            CachedConfig.setReverseSort(meta.isSortReversed());
-                            CachedConfig.updateLayoutWith(meta.getPageData());
-                            meta.getDisplayingPage().initializeContents();
-                            meta.getDisplayingPage().sendChangesToServer();
+                            CachedConfig.setReverseSort(!CachedConfig.reverseSort());
+                            if(meta.getDisplayingPage() instanceof ItemPage page){
+                                page.refreshItems();
+                            }
                         }
                 )
                 .pos(sortBoxParam.XPos() + sortBoxParam.XSize() + 2, sortBoxParam.YPos())
@@ -240,6 +238,7 @@ public class ScreenFramework {
 
     public void renderBg(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         SFBgRenderer.renderBg(guiGraphics, partialTick, mouseX, mouseY);
+        meta.getDisplayingPage().initRenderer(this, getPageX(), getPageY());
         meta.getDisplayingPage().renderBg(SFBgRenderer, guiGraphics, partialTick, mouseX, mouseY);
     }
 
@@ -509,12 +508,10 @@ public class ScreenFramework {
 
     public void refreshSearchResults() {
         String searching = searchBox.getValue();
-        meta.setSearching(searching);
         CachedConfig.setSearching(searching);
-        CachedConfig.updateLayoutWith(meta.getPageData());
-        meta.getDisplayingPage().initializeContents();
-        meta.getDisplayingPage().release();
-        meta.getDisplayingPage().sendChangesToServer();
+        if(meta.getDisplayingPage() instanceof ItemPage page){
+            page.refreshItems();
+        }
     }
 
     public static @Nullable ScreenFramework getInstance() {

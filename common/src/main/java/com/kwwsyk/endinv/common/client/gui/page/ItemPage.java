@@ -16,6 +16,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen;
+import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.core.NonNullList;
 import net.minecraft.world.entity.player.Inventory;
@@ -121,19 +122,54 @@ public abstract class ItemPage extends DisplayPage {
         return startIndex>0 ||(startIndex+length <= srcInv.getItemSize());
     }
 
-    public int getSlotForMouseOffset(double XOffset,double YOffset){
+    public int getSlotByMouseOffset(double XOffset, double YOffset){
         if(XOffset<0||YOffset<0||XOffset>18* meta.columns()||YOffset>18* meta.rows()) return -1;
         return (int)XOffset/18 + meta.columns()*((int)YOffset/18);
     }
 
+    /**
+     * Get an area of one independent interactable area, mainly one item slot.
+     * Can be used to mark one clickable area with other mods, such as Jei's register {@code getClickableIngredientUnderMouse}
+     * @param XOffset mouseX-pageX
+     * @param YOffset mouseY-pageY
+     * @return one interactable area
+     */
+    @Override
+    public Rect2i getOneInteractableArea(double XOffset, double YOffset){
+        return getSlotArea(getSlotByMouseOffset(XOffset, YOffset));
+    }
+
+    /**
+     * Get area of one slot by the index of slot
+     * @param slot index of slot/item, often use {@link #getSlotByMouseOffset(double, double)} to get
+     * @return one slot area
+     */
+    public Rect2i getSlotArea(int slot){
+        final int slotSize = 18;
+        final int rowAt = slot / meta.columns();
+        final int columnAt = slot % meta.columns();
+        return new Rect2i(leftPos+slotSize*columnAt, topPos+slotSize*rowAt, slotSize, slotSize);
+    }
+
+    /**Get mouse hovered or clicked item by mouse offset.
+     * @param XOffset mouseX-pageX
+     * @param YOffset mouseY-pageY
+     * @return hovered or clicked item
+     */
+    @Override
+    public ItemStack getItemByMouseOffset(double XOffset, double YOffset){
+        int slot = getSlotByMouseOffset(XOffset,YOffset);
+        if(slot>=0 && slot<items.size()) {
+            return items.get(slot);
+        }
+        return ItemStack.EMPTY;
+    }
+
     @Override
     public void handleStarItem(double XOffset, double YOffset) {
-        int slot = getSlotForMouseOffset(XOffset,YOffset);
-        if(slot>=0&&slot<items.size()) {
-            ItemStack clicked = items.get(slot);
-            if(clicked.isEmpty()) return;
-            getPacketDistributor().sendToServer(new StarItemPayload(clicked,true));
-        }
+        ItemStack clicked = getItemByMouseOffset(XOffset, YOffset);
+        if(clicked.isEmpty()) return;
+        getPacketDistributor().sendToServer(new StarItemPayload(clicked,true));
     }
 
     public void renderPage(GuiGraphics guiGraphics){
@@ -198,18 +234,18 @@ public abstract class ItemPage extends DisplayPage {
 
     public void renderHovering(GuiGraphics graphics, int mouseX, int mouseY, float partialTick){
         renderSlotHighlight(graphics, mouseX, mouseY, partialTick);
-        int hoveringSlot = getSlotForMouseOffset(mouseX-leftPos,mouseY-topPos);
-        if(hoveringSlot>=0&&hoveringSlot<items.size()){
-            ItemStack hovering = items.get(hoveringSlot);
-            if(hovering.isEmpty()) return;
-            graphics.pose().pushPose();
-            graphics.pose().translate(0,0,550.0F);
+        ItemStack hovering = getHoveredOrClickedItem(mouseX, mouseY);
+        if(hovering.isEmpty()) return;
+
+        graphics.pose().pushPose();
+        graphics.pose().translate(0, 0, 550.0F);
+        {
             graphics.renderTooltip(Minecraft.getInstance().font,
-                    AbstractContainerScreen.getTooltipFromItem(Minecraft.getInstance(),hovering),
+                    AbstractContainerScreen.getTooltipFromItem(Minecraft.getInstance(), hovering),
                     hovering.getTooltipImage(),
                     mouseX, mouseY);
-            graphics.pose().popPose();
         }
+        graphics.pose().popPose();
     }
     protected void renderSlotHighlight(GuiGraphics graphics, int mouseX, int mouseY, float partialTick){
         for(int u = 0; u< meta.columns(); ++u){
@@ -237,7 +273,7 @@ public abstract class ItemPage extends DisplayPage {
 
     @Override
     public void pageClicked(double XOffset, double YOffset, int button, ClickType clickType) {
-        int slot = getSlotForMouseOffset(XOffset,YOffset);
+        int slot = getSlotByMouseOffset(XOffset,YOffset);
         if(slot>=0&&slot<items.size()) {
             ItemStack clicked = items.get(slot).copy();
             switch (clickType) {

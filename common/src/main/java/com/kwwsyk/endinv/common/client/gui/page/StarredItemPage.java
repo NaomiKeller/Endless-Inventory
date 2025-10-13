@@ -117,7 +117,7 @@ public class StarredItemPage extends ItemPage{
 
     @Override
     public void handleStarItem(double XOffset, double YOffset) {
-        int slot = getSlotForMouseOffset(XOffset,YOffset);
+        int slot = getSlotByMouseOffset(XOffset,YOffset);
         if(slot>=0&&slot<items.size()) {
             ItemStack clicked = items.get(slot);
             starItem(clicked,false);

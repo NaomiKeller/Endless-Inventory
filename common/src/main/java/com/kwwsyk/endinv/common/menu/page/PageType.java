@@ -80,6 +80,13 @@ public class PageType {
         return new PageType(ItemEntryDisplay::new,registerName,itemClassify, new ResourceLocation("minecraft", icon));
     }
 
+    /**
+     * Build new DisplayPage.<p>
+     * Invoke note:
+     *      todo ...
+     * @param meta
+     * @return
+     */
     public DisplayPage buildPage(PageMetaDataManager meta){
         var page =  constructor.create(this, meta);
         if(icon!=null) page.icon = icon;

@@ -4,6 +4,7 @@ import com.kwwsyk.endinv.common.client.ClientModInfo;
 import com.kwwsyk.endinv.common.client.gui.EndlessInventoryScreen;
 import com.kwwsyk.endinv.common.client.gui.bg.FromResource;
 import com.kwwsyk.endinv.common.client.gui.bg.SFBgRenderer;
+import com.kwwsyk.endinv.common.client.gui.bg.Transparent;
 import com.kwwsyk.endinv.common.client.option.TextureMode;
 import com.kwwsyk.endinv.common.menu.page.PageType;
 import com.kwwsyk.endinv.common.menu.page.pageManager.PageMetaDataManager;
@@ -11,6 +12,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.core.NonNullList;
 import net.minecraft.network.chat.Component;
@@ -61,9 +63,16 @@ public class ItemEntryDisplay extends ItemDisplay{
     }
 
     @Override
-    public int getSlotForMouseOffset(double XOffset, double YOffset) {
+    public int getSlotByMouseOffset(double XOffset, double YOffset) {
         if(XOffset<0||YOffset<0||XOffset>18* meta.columns()||YOffset>18* meta.rows()) return -1;
         return (int)YOffset/18;
+    }
+
+    @Override
+    public Rect2i getSlotArea(int slot) {
+        final int slotHeight = 18;
+        final int slotWidth = meta.columns() * 18;
+        return new Rect2i(leftPos, topPos+slotHeight*slot, slotWidth, slotHeight);
     }
 
     @Override
@@ -118,7 +127,7 @@ public class ItemEntryDisplay extends ItemDisplay{
     @Override
     public void renderHovering(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         renderSlotHighlight(graphics, mouseX, mouseY, partialTick);
-        int hoveringSlot = getSlotForMouseOffset(mouseX-leftPos,mouseY-topPos);
+        int hoveringSlot = getSlotByMouseOffset(mouseX-leftPos,mouseY-topPos);
         if(hoveringSlot>=0&&hoveringSlot<items.size()){
             ItemStack hovering = items.get(hoveringSlot);
             if(hovering.isEmpty()) return;
@@ -168,6 +177,7 @@ public class ItemEntryDisplay extends ItemDisplay{
             };
         }
         return (guiGraphics, partialTicks, mouseX, mouseY) ->{//assert mode = transparent
+            ((Transparent)framework.SFBgRenderer).new GridPageRenderer().renderBg(guiGraphics, partialTicks, mouseX, mouseY);
             int pageX = sfBgRenderer.getScreenFrameWork().getPageX();
             int startY = sfBgRenderer.getScreenFrameWork().getPageY();
             for(int i = 0; i< meta.rows(); ++i){

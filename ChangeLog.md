@@ -102,3 +102,11 @@ player can interact with EndInv without depending on EIM even server's attaching
 
 If I do not make mistakes, `OpenEndInvPayload (server)` and `ScreenAttachment (forge/fabric | client)`
 are the only classes who check attachability.
+
+# 10.13
+Forge: Added icon to curios page
+
+Forge: Added jei mouse click handler, so press R,U... can apply on Page's items.
+todo: fabric
+
+

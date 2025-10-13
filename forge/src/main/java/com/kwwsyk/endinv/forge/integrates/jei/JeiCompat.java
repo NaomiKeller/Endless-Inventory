@@ -35,8 +35,4 @@ public class JeiCompat implements IModPlugin{
 
 
     }
-
-    private static boolean isExperimentalFeatureAllowed(){
-        return true;
-    }
 }

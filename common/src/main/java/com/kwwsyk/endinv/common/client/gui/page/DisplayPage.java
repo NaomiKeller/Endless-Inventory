@@ -13,6 +13,7 @@ import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -68,6 +69,7 @@ public abstract class DisplayPage{
 
     //leftPos and topPos are used as Renderer param
     protected ScreenFramework framework;
+
     protected int leftPos;
     protected int topPos;
     protected int renderOffsetX;
@@ -118,10 +120,18 @@ public abstract class DisplayPage{
     public abstract boolean hasSortTypeSwitchBar();
 
     /**Render page icon with page's {@link #icon}
-     * icon can be an item location or sprite location with 18*18 size.
+     * icon can be an item location or sprite location with 16*16 size.
      */
     public ResourceLocation getIcon(){
         return icon;
+    }
+
+    public int getPageLeft() {
+        return leftPos;
+    }
+
+    public int getPageTop() {
+        return topPos;
     }
 
     @Nullable
@@ -241,6 +251,8 @@ public abstract class DisplayPage{
     public void renderHovering(GuiGraphics graphics, int mouseX, int mouseY, float partialTick){}
 
     /**
+     * Render Page's icon, will first try render {@link #icon} as {@code Item} location, then it will try render a {@code 16x16} icon.
+     * <p>
      *Invoked when page s not initialized (items) yet.
      */
     public void renderPageIcon(GuiGraphics graphics, int x, int y, float partialTick) {
@@ -252,7 +264,7 @@ public abstract class DisplayPage{
             return;
         }
         try {
-            graphics.blit(getIcon(),x,y,0,0,18,18);
+            graphics.blit(getIcon(),x,y,0,0,16,16,16,16);
         }catch (Exception ignored){}
     }
 
@@ -267,6 +279,33 @@ public abstract class DisplayPage{
 
     public abstract void pageClicked(double XOffset, double YOffset, int keyCode, ClickType clickType);
 
+    /**
+     * Get an area of one independent interactable area, mainly one item slot.
+     * Can be used to mark one clickable area with other mods, such as Jei's register {@code getClickableIngredientUnderMouse}
+     * @param XOffset mouseX-pageX
+     * @param YOffset mouseY-pageY
+     * @return one interactable area
+     */
+    public abstract Rect2i getOneInteractableArea(double XOffset, double YOffset);
+
+    /**Get mouse hovered or clicked item by mouse offset.
+     * @param XOffset mouseX-pageX
+     * @param YOffset mouseY-pageY
+     * @return hovered or clicked item
+     */
+    public abstract ItemStack getItemByMouseOffset(double XOffset, double YOffset);
+
+    /**
+     * Get mouse hovered or clicked item with absolute mouse position in screen.
+     * Easily call it out of DisplayPage class
+     * @param mouseX screen mouseX
+     * @param mouseY screen mouseY
+     * @return hovered or clicked item
+     */
+    public ItemStack getHoveredOrClickedItem(double mouseX, double mouseY){
+        return getItemByMouseOffset(mouseX - leftPos, mouseY - topPos);
+    }
+
     public abstract void handleStarItem(double XOffset, double YOffset);
 
     /**Used to handle mouse clicked/dragged on page and page has slots
@@ -274,7 +313,7 @@ public abstract class DisplayPage{
      * @param YOffset the relative Y coordinate to page top pos
      * @return the slot id in page or -1 with no slot.
      */
-    public int getSlotForMouseOffset(double XOffset,double YOffset){
+    public int getSlotByMouseOffset(double XOffset, double YOffset){
         return -1;
     }
 
@@ -335,7 +374,7 @@ public abstract class DisplayPage{
 
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY){
         if(hasShiftDown()){
-            int slotId = getSlotForMouseOffset(mouseX,mouseY);
+            int slotId = getSlotByMouseOffset(mouseX,mouseY);
             if(slotId>=0 && lastDraggedPageSlot>=0 && slotId!=lastDraggedPageSlot){
                 pageClicked(mouseX,mouseY,button,ClickType.QUICK_MOVE);
             }
@@ -395,7 +434,7 @@ public abstract class DisplayPage{
         }
 
         if(inputHandler.isActiveAndMatches(KeyMappings.STAR_ITEM,InputConstants.getKey(keyCode,scanCode))){
-            meta.getDisplayingPage().handleStarItem(mouseX,mouseY);
+            handleStarItem(mouseX,mouseY);
             return true;
         }
         return false;

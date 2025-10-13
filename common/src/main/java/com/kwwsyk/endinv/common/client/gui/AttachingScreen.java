@@ -4,8 +4,8 @@ import com.kwwsyk.endinv.common.ModInfo;
 import com.kwwsyk.endinv.common.SourceInventory;
 import com.kwwsyk.endinv.common.client.CachedSrcInv;
 import com.kwwsyk.endinv.common.client.gui.page.DisplayPage;
+import com.kwwsyk.endinv.common.client.gui.page.manager.PageManager;
 import com.kwwsyk.endinv.common.client.option.CachedConfig;
-import com.kwwsyk.endinv.common.menu.page.pageManager.PageMetaDataManager;
 import com.kwwsyk.endinv.common.menu.page.pageManager.PageQuickMoveHandler;
 import com.kwwsyk.endinv.common.network.payloads.PageData;
 import com.kwwsyk.endinv.common.network.payloads.toServer.OpenEndInvPayload;
@@ -42,7 +42,8 @@ public class AttachingScreen<T extends AbstractContainerMenu>{
 
     private ScreenFramework frameWork;
 
-    private final com.kwwsyk.endinv.common.client.gui.page.manager.PageManager pageMetadata = new com.kwwsyk.endinv.common.client.gui.page.manager.PageManager() {
+    private final PageManager pageMetadata = new PageManager() {
+
         @Override
         public AbstractContainerMenu getMenu() {
             return screen.getMenu();
@@ -259,7 +260,7 @@ public class AttachingScreen<T extends AbstractContainerMenu>{
         LOGGER.info("Attached Screen {} closed with reason: {}", this, reason);
     }
 
-    public PageMetaDataManager getPageManager() {
+    public PageManager getPageManager() {
         return pageMetadata;
     }
 
