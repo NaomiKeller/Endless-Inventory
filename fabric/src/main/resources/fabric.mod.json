@@ -17,6 +17,9 @@
     ],
     "client": [
       "com.kwwsyk.endinv.fabric.ClientModInit"
+    ],
+    "jei_mod_plugin": [
+      "com.kwwsyk.endinv.fabric.integrates.jei.JeiCompat"
     ]
   },
   "mixins": [
