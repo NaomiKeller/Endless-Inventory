@@ -84,7 +84,10 @@ public class EndlessInventory extends SourceInventory {
      * @return endinv's modState that has been updated
      */
     public long updateModState(long newState){
-        this.lastModTime = Math.max(lastModTime,newState);
+        if (newState <= lastModTime) {
+            newState = lastModTime + 1;
+        }
+        this.lastModTime = newState;
         return lastModTime;
     }
 
