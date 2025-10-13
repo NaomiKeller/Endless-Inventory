@@ -305,7 +305,11 @@ public abstract class SourceInventory {
 
     //modification version mangers
     public long updateLastModTime(){
-        lastModTime=Util.getMillis();
+        long now = Util.getMillis();
+        if (now <= lastModTime) {
+            now = lastModTime + 1;
+        }
+        lastModTime = now;
         return lastModTime;
     }
 
