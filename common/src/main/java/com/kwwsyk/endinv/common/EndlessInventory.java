@@ -73,11 +73,6 @@ public class EndlessInventory extends SourceInventory {
         return level.getPlayers(pl->Objects.equals(pl.getUUID(),owner)).stream().findAny();
     }
 
-    @Override
-    public boolean isRemote() {
-        return false;
-    }
-
     public void setChanged() {
         super.setChanged();
         ServerLevelEndInv.levelEndInvData.setDirty();

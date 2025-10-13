@@ -55,9 +55,6 @@ public abstract class SourceInventory {
     }
 
 
-    //abstract methods
-    public abstract boolean isRemote();
-
     public void setChanged(){
         markCacheDirty();
     }

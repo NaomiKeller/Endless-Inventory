@@ -43,11 +43,6 @@ public class CachedSrcInv extends SourceInventory {
     }
 
     @Override
-    public boolean isRemote() {
-        return true;
-    }
-
-    @Override
     public ItemStack takeItem(ItemStack stack, int count){
         if(stack.isEmpty()) return ItemStack.EMPTY;
         ItemKey key = ItemKey.asKey(stack);
