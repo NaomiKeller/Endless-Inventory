@@ -11,7 +11,8 @@
     "AbstractContainerScreenAccessor",
     "AbstractContainerScreenMixin",
     "ScreenAccessor",
-    "RecipeBookComponentMixin"
+    "RecipeBookComponentMixin",
+    "KeyboardHandlerMixin"
   ],
   "injectors": {
     "defaultRequire": 1

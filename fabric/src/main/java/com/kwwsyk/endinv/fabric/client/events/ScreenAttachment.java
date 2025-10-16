@@ -16,10 +16,10 @@ import net.fabricmc.fabric.api.client.screen.v1.ScreenMouseEvents;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.world.entity.player.Player;
-import org.lwjgl.glfw.GLFW;
 
 import javax.annotation.Nullable;
 
@@ -30,10 +30,17 @@ public final class ScreenAttachment {
     @Nullable
     public static AttachingScreen<?> attachment;
 
+    private static boolean charTypedEventsRegistered;
+
     private ScreenAttachment() {
     }
 
     public static void register() {
+        if (!charTypedEventsRegistered) {
+            ScreenCharTypedEvents.BEFORE_CHAR_TYPED.register(ScreenAttachment::beforeCharTyped);
+            charTypedEventsRegistered = true;
+        }
+
         ScreenEvents.BEFORE_INIT.register((client, screen, width, height) -> {
             if (screen instanceof AbstractContainerScreen<?>) {
                 CachedConfig.readAndSyncClientConfigToServer(false);
@@ -244,8 +251,7 @@ public final class ScreenAttachment {
                 canceled[0] = flag;
             }
         });
-        if(!canceled[0]) return !handleCharTypedFromKey(expected, keyCode, scanCode, modifiers);
-        return false;
+        return !canceled[0];
     }
 
     public static boolean handleMouseDrag(AbstractContainerScreen<?> screen, double mouseX, double mouseY, int button, double deltaX, double deltaY) {
@@ -288,92 +294,35 @@ public final class ScreenAttachment {
         return canceled[0];
     }
 
-    private static boolean handleCharTypedFromKey(AttachingScreen<?> expected, int keyCode, int scanCode, int modifiers) {
-        if(ScreenFramework.getInstance()!=null && ScreenFramework.getInstance().searchBox.isFocused()) {
-            char chr = translateKeyToCharacter(keyCode, scanCode, modifiers);
-            if (chr == 0) {
-                return false;
+    private static boolean beforeCharTyped(GuiEventListener guiEventListener, char codePoint, int modifiers) {
+        AttachingScreen<?> current = attachment;
+        if (current == null) {
+            return false;
+        }
+        if (!(guiEventListener instanceof Screen screen) || current.screen != screen) {
+            return false;
+        }
+        if (!isAttachmentActive(current)) {
+            return false;
+        }
+        boolean[] canceled = {false};
+        current.charTyped(new IScreenEvent() {
+            @Override
+            public char getCodePoint() {
+                return codePoint;
             }
-            return ScreenFramework.getInstance().charTyped(chr, modifiers);
-            /*expected.charTyped(new IScreenEvent() {
-                @Override
-                public char getCodePoint() {
-                    return chr;
-                }
 
-                @Override
-                public int getModifiers() {
-                    return modifiers;
-                }
-            });*/
-        }
-        return false;
-    }
-
-    private static char translateKeyToCharacter(int keyCode, int scanCode, int modifiers) {
-        String keyName = GLFW.glfwGetKeyName(keyCode, scanCode);
-        if (keyName == null || keyName.isEmpty()) {
-            return 0;
-        }
-
-        char base = keyName.charAt(0);
-        boolean shift = (modifiers & GLFW.GLFW_MOD_SHIFT) != 0;
-        boolean caps = (modifiers & GLFW.GLFW_MOD_CAPS_LOCK) != 0;
-
-        if (Character.isLetter(base)) {
-            return (shift ^ caps) ? Character.toUpperCase(base) : Character.toLowerCase(base);
-        }
-
-        if (shift) {
-            switch (base) {
-                case '1':
-                    return '!';
-                case '2':
-                    return '@';
-                case '3':
-                    return '#';
-                case '4':
-                    return '$';
-                case '5':
-                    return '%';
-                case '6':
-                    return '^';
-                case '7':
-                    return '&';
-                case '8':
-                    return '*';
-                case '9':
-                    return '(';
-                case '0':
-                    return ')';
-                case '-':
-                    return '_';
-                case '=':
-                    return '+';
-                case '[':
-                    return '{';
-                case ']':
-                    return '}';
-                case '\\':
-                    return '|';
-                case ';':
-                    return ':';
-                case '\'':
-                    return '"';
-                case ',':
-                    return '<';
-                case '.':
-                    return '>';
-                case '/':
-                    return '?';
-                case '`':
-                    return '~';
-                default:
-                    break;
+            @Override
+            public int getModifiers() {
+                return modifiers;
             }
-        }
 
-        return base;
+            @Override
+            public void setCanceled(boolean flag) {
+                canceled[0] = flag;
+            }
+        });
+        return canceled[0];
     }
 
     private static boolean isAttachmentActive(AttachingScreen<?> expected) {
