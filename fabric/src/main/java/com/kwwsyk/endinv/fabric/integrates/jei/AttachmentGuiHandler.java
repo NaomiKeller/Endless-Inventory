@@ -17,6 +17,7 @@ import org.jetbrains.annotations.TestOnly;
 import org.slf4j.Logger;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 public class AttachmentGuiHandler implements IGuiContainerHandler<AbstractContainerScreen<?>> {
@@ -37,7 +38,11 @@ public class AttachmentGuiHandler implements IGuiContainerHandler<AbstractContai
     @Override
     public Optional<IClickableIngredient<?>> getClickableIngredientUnderMouse(AbstractContainerScreen<?> containerScreen, double mouseX, double mouseY) {
         if(ScreenFramework.getInstance() != null){
-            return Optional.of(new ItemClickEventWrapper(ScreenFramework.getInstance().getDisplayingPage(), mouseX, mouseY));
+            try {
+                return Optional.of(new ItemClickEventWrapper(ScreenFramework.getInstance().getDisplayingPage(), mouseX, mouseY));
+            } catch (Exception e) {
+                return Optional.empty();
+            }
         }
         return Optional.empty();
     }
@@ -49,10 +54,10 @@ public class AttachmentGuiHandler implements IGuiContainerHandler<AbstractContai
         ItemStack hovered;
         Rect2i hoveredSlotArea;
 
-        public ItemClickEventWrapper(DisplayPage page, double mouseX, double mouseY){
+        public ItemClickEventWrapper(DisplayPage page, double mouseX, double mouseY) {
             this.page = page;
             this.hovered = page.getHoveredOrClickedItem(mouseX,mouseY);
-            this.hoveredSlotArea = page.getOneInteractableArea(mouseX - page.getPageLeft(), mouseY - page.getPageTop());
+            this.hoveredSlotArea = Objects.requireNonNull(page.getOneInteractableArea(mouseX - page.getPageLeft(), mouseY - page.getPageTop()));
             try {
                 checkStatus(mouseX,mouseY);
             } catch (Exception e) {
@@ -112,7 +117,12 @@ public class AttachmentGuiHandler implements IGuiContainerHandler<AbstractContai
         private void checkStatus(double mouseX, double mouseY){
             Rect2i area = getArea();
             if(!area.contains((int) mouseX, (int) mouseY))
-                throw new IllegalStateException("The area does not contain clicked pos");
+                throw new IllegalStateException(String.format(
+                        "The area does not contain clicked pos: clicked: [%.2f,%.2f], area: [from[%d,%d],to[%d,%d]]",
+                        mouseX,mouseY,
+                        area.getX(),area.getY(),
+                        area.getX()+area.getWidth(),area.getY()+area.getHeight()
+                ));
         }
     }
 }

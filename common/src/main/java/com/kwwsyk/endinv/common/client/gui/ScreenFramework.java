@@ -73,7 +73,7 @@ public class ScreenFramework implements PageManager{
     private int pageOffsetY;
     private int roughMouseX;
     private int roughMouseY;
-    private EditBox searchBox;
+    public EditBox searchBox;
     public SortTypeSwitchBox sortTypeSwitchBox;
     private Button reverseSortButton;
     private Button configButton;

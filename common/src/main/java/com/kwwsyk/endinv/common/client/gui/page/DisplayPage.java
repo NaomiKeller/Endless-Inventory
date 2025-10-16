@@ -287,6 +287,7 @@ public abstract class DisplayPage{
      * @param YOffset mouseY-pageY
      * @return one interactable area
      */
+    @Nullable
     public abstract Rect2i getOneInteractableArea(double XOffset, double YOffset);
 
     /**Get mouse hovered or clicked item by mouse offset.

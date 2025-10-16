@@ -5,6 +5,7 @@ import com.kwwsyk.endinv.common.client.ClientModInfo;
 import com.kwwsyk.endinv.common.client.gui.AttachingScreen;
 import com.kwwsyk.endinv.common.client.gui.EndlessInventoryScreen;
 import com.kwwsyk.endinv.common.client.gui.IScreenEvent;
+import com.kwwsyk.endinv.common.client.gui.ScreenFramework;
 import com.kwwsyk.endinv.common.client.option.CachedConfig;
 import com.kwwsyk.endinv.common.client.option.MenuAttachabilityCache;
 import com.kwwsyk.endinv.common.network.payloads.toServer.OpenEndInvPayload;
@@ -88,7 +89,9 @@ public final class ScreenAttachment {
             ScreenMouseEvents.allowMouseScroll(screen).register((s, mouseX, mouseY, horizontal, vertical) -> allowMouseScroll(attachment, mouseX, mouseY, horizontal, vertical));
 
             ScreenKeyboardEvents.allowKeyPress(screen).register((s, keyCode, scanCode, modifiers) -> allowKeyPress(attachment, keyCode, scanCode, modifiers));
-            ScreenKeyboardEvents.afterKeyPress(screen).register((s, keyCode, scanCode, modifiers) -> handleCharTypedFromKey(attachment, keyCode, scanCode, modifiers));
+            //ScreenKeyboardEvents.afterKeyPress(screen).register((s, keyCode, scanCode, modifiers) -> handleCharTypedFromKey(attachment, keyCode, scanCode, modifiers));
+
+
         });
     }
 
@@ -241,7 +244,8 @@ public final class ScreenAttachment {
                 canceled[0] = flag;
             }
         });
-        return !canceled[0];
+        if(!canceled[0]) return !handleCharTypedFromKey(expected, keyCode, scanCode, modifiers);
+        return false;
     }
 
     public static boolean handleMouseDrag(AbstractContainerScreen<?> screen, double mouseX, double mouseY, int button, double deltaX, double deltaY) {
@@ -284,25 +288,26 @@ public final class ScreenAttachment {
         return canceled[0];
     }
 
-    private static void handleCharTypedFromKey(AttachingScreen<?> expected, int keyCode, int scanCode, int modifiers) {
-        if (attachment != expected || !isAttachmentActive(expected)) {
-            return;
-        }
-        char chr = translateKeyToCharacter(keyCode, scanCode, modifiers);
-        if (chr == 0) {
-            return;
-        }
-        expected.charTyped(new IScreenEvent() {
-            @Override
-            public char getCodePoint() {
-                return chr;
+    private static boolean handleCharTypedFromKey(AttachingScreen<?> expected, int keyCode, int scanCode, int modifiers) {
+        if(ScreenFramework.getInstance()!=null && ScreenFramework.getInstance().searchBox.isFocused()) {
+            char chr = translateKeyToCharacter(keyCode, scanCode, modifiers);
+            if (chr == 0) {
+                return false;
             }
+            return ScreenFramework.getInstance().charTyped(chr, modifiers);
+            /*expected.charTyped(new IScreenEvent() {
+                @Override
+                public char getCodePoint() {
+                    return chr;
+                }
 
-            @Override
-            public int getModifiers() {
-                return modifiers;
-            }
-        });
+                @Override
+                public int getModifiers() {
+                    return modifiers;
+                }
+            });*/
+        }
+        return false;
     }
 
     private static char translateKeyToCharacter(int keyCode, int scanCode, int modifiers) {

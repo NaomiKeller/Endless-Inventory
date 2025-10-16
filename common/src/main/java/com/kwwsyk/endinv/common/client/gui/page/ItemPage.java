@@ -25,6 +25,7 @@ import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 
 import java.util.List;
@@ -144,7 +145,9 @@ public abstract class ItemPage extends DisplayPage {
      * @param slot index of slot/item, often use {@link #getSlotByMouseOffset(double, double)} to get
      * @return one slot area
      */
+    @Nullable
     public Rect2i getSlotArea(int slot){
+        if(slot<0) return null;
         final int slotSize = 18;
         final int rowAt = slot / meta.columns();
         final int columnAt = slot % meta.columns();
