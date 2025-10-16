@@ -111,3 +111,19 @@ todo: fabric
 
 Ensure Endless Inventory updates always advance the last modified timestamp so quick successive edits keep their ordering.
 
+# 10.17
+Fabric: fix search
+
+# 1.1.0 Pre-3 Changelog
+Forge:
+- Fixed several bugs
+- Added "curios page" for Curios
+- Added config screen, cloth config api is a selectable dependency now
+- Experimental: Use mixin on Jei's recipe transfer handler to let Jei import ingredients from Attaching Screen in any menu.
+- - To open it: config startup config in `endless_inventory-common.toml`
+- - This feature depends on Jei's (`15.20.0.112`) non-api codes, this means it's not stable.
+
+Fabric:
+- Fixed several bugs
+- Added config screen
+
