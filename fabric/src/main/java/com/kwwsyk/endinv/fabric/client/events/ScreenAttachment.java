@@ -18,6 +18,7 @@ import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.world.entity.player.Player;
+import org.lwjgl.glfw.GLFW;
 
 import javax.annotation.Nullable;
 
@@ -87,6 +88,7 @@ public final class ScreenAttachment {
             ScreenMouseEvents.allowMouseScroll(screen).register((s, mouseX, mouseY, horizontal, vertical) -> allowMouseScroll(attachment, mouseX, mouseY, horizontal, vertical));
 
             ScreenKeyboardEvents.allowKeyPress(screen).register((s, keyCode, scanCode, modifiers) -> allowKeyPress(attachment, keyCode, scanCode, modifiers));
+            ScreenKeyboardEvents.afterKeyPress(screen).register((s, keyCode, scanCode, modifiers) -> handleCharTypedFromKey(attachment, keyCode, scanCode, modifiers));
         });
     }
 
@@ -282,13 +284,15 @@ public final class ScreenAttachment {
         return canceled[0];
     }
 
-    public static boolean handleCharTyped(Screen screen, char chr, int modifiers) {
-        AttachingScreen<?> current = attachment;
-        if (current == null || current.screen != screen || !isAttachmentActive(current)) {
-            return false;
+    private static void handleCharTypedFromKey(AttachingScreen<?> expected, int keyCode, int scanCode, int modifiers) {
+        if (attachment != expected || !isAttachmentActive(expected)) {
+            return;
         }
-        boolean[] canceled = {false};
-        current.charTyped(new IScreenEvent() {
+        char chr = translateKeyToCharacter(keyCode, scanCode, modifiers);
+        if (chr == 0) {
+            return;
+        }
+        expected.charTyped(new IScreenEvent() {
             @Override
             public char getCodePoint() {
                 return chr;
@@ -298,13 +302,73 @@ public final class ScreenAttachment {
             public int getModifiers() {
                 return modifiers;
             }
-
-            @Override
-            public void setCanceled(boolean flag) {
-                canceled[0] = flag;
-            }
         });
-        return canceled[0];
+    }
+
+    private static char translateKeyToCharacter(int keyCode, int scanCode, int modifiers) {
+        String keyName = GLFW.glfwGetKeyName(keyCode, scanCode);
+        if (keyName == null || keyName.isEmpty()) {
+            return 0;
+        }
+
+        char base = keyName.charAt(0);
+        boolean shift = (modifiers & GLFW.GLFW_MOD_SHIFT) != 0;
+        boolean caps = (modifiers & GLFW.GLFW_MOD_CAPS_LOCK) != 0;
+
+        if (Character.isLetter(base)) {
+            return (shift ^ caps) ? Character.toUpperCase(base) : Character.toLowerCase(base);
+        }
+
+        if (shift) {
+            switch (base) {
+                case '1':
+                    return '!';
+                case '2':
+                    return '@';
+                case '3':
+                    return '#';
+                case '4':
+                    return '$';
+                case '5':
+                    return '%';
+                case '6':
+                    return '^';
+                case '7':
+                    return '&';
+                case '8':
+                    return '*';
+                case '9':
+                    return '(';
+                case '0':
+                    return ')';
+                case '-':
+                    return '_';
+                case '=':
+                    return '+';
+                case '[':
+                    return '{';
+                case ']':
+                    return '}';
+                case '\\':
+                    return '|';
+                case ';':
+                    return ':';
+                case '\'':
+                    return '"';
+                case ',':
+                    return '<';
+                case '.':
+                    return '>';
+                case '/':
+                    return '?';
+                case '`':
+                    return '~';
+                default:
+                    break;
+            }
+        }
+
+        return base;
     }
 
     private static boolean isAttachmentActive(AttachingScreen<?> expected) {
