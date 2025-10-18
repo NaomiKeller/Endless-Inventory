@@ -30,6 +30,7 @@ public class ClientModInit extends AbstractClientModInitializer implements Clien
         registerKey(KeyMappings.OPEN_MENU);
         registerEmptyKey(KeyMappings.QUICK_MOVE);
         registerEmptyKey(KeyMappings.STAR_ITEM);
+        FabricNetworking.initClientEncodersOnly();
         FabricNetworking.initClient();
         ClientEvents.register();
     }

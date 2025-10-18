@@ -11,9 +11,9 @@ import com.kwwsyk.endinv.common.options.IServerConfig;
 import com.kwwsyk.endinv.fabric.event.FabricEvents;
 import com.kwwsyk.endinv.fabric.integrates.clothconfig.ClothConfigIntegration;
 import com.kwwsyk.endinv.fabric.nbtAttachment.FabricNbtStorage;
-import com.kwwsyk.endinv.fabric.network.FabricNetworking;
-import net.fabricmc.api.ModInitializer;
+import com.kwwsyk.endinv.fabric.network.FabricServerNetworking;
 import net.fabricmc.api.EnvType;
+import net.fabricmc.api.ModInitializer;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
@@ -31,7 +31,9 @@ public class ModInit extends AbstractModInitializer implements ModInitializer {
 
     @Override
     public void onInitialize() {
-        FabricNetworking.init();
+        // register serverbound receivers and populate clientbound encoders
+        FabricServerNetworking.init();
+        com.kwwsyk.endinv.fabric.network.FabricNetworking.initServerEncodersOnly();
         FabricEvents.init();
         super.init();
         com.kwwsyk.endinv.fabric.nbtAttachment.AttachingCapabilities.register();
@@ -90,7 +92,23 @@ public class ModInit extends AbstractModInitializer implements ModInitializer {
 
     @Override
     protected Supplier<MenuType<EndlessInventoryMenu>> createEndInvMenuType() {
-        return () -> new MenuType<>(EndlessInventoryMenu::createClient, FeatureFlags.DEFAULT_FLAGS);
+        return () -> {
+            @SuppressWarnings({"rawtypes", "unchecked"})
+            net.minecraft.world.inventory.MenuType raw = new net.minecraft.world.inventory.MenuType(
+                    (net.minecraft.world.inventory.MenuType.MenuSupplier) (net.minecraft.world.inventory.MenuType.MenuSupplier) (id, inventory) -> {
+                        try {
+                            Class<?> cls = Class.forName("com.kwwsyk.endinv.common.menu.EndlessInventoryMenu");
+                            java.lang.reflect.Method m = cls.getMethod("createClient", int.class, net.minecraft.world.entity.player.Inventory.class);
+                            Object menu = m.invoke(null, id, inventory);
+                            return (net.minecraft.world.inventory.AbstractContainerMenu) menu;
+                        } catch (Throwable t) {
+                            throw new RuntimeException(t);
+                        }
+                    },
+                    FeatureFlags.DEFAULT_FLAGS
+            );
+            return (MenuType<EndlessInventoryMenu>) raw;
+        };
     }
 
     @Override

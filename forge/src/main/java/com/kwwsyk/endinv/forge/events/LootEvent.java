@@ -1,26 +1,17 @@
 package com.kwwsyk.endinv.forge.events;
 
-import com.kwwsyk.endinv.common.EndlessInventory;
 import com.kwwsyk.endinv.common.ModInfo;
-import com.kwwsyk.endinv.common.ModRegistries;
-import com.kwwsyk.endinv.common.ServerLevelEndInv;
-import com.kwwsyk.endinv.common.network.payloads.toClient.ItemPickedUpPayload;
-import com.kwwsyk.endinv.forge.ServerConfig;
+import com.kwwsyk.endinv.common.autopick.AutoPickHelper;
+import com.kwwsyk.endinv.common.autopick.events.IBlockBreakEvent;
+import com.kwwsyk.endinv.common.autopick.events.ILivingDropsEvent;
+import com.kwwsyk.endinv.common.autopick.events.ILivingExpDropsEvent;
+import com.kwwsyk.endinv.common.autopick.events.IPlayerPickupItemEvent;
 import net.minecraft.core.BlockPos;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.*;
-import net.minecraft.world.item.enchantment.EnchantmentHelper;
-import net.minecraft.world.item.enchantment.Enchantments;
-import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.storage.loot.LootParams;
-import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
-import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.event.entity.living.LivingDropsEvent;
 import net.minecraftforge.event.entity.living.LivingExperienceDropEvent;
 import net.minecraftforge.event.entity.player.EntityItemPickupEvent;
@@ -28,9 +19,9 @@ import net.minecraftforge.event.level.BlockEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+import org.jetbrains.annotations.Nullable;
 
-import java.util.List;
-import java.util.Map;
+import java.util.Collection;
 
 /**Handle auto-pickup features, triggered when
  * 1. Entity drop item and exp: automatically transfer items into EndInv, and exp picked up, meaning jumping item and exp entity spawn.
@@ -42,27 +33,24 @@ public class LootEvent {
 
     @SubscribeEvent
     public static void onLivingDrops(LivingDropsEvent event) {
-        if (!(event.getSource().getEntity() instanceof ServerPlayer player)) return;
-        if(!isPlayerEnabledAutoPick(player)) return;
-        if (ServerConfig.CONFIG.ENABLE_AUTO_PICK.get()) {
-            EndlessInventory endInv = ServerLevelEndInv.getEndInvForPlayer(player).orElse(null);
-            if(endInv==null) return;
-            boolean flag = true;
-            for (ItemEntity drop : event.getDrops()) {
-                ItemStack stack = drop.getItem();
-                ItemStack remain = endInv.addItem(stack);
-                stack.split(remain.getCount());
-                if(!stack.isEmpty()) ModInfo.getPacketDistributor().sendToPlayer(player,new ItemPickedUpPayload(stack));
-                if (remain.isEmpty()) {
-                    drop.remove(Entity.RemovalReason.DISCARDED);
-                } else {
-                    drop.setItem(remain);
-                    flag = false;
+        AutoPickHelper.onLivingDrops(
+                new ILivingDropsEvent() {
+                    @Override
+                    public DamageSource getSource() {
+                        return event.getSource();
+                    }
+
+                    @Override
+                    public Collection<ItemEntity> getDrops() {
+                        return event.getDrops();
+                    }
+
+                    @Override
+                    public void setCanceled(boolean canceled) {
+                        event.setCanceled(canceled);
+                    }
                 }
-            }
-            if (flag)
-                event.setCanceled(true); // 取消原始掉落
-        }
+        );
     }
 
     /**
@@ -71,155 +59,95 @@ public class LootEvent {
      */
     @SubscribeEvent
     public static void onBlockBreak(BlockEvent.BreakEvent event) {
-        if (!(event.getPlayer() instanceof ServerPlayer player)) return;
-        if (!isPlayerEnabledAutoPick(player)) return;
-        if (!ServerConfig.CONFIG.ENABLE_AUTO_PICK.get()) return;
+        AutoPickHelper.onBlockBreak(
+                new IBlockBreakEvent() {
+                    @Override
+                    public LevelAccessor getLevel() {
+                        return event.getLevel();
+                    }
 
-        EndlessInventory endInv = ServerLevelEndInv.getEndInvForPlayer(player).orElse(null);
-        if (endInv == null) return;
+                    @Override
+                    public BlockPos getPos() {
+                        return event.getPos();
+                    }
 
-        ServerLevel level = (ServerLevel) event.getLevel();
-        BlockPos pos = event.getPos();
-        BlockState state = level.getBlockState(pos);
-        LootParams.Builder builder = new LootParams.Builder(level)
-                .withParameter(LootContextParams.ORIGIN, Vec3.atCenterOf(pos))
-                .withParameter(LootContextParams.TOOL, player.getMainHandItem())
-                .withParameter(LootContextParams.BLOCK_STATE, state)
-                .withParameter(LootContextParams.THIS_ENTITY, player);
-        if (event.getExpToDrop() > 0) {
-            int exp = event.getExpToDrop();
-            int repaired = repairPlayerItems(player, exp);
-            player.giveExperiencePoints(repaired);
-            event.setExpToDrop(0);
-        }
+                    @Override
+                    public BlockState getState() {
+                        return event.getState();
+                    }
 
-        List<ItemStack> drops = state.getDrops(builder);
+                    @Override
+                    public Player getPlayer() {
+                        return event.getPlayer();
+                    }
 
-        boolean allPicked = true;
-        for (ItemStack drop : drops) {
-            ItemStack remain = endInv.addItem(drop.copy());
-            drop.shrink(remain.getCount());
-            if (!drop.isEmpty()) {
-                ModInfo.getPacketDistributor().sendToPlayer(player, new ItemPickedUpPayload(drop));
-            }
-            if (!remain.isEmpty()) {
-                allPicked = false;
-                level.addFreshEntity(new ItemEntity(level, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, remain));
-            }
-        }
+                    @Override
+                    public int getExpToDrop() {
+                        return event.getExpToDrop();
+                    }
 
-        if (allPicked) {
-            // 不生成掉落物
-            event.setCanceled(true);
-            level.setBlock(pos, Blocks.AIR.defaultBlockState(), 3);
-        }
+                    @Override
+                    public void setExpToDrop(int exp) {
+                        event.setExpToDrop(exp);
+                    }
+
+                    @Override
+                    public void setCanceled(boolean canceled) {
+                        event.setCanceled(canceled);
+                    }
+                }
+        );
     }
 
     @SubscribeEvent
     public static void onExpDrops(LivingExperienceDropEvent event){
-        if(event.getAttackingPlayer() instanceof  ServerPlayer player){
-            if(!isPlayerEnabledAutoPick(player) || !ServerConfig.CONFIG.ENABLE_AUTO_PICK.get()) return;
-            int exp = event.getDroppedExperience();
-            int newValue = repairPlayerItems(player,exp);
-            player.giveExperiencePoints(newValue);
-            event.setCanceled(true);
-        }
+        AutoPickHelper.onExpDrops(
+                new ILivingExpDropsEvent() {
+                    @Override
+                    public int getDroppedExperience() {
+                        return event.getDroppedExperience();
+                    }
+
+                    @Override
+                    public void setDroppedExperience(int droppedExperience) {
+                        event.setDroppedExperience(droppedExperience);
+                    }
+
+                    @Override
+                    public @Nullable Player getAttackingPlayer() {
+                        return event.getAttackingPlayer();
+                    }
+
+                    @Override
+                    public void setCanceled(boolean canceled) {
+                        event.setCanceled(canceled);
+                    }
+                }
+        );
     }
 
     @SubscribeEvent(priority = EventPriority.LOWEST)//mostly, the itemEntity should vanish.
     public static void onPickupItem(EntityItemPickupEvent event){
-        Player player = event.getEntity();
-        if(!(player instanceof ServerPlayer) || !ServerConfig.CONFIG.ENABLE_AUTO_PICK.get() || !isPlayerEnabledAutoPick(player)){
-            return;
-        }
-        ItemEntity entity = event.getItem();
-        if(entity.hasPickUpDelay()) return;
-        ItemStack stack = entity.getItem();
-        if(shouldMoveTo(player,stack)){
-            ServerLevelEndInv.getEndInvForPlayer(player).ifPresent(endInv->{
-                ItemStack remain = endInv.addItem(stack.copy());
+        AutoPickHelper.onPickupItem(
+                new IPlayerPickupItemEvent() {
+                    @Override
+                    public ItemEntity getItem() {
+                        return event.getItem();
+                    }
 
-                if(!stack.isEmpty()) ModInfo.getPacketDistributor().sendToPlayer((ServerPlayer) player,new ItemPickedUpPayload(stack.copy()));
-                if(remain.isEmpty()){
-                    stack.setCount(0);
-                }else {//rare
-                    stack.split(remain.getCount());
+                    @Override
+                    public Player getPlayer() {
+                        return event.getEntity();
+                    }
                 }
-            });
-        }
-    }
-
-    /**Items satisfied with several conditions will stay in the player inventory.
-     * 1. Player has mergeable items in the inventory.
-     * 2. Player has unstackable some class items in inventory or worn, e.g. {@link SwordItem},{@link ArmorItem}...
-     */
-    private static boolean shouldMoveTo(Player player, ItemStack stack){
-        if(stack.isEmpty()) return false;
-        Item item = stack.getItem();
-        if(item instanceof SwordItem swordItem){
-            return hasSuch(player,swordItem);
-        }else if(item instanceof AxeItem axeItem){
-            return hasSuch(player,axeItem);
-        }else if(item instanceof PickaxeItem such){
-            return hasSuch(player,such);
-        }else if(item instanceof ShovelItem such){
-            return hasSuch(player,such);
-        }else if(item instanceof HoeItem such){
-            return hasSuch(player,such);
-        }else if(item instanceof TridentItem such){
-            return hasSuch(player,such);
-        }else if(item instanceof ShieldItem such){
-            return hasSuch(player,such);
-        }else if(item instanceof ShearsItem such){
-            return hasSuch(player,such);
-        }else if(item instanceof BoatItem such){
-            return hasSuch(player,such);
-        }else if(item instanceof ElytraItem such){
-            return hasSuch(player,such);
-        }else if(item instanceof BowItem such){
-            return hasSuch(player,such);
-        }else if(item instanceof CrossbowItem such){
-            return hasSuch(player,such);
-        }else if(item instanceof ArmorItem armorItem){
-            return hasOrSwearing(player,armorItem);
-        }else{
-            return !canMerge(player,stack);
-        }
-    }
-
-    private static boolean canMerge(Player player, ItemStack stack){
-        return player.inventoryMenu.slots.stream().anyMatch(slot -> ItemStack.isSameItemSameTags(slot.getItem(),stack));
-    }
-
-    private static boolean hasSuch(Player player, Item item){
-        return player.inventoryMenu.slots.stream().anyMatch(slot->slot.getItem().getItem().getClass()==item.getClass());
-    }
-
-    private static boolean hasOrSwearing(Player player,ArmorItem armor){
-        EquipmentSlot slot = armor.getEquipmentSlot();
-        ItemStack equipped = player.getItemBySlot(slot);
-        if(equipped.isEmpty()){
-            return player.inventoryMenu.slots.stream().anyMatch(slt-> slt.getItem().getItem() instanceof ArmorItem a1 && a1.getEquipmentSlot() == slot);
-        }
-        return true;
+        );
     }
 
 
-    //copied from ExperienceOrb.java
-    private static int repairPlayerItems(Player player, int repairAmount) {
-        Map.Entry<EquipmentSlot, ItemStack> entry = EnchantmentHelper.getRandomItemWith(Enchantments.MENDING, player, ItemStack::isDamaged);
-        if (entry != null) {
-            ItemStack itemstack = entry.getValue();
-            int i = Math.min((int) (repairAmount * itemstack.getXpRepairRatio()), itemstack.getDamageValue());
-            itemstack.setDamageValue(itemstack.getDamageValue() - i);
-            int j = repairAmount - i/2;
-            return j > 0 ? repairPlayerItems(player, j) : 0;
-        } else {
-            return repairAmount;
-        }
-    }
 
-    private static boolean isPlayerEnabledAutoPick(Player player){
-        return ModRegistries.NbtAttachments.getSyncedConfig().computeIfAbsent(player).autoPicking();
-    }
+
+
+
+
+
 }

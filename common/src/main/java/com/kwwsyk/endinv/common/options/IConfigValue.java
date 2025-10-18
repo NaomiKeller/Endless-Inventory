@@ -21,4 +21,19 @@ public interface IConfigValue<T> {
             }
         };
     }
+
+    static <T> IConfigValue<T> of(Supplier<T> getter, Consumer<T> setter, Runnable onset){
+        return new IConfigValue<T>() {
+            @Override
+            public T get() {
+                return getter.get();
+            }
+
+            @Override
+            public void set(T t) {
+                setter.accept(t);
+                onset.run();
+            }
+        };
+    }
 }

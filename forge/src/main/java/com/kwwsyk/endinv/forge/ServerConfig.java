@@ -62,15 +62,15 @@ public class ServerConfig {
     public final IServerConfig INSTANCE = new IServerConfig() {
 
         private static IConfigValue<Integer> convert(ForgeConfigSpec.IntValue value){
-            return IConfigValue.of(value,value::set);
+            return IConfigValue.of(value,value::set, CONFIG_SPEC::save);
         }
 
         private static IConfigValue<Boolean> convert(ForgeConfigSpec.BooleanValue value){
-            return IConfigValue.of(value,value::set);
+            return IConfigValue.of(value,value::set, CONFIG_SPEC::save);
         }
 
         private static IConfigValue<Boolean> convert(ForgeConfigSpec.BooleanValue value, Runnable onSet){
-            return IConfigValue.of(value,value::set);
+            return IConfigValue.of(value,value::set, onSet);
         }
 
         @Override

@@ -125,5 +125,14 @@ Forge:
 
 Fabric:
 - Fixed several bugs
-- Added config screen
+- Added config screen, cloth config api is a selectable dependency now
+\
+# 10.17 Fabric autopick & metadata
+- Fabric: removed reflection-based loot registration; use mixins and Fabric API where applicable to restore autopick.
+- Fabric: block break drops are absorbed via Block.popResource/popExperience mixins; no entities when fully absorbed; XP repairs Mending gear then grants remainder.
+- Fabric: mob death drops are absorbed by intercepting LivingEntity.dropFromLootTable and Entity.spawnAtLocation; XP handled via ExperienceOrb.award.
+- Fabric: added server/client networking init split to avoid unregistered payloads; ensured clientbound/serverbound encoders registered on respective sides.
+- Metadata: mods metadata updated to suggest optional Cloth Config on Fabric and optional cloth_config on Forge; relaxed Fabric loader and MC version ranges.
 
+# 10.18 Fabric autopick fix
+- Fabric: fix BlockDropMixin null breaker by capturing and clearing the breaker around Block.playerDestroy; ThreadLocal now set precisely during drops/XP awarding to restore reliable auto-pick.

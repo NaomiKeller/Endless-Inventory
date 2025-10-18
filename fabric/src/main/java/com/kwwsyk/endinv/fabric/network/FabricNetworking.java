@@ -1,7 +1,6 @@
 package com.kwwsyk.endinv.fabric.network;
 
 import com.kwwsyk.endinv.common.AbstractModInitializer;
-import com.kwwsyk.endinv.common.client.option.CachedConfig;
 import com.kwwsyk.endinv.common.network.payloads.ModPacketContext;
 import com.kwwsyk.endinv.common.network.payloads.ModPacketPayload;
 import com.kwwsyk.endinv.common.network.payloads.SyncedConfig;
@@ -54,9 +53,38 @@ public final class FabricNetworking {
         }
     }
 
+    // Populate clientbound encoder/decoder map on the server without registering receivers
+    public static void initServerEncodersOnly() {
+        registerClientbound(EndInvContent.class, EndInvContent::encode, EndInvContent::decode, "endinv_content");
+        registerClientbound(EndInvMetadata.class, EndInvMetadata::encode, EndInvMetadata::decode, "endinv_meta");
+        registerClientbound(ItemPickedUpPayload.class, ItemPickedUpPayload::encode, ItemPickedUpPayload::decode, "auto_picked");
+        registerClientbound(SetItemDisplayContentPayload.class, SetItemDisplayContentPayload::encode, SetItemDisplayContentPayload::decode, "itemdisplay_content");
+        registerClientbound(SetStarredPagePayload.class, SetStarredPagePayload::encode, SetStarredPagePayload::decode, "starred_item");
+        registerClientbound(MenuAttachabilityPayload.class, MenuAttachabilityPayload::encode, MenuAttachabilityPayload::decode, "menu_attachability");
+        registerClientbound(SyncedConfig.class, SyncedConfig::encode, SyncedConfig::decode, SyncedConfig.DEFAULT.id());
+    }
+
     public static void initClient() {
         for (PayloadRegistration<? extends ModPacketPayload> registration : CLIENTBOUND_REGISTRATIONS) {
             registerClientReceiver(registration);
+        }
+    }
+
+    // Populate encoders for client->server payloads on client side (no receiver registration)
+    public static void initClientEncodersOnly() {
+        SERVERBOUND.put(ItemClickPayload.class, new PayloadRegistration<>(AbstractModInitializer.withModLocation("item_click"), ItemClickPayload::encode, ItemClickPayload::decode));
+        SERVERBOUND.put(CreativeItemModPayload.class, new PayloadRegistration<>(AbstractModInitializer.withModLocation("item_modify"), CreativeItemModPayload::encode, CreativeItemModPayload::decode));
+        SERVERBOUND.put(ItemPageContext.class, new PayloadRegistration<>(AbstractModInitializer.withModLocation("page_context"), ItemPageContext::encode, ItemPageContext::decode));
+        SERVERBOUND.put(OpenEndInvPayload.class, new PayloadRegistration<>(AbstractModInitializer.withModLocation("open_endinv"), OpenEndInvPayload::encode, OpenEndInvPayload::decode));
+        SERVERBOUND.put(QuickMoveToPagePayload.class, new PayloadRegistration<>(AbstractModInitializer.withModLocation("quick_move_page"), QuickMoveToPagePayload::encode, QuickMoveToPagePayload::decode));
+        SERVERBOUND.put(StarItemPayload.class, new PayloadRegistration<>(AbstractModInitializer.withModLocation("star_item"), StarItemPayload::encode, StarItemPayload::decode));
+        SERVERBOUND.put(ToggleCraftingPayload.class, new PayloadRegistration<>(AbstractModInitializer.withModLocation("toggle_crafting"), ToggleCraftingPayload::encode, ToggleCraftingPayload::decode));
+        SERVERBOUND.put(SyncedConfig.class, new PayloadRegistration<>(AbstractModInitializer.withModLocation(SyncedConfig.DEFAULT.id()), SyncedConfig::encode, SyncedConfig::decode));
+        if (FabricLoader.getInstance().isModLoaded("jei")) {
+            SERVERBOUND.put(com.kwwsyk.endinv.fabric.network.payloads.JeiTransferRecipePayload.class,
+                    new PayloadRegistration<>(AbstractModInitializer.withModLocation("jei_transfer_recipe"),
+                            com.kwwsyk.endinv.fabric.network.payloads.JeiTransferRecipePayload::encode,
+                            com.kwwsyk.endinv.fabric.network.payloads.JeiTransferRecipePayload::decode));
         }
     }
 
@@ -92,12 +120,7 @@ public final class FabricNetworking {
     private static void registerClientReceiver(PayloadRegistration<? extends ModPacketPayload> registration) {
         ClientPlayNetworking.registerGlobalReceiver(registration.id(), (client, handler, buf, responseSender) -> {
             ModPacketPayload payload = registration.decode(buf);
-            client.execute(() -> {
-                payload.handle(context(client.player));
-                if (payload instanceof SyncedConfig config) {
-                    CachedConfig.acceptServerFlags(config);
-                }
-            });
+            client.execute(() -> payload.handle(context(client.player)));
         });
     }
 
