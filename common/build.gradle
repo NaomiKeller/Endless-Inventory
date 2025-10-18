@@ -10,17 +10,56 @@ buildscript {
 }
 
 plugins {
-    id 'net.minecraftforge.gradle' version '6.+'
+    id 'net.neoforged.moddev' version '2.0.80'
     id 'idea'
-    id 'org.parchmentmc.librarian.forgegradle' version '1.+'
 }
 
 java {
     toolchain.languageVersion.set(JavaLanguageVersion.of(17))
 }
 
-minecraft {
-    mappings channel: "parchment", version: "2023.09.03-1.20.1"
+neoForge {
+
+    parchment{
+        // The Minecraft version for which the Parchment mappings were created.
+        // This does not necessarily need to match the Minecraft version your mod targets
+        // Defaults to the value of Gradle property neoForge.parchment.minecraftVersion
+        minecraftVersion = parchment_minecraft
+
+        // The version of Parchment mappings to apply.
+        // See https://parchmentmc.org/docs/getting-started for a list.
+        // Defaults to the value of Gradle property neoForge.parchment.mappingsVersion
+        mappingsVersion = parchment_version
+
+        // Overrides the full Maven coordinate of the Parchment artifact to use
+        // This is computed from the minecraftVersion and mappingsVersion properties by default.
+        // If you set this property explicitly, minecraftVersion and mappingsVersion will be ignored.
+        // parchmentArtifact = "org.parchmentmc.data:parchment-$minecraftVersion:$mappingsVersion:checked@zip"
+
+        // The string that parameters are prefixed with when they conflict with other names inside the method.
+        // Defaults to `p_`. You can set this property to an empty string to disable conflict resolution,
+        // for example, when you use the checked version of parchment, which already includes prefixes.
+        // conflictResolutionPrefix = ''
+
+        // Can be used to explicitly disable this subsystem. By default, it will be enabled automatically as soon
+        // as parchmentArtifact or minecraftVersion and mappingsVersion are set.
+        // enabled = true
+    }
+
+    // Look for versions on https://projects.neoforged.net/neoforged/neoform
+    neoFormVersion = "1.21.1-20240808.144430"
+
+    runs {
+        client {
+            client()
+        }
+        server {
+            server()
+        }
+        data {
+            data()
+        }
+    }
 }
 
 configurations {
@@ -39,7 +78,6 @@ repositories {
 }
 
 dependencies {
-    minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
 
     implementation 'org.jetbrains:annotations:24.0.1'
 

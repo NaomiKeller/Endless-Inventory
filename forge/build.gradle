@@ -110,10 +110,6 @@ dependencies {
     runtimeOnly fg.deobf("top.theillusivec4.curios:curios-forge:${curio_version}")
     compileOnly fg.deobf("top.theillusivec4.curios:curios-forge:${curio_version}:api")
 
-    //runtimeOnly fg.deobf(files("run/fgdeobf/artifacts-forge-9.5.16.jar"))
-
-    //implementation fg.deobf("curse.maven:timeless-and-classics-zero-1028108:6632240-sources-6633203")
-
     implementation fg.deobf("me.shedaniel.cloth:cloth-config-forge:${cloth_config_version}")
 }
 
