@@ -2,6 +2,7 @@ package com.kwwsyk.endinv.common.menu.page;
 
 import com.kwwsyk.endinv.common.client.gui.page.*;
 import com.kwwsyk.endinv.common.client.gui.page.manager.PageManager;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.*;
@@ -145,8 +146,7 @@ public class PageType {
 
     private static boolean isFoodOrPotion(ItemStack itemStack){
         Item item = itemStack.getItem();
-        return item instanceof PotionItem ||
-                itemStack.isEdible();
+        return item instanceof PotionItem || itemStack.has(DataComponents.FOOD);
     }
 
     static {

@@ -1,5 +1,6 @@
 package com.kwwsyk.endinv.common.network.payloads.toServer;
 
+import com.kwwsyk.endinv.common.AbstractModInitializer;
 import com.kwwsyk.endinv.common.EndlessInventory;
 import com.kwwsyk.endinv.common.ServerLevelEndInv;
 import com.kwwsyk.endinv.common.menu.page.pageManager.PageMetaDataManager;
@@ -7,6 +8,9 @@ import com.kwwsyk.endinv.common.network.payloads.ModPacketContext;
 import com.kwwsyk.endinv.common.network.payloads.ModPacketPayload;
 import com.mojang.logging.LogUtils;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.Slot;
@@ -27,9 +31,20 @@ public record QuickMoveToPagePayload(int slotId) implements ModPacketPayload {
         return new QuickMoveToPagePayload(o.readInt());
     }
 
+    public static final StreamCodec<RegistryFriendlyByteBuf, QuickMoveToPagePayload> STREAM_CODEC =
+            StreamCodec.of((buf, value) -> encode(value, buf), QuickMoveToPagePayload::decode);
+
+    public static final CustomPacketPayload.Type<QuickMoveToPagePayload> TYPE =
+            new CustomPacketPayload.Type<>(AbstractModInitializer.withModLocation("quick_move_page"));
+
     @Override
     public String id() {
         return "quick_move_page";
+    }
+
+    @Override
+    public CustomPacketPayload.Type<? extends CustomPacketPayload> type() {
+        return TYPE;
     }
 
     public void handle(ModPacketContext iPayloadContext) {

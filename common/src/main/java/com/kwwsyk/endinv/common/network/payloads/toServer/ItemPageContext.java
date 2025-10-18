@@ -1,5 +1,6 @@
 package com.kwwsyk.endinv.common.network.payloads.toServer;
 
+import com.kwwsyk.endinv.common.AbstractModInitializer;
 import com.kwwsyk.endinv.common.EndlessInventory;
 import com.kwwsyk.endinv.common.ServerLevelEndInv;
 import com.kwwsyk.endinv.common.menu.EndlessInventoryMenu;
@@ -14,6 +15,9 @@ import com.kwwsyk.endinv.common.options.ContentTransferMode;
 import com.kwwsyk.endinv.common.util.SortType;
 import net.minecraft.core.NonNullList;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 
@@ -31,6 +35,12 @@ import static com.kwwsyk.endinv.common.ModInfo.getServerConfig;
  * @param pageData
  */
 public record ItemPageContext(int startIndex, int length, PageData pageData) implements ModPacketPayload {
+
+    public static final StreamCodec<RegistryFriendlyByteBuf, ItemPageContext> STREAM_CODEC =
+            StreamCodec.of((buf, value) -> encode(value, buf), ItemPageContext::decode);
+
+    public static final CustomPacketPayload.Type<ItemPageContext> TYPE =
+            new CustomPacketPayload.Type<>(AbstractModInitializer.withModLocation("page_context"));
 
     public static void encode(ItemPageContext context, FriendlyByteBuf o) {
         o.writeInt(context.startIndex);
@@ -65,6 +75,11 @@ public record ItemPageContext(int startIndex, int length, PageData pageData) imp
     @Override
     public String id() {
         return "page_context";
+    }
+
+    @Override
+    public CustomPacketPayload.Type<? extends CustomPacketPayload> type() {
+        return TYPE;
     }
 
     public void handle(ModPacketContext iPayloadContext) {

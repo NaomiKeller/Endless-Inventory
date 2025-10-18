@@ -15,6 +15,7 @@ import com.kwwsyk.endinv.common.util.SortType;
 import net.minecraft.CrashReport;
 import net.minecraft.CrashReportCategory;
 import net.minecraft.ReportedException;
+import net.minecraft.core.NonNullList;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundContainerSetSlotPacket;
 import net.minecraft.server.level.ServerPlayer;
@@ -26,7 +27,9 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.flag.FeatureFlagSet;
 import net.minecraft.world.inventory.*;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.CraftingInput;
 import net.minecraft.world.item.crafting.CraftingRecipe;
+import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RecipeType;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.TestOnly;
@@ -704,11 +707,22 @@ public class EndlessInventoryMenu extends AbstractContainerMenu implements PageM
         }
         var level = serverPlayer.level();
         ItemStack resultStack = ItemStack.EMPTY;
-        Optional<CraftingRecipe> optional = serverPlayer.server.getRecipeManager().getRecipeFor(RecipeType.CRAFTING, this.craftMatrix, level);
+        int w = CRAFT_GRID_WIDTH;
+        int h = CRAFT_GRID_HEIGHT;
+        NonNullList<ItemStack> items = NonNullList.withSize(w * h, ItemStack.EMPTY);
+        for (int y = 0; y < h; y++) {
+            for (int x = 0; x < w; x++) {
+                int idx = y * w + x;
+                items.set(idx, this.craftMatrix.getItem(idx));
+            }
+        }
+        CraftingInput input = CraftingInput.of(w, h, items);
+        Optional<RecipeHolder<CraftingRecipe>> optional = serverPlayer.server.getRecipeManager().getRecipeFor(RecipeType.CRAFTING, input, level);
         if (optional.isPresent()) {
-            CraftingRecipe recipe = optional.get();
-            if (this.craftResult.setRecipeUsed(level, serverPlayer, recipe)) {
-                ItemStack assembled = recipe.assemble(this.craftMatrix, level.registryAccess());
+            RecipeHolder<CraftingRecipe> holder = optional.get();
+            CraftingRecipe recipe = holder.value();
+            if (this.craftResult.setRecipeUsed(level, serverPlayer, holder)) {
+                ItemStack assembled = recipe.assemble(input, level.registryAccess());
                 if (assembled.isItemEnabled(level.enabledFeatures())) {
                     resultStack = assembled;
                 }

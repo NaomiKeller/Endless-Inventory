@@ -6,15 +6,13 @@ import com.kwwsyk.endinv.common.ModInfo;
 import com.kwwsyk.endinv.common.NbtAttachment;
 import com.kwwsyk.endinv.common.menu.EndlessInventoryMenu;
 import com.kwwsyk.endinv.common.network.IPacketDistributor;
+import com.kwwsyk.endinv.common.network.payloads.ModPacketPayload;
 import com.kwwsyk.endinv.common.network.payloads.SyncedConfig;
 import com.kwwsyk.endinv.common.options.IServerConfig;
-import com.kwwsyk.endinv.common.util.SortType;
 import com.kwwsyk.endinv.neoforge.client.config.ClientConfig;
 import com.kwwsyk.endinv.neoforge.options.ServerConfig;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.SlotAccess;
 import net.minecraft.world.entity.player.Player;
@@ -38,8 +36,6 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 import net.neoforged.neoforge.registries.NeoForgeRegistries;
 
 import javax.annotation.Nullable;
-import java.util.Comparator;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Supplier;
 
@@ -85,25 +81,22 @@ public class ModInitializer extends AbstractModInitializer {
     @Override
     protected IPacketDistributor loadPacketDistributor() {
         return new IPacketDistributor() {
+
             @Override
-            public void sendToServer(CustomPacketPayload payload) {
+            public void sendToServer(ModPacketPayload payload) {
                 PacketDistributor.sendToServer(payload);
             }
 
             @Override
-            public void sendToPlayer(ServerPlayer player, CustomPacketPayload payload) {
-                PacketDistributor.sendToPlayer(player,payload);
+            public void sendToPlayer(ServerPlayer player, ModPacketPayload payload) {
+                PacketDistributor.sendToPlayer(player, payload);
+            }
+
+            @Override
+            public void sendToAllPlayer(ModPacketPayload payload) {
+                PacketDistributor.sendToAllPlayers(payload);
             }
         };
-    }
-
-    @Override
-    protected SortType.ISortHelper loadSortHelper() {
-        return () -> Comparator.comparing(
-                s -> Optional.ofNullable(s.getItemHolder().getKey())
-                        .map(ResourceKey::location)
-                        .map(Object::toString)
-                        .orElse("~"));
     }
 
     @Override

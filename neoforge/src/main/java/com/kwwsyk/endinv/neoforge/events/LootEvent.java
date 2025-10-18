@@ -21,16 +21,17 @@ import net.neoforged.neoforge.event.entity.living.LivingDropsEvent;
 import net.neoforged.neoforge.event.entity.living.LivingExperienceDropEvent;
 import net.neoforged.neoforge.event.entity.player.ItemEntityPickupEvent;
 import net.neoforged.neoforge.event.level.BlockDropsEvent;
-import net.neoforged.neoforge.network.PacketDistributor;
 
 import java.util.Optional;
+
+import static com.kwwsyk.endinv.common.ModInfo.getPacketDistributor;
 
 /**Handle auto-pickup features, triggered when
  * 1. Entity drop item and exp: automatically transfer items into EndInv, and exp picked up, meaning jumping item and exp entity spawn.
  * 2. Block drop item and exp: Similar to item behavior. But beds or chests may still drop item entities as different drop logic.
  * 3. Picked-up items (by player touch item entities) will be automatically transferred into EndInv. But items satisfied with some conditions will stay in playerInv.
  */
-@EventBusSubscriber(modid = ModInfo.MOD_ID,bus = EventBusSubscriber.Bus.GAME)
+@EventBusSubscriber(modid = ModInfo.MOD_ID)
 public class LootEvent {
 
     @SubscribeEvent
@@ -45,7 +46,7 @@ public class LootEvent {
                 ItemStack stack = drop.getItem();
                 ItemStack remain = endInv.addItem(stack);
                 stack.split(remain.getCount());
-                if(!stack.isEmpty()) PacketDistributor.sendToPlayer(player,new ItemPickedUpPayload(stack));
+                if(!stack.isEmpty()) getPacketDistributor().sendToPlayer(player,new ItemPickedUpPayload(stack));
                 if (remain.isEmpty()) {
                     drop.remove(Entity.RemovalReason.DISCARDED);
                 } else {
@@ -75,7 +76,7 @@ public class LootEvent {
                 ItemStack stack = drop.getItem();
                 ItemStack remain = endInv.addItem(stack);
                 stack.split(remain.getCount());
-                if(!stack.isEmpty()) PacketDistributor.sendToPlayer(player,new ItemPickedUpPayload(stack));
+                if(!stack.isEmpty()) getPacketDistributor().sendToPlayer(player,new ItemPickedUpPayload(stack));
                 if (remain.isEmpty()) {
                     drop.remove(Entity.RemovalReason.DISCARDED);
                 } else {
@@ -115,7 +116,7 @@ public class LootEvent {
             ServerLevelEndInv.getEndInvForPlayer(player).ifPresent(endInv->{
                 ItemStack remain = endInv.addItem(stack.copy());
 
-                if(!stack.isEmpty()) PacketDistributor.sendToPlayer((ServerPlayer) player,new ItemPickedUpPayload(stack.copy()));
+                if(!stack.isEmpty()) getPacketDistributor().sendToPlayer((ServerPlayer) player,new ItemPickedUpPayload(stack.copy()));
                 if(remain.isEmpty()){
                     stack.setCount(0);
                 }else {

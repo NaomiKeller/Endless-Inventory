@@ -4,16 +4,13 @@ import com.kwwsyk.endinv.common.ModInfo;
 import com.kwwsyk.endinv.common.network.payloads.SyncedConfig;
 import com.kwwsyk.endinv.common.network.payloads.toClient.*;
 import com.kwwsyk.endinv.common.network.payloads.toServer.*;
-import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.handling.DirectionalPayloadHandler;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 
-import static com.kwwsyk.endinv.common.AbstractModInitializer.withModLocation;
-
-@EventBusSubscriber(modid = ModInfo.MOD_ID,bus = EventBusSubscriber.Bus.MOD)
+@EventBusSubscriber(modid = ModInfo.MOD_ID)
 public class PayloadReg {
 
 
@@ -22,67 +19,77 @@ public class PayloadReg {
     public static void registerPayload(final RegisterPayloadHandlersEvent event){
         final PayloadRegistrar registrar = event.registrar("1");
         registrar.playBidirectional(
-                new CustomPacketPayload.Type<>(withModLocation("endinv_settings")),
+                SyncedConfig.TYPE,
                 SyncedConfig.STREAM_CODEC,
                 new DirectionalPayloadHandler<>(
-                        (pl,cxt)->pl.handleClient(cxt::player),
-                        (pl,cxt)->pl.handleServer(cxt::player)
+                        (pl,cxt)->pl.handle(cxt::player),
+                        (pl,cxt)->pl.handle(cxt::player)
                 )
         );
         registrar.playToServer(
-                new CustomPacketPayload.Type<>(withModLocation("page_context")),
+                ItemPageContext.TYPE,
                 ItemPageContext.STREAM_CODEC,
                 (pl,cxt)->pl.handle(cxt::player)
         );
         registrar.playToClient(
-                new CustomPacketPayload.Type<>(withModLocation("itemdisplay_content")),
+                SetItemDisplayContentPayload.TYPE,
                 SetItemDisplayContentPayload.STREAM_CODEC,
                 (pl,cxt)->pl.handle(cxt::player)
         );
         registrar.playToServer(
-                new CustomPacketPayload.Type<>(withModLocation("item_click")),
+                ItemClickPayload.TYPE,
                 ItemClickPayload.STREAM_CODEC,
                 (pl,cxt)->pl.handle(cxt::player)
         );
+        registrar.playToServer(
+                ToggleCraftingPayload.TYPE,
+                ToggleCraftingPayload.STREAM_CODEC,
+                (pl,cxt)->pl.handle(cxt::player)
+        );
         registrar.playToClient(
-                new CustomPacketPayload.Type<>(withModLocation("endinv_meta")),
+                EndInvMetadata.TYPE,
                 EndInvMetadata.STREAM_CODEC,
                 (pl,cxt)->pl.handle(cxt::player)
         );
         registrar.playToServer(
-                new CustomPacketPayload.Type<>(withModLocation("open_endinv")),
+                OpenEndInvPayload.TYPE,
                 OpenEndInvPayload.STREAM_CODEC,
                 (pl,cxt)->pl.handle(cxt::player)
         );
         registrar.playToServer(
-                new CustomPacketPayload.Type<>(withModLocation("item_modify")),
-                ItemDisplayItemModPayload.STREAM_CODEC,
+                CreativeItemModPayload.TYPE,
+                CreativeItemModPayload.STREAM_CODEC,
                 (pl,cxt)->pl.handle(cxt::player)
         );
         registrar.playToClient(
-                new CustomPacketPayload.Type<>(withModLocation("auto_picked")),
+                ItemPickedUpPayload.TYPE,
                 ItemPickedUpPayload.STREAM_CODEC,
                 (pl,cxt)->pl.handle(cxt::player)
         );
         registrar.playToServer(
-                new CustomPacketPayload.Type<>(withModLocation("star_item")),
+                StarItemPayload.TYPE,
                 StarItemPayload.STREAM_CODEC,
                 (pl,cxt)->pl.handle(cxt::player)
         );
         registrar.playToServer(
-                new CustomPacketPayload.Type<>(withModLocation("quick_move_page")),
+                QuickMoveToPagePayload.TYPE,
                 QuickMoveToPagePayload.STREAM_CODEC,
                 (pl,cxt)->pl.handle(cxt::player)
         );
         registrar.playToClient(
-                new CustomPacketPayload.Type<>(withModLocation("starred_item")),
+                SetStarredPagePayload.TYPE,
                 SetStarredPagePayload.STREAM_CODEC,
                 (pl,cxt)->pl.handle(cxt::player)
         );
         registrar.playToClient(
-                new CustomPacketPayload.Type<>(withModLocation("endinv_content")),
+                EndInvContent.TYPE,
                 EndInvContent.STREAM_CODEC,
                 (pl,cxt)->pl.handle(cxt::player)
+        );
+        registrar.playToClient(
+                MenuAttachabilityPayload.TYPE,
+                MenuAttachabilityPayload.STREAM_CODEC,
+                (pl, cxt)->pl.handle(cxt::player)
         );
         // Note: This project version does not use StreamCodec here; MenuAttachabilityPayload is handled on Forge/Fabric.
     }

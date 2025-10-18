@@ -2,7 +2,7 @@ package com.kwwsyk.endinv.common.util;
 
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
@@ -10,12 +10,12 @@ import org.jetbrains.annotations.Nullable;
 
 public record ItemKey(Item item, @Nullable CustomData customData) {
 
-    public static void encode(FriendlyByteBuf output, ItemKey key) {
-        output.writeItem(key.toStack(1));
+    public static void encode(RegistryFriendlyByteBuf output, ItemKey key) {
+        ItemStack.STREAM_CODEC.encode(output, key.toStack(1));
     }
 
-    public static ItemKey decode(FriendlyByteBuf input) {
-        ItemStack stack = input.readItem();
+    public static ItemKey decode(RegistryFriendlyByteBuf input) {
+        ItemStack stack = ItemStack.STREAM_CODEC.decode(input);
         return asKey(stack);
     }
 

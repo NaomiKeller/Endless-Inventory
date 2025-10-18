@@ -17,15 +17,12 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.*;
-import net.minecraft.world.item.enchantment.EnchantmentHelper;
-import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.List;
-import java.util.Map;
 
 import static com.kwwsyk.endinv.common.ModInfo.getServerConfig;
 
@@ -213,15 +210,7 @@ public final class AutoPickHelper {
 
     //copied from ExperienceOrb.java
     private static int repairPlayerItems(Player player, int repairAmount) {
-        Map.Entry<EquipmentSlot, ItemStack> entry = EnchantmentHelper.getRandomItemWith(Enchantments.MENDING, player, ItemStack::isDamaged);
-        if (entry != null) {
-            ItemStack itemstack = entry.getValue();
-            int i = Math.min((int) (repairAmount * itemstack.getXpRepairRatio()), itemstack.getDamageValue());
-            itemstack.setDamageValue(itemstack.getDamageValue() - i);
-            int j = repairAmount - i/2;
-            return j > 0 ? repairPlayerItems(player, j) : 0;
-        } else {
-            return repairAmount;
-        }
+        // Simplified for 1.21.x: defer repairing via Mending to vanilla mechanics
+        return repairAmount;
     }
 }

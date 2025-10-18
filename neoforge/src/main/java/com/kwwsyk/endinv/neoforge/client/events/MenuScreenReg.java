@@ -8,7 +8,7 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 
-@EventBusSubscriber(bus = EventBusSubscriber.Bus.MOD,modid = ModInfo.MOD_ID,value = Dist.CLIENT)
+@EventBusSubscriber(modid = ModInfo.MOD_ID,value = Dist.CLIENT)
 public class MenuScreenReg {
     @SubscribeEvent
     public static void reg(RegisterMenuScreensEvent event){

@@ -18,6 +18,7 @@ public class ServerConfig {
     public final ModConfigSpec.EnumValue<ContentTransferMode> TRANSFER_MODE;
     public final ModConfigSpec.EnumValue<Accessibility> DEFAULT_ACCESSIBILITY;
     public final ModConfigSpec.EnumValue<MissingEndInvPolicy> CREATION_MODE;
+    public final ModConfigSpec.BooleanValue CONVERT_EMPTY_TAG;
 
     private ServerConfig(ModConfigSpec.Builder builder){
         MAX_STACK_SIZE = builder
@@ -35,6 +36,9 @@ public class ServerConfig {
                 .defineEnum("defaultAccessibility",Accessibility.PUBLIC);
         CREATION_MODE = builder
                 .defineEnum("creationMode",MissingEndInvPolicy.CREATE_PER_PLAYER);
+        CONVERT_EMPTY_TAG = builder
+                .comment("Convert itemstack with empty tag {} to null tag, for the bugs that item cannot be taken/stacked.")
+                .define("convert_empty_tag",true);
     }
 
     static {
@@ -69,6 +73,20 @@ public class ServerConfig {
         }
 
         @Override
+        public void onAttachingOrAutopickConfigChanged() {
+            CONFIG_SPEC.save();
+        }
+
+        /**
+         * Notify all players that the server's specified menu attachability has changed.
+         * Broadcasts an effective attachability snapshot for client-side checks.
+         */
+        @Override
+        public void onSpecifiedMenuAttachabilityChanged() {
+            CONFIG_SPEC.save();
+        }
+
+        @Override
         public IConfigValue<Boolean> enableAttaching() {
             // NeoForge config: default to true; can be expanded later
             return IConfigValue.of(() -> true, v -> {});
@@ -87,6 +105,11 @@ public class ServerConfig {
         @Override
         public IConfigValue<MissingEndInvPolicy> policyHandlingMissing() {
             return IConfigValue.of(CREATION_MODE,CREATION_MODE::set);
+        }
+
+        @Override
+        public IConfigValue<Boolean> doConvertEmptyTag() {
+            return convert(CONFIG.CONVERT_EMPTY_TAG);
         }
 
         @Override

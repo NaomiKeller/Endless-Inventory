@@ -1,5 +1,6 @@
 package com.kwwsyk.endinv.common.network.payloads.toServer;
 
+import com.kwwsyk.endinv.common.AbstractModInitializer;
 import com.kwwsyk.endinv.common.ModInfo;
 import com.kwwsyk.endinv.common.ModRegistries;
 import com.kwwsyk.endinv.common.ServerLevelEndInv;
@@ -10,6 +11,9 @@ import com.kwwsyk.endinv.common.network.payloads.ModPacketPayload;
 import com.kwwsyk.endinv.common.network.payloads.SyncedConfig;
 import com.mojang.logging.LogUtils;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerPlayer;
 import org.slf4j.Logger;
 
@@ -41,9 +45,20 @@ public record OpenEndInvPayload(boolean openNew, int rows, int columns) implemen
         return new OpenEndInvPayload(o.readBoolean(),o.readInt(),o.readInt());
     }
 
+    public static final StreamCodec<RegistryFriendlyByteBuf, OpenEndInvPayload> STREAM_CODEC =
+            StreamCodec.of((buf, value) -> encode(value, buf), OpenEndInvPayload::decode);
+
+    public static final CustomPacketPayload.Type<OpenEndInvPayload> TYPE =
+            new CustomPacketPayload.Type<>(AbstractModInitializer.withModLocation("open_endinv"));
+
     @Override
     public String id() {
         return "open_endinv";
+    }
+
+    @Override
+    public CustomPacketPayload.Type<? extends CustomPacketPayload> type() {
+        return TYPE;
     }
 
     @Override

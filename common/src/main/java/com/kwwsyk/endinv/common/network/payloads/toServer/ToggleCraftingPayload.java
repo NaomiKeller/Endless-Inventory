@@ -1,12 +1,22 @@
 package com.kwwsyk.endinv.common.network.payloads.toServer;
 
+import com.kwwsyk.endinv.common.AbstractModInitializer;
 import com.kwwsyk.endinv.common.menu.EndlessInventoryMenu;
 import com.kwwsyk.endinv.common.network.payloads.ModPacketContext;
 import com.kwwsyk.endinv.common.network.payloads.ModPacketPayload;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.world.entity.player.Player;
 
 public record ToggleCraftingPayload(boolean visible) implements ModPacketPayload {
+
+    public static final StreamCodec<RegistryFriendlyByteBuf, ToggleCraftingPayload> STREAM_CODEC =
+            StreamCodec.of((buf, value) -> encode(value, buf), ToggleCraftingPayload::decode);
+
+    public static final CustomPacketPayload.Type<ToggleCraftingPayload> TYPE =
+            new CustomPacketPayload.Type<>(AbstractModInitializer.withModLocation("toggle_crafting"));
 
 
     public static void encode(ToggleCraftingPayload payload, FriendlyByteBuf buf) {
@@ -20,6 +30,11 @@ public record ToggleCraftingPayload(boolean visible) implements ModPacketPayload
     @Override
     public String id() {
         return "toggle_crafting";
+    }
+
+    @Override
+    public CustomPacketPayload.Type<? extends CustomPacketPayload> type() {
+        return TYPE;
     }
 
     @Override

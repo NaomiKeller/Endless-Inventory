@@ -1,11 +1,15 @@
 package com.kwwsyk.endinv.common.network.payloads.toClient;
 
+import com.kwwsyk.endinv.common.AbstractModInitializer;
 import com.kwwsyk.endinv.common.client.option.MenuAttachabilityCache;
 import com.kwwsyk.endinv.common.network.payloads.ModPacketContext;
 import com.kwwsyk.endinv.common.network.payloads.ModPacketPayload;
 import com.kwwsyk.endinv.common.options.SpecifiedMenuAttachingConfig;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.inventory.MenuType;
 
@@ -21,6 +25,25 @@ public record MenuAttachabilityPayload(
         boolean inventoryAttach,
         Map<MenuType<?>, Boolean> perMenu
 ) implements ModPacketPayload {
+
+    public static final StreamCodec<RegistryFriendlyByteBuf, MenuAttachabilityPayload> STREAM_CODEC = new StreamCodec<RegistryFriendlyByteBuf, MenuAttachabilityPayload>() {
+        @Override
+        public MenuAttachabilityPayload decode(RegistryFriendlyByteBuf registryFriendlyByteBuf) {
+            return MenuAttachabilityPayload.decode(registryFriendlyByteBuf);
+        }
+
+        @Override
+        public void encode(RegistryFriendlyByteBuf o, MenuAttachabilityPayload menuAttachabilityPayload) {
+            MenuAttachabilityPayload.encode(menuAttachabilityPayload, o);
+        }
+    };
+
+    public static final Type<MenuAttachabilityPayload> TYPE = new Type<>(AbstractModInitializer.withModLocation("menu_attachability"));
+
+    @Override
+    public Type<? extends CustomPacketPayload> type() {
+        return TYPE;
+    }
 
     public static MenuAttachabilityPayload of(boolean defaultAttach, SpecifiedMenuAttachingConfig config) {
         return new MenuAttachabilityPayload(defaultAttach, config.isInventoryAttachable(), new HashMap<>(config.getConfigs()));

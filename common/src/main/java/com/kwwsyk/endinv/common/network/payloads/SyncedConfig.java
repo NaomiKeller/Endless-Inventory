@@ -1,9 +1,13 @@
 package com.kwwsyk.endinv.common.network.payloads;
 
+import com.kwwsyk.endinv.common.AbstractModInitializer;
 import com.kwwsyk.endinv.common.ModRegistries;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 
 /**
  * Synced endless inventory config data shared between client preferences and the server.
@@ -17,6 +21,17 @@ import net.minecraft.network.FriendlyByteBuf;
  * @param attaching presents player's client attaching config.
  */
 public record SyncedConfig(boolean attaching, boolean autoPicking) implements ModPacketPayload {//TODO Illegal state exists in game of [false,true] but in fact [true,false], this shall be deprecated.
+
+    public static final StreamCodec<RegistryFriendlyByteBuf, SyncedConfig> STREAM_CODEC =
+            StreamCodec.of((buf, value) -> encode(value, buf), SyncedConfig::decode);
+
+    public static final CustomPacketPayload.Type<SyncedConfig> TYPE =
+            new CustomPacketPayload.Type<>(AbstractModInitializer.withModLocation("endinv_settings"));
+
+    @Override
+    public CustomPacketPayload.Type<? extends CustomPacketPayload> type() {
+        return TYPE;
+    }
 
     public static final SyncedConfig DEFAULT = new SyncedConfig(true, false);
     public static final Codec<SyncedConfig> CODEC = RecordCodecBuilder.create(instance ->

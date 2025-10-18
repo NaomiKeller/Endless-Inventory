@@ -1,6 +1,6 @@
 package com.kwwsyk.endinv.common.util;
 
-import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
@@ -8,12 +8,12 @@ import org.jetbrains.annotations.Nullable;
 
 public record ItemStackLike(Item item, int count, @Nullable CustomData customData) {
 
-    public static void encode(FriendlyByteBuf output, ItemStackLike like) {
-        output.writeItem(like.toKey());
+    public static void encode(RegistryFriendlyByteBuf output, ItemStackLike like) {
+        ItemStack.STREAM_CODEC.encode(output, like.toKey());
     }
 
-    public static ItemStackLike decode(FriendlyByteBuf input) {
-        return asKey(input.readItem());
+    public static ItemStackLike decode(RegistryFriendlyByteBuf input) {
+        return asKey(ItemStack.STREAM_CODEC.decode(input));
     }
 
     public static ItemStackLike asKey(ItemStack stack) {

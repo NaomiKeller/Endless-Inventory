@@ -29,11 +29,6 @@ loom {
         }
     }
 }
-fabricApi {
-    configureDataGeneration {
-        client = true
-    }
-}
 sourceSets {
 //    main {
 //        resources.srcDir project(':common').file('src/main/resources')

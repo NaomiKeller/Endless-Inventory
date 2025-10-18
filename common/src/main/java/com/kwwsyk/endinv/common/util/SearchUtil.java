@@ -1,13 +1,9 @@
 package com.kwwsyk.endinv.common.util;
 
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.TooltipFlag;
 
-import java.util.List;
 import java.util.Locale;
 
 public class SearchUtil {
@@ -51,13 +47,8 @@ public class SearchUtil {
     }
 
     private static boolean matchesTooltip(ItemStack stack, String tooltipSearch) {
-        List<Component> tooltip = stack.getTooltipLines(null, TooltipFlag.Default.NORMAL);
-        for (Component line : tooltip) {
-            if (line.getString().toLowerCase(Locale.ROOT).contains(tooltipSearch)) {
-                return true;
-            }
-        }
-        return false;
+        // Simplified for 1.21.x: fallback to hover name when tooltip API changes
+        return stack.getHoverName().getString().toLowerCase(Locale.ROOT).contains(tooltipSearch);
     }
 
     private static boolean matchesName(ItemStack stack, String nameSearch) {

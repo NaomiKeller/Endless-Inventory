@@ -17,7 +17,7 @@ public class Debugger {
     static {
         var ctx = (org.apache.logging.log4j.core.LoggerContext) org.apache.logging.log4j.LogManager.getContext(false);
         var cfg = ctx.getConfiguration();
-        var file = net.minecraftforge.fml.loading.FMLPaths.GAMEDIR.get().resolve("logs/tagwatch-workbench_b.log").toString();
+        var file = java.nio.file.Paths.get("logs").resolve("tagwatch-workbench_b.log").toString();
 
         var layout = org.apache.logging.log4j.core.layout.PatternLayout.newBuilder()
                 .withPattern("[%d{HH:mm:ss}] %m%n").withConfiguration(cfg).build();

@@ -5,6 +5,7 @@ import com.kwwsyk.endinv.common.ModRegistries;
 import com.kwwsyk.endinv.common.ServerLevelEndInv;
 import com.kwwsyk.endinv.common.network.payloads.toClient.EndInvContent;
 import com.kwwsyk.endinv.common.network.payloads.toClient.EndInvMetadata;
+import com.kwwsyk.endinv.common.network.payloads.toClient.MenuAttachabilityPayload;
 import com.kwwsyk.endinv.common.options.ContentTransferMode;
 import com.kwwsyk.endinv.neoforge.options.ServerConfig;
 import net.minecraft.server.level.ServerPlayer;
@@ -28,7 +29,7 @@ public class PlayerEvents {
                 var menuCfg = serverCfg.specifiedMenuAttachability().get();
                 boolean defaultAttach = serverCfg.enableAttaching().get();
                 PacketDistributor.sendToPlayer(serverPlayer,
-                        new com.kwwsyk.endinv.common.network.payloads.toClient.MenuAttachabilityPayload(
+                        new MenuAttachabilityPayload(
                                 defaultAttach,
                                 menuCfg.isInventoryAttachable(),
                                 menuCfg.getConfigs()

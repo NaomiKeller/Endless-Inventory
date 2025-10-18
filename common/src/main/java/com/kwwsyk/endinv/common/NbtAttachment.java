@@ -8,7 +8,6 @@ public interface NbtAttachment<T> {
 
     void setTo(Player player, T t);
 
-    @Deprecated
     T computeIfAbsent(Player player);
 
 }

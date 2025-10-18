@@ -22,14 +22,14 @@ public record EndInvConfig(Accessibility accessibility, UUID owner, List<UUID> w
         return new EndInvConfig(
                 friendlyByteBuf.readEnum(Accessibility.class),
                 friendlyByteBuf.readUUID(),
-                friendlyByteBuf.readList(FriendlyByteBuf::readUUID)
+                friendlyByteBuf.readList(buf -> buf.readUUID())
         );
     }
 
     public static void encode(FriendlyByteBuf o, EndInvConfig endInvConfig) {
         o.writeEnum(endInvConfig.accessibility);
         o.writeUUID(endInvConfig.owner);
-        o.writeCollection(endInvConfig.white_list, FriendlyByteBuf::writeUUID);
+        o.writeCollection(endInvConfig.white_list, (buf, id) -> buf.writeUUID(id));
     }
 
 
