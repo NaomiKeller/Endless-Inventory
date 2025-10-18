@@ -305,10 +305,7 @@ public final class AEIRecipeTransferHandler {
 
     private static boolean sameType(ItemStack a, ItemStack b) {
         if (a.isEmpty() || b.isEmpty()) return false;
-        if (a.getItem() != b.getItem()) return false;
-        var ta = a.getTag();
-        var tb = b.getTag();
-        return Objects.equals(ta, tb);
+        return ItemStack.isSameItemSameTags(a, b);
     }
 
     private static Ingredient[] buildRecipeLayout(Recipe<?> recipe, int targetSlots) {
@@ -488,7 +485,7 @@ public final class AEIRecipeTransferHandler {
         }
 
         boolean isPlain() {
-            return key.tag() == null;
+            return !key.hasCustomData();
         }
     }
 
