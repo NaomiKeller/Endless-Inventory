@@ -3,7 +3,7 @@ package com.kwwsyk.endinv.common.autopick;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
-/**
+/**Reserved
  * Upgraded autopick config.
  * @param enabled general toggler that controls the whole autopick utility
  * @param mobLoot Grab entity drops

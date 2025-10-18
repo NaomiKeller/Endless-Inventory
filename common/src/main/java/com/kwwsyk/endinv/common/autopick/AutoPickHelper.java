@@ -41,11 +41,14 @@ public final class AutoPickHelper {
         return isPlayerEnabledAutoPick(player) && getServerConfig().enableAutoPick().get();
     }
 
-    public static boolean isPlayerEnabledAutoPick(Player player){
+    private static boolean isPlayerEnabledAutoPick(Player player){
         return ModRegistries.NbtAttachments.getSyncedConfig().getWith(player).autoPicking();
     }
 
-
+    /**
+     * Hook living entity dropping, jmp ItemEntity spawning and directly send drops to EndInv
+     * @param event use mod loader's event api to implement it
+     */
     public static void onLivingDrops(ILivingDropsEvent event) {
         if (!(event.getSource().getEntity() instanceof ServerPlayer player)) return;
         if (AutoPickHelper.isEnabled(player)) {
@@ -69,7 +72,10 @@ public final class AutoPickHelper {
         }
     }
 
-
+    /**
+     * Hook lining entity dropping exp, jmp exp entity spawn and directly send exp to player
+     * @param event use mod loader's event api to implement it
+     */
     public static void onExpDrops(ILivingExpDropsEvent event){
         if(event.getAttackingPlayer() instanceof  ServerPlayer player){
             if(!AutoPickHelper.isEnabled(player)) return;
@@ -80,7 +86,13 @@ public final class AutoPickHelper {
         }
     }
 
-
+    /**
+     * Hook blocks' break and jmp dropped (ItemEntity) spawning, directly send drops to EndInv.
+     * For exp, do the same thing
+     * <p>
+     * Future to do: split steps and separate item and exp drop. To increase compatibility with other mods.
+     * @param event use mod loader's event api to implement it
+     */
     public static void onBlockBreak(IBlockBreakEvent event) {
         if (!(event.getPlayer() instanceof ServerPlayer player)) return;
         if (!AutoPickHelper.isEnabled(player)) return;
