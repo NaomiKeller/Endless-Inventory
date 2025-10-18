@@ -136,3 +136,38 @@ Fabric:
 
 # 10.18 Fabric autopick fix
 - Fabric: fix BlockDropMixin null breaker by capturing and clearing the breaker around Block.playerDestroy; ThreadLocal now set precisely during drops/XP awarding to restore reliable auto-pick.
+- Forge: Optimistic autopick mechanic: fixed bug in picking skulker_box.
+
+# 10.18 1.1.0 Release
+
+Endless Inventory 1.1.0 is a feature-packed update for 1.20.1 (Forge/Fabric), with stability fixes and quality-of-life improvements. Highlights below are curated for CurseForge/Modrinth.
+
+What’s new
+- Attached Item Page overhaul: faster open from cached data, improved sorting, searching, and category browsing; bookmark support and better quick-move behavior.
+- Crafter inside Endless Inventory Menu: toggle an embedded crafting grid, supports JEI recipe transfer into the crafter.
+- Curios integration (Forge): a dedicated Curios page for quick access and management.
+- Config screens: optional Cloth Config UI on both Forge and Fabric to tweak layout, textures, and behavior.
+- Texture “DedicatedLocation” mode: ship or resource-pack custom skins for the attached UI (item grid, tabs, entry rows) without editing code.
+
+Fabric parity and autopick
+- Fabric port completed for 1.20.1 with feature parity to Forge where applicable.
+- Auto-pick utility restored and hardened on Fabric: block and mob drops go straight to EndInv; XP first repairs Mending, then awards the remainder.
+- Fixed a critical null-breaker bug in Fabric autopick by scoping the breaker during Block.playerDestroy, ensuring reliable capture through popResource/popExperience.
+
+Fixes and polish
+- Consistent search box input on Fabric; character typing bugs resolved.
+- Corrected quick-move behaviors and slot validation; fewer desyncs and edge-case fails.
+- Empty NBT tag handling: added “Convert Empty Tag” option to treat {} as null, fixing items that couldn’t be taken from pages in specific mods.
+- Stable “last modified” ordering: enforced monotonic timestamps so recent changes sort correctly.
+- Numerous UI and attachment lifecycle refinements for smoother screen overlays and inputs.
+
+Compatibility and metadata
+- Loaders: Forge 1.20.1 and Fabric 1.20.1.
+- Optional integrations: Cloth Config (both loaders), JEI (Forge). Integration paths are guarded when mods are absent.
+- Pack authors: refreshed mod metadata and texture hooks for resource-pack friendly theming.
+
+Notes
+- Auto-pick is configurable on the server and is still experimental in heavily modded stacks. Disable if another loot-capture mod conflicts.
+- JEI recipe transfer mixin on Forge uses non-API internals; treat as experimental and report incompatibilities.
+
+Thanks for testing the pre-releases and reporting issues — your feedback directly shaped this update. Enjoy the inventory freedom!

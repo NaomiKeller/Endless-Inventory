@@ -19,11 +19,10 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.*;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.Enchantments;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.storage.loot.LootParams;
-import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
-import net.minecraft.world.phys.Vec3;
 
 import java.util.List;
 import java.util.Map;
@@ -103,19 +102,16 @@ public final class AutoPickHelper {
         ServerLevel level = (ServerLevel) event.getLevel();
         BlockPos pos = event.getPos();
         BlockState state = level.getBlockState(pos);
-        LootParams.Builder builder = new LootParams.Builder(level)
-                .withParameter(LootContextParams.ORIGIN, Vec3.atCenterOf(pos))
-                .withParameter(LootContextParams.TOOL, player.getMainHandItem())
-                .withParameter(LootContextParams.BLOCK_STATE, state)
-                .withParameter(LootContextParams.THIS_ENTITY, player);
+        BlockEntity blockEntity = level.getBlockEntity(pos);
+
+        List<ItemStack> drops = Block.getDrops(state,level,pos,blockEntity,player,player.getMainHandItem());
+
         if (event.getExpToDrop() > 0) {
             int exp = event.getExpToDrop();
             int repaired = repairPlayerItems(player, exp);
             player.giveExperiencePoints(repaired);
             event.setExpToDrop(0);
         }
-
-        List<ItemStack> drops = state.getDrops(builder);
 
         boolean allPicked = true;
         for (ItemStack drop : drops) {
