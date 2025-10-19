@@ -1,32 +1,32 @@
 package com.kwwsyk.endinv.common.util;
 
+import net.minecraft.core.component.DataComponentPatch;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.component.CustomData;
-import org.jetbrains.annotations.Nullable;
 
-public record ItemStackLike(Item item, int count, @Nullable CustomData customData) {
+public record ItemStackLike(Item item, int count,DataComponentPatch components) {
 
-    public static void encode(RegistryFriendlyByteBuf output, ItemStackLike like) {
-        ItemStack.STREAM_CODEC.encode(output, like.toKey());
+    public static final StreamCodec<RegistryFriendlyByteBuf,ItemStackLike> STREAM_CODEC = StreamCodec.composite(
+            ByteBufCodecs.registry(Registries.ITEM),ItemStackLike::item,
+            ByteBufCodecs.INT,ItemStackLike::count,
+            DataComponentPatch.STREAM_CODEC,ItemStackLike::components,
+            ItemStackLike::new
+    );
+
+    public static ItemStackLike asKey(ItemStack stack){
+        return new ItemStackLike(stack.getItem(),0,stack.getComponentsPatch());
     }
 
-    public static ItemStackLike decode(RegistryFriendlyByteBuf input) {
-        return asKey(ItemStack.STREAM_CODEC.decode(input));
-    }
-
-    public static ItemStackLike asKey(ItemStack stack) {
-        return new ItemStackLike(stack.getItem(), 0, ItemKey.copyCustomData(stack));
-    }
-
-    public static ItemStackLike asKey(ItemStack stack, int count) {
-        return new ItemStackLike(stack.getItem(), count, ItemKey.copyCustomData(stack));
+    public static ItemStackLike asKey(ItemStack stack, int count){
+        return new ItemStackLike(stack.getItem(),count,stack.getComponentsPatch());
     }
 
     public ItemStack toKey() {
-        ItemStack result = new ItemStack(item, count);
-        ItemKey.applyCustomData(result, customData);
-        return result;
+        return new ItemStack(BuiltInRegistries.ITEM.wrapAsHolder(item),count,components);
     }
 }

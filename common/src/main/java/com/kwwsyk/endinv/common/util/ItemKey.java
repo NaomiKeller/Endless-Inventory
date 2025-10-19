@@ -1,61 +1,38 @@
 package com.kwwsyk.endinv.common.util;
 
-import net.minecraft.core.component.DataComponents;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.core.component.DataComponentPatch;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.component.CustomData;
 import org.jetbrains.annotations.Nullable;
 
-public record ItemKey(Item item, @Nullable CustomData customData) {
+/**
+ *
+ * @param item
+ * @param components should not be null, but somewhere may construct it to null
+ */
+public record ItemKey(Item item, DataComponentPatch components) {
 
-    public static void encode(RegistryFriendlyByteBuf output, ItemKey key) {
-        ItemStack.STREAM_CODEC.encode(output, key.toStack(1));
+    public static final StreamCodec<RegistryFriendlyByteBuf,ItemKey> STREAM_CODEC = StreamCodec.composite(
+            ByteBufCodecs.registry(Registries.ITEM),ItemKey::item,
+            DataComponentPatch.STREAM_CODEC,ItemKey::components,
+            ItemKey::new
+    );
+
+    public ItemKey(Item item, @Nullable DataComponentPatch components){
+        this.item = item;
+        this.components = components==null? DataComponentPatch.EMPTY : components;
     }
 
-    public static ItemKey decode(RegistryFriendlyByteBuf input) {
-        ItemStack stack = ItemStack.STREAM_CODEC.decode(input);
-        return asKey(stack);
+    public ItemStack toStack(int count){
+        return new ItemStack(BuiltInRegistries.ITEM.wrapAsHolder(item),count,components);
     }
 
-    public ItemStack toStack(int count) {
-        ItemStack result = new ItemStack(item, count);
-        applyCustomData(result, customData);
-        return result;
-    }
-
-    public static ItemKey asKey(ItemStack stack) {
-        return new ItemKey(stack.getItem(), copyCustomData(stack));
-    }
-
-    public boolean hasCustomData() {
-        return !isEmpty(customData);
-    }
-
-    public static @Nullable CustomData copyCustomData(ItemStack stack) {
-        CustomData component = stack.get(DataComponents.CUSTOM_DATA);
-        if (component == null) {
-            return null;
-        }
-        CompoundTag copied = component.copyTag();
-        return copied == null ? null : CustomData.of(copied);
-    }
-
-    public static void applyCustomData(ItemStack stack, @Nullable CustomData component) {
-        if (isEmpty(component)) {
-            stack.remove(DataComponents.CUSTOM_DATA);
-            return;
-        }
-
-        stack.set(DataComponents.CUSTOM_DATA, CustomData.of(component.copyTag()));
-    }
-
-    public static boolean isEmpty(@Nullable CustomData component) {
-        if (component == null) {
-            return true;
-        }
-        CompoundTag copied = component.copyTag();
-        return copied == null || copied.isEmpty();
+    public static ItemKey asKey(ItemStack stack){
+        return new ItemKey(stack.getItem(),stack.getComponentsPatch());
     }
 }

@@ -318,22 +318,35 @@ public class EIMRecipeTranHandler implements IRecipeTransferHandler {
     }
 
     private static final class ItemCounts {
-        private final ItemKey key; private final ItemStack representative;
-        private int inventoryCount; private int pageCount;
-        ItemCounts(ItemKey key, ItemStack representative) { this.key = key; this.representative = representative; }
-        void add(int amount, ItemAvailability.Source source) { if (source == ItemAvailability.Source.INVENTORY) inventoryCount += amount; else pageCount += amount; }
+        private final ItemKey key;
+        private final ItemStack representative;
+        private int inventoryCount;
+        private int pageCount;
+
+        ItemCounts(ItemKey key, ItemStack representative) {
+            this.key = key;
+            this.representative = representative;
+        }
+
+        void add(int amount, ItemAvailability.Source source) {
+            if (source == ItemAvailability.Source.INVENTORY) inventoryCount += amount;
+            else pageCount += amount;
+        }
         ItemKey key() { return key; }
         ItemStack representative() { return representative.copy(); }
         int total() { return inventoryCount + pageCount; }
         int totalRemaining(Reservation reservation) { return total() - reservation.totalReserved(key); }
         int inventoryRemaining(Reservation reservation) { return inventoryCount - reservation.inventoryReserved(key); }
-        boolean isPlain() { return !key.hasCustomData(); }
+        boolean isPlain() { return key.components()!=null && !key.components().isEmpty(); }
     }
 
     private static final class Reservation {
         private final Map<ItemKey, Integer> total = new HashMap<>();
         private final Map<ItemKey, Integer> inventory = new HashMap<>();
-        void reserve(Selection selection) { if (selection.key() == null) return; total.merge(selection.key(), 1, Integer::sum); if (selection.useInventory()) inventory.merge(selection.key(), 1, Integer::sum); }
+        void reserve(Selection selection) {
+            total.merge(selection.key(), 1, Integer::sum);
+            if (selection.useInventory()) inventory.merge(selection.key(), 1, Integer::sum);
+        }
         int totalReserved(ItemKey key) { return total.getOrDefault(key, 0); }
         int inventoryReserved(ItemKey key) { return inventory.getOrDefault(key, 0); }
         Map<ItemKey, Integer> totalDemand() { return total; }
@@ -350,7 +363,9 @@ public class EIMRecipeTranHandler implements IRecipeTransferHandler {
         boolean isValid() { return selection != null && !selection.isEmpty(); }
         static Candidate fromCounts(@Nullable ItemCounts counts, Reservation reservation) {
             if (counts == null) return NONE; int totalRemaining = counts.totalRemaining(reservation); if (totalRemaining <= 0) return NONE;
-            int inventoryRemaining = counts.inventoryRemaining(reservation); boolean hasInventory = inventoryRemaining > 0; boolean hasPlainInventory = hasInventory && counts.isPlain();
+            int inventoryRemaining = counts.inventoryRemaining(reservation);
+            boolean hasInventory = inventoryRemaining > 0;
+            boolean hasPlainInventory = hasInventory && counts.isPlain();
             int priority = hasPlainInventory ? 3 : (hasInventory ? 2 : 1); Selection selection = new Selection(counts.representative(), counts.key(), hasInventory);
             return new Candidate(selection, priority, totalRemaining, inventoryRemaining);
         }

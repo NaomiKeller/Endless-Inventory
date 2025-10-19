@@ -11,7 +11,6 @@ import net.minecraft.util.datafix.DataFixTypes;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.saveddata.SavedData;
 import net.minecraft.world.level.storage.LevelResource;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 
 import javax.annotation.Nullable;
@@ -49,7 +48,7 @@ public class EndlessInventoryData extends SavedData {
             return; // 仅在主世界执行
         }
 
-        SavedData.Factory<EndlessInventoryData> factory = new SavedData.Factory<>(EndlessInventoryData::create, (tag, provider) -> EndlessInventoryData.load(tag), (DataFixTypes) null);
+        SavedData.Factory<EndlessInventoryData> factory = new SavedData.Factory<>(EndlessInventoryData::create, EndlessInventoryData::load, DataFixTypes.CHUNK);
         ServerLevelEndInv.levelEndInvData = level.getDataStorage().computeIfAbsent(factory, END_INV_LIST_KEY);
 
         LOGGER.info("Initialized EndlessInventoryData in {} with {} inventories", level.dimension().location(), ServerLevelEndInv.levelEndInvData.levelEndInvs.size());
@@ -119,7 +118,7 @@ public class EndlessInventoryData extends SavedData {
         return -1;
     }
 
-    public static EndlessInventoryData load(final CompoundTag tag){
+    public static EndlessInventoryData load(final CompoundTag tag, HolderLookup.Provider provider){
         EndlessInventoryData data = create();
         //Get EndInv[]
         ListTag listTag = tag.getList(END_INV_LIST_KEY,10) ;
@@ -129,7 +128,7 @@ public class EndlessInventoryData extends SavedData {
 
         //{}EndInv -> EndInvs -> levelEndInvs
         listTag.iterator().forEachRemaining(
-                (t)->   data.levelEndInvs.add(LoadStrategy.deserializeEndInv((CompoundTag) t))
+                (t)->   data.levelEndInvs.add(LoadStrategy.deserializeEndInv((CompoundTag) t, provider))
         );
         return data;
     }
@@ -143,13 +142,13 @@ public class EndlessInventoryData extends SavedData {
     }
 
     @Override
-    public @NotNull CompoundTag save(@NotNull CompoundTag compoundTag, HolderLookup.Provider provider) {
+    public CompoundTag save(CompoundTag compoundTag, HolderLookup.Provider provider) {
 
         // []:List of {}EndInv
         ListTag nbtTagList = new ListTag();
 
         for (EndlessInventory endlessInventory : levelEndInvs) {
-            CompoundTag invTag = SaveStrategy.serializeEndInv(endlessInventory);
+            CompoundTag invTag = SaveStrategy.serializeEndInv(endlessInventory, provider);
             nbtTagList.add(invTag);
         }
 

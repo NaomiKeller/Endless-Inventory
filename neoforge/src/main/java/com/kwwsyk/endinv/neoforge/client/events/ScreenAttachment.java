@@ -7,7 +7,6 @@ import com.kwwsyk.endinv.common.client.gui.EndlessInventoryScreen;
 import com.kwwsyk.endinv.common.client.gui.IScreenEvent;
 import com.kwwsyk.endinv.common.client.option.CachedConfig;
 import com.kwwsyk.endinv.common.client.option.MenuAttachabilityCache;
-import com.kwwsyk.endinv.common.network.payloads.SyncedConfig;
 import com.kwwsyk.endinv.common.network.payloads.toServer.OpenEndInvPayload;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -19,8 +18,6 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ScreenEvent;
 
 import javax.annotation.Nullable;
-
-import static com.kwwsyk.endinv.common.ModRegistries.NbtAttachments.getSyncedConfig;
 
 @EventBusSubscriber(value = Dist.CLIENT,modid = ModInfo.MOD_ID)
 public class ScreenAttachment {
@@ -65,8 +62,7 @@ public class ScreenAttachment {
             Player player = screen.getMinecraft().player;
             if(player==null) return;
 
-            SyncedConfig syncedConfig = getSyncedConfig().getWith(player);
-            if(!syncedConfig.checkForAttaching()) return;
+            if(!ClientModInfo.getClientConfig().attaching().get()) return;
             if(!MenuAttachabilityCache.isAttachable(screen)) return;
 
             CachedConfig.readAndSyncClientConfigToServer(false);

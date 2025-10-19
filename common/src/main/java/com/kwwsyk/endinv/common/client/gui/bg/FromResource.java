@@ -1,5 +1,6 @@
 package com.kwwsyk.endinv.common.client.gui.bg;
 
+import com.kwwsyk.endinv.common.AbstractModInitializer;
 import com.kwwsyk.endinv.common.ModInfo;
 import com.kwwsyk.endinv.common.client.ClientModInfo;
 import com.kwwsyk.endinv.common.client.gui.ScreenFramework;
@@ -11,23 +12,45 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;
 
-@SuppressWarnings("removal")
 public abstract class FromResource extends SFBgRendererImpl {
 
 
-    public static final ResourceLocation CONTAINER_TEXTURE_RESOURCE = ResourceLocation.fromNamespaceAndPath("minecraft", "textures/gui/container/generic_54.png");
-    public static final ResourceLocation TABS_RESOURCE = ResourceLocation.fromNamespaceAndPath("minecraft", "textures/gui/advancements/tabs.png");
+    public static final ResourceLocation CONTAINER_TEXTURE_RESOURCE = ResourceLocation.withDefaultNamespace("textures/gui/container/generic_54.png");
+    public static final ResourceLocation TABS_RESOURCE = ResourceLocation.withDefaultNamespace("textures/gui/advancements/tabs.png");
+    private static final ResourceLocation TAB_LEFT_MIDDLE_SPRITE = ResourceLocation.withDefaultNamespace("advancements/tab_left_middle");
+    private static final ResourceLocation TAB_LEFT_TOP_SELECTED = ResourceLocation.withDefaultNamespace("advancements/tab_left_top_selected");
+    private static final ResourceLocation TAB_LEFT_MIDDLE_SELECTED = ResourceLocation.withDefaultNamespace("advancements/tab_left_middle_selected");
+    private static final ResourceLocation TAB_LEFT_BOTTOM_SELECTED = ResourceLocation.withDefaultNamespace("advancements/tab_left_bottom_selected");
 
     public static final ResourceLocation DEDICATED_CONTAINER_TEXTURE = ResourceLocation.fromNamespaceAndPath(ModInfo.MOD_ID, "textures/gui/item_grid.png");
     public static final ResourceLocation DEDICATED_TABS = ResourceLocation.fromNamespaceAndPath(ModInfo.MOD_ID, "textures/gui/tabs.png");
+    private static final ResourceLocation TAB_UNSELECTED = AbstractModInitializer.withModLocation("textures/gui/tab_left_middle");
+    private static final ResourceLocation TAB_TOP = ResourceLocation.withDefaultNamespace("textures/gui/tab_left_top_selected");
+    private static final ResourceLocation TAB_MIDDLE = ResourceLocation.withDefaultNamespace("textures/gui/tab_left_middle_selected");
+    private static final ResourceLocation TAB_BOTTOM = ResourceLocation.withDefaultNamespace("textures/gui/tab_left_bottom_selected");
     public static final ResourceLocation ITEM_ENTRY_DISPLAY_RESOURCE = ResourceLocation.fromNamespaceAndPath(ModInfo.MOD_ID, "textures/gui/item_entry.png");
 
     private static ResourceLocation getContainerTexture(){
         return ClientModInfo.getClientConfig().textureMode().get() == TextureMode.DEDICATED_LOCATION ? DEDICATED_CONTAINER_TEXTURE : CONTAINER_TEXTURE_RESOURCE;
     }
 
-    private static ResourceLocation getTabsTexture(){
-        return ClientModInfo.getClientConfig().textureMode().get() == TextureMode.DEDICATED_LOCATION ? DEDICATED_TABS : TABS_RESOURCE;
+    private static ResourceLocation getTabsTexture(TabType type){
+        return ClientModInfo.getClientConfig().textureMode().get() == TextureMode.DEDICATED_LOCATION ? type.dedicatedLocation : type.vanillaTexture;
+    }
+
+    public enum TabType{
+        UNSELECTED(TAB_LEFT_MIDDLE_SPRITE, TAB_UNSELECTED),
+        TOP(TAB_LEFT_TOP_SELECTED, TAB_TOP),
+        MIDDLE(TAB_LEFT_MIDDLE_SELECTED, TAB_MIDDLE),
+        BOTTOM(TAB_LEFT_BOTTOM_SELECTED, TAB_BOTTOM);
+
+        final ResourceLocation vanillaTexture;
+        final ResourceLocation dedicatedLocation;
+
+        TabType(ResourceLocation vanillaTexture, ResourceLocation dedicatedLocation){
+            this.vanillaTexture = vanillaTexture;
+            this.dedicatedLocation = dedicatedLocation;
+        }
     }
 
     public FromResource(ScreenFramework frameWork){
@@ -175,13 +198,13 @@ public abstract class FromResource extends SFBgRendererImpl {
         for (int i = frameWork.firstPageIndex; i < frameWork.firstPageIndex + frameWork.pageBarCount; ++i) {
             if (i == selectedPageIndex) {
                 if (i == 0) {
-                    guiGraphics.blit(getTabsTexture(),pageX,pageY,0,92,32,28);
+                    guiGraphics.blitSprite(getTabsTexture(TabType.TOP),pageX,pageY,32,28);
                 } else if (i == frameWork.firstPageIndex + frameWork.pageBarCount-1) {
-                    guiGraphics.blit(getTabsTexture(),pageX,pageY,64,91,32,28);
+                    guiGraphics.blitSprite(getTabsTexture(TabType.BOTTOM),pageX,pageY,32,28);
                 } else
-                    guiGraphics.blit(getTabsTexture(),pageX,pageY,32,91,32,29);
+                    guiGraphics.blitSprite(getTabsTexture(TabType.MIDDLE),pageX,pageY,32,28);
             } else {
-                guiGraphics.blit(getTabsTexture(),pageX+8,pageY,4,64,24,27);
+                guiGraphics.blitSprite(getTabsTexture(TabType.UNSELECTED),pageX+4,pageY,32,28);
             }
             pageY+=28;
         }

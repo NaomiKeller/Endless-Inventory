@@ -401,7 +401,7 @@ public final class AEIRecipeTransferHandler {
         int total() { return inventoryCount + pageCount; }
         int totalRemaining(Reservation reservation) { return total() - reservation.totalReserved(key); }
         int inventoryRemaining(Reservation reservation) { return inventoryCount - reservation.inventoryReserved(key); }
-        boolean isPlain() { return !key.hasCustomData(); }
+        boolean isPlain() { return key.components()!=null && !key.components().isEmpty(); }
     }
 
     private static final class Reservation {

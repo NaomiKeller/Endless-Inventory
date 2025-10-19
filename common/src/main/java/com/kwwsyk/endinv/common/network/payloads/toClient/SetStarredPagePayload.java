@@ -15,11 +15,11 @@ import java.util.List;
 public record SetStarredPagePayload(List<ItemStackLike> stacks) implements ModPacketPayload {
 
     public static void encode(SetStarredPagePayload payload, FriendlyByteBuf o){
-        o.writeCollection(payload.stacks, (buf, like) -> ItemStackLike.encode((net.minecraft.network.RegistryFriendlyByteBuf) buf, like));
+        o.writeCollection(payload.stacks, (buf, like) -> ItemStackLike.STREAM_CODEC.encode((net.minecraft.network.RegistryFriendlyByteBuf) buf, like));
     }
 
     public static SetStarredPagePayload decode(FriendlyByteBuf o){
-        return new SetStarredPagePayload(o.readList(buf -> ItemStackLike.decode((net.minecraft.network.RegistryFriendlyByteBuf) buf)));
+        return new SetStarredPagePayload(o.readList(buf -> ItemStackLike.STREAM_CODEC.decode((net.minecraft.network.RegistryFriendlyByteBuf) buf)));
     }
 
     public static final StreamCodec<RegistryFriendlyByteBuf, SetStarredPagePayload> STREAM_CODEC =

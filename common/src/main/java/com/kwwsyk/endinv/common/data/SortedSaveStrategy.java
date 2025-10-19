@@ -1,6 +1,7 @@
 package com.kwwsyk.endinv.common.data;
 
 import com.kwwsyk.endinv.common.EndlessInventory;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
@@ -14,17 +15,17 @@ public class SortedSaveStrategy implements EndInvCodecStrategy{
         return true;
     }
 
-    public void deserializeItems(EndlessInventory endlessInventory, CompoundTag nbt) {
+    public void deserializeItems(EndlessInventory endlessInventory, CompoundTag nbt, HolderLookup.Provider provider) {
         List<ItemStack> items = endlessInventory.getItemsAsList();
         ListTag tagList = nbt.getList(ITEM_LIST_KEY, Tag.TAG_COMPOUND);
         for (int i = 0; i < tagList.size(); i++) {
             CompoundTag itemTag = tagList.getCompound(i);
-            EndInvCodecStrategy.parse(itemTag).filter(it->!it.isEmpty()).ifPresent(items::add);
+            EndInvCodecStrategy.parse(itemTag, provider).filter(it->!it.isEmpty()).ifPresent(items::add);
         }
         endlessInventory.syncMapFromItems();
     }
 
-    public CompoundTag serializeItems(EndlessInventory endlessInventory) {
+    public CompoundTag serializeItems(EndlessInventory endlessInventory, HolderLookup.Provider provider) {
         ListTag nbtTagList = new ListTag();
         endlessInventory.syncItemsFromMap();
         List<ItemStack> items = endlessInventory.getItemsAsList();
@@ -32,7 +33,7 @@ public class SortedSaveStrategy implements EndInvCodecStrategy{
             if (!itemStack.isEmpty()) {
                 CompoundTag itemTag = new CompoundTag();
 
-                nbtTagList.add(EndInvCodecStrategy.saveItem(itemStack, itemTag));
+                nbtTagList.add(EndInvCodecStrategy.saveItem(itemStack, itemTag, provider));
             }
         }
         CompoundTag nbt = new CompoundTag();

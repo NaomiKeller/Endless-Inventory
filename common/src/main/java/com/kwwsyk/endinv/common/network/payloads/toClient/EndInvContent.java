@@ -19,15 +19,15 @@ public record EndInvContent(Map<ItemKey, ItemState> itemMap) implements ModPacke
 
     public static void encodeItemMap(Map<ItemKey,ItemState> map, FriendlyByteBuf o){
         o.writeMap(map,
-                (buf, key) -> ItemKey.encode((net.minecraft.network.RegistryFriendlyByteBuf) buf, key),
-                (buf, state) -> ItemState.encode((net.minecraft.network.RegistryFriendlyByteBuf) buf, state)
+                (buf, key) -> ItemKey.STREAM_CODEC.encode((net.minecraft.network.RegistryFriendlyByteBuf) buf, key),
+                ItemState::encode
         );
     }
 
     public static Map<ItemKey,ItemState> decodeItemMap(FriendlyByteBuf o){
         return o.readMap(Object2ObjectLinkedOpenHashMap::new,
-                buf -> ItemKey.decode((net.minecraft.network.RegistryFriendlyByteBuf) buf),
-                buf -> ItemState.decode((net.minecraft.network.RegistryFriendlyByteBuf) buf)
+                buf -> ItemKey.STREAM_CODEC.decode((net.minecraft.network.RegistryFriendlyByteBuf) buf),
+                ItemState::decode
         );
     }
 

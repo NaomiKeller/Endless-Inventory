@@ -3,6 +3,7 @@ package com.kwwsyk.endinv.common.data;
 import com.kwwsyk.endinv.common.EndlessInventory;
 import com.kwwsyk.endinv.common.util.ItemKey;
 import com.kwwsyk.endinv.common.util.ItemState;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
@@ -18,12 +19,12 @@ public class FullCodecStrategy implements EndInvCodecStrategy{
         return !list.isEmpty() && list.getCompound(0).contains(LAST_MOD_TIME_LONG_KEY);
     }
 
-    public void deserializeItems(EndlessInventory endlessInventory, CompoundTag nbt) {
+    public void deserializeItems(EndlessInventory endlessInventory, CompoundTag nbt, HolderLookup.Provider provider) {
         Map<ItemKey, ItemState> itemMap = endlessInventory.getItemMap();
         ListTag tagList = nbt.getList(ITEM_LIST_KEY, Tag.TAG_COMPOUND);
         for (int i = 0; i < tagList.size(); i++) {
             CompoundTag itemTag = tagList.getCompound(i);
-            Optional<ItemStack> stackPre = EndInvCodecStrategy.parse(itemTag).filter(it->!it.isEmpty());
+            Optional<ItemStack> stackPre = EndInvCodecStrategy.parse(itemTag, provider).filter(it->!it.isEmpty());
             final long modState = itemTag.getLong(LAST_MOD_TIME_LONG_KEY);
             endlessInventory.updateModState(modState);
             stackPre.ifPresent(itemStack ->
@@ -31,7 +32,7 @@ public class FullCodecStrategy implements EndInvCodecStrategy{
         }
     }
 
-    public CompoundTag serializeItems(EndlessInventory endlessInventory) {
+    public CompoundTag serializeItems(EndlessInventory endlessInventory, HolderLookup.Provider provider) {
         ListTag nbtTagList = new ListTag();
         Map<ItemKey, ItemState> itemMap = endlessInventory.getItemMap();
         for (var entry : itemMap.entrySet()) {
@@ -39,7 +40,7 @@ public class FullCodecStrategy implements EndInvCodecStrategy{
             if (!itemStack.isEmpty()) {
                 CompoundTag itemTag = new CompoundTag();
                 itemTag.putLong(LAST_MOD_TIME_LONG_KEY,entry.getValue().lastModTime());
-                nbtTagList.add(EndInvCodecStrategy.saveItem(itemStack, itemTag));
+                nbtTagList.add(EndInvCodecStrategy.saveItem(itemStack, itemTag, provider));
             }
         }
         CompoundTag nbt = new CompoundTag();

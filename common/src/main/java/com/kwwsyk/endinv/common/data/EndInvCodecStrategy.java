@@ -3,27 +3,33 @@ package com.kwwsyk.endinv.common.data;
 import com.kwwsyk.endinv.common.EndInvAffinities;
 import com.kwwsyk.endinv.common.EndlessInventory;
 import com.kwwsyk.endinv.common.util.Accessibility;
-import com.kwwsyk.endinv.common.util.ItemKey;
 import com.mojang.logging.LogUtils;
-import net.minecraft.core.component.DataComponents;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.core.component.DataComponentPatch;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.NbtUtils;
-import net.minecraft.nbt.Tag;
+import net.minecraft.nbt.*;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.component.CustomData;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 
 import java.util.List;
 import java.util.Optional;
 
+import static net.minecraft.world.item.ItemStack.ITEM_NON_AIR_CODEC;
+
 
 public interface EndInvCodecStrategy {
 
     Logger LOGGER = LogUtils.getLogger();
+
+    String ITEM_ID_KEY = "id";
+    String ITEM_COUNT_KEY = "count";
+    String DEPRECATED_COUNT_KEY = "Count";
+    String COMPONENTS_KEY = "components";
+
     String END_INV_LIST_KEY = "endless_inventories";
     String ITEM_LIST_KEY = "Items";
     String SIZE_INT_KEY = "Size";
@@ -36,16 +42,26 @@ public interface EndInvCodecStrategy {
     String OWNER_UUID_KEY = "Owner";
     String WHITE_LIST_KEY = "white_list";
     String ACCESSIBILITY_KEY = "Accessibility";
-    String COMPONENTS_KEY = "components";
-    String CUSTOM_DATA_COMPONENT_KEY = DataComponents.CUSTOM_DATA.toString();
 
+    Codec<ItemStack> ITEM_STACK_CODEC = Codec.lazyInitialized(
+            () -> RecordCodecBuilder.create(
+                    instance -> instance.group(
+                                    ITEM_NON_AIR_CODEC.fieldOf("id").forGetter(ItemStack::getItemHolder),
+                                    Codec.INT.fieldOf("count").orElse(1).forGetter(ItemStack::getCount),
+                                    DataComponentPatch.CODEC
+                                            .optionalFieldOf("components", DataComponentPatch.EMPTY)
+                                            .forGetter(ItemStack::getComponentsPatch)
+                            )
+                            .apply(instance, ItemStack::new)
+            )
+    );
 
-    default EndlessInventory deserializeEndInv(CompoundTag invTag){
+    default EndlessInventory deserializeEndInv(CompoundTag invTag, HolderLookup.Provider provider){
         //handle uuid and itemMap/items.
         EndlessInventory endlessInventory = new EndlessInventory(invTag.getUUID(UUID_KEY));
-        deserializeItems(endlessInventory,invTag);
+        deserializeItems(endlessInventory,invTag, provider);
         //handle affinities
-        decodeAffinities(endlessInventory, (CompoundTag) invTag.get(AFFINITY_KEY));
+        decodeAffinities(endlessInventory, (CompoundTag) invTag.get(AFFINITY_KEY), provider);
         //handle player uuid
         if(invTag.contains(OWNER_UUID_KEY)) endlessInventory.setOwner(invTag.getUUID(OWNER_UUID_KEY));
         if(invTag.contains(WHITE_LIST_KEY)){
@@ -61,13 +77,13 @@ public interface EndInvCodecStrategy {
         return  endlessInventory;
     }
 
-    default CompoundTag serializeEndInv(EndlessInventory endInv){
+    default CompoundTag serializeEndInv(EndlessInventory endInv, HolderLookup.Provider provider){
         CompoundTag nbt = new CompoundTag();
 
-        CompoundTag itemData = serializeItems(endInv);
+        CompoundTag itemData = serializeItems(endInv, provider);
         nbt.merge(itemData);
 
-        CompoundTag affTag = encodeAffinities(endInv.affinities);
+        CompoundTag affTag = encodeAffinities(endInv.affinities, provider);
         nbt.put(AFFINITY_KEY,affTag);
 
         nbt.putUUID(UUID_KEY,endInv.getUuid());
@@ -89,22 +105,21 @@ public interface EndInvCodecStrategy {
         return nbt;
     }
 
-    void deserializeItems(EndlessInventory endlessInventory,CompoundTag nbt);
+    void deserializeItems(EndlessInventory endlessInventory, CompoundTag nbt, HolderLookup.Provider provider);
 
-    CompoundTag serializeItems(EndlessInventory endlessInventory);
+    CompoundTag serializeItems(EndlessInventory endlessInventory, HolderLookup.Provider provider);
 
     boolean canHandle(CompoundTag tag);
 
-    default CompoundTag encodeAffinities(EndInvAffinities affinities){
+    default CompoundTag encodeAffinities(EndInvAffinities affinities, HolderLookup.Provider provider){
         CompoundTag ret = new CompoundTag();
-        if(affinities==null) return ret;
         ListTag nbtTagList = new ListTag();
         List<ItemStack> items = affinities.starredItems;
         for (ItemStack itemStack : items) {
             if (!itemStack.isEmpty()) {
                 CompoundTag itemTag = new CompoundTag();
 
-                nbtTagList.add(saveItem(itemStack.copyWithCount(1), itemTag));
+                nbtTagList.add(saveItem(itemStack.copyWithCount(1), itemTag, provider));
             }
         }
         ret.put(BOOKMARK_LIST_KEY,nbtTagList);
@@ -112,70 +127,54 @@ public interface EndInvCodecStrategy {
         return  ret;
     }
 
-    default void decodeAffinities(EndlessInventory endlessInventory,@Nullable CompoundTag nbt){
+    default void decodeAffinities(EndlessInventory endlessInventory, @Nullable CompoundTag nbt, HolderLookup.Provider provider){
         EndInvAffinities aff = endlessInventory.affinities;
         if(nbt==null) return;
         ListTag tagList = nbt.getList(BOOKMARK_LIST_KEY, Tag.TAG_COMPOUND);
         for (int i = 0; i < tagList.size(); i++) {
             CompoundTag itemTag = tagList.getCompound(i);
-            parse(itemTag).filter(it -> !it.isEmpty()).ifPresent(aff::addStarredItem);
+            parse(itemTag, provider).filter(it -> !it.isEmpty()).ifPresent(aff::addStarredItem);
         }
     }
 
-    static Optional<ItemStack> parse(Tag tag) {
+    static Optional<ItemStack> parse(Tag tag, HolderLookup.Provider provider) {
         if (!(tag instanceof CompoundTag compound)) {
             return Optional.empty();
         }
         try {
-            return Optional.of(load(compound));
+            return Optional.of(loadItem(compound, provider));
         } catch (Exception e) {
             LOGGER.error("Tried to load invalid item: '{}'", compound, e);
             return Optional.empty();
         }
     }
 
-    static Tag saveItem(ItemStack itemStack, CompoundTag outputTag) {
+    static Tag saveItem(ItemStack itemStack, CompoundTag outputTag, HolderLookup.Provider provider) {
         if (itemStack.isEmpty()) {
             throw new IllegalStateException("Cannot encode empty ItemStack");
         }
-        return save(itemStack,outputTag);
+        return save(itemStack,outputTag, provider);
     }
 
-    static CompoundTag save(ItemStack stack, CompoundTag compoundTag) {
-        ResourceLocation resourcelocation = BuiltInRegistries.ITEM.getKey(stack.getItem());
-        compoundTag.putString("id", resourcelocation.toString());
-        compoundTag.putInt("Count", stack.getCount());
-        CustomData customData = ItemKey.copyCustomData(stack);
-        if (!ItemKey.isEmpty(customData)) {
-            CompoundTag components = new CompoundTag();
-            components.put(CUSTOM_DATA_COMPONENT_KEY, customData.copyTag());
-            compoundTag.put(COMPONENTS_KEY, components);
-        }
-
-        return compoundTag;
+    static CompoundTag save(ItemStack stack, CompoundTag compoundTag, HolderLookup.Provider provider) {
+        return (CompoundTag) ITEM_STACK_CODEC.encode(stack, provider.createSerializationContext(NbtOps.INSTANCE), compoundTag).getOrThrow();
     }
 
-    @SuppressWarnings("removal")
-    static ItemStack load(CompoundTag compoundTag) {
+    static ItemStack loadItem(CompoundTag compoundTag, HolderLookup.Provider provider) {
         try {
-            var ret = new ItemStack(
-                    BuiltInRegistries.ITEM.get(ResourceLocation.parse(compoundTag.getString("id"))),
-                    compoundTag.getInt("Count")
-            );
-            CustomData customData = null;
-            if (compoundTag.contains(COMPONENTS_KEY, Tag.TAG_COMPOUND)) {
-                CompoundTag components = compoundTag.getCompound(COMPONENTS_KEY);
-                if (components.contains(CUSTOM_DATA_COMPONENT_KEY, Tag.TAG_COMPOUND)) {
-                    customData = CustomData.of(components.getCompound(CUSTOM_DATA_COMPONENT_KEY).copy());
+            if(compoundTag.contains(DEPRECATED_COUNT_KEY)) {//load item with 'Count' count key
+                var ret = new ItemStack(
+                        BuiltInRegistries.ITEM.get(ResourceLocation.parse(compoundTag.getString("id"))),
+                        compoundTag.getInt("Count")
+                );
+                if(compoundTag.contains("components")) {
+                    DataComponentPatch patch = DataComponentPatch.CODEC.parse(provider.createSerializationContext(NbtOps.INSTANCE), compoundTag).getOrThrow();
+                    ret.applyComponents(patch);
                 }
-            } else if (compoundTag.contains("tag", Tag.TAG_COMPOUND)) {
-                CompoundTag legacy = compoundTag.getCompound("tag");
-                if (!legacy.isEmpty()) {
-                    customData = CustomData.of(legacy.copy());
-                }
+                return ret;
             }
-            ItemKey.applyCustomData(ret, customData);
-            return ret;
+
+            return ITEM_STACK_CODEC.parse(provider.createSerializationContext(NbtOps.INSTANCE), compoundTag).getOrThrow();
         } catch (RuntimeException runtimeexception) {
             LOGGER.debug("Tried to load invalid item: {}", compoundTag, runtimeexception);
             return ItemStack.EMPTY;

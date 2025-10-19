@@ -103,7 +103,7 @@ public class ScreenDebug {
 
         if(button == InputConstants.KEY_F3){
             phase++;
-            if(phase>2) phase=0;
+            if(phase>3) phase=0;
         }
         if(button==InputConstants.KEY_F4){
             hideMenu=!hideMenu;
