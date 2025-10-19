@@ -25,11 +25,11 @@ public record SetItemDisplayContentPayload(List<ItemStack> stacks) implements Mo
             new CustomPacketPayload.Type<>(AbstractModInitializer.withModLocation("itemdisplay_content"));
 
     public static void encode(SetItemDisplayContentPayload payload, FriendlyByteBuf o){
-        o.writeCollection(payload.stacks,(buf, stack) -> net.minecraft.world.item.ItemStack.STREAM_CODEC.encode((net.minecraft.network.RegistryFriendlyByteBuf) buf, stack));
+        o.writeCollection(payload.stacks,(buf, stack) -> ItemStack.OPTIONAL_STREAM_CODEC.encode((net.minecraft.network.RegistryFriendlyByteBuf) buf, stack));
     }
 
     public static SetItemDisplayContentPayload decode(FriendlyByteBuf o){
-        return new SetItemDisplayContentPayload(o.readList(buf -> net.minecraft.world.item.ItemStack.STREAM_CODEC.decode((net.minecraft.network.RegistryFriendlyByteBuf) buf)));
+        return new SetItemDisplayContentPayload(o.readList(buf -> ItemStack.OPTIONAL_STREAM_CODEC.decode((net.minecraft.network.RegistryFriendlyByteBuf) buf)));
     }
 
     @Override

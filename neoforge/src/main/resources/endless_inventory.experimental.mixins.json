@@ -1,0 +1,11 @@
+{
+  "required": false,
+  "minVersion": "0.8",
+  "package": "com.kwwsyk.endinv.neoforge.integrates.jei.experimental.mixin",
+  "plugin": "com.kwwsyk.endinv.neoforge.integrates.jei.experimental.mixin.MixinPlugin",
+  "compatibilityLevel": "JAVA_17",
+  "client": [
+    "BasicRecipeTransferHandlerMixin"
+  ]
+}
+

@@ -1,0 +1,15 @@
+{
+  "required": false,
+  "minVersion": "0.8",
+  "refmap": "endless_inventory.refmap.json",
+  "package": "com.kwwsyk.endinv.neoforge.mixin",
+  "plugin": "com.kwwsyk.endinv.neoforge.mixin.MixinPlugin",
+  "compatibilityLevel": "JAVA_17",
+  "mixins": [
+    "ServerPlaceRecipeMixin"
+  ],
+  "client": [
+    "RecipeBookComponentMixin"
+  ]
+}
+

@@ -1,4 +1,4 @@
-package com.kwwsyk.endinv.forge.integrates.curio;
+package com.kwwsyk.endinv.neoforge.integrates.curio;
 
 import com.kwwsyk.endinv.common.ModInfo;
 import com.kwwsyk.endinv.common.client.gui.page.ItemDisplay;
@@ -17,7 +17,7 @@ public class CurioPageType {
                 return ret;
             },
             "curios",
-            (stack)-> stack.getCapability(CuriosCapability.ITEM).isPresent(),
+            (stack)-> stack.getCapability(CuriosCapability.ITEM)!=null,
             ResourceLocation.fromNamespaceAndPath(ModInfo.MOD_ID,"textures/curios_icon.png")
     );
 

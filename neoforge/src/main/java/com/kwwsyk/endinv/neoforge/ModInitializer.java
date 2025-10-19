@@ -11,6 +11,7 @@ import com.kwwsyk.endinv.common.network.payloads.SyncedConfig;
 import com.kwwsyk.endinv.common.options.IServerConfig;
 import com.kwwsyk.endinv.neoforge.client.config.ClientConfig;
 import com.kwwsyk.endinv.neoforge.options.ServerConfig;
+import com.kwwsyk.endinv.neoforge.options.StartupConfig;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.server.level.ServerPlayer;
@@ -60,6 +61,7 @@ public class ModInitializer extends AbstractModInitializer {
 
         container.registerConfig(ModConfig.Type.CLIENT, ClientConfig.CONFIG_SPEC);
         container.registerConfig(ModConfig.Type.SERVER, ServerConfig.CONFIG_SPEC);
+        container.registerConfig(ModConfig.Type.STARTUP, StartupConfig.CONFIG_SPEC);
 
         if(FMLEnvironment.dist.isClient()) {
             var client = new ClientModInitializer();

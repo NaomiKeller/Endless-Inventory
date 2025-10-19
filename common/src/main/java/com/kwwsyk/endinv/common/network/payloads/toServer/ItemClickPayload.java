@@ -40,7 +40,7 @@ public record ItemClickPayload(ItemStack stack, int button, ClickType clickType)
 
     public static ItemClickPayload decode(RegistryFriendlyByteBuf buf) {
         return new ItemClickPayload(
-                ItemStack.STREAM_CODEC.decode(buf),
+                ItemStack.OPTIONAL_STREAM_CODEC.decode(buf),
                 buf.readInt(),
                 buf.readEnum(ClickType.class)
         );
@@ -48,7 +48,7 @@ public record ItemClickPayload(ItemStack stack, int button, ClickType clickType)
 
 
     public static void encode(ItemClickPayload itemClickPayload,RegistryFriendlyByteBuf o) {
-        ItemStack.STREAM_CODEC.encode(o, itemClickPayload.stack);
+        ItemStack.OPTIONAL_STREAM_CODEC.encode(o, itemClickPayload.stack);
         o.writeInt(itemClickPayload.button);
         o.writeEnum(itemClickPayload.clickType);
     }

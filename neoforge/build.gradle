@@ -40,6 +40,8 @@ dependencies {
     implementation(project(":common"))
     // Optional integrations removed from compile path to avoid resolution issues during CI builds.
      compileOnly("mezz.jei:jei-${minecraft_version}-neoforge-api:${jei_version}")
+     // add full JEI to compileOnly so mixins to JEI internals can compile
+     compileOnly("mezz.jei:jei-${minecraft_version}-neoforge:${jei_version}")
      runtimeOnly("mezz.jei:jei-${minecraft_version}-neoforge:${jei_version}")
      runtimeOnly("top.theillusivec4.curios:curios-neoforge:${curio_version}")
      compileOnly("top.theillusivec4.curios:curios-neoforge:${curio_version}:api")

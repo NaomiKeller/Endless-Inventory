@@ -4,6 +4,8 @@ import com.kwwsyk.endinv.common.ModInfo;
 import com.kwwsyk.endinv.common.network.payloads.SyncedConfig;
 import com.kwwsyk.endinv.common.network.payloads.toClient.*;
 import com.kwwsyk.endinv.common.network.payloads.toServer.*;
+import com.kwwsyk.endinv.neoforge.network.payloads.JeiAttachedTransferPayload;
+import com.kwwsyk.endinv.neoforge.network.payloads.JeiTransferRecipePayload;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
@@ -84,6 +86,16 @@ public class PayloadReg {
         registrar.playToClient(
                 EndInvContent.TYPE,
                 EndInvContent.STREAM_CODEC,
+                (pl,cxt)->pl.handle(cxt::player)
+        );
+        registrar.playToServer(
+                JeiTransferRecipePayload.TYPE,
+                JeiTransferRecipePayload.STREAM_CODEC,
+                (pl,cxt)->pl.handle(cxt::player)
+        );
+        registrar.playToServer(
+                JeiAttachedTransferPayload.TYPE,
+                JeiAttachedTransferPayload.STREAM_CODEC,
                 (pl,cxt)->pl.handle(cxt::player)
         );
         registrar.playToClient(

@@ -1,4 +1,4 @@
-package com.kwwsyk.endinv.forge.mixin;
+package com.kwwsyk.endinv.neoforge.mixin;
 
 import com.kwwsyk.endinv.common.EndlessInventory;
 import com.kwwsyk.endinv.common.ServerLevelEndInv;
@@ -23,7 +23,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import javax.annotation.Nullable;
 
 @Mixin(ServerPlaceRecipe.class)
-public class ServerPlaceRecipeMixin<C extends Container>{
+public class ServerPlaceRecipeMixin<C extends Container> {
 
     @Final
     @Shadow
@@ -31,8 +31,8 @@ public class ServerPlaceRecipeMixin<C extends Container>{
     @Unique
     @Nullable
     private EndlessInventory endInv;
-    @Unique private int ei$lastIndex = Integer.MIN_VALUE; // 记录 moveItemToGrid 中的 i
-
+    @Unique
+    private int ei$lastIndex = Integer.MIN_VALUE;
 
     @Inject(
             method = "recipeClicked",

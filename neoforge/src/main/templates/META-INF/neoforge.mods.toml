@@ -46,7 +46,11 @@ authors="${mod_authors}" #optional
 # The description text for the mod (multi line!) (#mandatory)
 description='''${mod_description}'''
 
-# Mixins are now configured in the Forge module.
+[[mixins]]
+config="endless_inventory.mixins.json"
+
+[[mixins]]
+config="endless_inventory.experimental.mixins.json"
 
 # The [[accessTransformers]] block allows you to declare where your AT file is.
 # If this block is omitted, a fallback attempt will be made to load an AT from META-INF/accesstransformer.cfg

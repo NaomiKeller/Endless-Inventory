@@ -1,0 +1,394 @@
+package com.kwwsyk.endinv.neoforge.integrates.jei;
+
+import com.kwwsyk.endinv.common.ModInfo;
+import com.kwwsyk.endinv.common.ModRegistries;
+import com.kwwsyk.endinv.common.menu.EndlessInventoryMenu;
+import com.kwwsyk.endinv.common.util.ItemKey;
+import com.kwwsyk.endinv.neoforge.network.payloads.JeiTransferRecipePayload;
+import mezz.jei.api.constants.RecipeTypes;
+import mezz.jei.api.gui.ingredient.IRecipeSlotsView;
+import mezz.jei.api.helpers.IJeiHelpers;
+import mezz.jei.api.recipe.RecipeType;
+import mezz.jei.api.recipe.transfer.IRecipeTransferError;
+import mezz.jei.api.recipe.transfer.IRecipeTransferHandler;
+import mezz.jei.api.recipe.transfer.IRecipeTransferHandlerHelper;
+import mezz.jei.api.recipe.transfer.IRecipeTransferInfo;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.MenuType;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.world.item.crafting.ShapedRecipe;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.*;
+
+/** EndlessInventoryMenu's JEI recipe transfer handler for NeoForge. */
+@SuppressWarnings({"rawtypes","unchecked"})
+public class EIMRecipeTranHandler implements IRecipeTransferHandler {
+
+    private static final Class<EndlessInventoryMenu> CONTAINER_CLASS = EndlessInventoryMenu.class;
+    private static final MenuType<EndlessInventoryMenu> CONTAINER_TYPE = ModRegistries.Menus.getEndInvMenuType();
+
+    private final IJeiHelpers jeiHelper;
+    private final IRecipeTransferHandlerHelper transferHelper;
+    private final IRecipeTransferInfo playerInvInfo;
+
+    public EIMRecipeTranHandler(IJeiHelpers jeiHelper, IRecipeTransferHandlerHelper transferHelper) {
+        this.jeiHelper = jeiHelper;
+        this.transferHelper = transferHelper;
+        this.playerInvInfo = createPlayerInvInfo();
+    }
+
+    private IRecipeTransferInfo createPlayerInvInfo() {
+        return (IRecipeTransferInfo) this.transferHelper.createBasicRecipeTransferInfo(CONTAINER_CLASS, CONTAINER_TYPE, RecipeTypes.CRAFTING, 0, 9, 10, 36);
+    }
+
+    @Override
+    public Class getContainerClass() {
+        return CONTAINER_CLASS;
+    }
+
+    @Override
+    public Optional getMenuType() {
+        return Optional.of(CONTAINER_TYPE);
+    }
+
+    @Override
+    public RecipeType getRecipeType() {
+        return RecipeTypes.CRAFTING;
+    }
+
+    @Override
+    public @Nullable IRecipeTransferError transferRecipe(net.minecraft.world.inventory.AbstractContainerMenu container,
+                                                         Object recipe,
+                                                         IRecipeSlotsView recipeSlots,
+                                                         Player player,
+                                                         boolean maxTransfer,
+                                                         boolean doTransfer) {
+        try {
+            if (!(container instanceof EndlessInventoryMenu)) {
+                return transferHelper.createInternalError();
+            }
+            EndlessInventoryMenu ei = (EndlessInventoryMenu) container;
+            if (!new EIMRecipeTranInfo().canHandle(ei, recipe)) {
+                return transferHelper.createUserErrorWithTooltip(Component.literal("Unsupported container or recipe"));
+            }
+
+            if (!ei.isCrafterEnabled()) {
+                return transferHelper.createUserErrorWithTooltip(Component.literal("Crafter is disabled by server rules"));
+            }
+
+            TransferPlan plan = createTransferPlan(ei, recipe, maxTransfer);
+            boolean missing = plan.isMissing();
+
+            if (!doTransfer) {
+                return missing ? transferHelper.createUserErrorWithTooltip(Component.literal("Missing ingredient(s)")) : null;
+            }
+
+            if (player.level().isClientSide) {
+                ei.setCraftingVisible(true);
+                var id = tryResolveRecipeId(recipe);
+                if (id != null) {
+                    ModInfo.getPacketDistributor().sendToServer(new JeiTransferRecipePayload(ei.containerId, id, maxTransfer));
+                } else {
+                    return transferHelper.createInternalError();
+                }
+            } else {
+                performTransfer(ei, recipe, plan, player);
+            }
+
+            return missing ? transferHelper.createUserErrorWithTooltip(Component.literal("Missing ingredient(s)")) : null;
+        } catch (Exception e) {
+            return transferHelper.createInternalError();
+        }
+    }
+
+    public static void performServerTransfer(EndlessInventoryMenu container, Object recipe, Player player, boolean maxTransfer) {
+        TransferPlan plan = createTransferPlan(container, recipe, maxTransfer);
+        performTransfer(container, recipe, plan, player);
+    }
+
+    private static boolean sameType(ItemStack a, ItemStack b) {
+        if (a.isEmpty() || b.isEmpty()) return false;
+        return ItemStack.isSameItemSameComponents(a, b);
+    }
+
+    private static Ingredient[] buildRecipeLayout(Object recipe) {
+        Ingredient[] layout = new Ingredient[9];
+        Arrays.fill(layout, Ingredient.EMPTY);
+        if (recipe instanceof ShapedRecipe shaped) {
+            int width = Math.min(3, shaped.getWidth());
+            int height = Math.min(3, shaped.getHeight());
+            List<Ingredient> ingredients = shaped.getIngredients();
+            for (int y = 0; y < height; y++) {
+                for (int x = 0; x < width; x++) {
+                    int srcIndex = y * shaped.getWidth() + x;
+                    if (srcIndex < ingredients.size()) {
+                        layout[y * 3 + x] = ingredients.get(srcIndex);
+                    }
+                }
+            }
+        } else if (recipe instanceof net.minecraft.world.item.crafting.Recipe<?> any) {
+            List<Ingredient> ingredients = any.getIngredients();
+            for (int i = 0; i < Math.min(ingredients.size(), layout.length); i++) {
+                layout[i] = ingredients.get(i);
+            }
+        }
+        return layout;
+    }
+
+    @Nullable
+    private static ItemCounts countAvailableOfType(ItemStack type, ItemAvailability availability) {
+        if (type.isEmpty()) return null;
+        return availability.lookup(ItemKey.asKey(type));
+    }
+
+    private static Selection chooseBestCandidate(Ingredient ing, ItemAvailability availability, Reservation reservation) {
+        Candidate best = Candidate.NONE;
+        Set<ItemKey> seen = new HashSet<>();
+
+        for (ItemStack cand : ing.getItems()) {
+            ItemCounts counts = countAvailableOfType(cand, availability);
+            Candidate candidate = Candidate.fromCounts(counts, reservation);
+            if (!candidate.isValid()) continue;
+            if (!seen.add(candidate.selection().key())) continue;
+            best = Candidate.pickBetter(best, candidate);
+        }
+
+        for (ItemCounts counts : availability.all()) {
+            if (!ing.test(counts.representative())) continue;
+            Candidate candidate = Candidate.fromCounts(counts, reservation);
+            if (!candidate.isValid()) continue;
+            if (!seen.add(candidate.selection().key())) continue;
+            best = Candidate.pickBetter(best, candidate);
+        }
+
+        return best.selection();
+    }
+
+    private static TransferPlan createTransferPlan(EndlessInventoryMenu container, Object recipe, boolean maxTransfer) {
+        Ingredient[] layout = buildRecipeLayout(recipe);
+        List<Slot> playerInvSlots = container.getPlayerInvSlots();
+        List<ItemStack> pageItems = container.getSourceInventory().getItemsAsList();
+
+        ItemAvailability availability = ItemAvailability.build(playerInvSlots, pageItems);
+        Reservation reservation = new Reservation();
+        ItemStack[] chosenPerSlot = new ItemStack[layout.length];
+        Arrays.fill(chosenPerSlot, ItemStack.EMPTY);
+
+        boolean missing = false;
+        int perSlotStackLimit = Integer.MAX_VALUE;
+
+        for (int i = 0; i < layout.length; i++) {
+            Ingredient ing = layout[i];
+            if (ing.isEmpty()) continue;
+            Selection selection = chooseBestCandidate(ing, availability, reservation);
+            if (selection.isEmpty()) {
+                missing = true;
+                continue;
+            }
+            reservation.reserve(selection);
+            chosenPerSlot[i] = selection.stack();
+            perSlotStackLimit = Math.min(perSlotStackLimit, selection.stack().getMaxStackSize());
+        }
+
+        int craftsPossible;
+        if (missing || reservation.isEmpty()) {
+            craftsPossible = 0;
+        } else {
+            craftsPossible = Integer.MAX_VALUE;
+            for (Map.Entry<ItemKey, Integer> entry : reservation.totalDemand().entrySet()) {
+                ItemCounts counts = availability.lookup(entry.getKey());
+                if (counts == null) {
+                    craftsPossible = 0;
+                    missing = true;
+                    break;
+                }
+                int possible = counts.total() / entry.getValue();
+                craftsPossible = Math.min(craftsPossible, possible);
+            }
+            if (craftsPossible == Integer.MAX_VALUE) craftsPossible = 0;
+        }
+
+        if (perSlotStackLimit == Integer.MAX_VALUE) perSlotStackLimit = 64;
+
+        int craftsWanted = maxTransfer ? Math.min(craftsPossible, perSlotStackLimit) : (craftsPossible > 0 ? 1 : 0);
+        boolean finalMissing = missing || craftsWanted <= 0;
+        return new TransferPlan(layout, chosenPerSlot, craftsWanted, finalMissing);
+    }
+
+    private static void performTransfer(EndlessInventoryMenu container, Object recipe, TransferPlan plan, Player player) {
+        container.setCraftingVisible(true);
+
+        List<Slot> craftingSlots = container.getCraftingSlots();
+        for (Slot cSlot : craftingSlots) {
+            if (!cSlot.hasItem()) continue;
+            int count = cSlot.getItem().getCount();
+            if (count <= 0) continue;
+            ItemStack removed = cSlot.safeTake(count, count, player);
+            if (!removed.isEmpty()) player.getInventory().placeItemBackInInventory(removed);
+        }
+
+        List<Slot> playerInvSlots = container.getPlayerInvSlots();
+        Ingredient[] layout = plan.layout();
+
+        for (int i = 0; i < Math.min(craftingSlots.size(), layout.length); i++) {
+            Ingredient ing = layout[i];
+            if (ing.isEmpty()) continue;
+            Slot target = craftingSlots.get(i);
+
+            int toTake = plan.craftsWanted();
+            if (toTake <= 0) continue;
+
+            ItemStack chosen = plan.chosenPerSlot()[i];
+            ItemStack placedStack = ItemStack.EMPTY;
+
+            for (Slot invSlot : playerInvSlots) {
+                if (toTake <= 0) break;
+                if (!invSlot.hasItem()) continue;
+                ItemStack in = invSlot.getItem();
+                if (!(chosen.isEmpty() ? ing.test(in) : sameType(chosen, in))) continue;
+                int can = Math.min(toTake, in.getCount());
+                if (can <= 0) continue;
+                ItemStack taken = invSlot.safeTake(can, can, player);
+                if (!taken.isEmpty()) {
+                    if (placedStack.isEmpty()) {
+                        placedStack = taken;
+                    } else if (sameType(placedStack, taken)) {
+                        placedStack.grow(taken.getCount());
+                    } else {
+                        player.getInventory().placeItemBackInInventory(taken);
+                        break;
+                    }
+                    toTake -= taken.getCount();
+                }
+            }
+
+            if (toTake > 0) {
+                ItemStack template = !chosen.isEmpty() ? chosen : (ing.getItems().length > 0 ? ing.getItems()[0] : ItemStack.EMPTY);
+                if (!template.isEmpty()) {
+                    ItemStack extracted = container.tryExtractFromPage(template, toTake);
+                    if (!extracted.isEmpty()) {
+                        if (placedStack.isEmpty()) {
+                            placedStack = extracted;
+                        } else if (sameType(placedStack, extracted)) {
+                            placedStack.grow(extracted.getCount());
+                        } else {
+                            player.getInventory().placeItemBackInInventory(extracted);
+                        }
+                        toTake -= extracted.getCount();
+                    }
+                }
+            }
+
+            if (!placedStack.isEmpty()) {
+                int cap = Math.min(placedStack.getMaxStackSize(), target.getMaxStackSize());
+                if (placedStack.getCount() > cap) {
+                    ItemStack overflow = placedStack.copyWithCount(placedStack.getCount() - cap);
+                    placedStack.setCount(cap);
+                    player.getInventory().placeItemBackInInventory(overflow);
+                }
+                target.set(placedStack);
+            }
+        }
+    }
+
+    private record TransferPlan(Ingredient[] layout, ItemStack[] chosenPerSlot, int craftsWanted, boolean missing) {
+        boolean isMissing() { return missing; }
+    }
+
+    private static final class ItemAvailability {
+        private final Map<ItemKey, ItemCounts> counts = new HashMap<>();
+        static ItemAvailability build(List<Slot> invSlots, List<ItemStack> pageItems) {
+            ItemAvailability availability = new ItemAvailability();
+            for (Slot slot : invSlots) if (slot.hasItem()) availability.add(slot.getItem(), Source.INVENTORY);
+            for (ItemStack stack : pageItems) if (!stack.isEmpty()) availability.add(stack, Source.PAGE);
+            return availability;
+        }
+        private void add(ItemStack stack, Source source) {
+            ItemKey key = ItemKey.asKey(stack);
+            ItemCounts counts = this.counts.computeIfAbsent(key, k -> new ItemCounts(k, stack.copyWithCount(1)));
+            counts.add(stack.getCount(), source);
+        }
+        @Nullable ItemCounts lookup(ItemKey key) { return counts.get(key); }
+        Collection<ItemCounts> all() { return counts.values(); }
+        private enum Source { INVENTORY, PAGE }
+    }
+
+    private static final class ItemCounts {
+        private final ItemKey key; private final ItemStack representative;
+        private int inventoryCount; private int pageCount;
+        ItemCounts(ItemKey key, ItemStack representative) { this.key = key; this.representative = representative; }
+        void add(int amount, ItemAvailability.Source source) { if (source == ItemAvailability.Source.INVENTORY) inventoryCount += amount; else pageCount += amount; }
+        ItemKey key() { return key; }
+        ItemStack representative() { return representative.copy(); }
+        int total() { return inventoryCount + pageCount; }
+        int totalRemaining(Reservation reservation) { return total() - reservation.totalReserved(key); }
+        int inventoryRemaining(Reservation reservation) { return inventoryCount - reservation.inventoryReserved(key); }
+        boolean isPlain() { return !key.hasCustomData(); }
+    }
+
+    private static final class Reservation {
+        private final Map<ItemKey, Integer> total = new HashMap<>();
+        private final Map<ItemKey, Integer> inventory = new HashMap<>();
+        void reserve(Selection selection) { if (selection.key() == null) return; total.merge(selection.key(), 1, Integer::sum); if (selection.useInventory()) inventory.merge(selection.key(), 1, Integer::sum); }
+        int totalReserved(ItemKey key) { return total.getOrDefault(key, 0); }
+        int inventoryReserved(ItemKey key) { return inventory.getOrDefault(key, 0); }
+        Map<ItemKey, Integer> totalDemand() { return total; }
+        boolean isEmpty() { return total.isEmpty(); }
+    }
+
+    private record Selection(ItemStack stack, ItemKey key, boolean useInventory) {
+        static final Selection EMPTY = new Selection(ItemStack.EMPTY, null, false);
+        boolean isEmpty() { return stack.isEmpty(); }
+    }
+
+    private record Candidate(Selection selection, int priority, int totalRemaining, int inventoryRemaining) {
+        private static final Candidate NONE = new Candidate(Selection.EMPTY, -1, 0, 0);
+        boolean isValid() { return selection != null && !selection.isEmpty(); }
+        static Candidate fromCounts(@Nullable ItemCounts counts, Reservation reservation) {
+            if (counts == null) return NONE; int totalRemaining = counts.totalRemaining(reservation); if (totalRemaining <= 0) return NONE;
+            int inventoryRemaining = counts.inventoryRemaining(reservation); boolean hasInventory = inventoryRemaining > 0; boolean hasPlainInventory = hasInventory && counts.isPlain();
+            int priority = hasPlainInventory ? 3 : (hasInventory ? 2 : 1); Selection selection = new Selection(counts.representative(), counts.key(), hasInventory);
+            return new Candidate(selection, priority, totalRemaining, inventoryRemaining);
+        }
+        static Candidate pickBetter(Candidate current, Candidate challenger) {
+            if (!challenger.isValid()) return current; if (!current.isValid()) return challenger;
+            if (challenger.priority != current.priority) return challenger.priority > current.priority ? challenger : current;
+            if (challenger.totalRemaining != current.totalRemaining) return challenger.totalRemaining > current.totalRemaining ? challenger : current;
+            if (challenger.inventoryRemaining != current.inventoryRemaining) return challenger.inventoryRemaining > current.inventoryRemaining ? challenger : current;
+            return current;
+        }
+    }
+
+    public class EIMRecipeTranInfo implements IRecipeTransferInfo {
+        @Override public Class getContainerClass() { return CONTAINER_CLASS; }
+        @Override public Optional getMenuType() { return Optional.of(CONTAINER_TYPE); }
+        @Override public RecipeType getRecipeType() { return RecipeTypes.CRAFTING; }
+        @Override public boolean canHandle(net.minecraft.world.inventory.AbstractContainerMenu container, Object recipe) { return EIMRecipeTranHandler.this.playerInvInfo.canHandle(container, recipe); }
+        @Override public List<Slot> getRecipeSlots(net.minecraft.world.inventory.AbstractContainerMenu container, Object recipe) { return ((EndlessInventoryMenu)container).getCraftingSlots(); }
+        @Override public List<Slot> getInventorySlots(net.minecraft.world.inventory.AbstractContainerMenu container, Object recipe) { return ((EndlessInventoryMenu)container).getPlayerInvSlots(); }
+    }
+
+    @Nullable
+    private static net.minecraft.resources.ResourceLocation tryResolveRecipeId(Object recipeObj) {
+        try {
+            var m = recipeObj.getClass().getMethod("getId");
+            Object v = m.invoke(recipeObj);
+            if (v instanceof net.minecraft.resources.ResourceLocation rl) return rl;
+        } catch (Throwable ignored) {}
+        try {
+            var m = recipeObj.getClass().getMethod("id");
+            Object v = m.invoke(recipeObj);
+            if (v instanceof net.minecraft.resources.ResourceLocation rl) return rl;
+        } catch (Throwable ignored) {}
+        try {
+            var m = recipeObj.getClass().getMethod("value");
+            Object v = m.invoke(recipeObj);
+            if (v != null) return tryResolveRecipeId(v);
+        } catch (Throwable ignored) {}
+        return null;
+    }
+}
