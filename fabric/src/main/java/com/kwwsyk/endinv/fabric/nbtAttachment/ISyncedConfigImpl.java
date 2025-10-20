@@ -20,7 +20,9 @@ public class ISyncedConfigImpl {
     }
 
     public CompoundTag toNbt(){
-        return (CompoundTag) SyncedConfig.CODEC.encodeStart(NbtOps.INSTANCE,this.syncedConfig).getOrThrow(false, error-> LOGGER.error("Failed to encode config to NBT: {}",error));
+        return (CompoundTag) SyncedConfig.CODEC
+                .encodeStart(NbtOps.INSTANCE, this.syncedConfig)
+                .getOrThrow(err -> new IllegalStateException("Failed to encode config to NBT: "+err));
     }
 
     public void fromNbt(CompoundTag tag){

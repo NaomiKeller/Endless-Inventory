@@ -31,9 +31,9 @@ public class ModInit extends AbstractModInitializer implements ModInitializer {
 
     @Override
     public void onInitialize() {
-        // register serverbound receivers and populate clientbound encoders
+        // Register payload types first, then receivers
+        com.kwwsyk.endinv.fabric.network.FabricNetworking.init();
         FabricServerNetworking.init();
-        com.kwwsyk.endinv.fabric.network.FabricNetworking.initServerEncodersOnly();
         FabricEvents.init();
         super.init();
         com.kwwsyk.endinv.fabric.nbtAttachment.AttachingCapabilities.register();

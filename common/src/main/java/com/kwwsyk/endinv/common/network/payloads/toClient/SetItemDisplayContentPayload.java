@@ -19,7 +19,7 @@ import java.util.List;
 public record SetItemDisplayContentPayload(List<ItemStack> stacks) implements ModPacketPayload {
 
     public static final StreamCodec<RegistryFriendlyByteBuf, SetItemDisplayContentPayload> STREAM_CODEC =
-            StreamCodec.of((buf, value) -> encode(value, buf), SetItemDisplayContentPayload::decode);
+            StreamCodec.of((buf, value) -> encodeRegistry(value, buf), SetItemDisplayContentPayload::decodeRegistry);
 
     public static final CustomPacketPayload.Type<SetItemDisplayContentPayload> TYPE =
             new CustomPacketPayload.Type<>(AbstractModInitializer.withModLocation("itemdisplay_content"));
@@ -30,6 +30,23 @@ public record SetItemDisplayContentPayload(List<ItemStack> stacks) implements Mo
 
     public static SetItemDisplayContentPayload decode(FriendlyByteBuf o){
         return new SetItemDisplayContentPayload(o.readList(buf -> ItemStack.OPTIONAL_STREAM_CODEC.decode((net.minecraft.network.RegistryFriendlyByteBuf) buf)));
+    }
+
+    // Registry-friendly versions used by the typed StreamCodec to avoid any ambiguity
+    private static void encodeRegistry(SetItemDisplayContentPayload payload, RegistryFriendlyByteBuf o){
+        o.writeVarInt(payload.stacks.size());
+        for (ItemStack stack : payload.stacks) {
+            ItemStack.OPTIONAL_STREAM_CODEC.encode(o, stack);
+        }
+    }
+
+    private static SetItemDisplayContentPayload decodeRegistry(RegistryFriendlyByteBuf o){
+        int n = o.readVarInt();
+        java.util.ArrayList<ItemStack> list = new java.util.ArrayList<>(n);
+        for (int i = 0; i < n; i++) {
+            list.add(ItemStack.OPTIONAL_STREAM_CODEC.decode(o));
+        }
+        return new SetItemDisplayContentPayload(list);
     }
 
     @Override

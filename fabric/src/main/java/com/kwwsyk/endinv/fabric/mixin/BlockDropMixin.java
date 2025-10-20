@@ -77,21 +77,28 @@ public abstract class BlockDropMixin {
         ci.cancel();
     }
 
-    // Copied from ExperienceOrb logic, same as Forge side
-    private static int repairPlayerItems(ServerPlayer player, int repairAmount) {
-        var entry = net.minecraft.world.item.enchantment.EnchantmentHelper.getRandomItemWith(
-                net.minecraft.world.item.enchantment.Enchantments.MENDING,
-                player,
-                ItemStack::isDamaged
-        );
-        if (entry != null) {
-            ItemStack itemstack = entry.getValue();
-            int i = Math.min(repairAmount * 2, itemstack.getDamageValue());
-            itemstack.setDamageValue(itemstack.getDamageValue() - i);
-            int j = repairAmount - i / 2;
-            return j > 0 ? repairPlayerItems(player, j) : 0;
+    // Copied from ExperienceOrb logic for 1.21+, mirrors NeoForge side
+    private static int repairPlayerItems(ServerPlayer player, int value) {
+        java.util.Optional<net.minecraft.world.item.enchantment.EnchantedItemInUse> optional =
+                net.minecraft.world.item.enchantment.EnchantmentHelper.getRandomItemWith(
+                        net.minecraft.world.item.enchantment.EnchantmentEffectComponents.REPAIR_WITH_XP,
+                        player,
+                        ItemStack::isDamaged
+                );
+        if (optional.isPresent()) {
+            ItemStack itemstack = optional.get().itemStack();
+            int i = net.minecraft.world.item.enchantment.EnchantmentHelper.modifyDurabilityToRepairFromXp(player.serverLevel(), itemstack, value);
+            int j = Math.min(i, itemstack.getDamageValue());
+            itemstack.setDamageValue(itemstack.getDamageValue() - j);
+            if (j > 0) {
+                int k = value - j * value / i;
+                if (k > 0) {
+                    return repairPlayerItems(player, k);
+                }
+            }
+            return 0;
         } else {
-            return repairAmount;
+            return value;
         }
     }
 }

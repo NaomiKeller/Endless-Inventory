@@ -1,6 +1,5 @@
 package com.kwwsyk.endinv.fabric.network;
 
-import com.kwwsyk.endinv.common.AbstractModInitializer;
 import com.kwwsyk.endinv.common.network.payloads.ModPacketContext;
 import com.kwwsyk.endinv.common.network.payloads.ModPacketPayload;
 import com.kwwsyk.endinv.common.network.payloads.SyncedConfig;
@@ -8,150 +7,89 @@ import com.kwwsyk.endinv.common.network.payloads.toClient.*;
 import com.kwwsyk.endinv.common.network.payloads.toServer.*;
 import com.kwwsyk.endinv.fabric.network.payloads.JeiTransferRecipePayload;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
+import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.function.BiConsumer;
-import java.util.function.Function;
-
 public final class FabricNetworking {
-
-    private static final Map<Class<? extends ModPacketPayload>, PayloadRegistration<? extends ModPacketPayload>> CLIENTBOUND = new HashMap<>();
-    private static final Map<Class<? extends ModPacketPayload>, PayloadRegistration<? extends ModPacketPayload>> SERVERBOUND = new HashMap<>();
-    private static final List<PayloadRegistration<? extends ModPacketPayload>> CLIENTBOUND_REGISTRATIONS = new ArrayList<>();
-
-    private FabricNetworking() {
-    }
+    private FabricNetworking() {}
 
     public static void init() {
-        registerClientbound(EndInvContent.class, EndInvContent::encode, EndInvContent::decode, "endinv_content");
-        registerClientbound(EndInvMetadata.class, EndInvMetadata::encode, EndInvMetadata::decode, "endinv_meta");
-        registerClientbound(ItemPickedUpPayload.class, ItemPickedUpPayload::encode, ItemPickedUpPayload::decode, "auto_picked");
-        registerClientbound(SetItemDisplayContentPayload.class, SetItemDisplayContentPayload::encode, SetItemDisplayContentPayload::decode, "itemdisplay_content");
-        registerClientbound(SetStarredPagePayload.class, SetStarredPagePayload::encode, SetStarredPagePayload::decode, "starred_item");
-        registerClientbound(MenuAttachabilityPayload.class, MenuAttachabilityPayload::encode, MenuAttachabilityPayload::decode, "menu_attachability");
-        registerClientbound(SyncedConfig.class, SyncedConfig::encode, SyncedConfig::decode, SyncedConfig.DEFAULT.id());
-
-        registerServerbound(ItemClickPayload.class, ItemClickPayload::encode, ItemClickPayload::decode, "item_click");
-        registerServerbound(CreativeItemModPayload.class, CreativeItemModPayload::encode, CreativeItemModPayload::decode, "item_modify");
-        registerServerbound(ItemPageContext.class, ItemPageContext::encode, ItemPageContext::decode, "page_context");
-        registerServerbound(OpenEndInvPayload.class, OpenEndInvPayload::encode, OpenEndInvPayload::decode, "open_endinv");
-        registerServerbound(QuickMoveToPagePayload.class, QuickMoveToPagePayload::encode, QuickMoveToPagePayload::decode, "quick_move_page");
-        registerServerbound(StarItemPayload.class, StarItemPayload::encode, StarItemPayload::decode, "star_item");
-        registerServerbound(ToggleCraftingPayload.class, ToggleCraftingPayload::encode, ToggleCraftingPayload::decode, "toggle_crafting");
-        registerServerbound(SyncedConfig.class, SyncedConfig::encode, SyncedConfig::decode, SyncedConfig.DEFAULT.id());
+        // Register all payload types/codecs before registering receivers
+        var c2s = PayloadTypeRegistry.playC2S();
+        c2s.register(ItemClickPayload.TYPE, ItemClickPayload.STREAM_CODEC);
+        c2s.register(CreativeItemModPayload.TYPE, CreativeItemModPayload.STREAM_CODEC);
+        c2s.register(ItemPageContext.TYPE, ItemPageContext.STREAM_CODEC);
+        c2s.register(OpenEndInvPayload.TYPE, OpenEndInvPayload.STREAM_CODEC);
+        c2s.register(QuickMoveToPagePayload.TYPE, QuickMoveToPagePayload.STREAM_CODEC);
+        c2s.register(StarItemPayload.TYPE, StarItemPayload.STREAM_CODEC);
+        c2s.register(ToggleCraftingPayload.TYPE, ToggleCraftingPayload.STREAM_CODEC);
+        c2s.register(SyncedConfig.TYPE, SyncedConfig.STREAM_CODEC);
         if (FabricLoader.getInstance().isModLoaded("jei")) {
-            registerServerbound(JeiTransferRecipePayload.class, JeiTransferRecipePayload::encode, JeiTransferRecipePayload::decode, "jei_transfer_recipe");
+            c2s.register(JeiTransferRecipePayload.TYPE, JeiTransferRecipePayload.STREAM_CODEC);
         }
+
+        var s2c = PayloadTypeRegistry.playS2C();
+        s2c.register(EndInvContent.TYPE, EndInvContent.STREAM_CODEC);
+        s2c.register(EndInvMetadata.TYPE, EndInvMetadata.STREAM_CODEC);
+        s2c.register(ItemPickedUpPayload.TYPE, ItemPickedUpPayload.STREAM_CODEC);
+        s2c.register(SetItemDisplayContentPayload.TYPE, SetItemDisplayContentPayload.STREAM_CODEC);
+        s2c.register(SetStarredPagePayload.TYPE, SetStarredPagePayload.STREAM_CODEC);
+        s2c.register(MenuAttachabilityPayload.TYPE, MenuAttachabilityPayload.STREAM_CODEC);
+        s2c.register(SyncedConfig.TYPE, SyncedConfig.STREAM_CODEC);
     }
 
-    // Populate clientbound encoder/decoder map on the server without registering receivers
-    public static void initServerEncodersOnly() {
-        registerClientbound(EndInvContent.class, EndInvContent::encode, EndInvContent::decode, "endinv_content");
-        registerClientbound(EndInvMetadata.class, EndInvMetadata::encode, EndInvMetadata::decode, "endinv_meta");
-        registerClientbound(ItemPickedUpPayload.class, ItemPickedUpPayload::encode, ItemPickedUpPayload::decode, "auto_picked");
-        registerClientbound(SetItemDisplayContentPayload.class, SetItemDisplayContentPayload::encode, SetItemDisplayContentPayload::decode, "itemdisplay_content");
-        registerClientbound(SetStarredPagePayload.class, SetStarredPagePayload::encode, SetStarredPagePayload::decode, "starred_item");
-        registerClientbound(MenuAttachabilityPayload.class, MenuAttachabilityPayload::encode, MenuAttachabilityPayload::decode, "menu_attachability");
-        registerClientbound(SyncedConfig.class, SyncedConfig::encode, SyncedConfig::decode, SyncedConfig.DEFAULT.id());
-    }
+    public static void initServerEncodersOnly() { /* no-op on Fabric typed API */ }
 
     public static void initClient() {
-        for (PayloadRegistration<? extends ModPacketPayload> registration : CLIENTBOUND_REGISTRATIONS) {
-            registerClientReceiver(registration);
-        }
+        ClientPlayNetworking.registerGlobalReceiver(EndInvContent.TYPE,
+                (payload, context) -> context.client().execute(() -> payload.handle(context(context.player()))));
+        ClientPlayNetworking.registerGlobalReceiver(EndInvMetadata.TYPE,
+                (payload, context) -> context.client().execute(() -> payload.handle(context(context.player()))));
+        ClientPlayNetworking.registerGlobalReceiver(ItemPickedUpPayload.TYPE,
+                (payload, context) -> context.client().execute(() -> payload.handle(context(context.player()))));
+        ClientPlayNetworking.registerGlobalReceiver(SetItemDisplayContentPayload.TYPE,
+                (payload, context) -> context.client().execute(() -> payload.handle(context(context.player()))));
+        ClientPlayNetworking.registerGlobalReceiver(SetStarredPagePayload.TYPE,
+                (payload, context) -> context.client().execute(() -> payload.handle(context(context.player()))));
+        ClientPlayNetworking.registerGlobalReceiver(MenuAttachabilityPayload.TYPE,
+                (payload, context) -> context.client().execute(() -> payload.handle(context(context.player()))));
+        ClientPlayNetworking.registerGlobalReceiver(SyncedConfig.TYPE,
+                (payload, context) -> context.client().execute(() -> payload.handle(context(context.player()))));
     }
 
-    // Populate encoders for client->server payloads on client side (no receiver registration)
-    public static void initClientEncodersOnly() {
-        SERVERBOUND.put(ItemClickPayload.class, new PayloadRegistration<>(AbstractModInitializer.withModLocation("item_click"), ItemClickPayload::encode, ItemClickPayload::decode));
-        SERVERBOUND.put(CreativeItemModPayload.class, new PayloadRegistration<>(AbstractModInitializer.withModLocation("item_modify"), CreativeItemModPayload::encode, CreativeItemModPayload::decode));
-        SERVERBOUND.put(ItemPageContext.class, new PayloadRegistration<>(AbstractModInitializer.withModLocation("page_context"), ItemPageContext::encode, ItemPageContext::decode));
-        SERVERBOUND.put(OpenEndInvPayload.class, new PayloadRegistration<>(AbstractModInitializer.withModLocation("open_endinv"), OpenEndInvPayload::encode, OpenEndInvPayload::decode));
-        SERVERBOUND.put(QuickMoveToPagePayload.class, new PayloadRegistration<>(AbstractModInitializer.withModLocation("quick_move_page"), QuickMoveToPagePayload::encode, QuickMoveToPagePayload::decode));
-        SERVERBOUND.put(StarItemPayload.class, new PayloadRegistration<>(AbstractModInitializer.withModLocation("star_item"), StarItemPayload::encode, StarItemPayload::decode));
-        SERVERBOUND.put(ToggleCraftingPayload.class, new PayloadRegistration<>(AbstractModInitializer.withModLocation("toggle_crafting"), ToggleCraftingPayload::encode, ToggleCraftingPayload::decode));
-        SERVERBOUND.put(SyncedConfig.class, new PayloadRegistration<>(AbstractModInitializer.withModLocation(SyncedConfig.DEFAULT.id()), SyncedConfig::encode, SyncedConfig::decode));
+    public static void registerServerReceivers() {
+        ServerPlayNetworking.registerGlobalReceiver(ItemClickPayload.TYPE,
+                (payload, context) -> context.server().execute(() -> payload.handle(context(context.player()))));
+        ServerPlayNetworking.registerGlobalReceiver(CreativeItemModPayload.TYPE,
+                (payload, context) -> context.server().execute(() -> payload.handle(context(context.player()))));
+        ServerPlayNetworking.registerGlobalReceiver(ItemPageContext.TYPE,
+                (payload, context) -> context.server().execute(() -> payload.handle(context(context.player()))));
+        ServerPlayNetworking.registerGlobalReceiver(OpenEndInvPayload.TYPE,
+                (payload, context) -> context.server().execute(() -> payload.handle(context(context.player()))));
+        ServerPlayNetworking.registerGlobalReceiver(QuickMoveToPagePayload.TYPE,
+                (payload, context) -> context.server().execute(() -> payload.handle(context(context.player()))));
+        ServerPlayNetworking.registerGlobalReceiver(StarItemPayload.TYPE,
+                (payload, context) -> context.server().execute(() -> payload.handle(context(context.player()))));
+        ServerPlayNetworking.registerGlobalReceiver(ToggleCraftingPayload.TYPE,
+                (payload, context) -> context.server().execute(() -> payload.handle(context(context.player()))));
+        ServerPlayNetworking.registerGlobalReceiver(SyncedConfig.TYPE,
+                (payload, context) -> context.server().execute(() -> payload.handle(context(context.player()))));
         if (FabricLoader.getInstance().isModLoaded("jei")) {
-            SERVERBOUND.put(com.kwwsyk.endinv.fabric.network.payloads.JeiTransferRecipePayload.class,
-                    new PayloadRegistration<>(AbstractModInitializer.withModLocation("jei_transfer_recipe"),
-                            com.kwwsyk.endinv.fabric.network.payloads.JeiTransferRecipePayload::encode,
-                            com.kwwsyk.endinv.fabric.network.payloads.JeiTransferRecipePayload::decode));
+            ServerPlayNetworking.registerGlobalReceiver(JeiTransferRecipePayload.TYPE,
+                    (payload, context) -> context.server().execute(() -> payload.handle(context(context.player()))));
         }
     }
 
     public static void sendToServer(ModPacketPayload payload) {
-        PayloadRegistration<ModPacketPayload> registration = getRegistration(SERVERBOUND, payload.getClass());
-        FriendlyByteBuf buf = PacketByteBufs.create();
-        registration.encode(payload, buf);
-        ClientPlayNetworking.send(registration.id(), buf);
+        ClientPlayNetworking.send(payload);
     }
 
     public static void sendToPlayer(ServerPlayer player, ModPacketPayload payload) {
-        PayloadRegistration<ModPacketPayload> registration = getRegistration(CLIENTBOUND, payload.getClass());
-        FriendlyByteBuf buf = PacketByteBufs.create();
-        registration.encode(payload, buf);
-        ServerPlayNetworking.send(player, registration.id(), buf);
+        ServerPlayNetworking.send(player, payload);
     }
 
-    private static <T extends ModPacketPayload> void registerClientbound(Class<T> type, BiConsumer<T, FriendlyByteBuf> encoder, Function<FriendlyByteBuf, T> decoder, String id) {
-        PayloadRegistration<T> registration = new PayloadRegistration<>(AbstractModInitializer.withModLocation(id), encoder, decoder);
-        CLIENTBOUND.put(type, registration);
-        CLIENTBOUND_REGISTRATIONS.add(registration);
-    }
-
-    private static <T extends ModPacketPayload> void registerServerbound(Class<T> type, BiConsumer<T, FriendlyByteBuf> encoder, Function<FriendlyByteBuf, T> decoder, String id) {
-        PayloadRegistration<T> registration = new PayloadRegistration<>(AbstractModInitializer.withModLocation(id), encoder, decoder);
-        SERVERBOUND.put(type, registration);
-        ServerPlayNetworking.registerGlobalReceiver(registration.id(), (server, player, handler, buf, responseSender) -> {
-            T payload = registration.decode(buf);
-            server.execute(() -> payload.handle(context(player)));
-        });
-    }
-
-    private static void registerClientReceiver(PayloadRegistration<? extends ModPacketPayload> registration) {
-        ClientPlayNetworking.registerGlobalReceiver(registration.id(), (client, handler, buf, responseSender) -> {
-            ModPacketPayload payload = registration.decode(buf);
-            client.execute(() -> payload.handle(context(client.player)));
-        });
-    }
-
-    private static ModPacketContext context(ServerPlayer player) {
-        return () -> player;
-    }
-
-    private static ModPacketContext context(net.minecraft.world.entity.player.Player player) {
-        return () -> player;
-    }
-
-    @SuppressWarnings("unchecked")
-    private static PayloadRegistration<ModPacketPayload> getRegistration(Map<Class<? extends ModPacketPayload>, PayloadRegistration<? extends ModPacketPayload>> map, Class<?> type) {
-        PayloadRegistration<? extends ModPacketPayload> registration = map.get(type);
-        if (registration == null) {
-            throw new IllegalStateException("Unregistered payload type: " + type);
-        }
-        return (PayloadRegistration<ModPacketPayload>) registration;
-    }
-
-    private record PayloadRegistration<T extends ModPacketPayload>(ResourceLocation id,
-                                                                   BiConsumer<T, FriendlyByteBuf> encoder,
-                                                                   Function<FriendlyByteBuf, T> decoder) {
-        void encode(ModPacketPayload payload, FriendlyByteBuf buf) {
-            encoder.accept((T) payload, buf);
-        }
-
-        T decode(FriendlyByteBuf buf) {
-            return decoder.apply(buf);
-        }
-    }
+    private static ModPacketContext context(ServerPlayer player) { return () -> player; }
+    private static ModPacketContext context(net.minecraft.world.entity.player.Player player) { return () -> player; }
 }
-
-

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "endless_inventory",
-  "version": "${version}",
+  "version": "1.1.0",
   "name": "Endless Inventory",
   "description": "This mod provides an RPG like inventory space, allowing player to store endless items.\nAnd do something else.",
   "authors": [
@@ -26,9 +26,9 @@
     "fabric.mixins.json"
   ],
   "depends": {
-    "fabricloader": ">=0.14",
+    "fabricloader": ">=0.17",
     "fabric": "*",
-    "minecraft": ">=1.20 <=1.20.1"
+    "minecraft": ">=1.21 <=1.21.1"
   },
   "suggests": {
     "cloth-config2": "*"

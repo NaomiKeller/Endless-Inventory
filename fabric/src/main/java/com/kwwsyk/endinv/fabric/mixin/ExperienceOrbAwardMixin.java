@@ -17,32 +17,38 @@ public abstract class ExperienceOrbAwardMixin {
     private static void endlessinv$redirectAward(ServerLevel level, Vec3 pos, int amount, CallbackInfo ci) {
         if (amount <= 0) return;
 
+        // Only redirect XP when we have a captured killer (mob/block contexts).
+        // For player death drops (no killer captured), let vanilla spawn XP orbs.
         ServerPlayer target = MobDeathRedirect.get();
-        if (target == null) {
-            var generic = level.getNearestPlayer(pos.x, pos.y, pos.z, 8.0, false);
-            if (generic instanceof ServerPlayer sp) target = sp;
-        }
         if (target == null) return;
 
-        int repaired = repairPlayerItems(target, amount);
+        int repaired = eiRepairPlayerItems(target, amount);
         target.giveExperiencePoints(repaired);
         ci.cancel();
     }
 
-    private static int repairPlayerItems(ServerPlayer player, int repairAmount) {
-        var entry = net.minecraft.world.item.enchantment.EnchantmentHelper.getRandomItemWith(
-                net.minecraft.world.item.enchantment.Enchantments.MENDING,
-                player,
-                net.minecraft.world.item.ItemStack::isDamaged
-        );
-        if (entry != null) {
-            var itemstack = entry.getValue();
-            int i = Math.min(repairAmount * 2, itemstack.getDamageValue());
-            itemstack.setDamageValue(itemstack.getDamageValue() - i);
-            int j = repairAmount - i / 2;
-            return j > 0 ? repairPlayerItems(player, j) : 0;
+    // Use a unique name to avoid clashing with ExperienceOrb's own methods.
+    private static int eiRepairPlayerItems(ServerPlayer player, int value) {
+        java.util.Optional<net.minecraft.world.item.enchantment.EnchantedItemInUse> optional =
+                net.minecraft.world.item.enchantment.EnchantmentHelper.getRandomItemWith(
+                        net.minecraft.world.item.enchantment.EnchantmentEffectComponents.REPAIR_WITH_XP,
+                        player,
+                        net.minecraft.world.item.ItemStack::isDamaged
+                );
+        if (optional.isPresent()) {
+            var itemstack = optional.get().itemStack();
+            int i = net.minecraft.world.item.enchantment.EnchantmentHelper.modifyDurabilityToRepairFromXp(player.serverLevel(), itemstack, value);
+            int j = Math.min(i, itemstack.getDamageValue());
+            itemstack.setDamageValue(itemstack.getDamageValue() - j);
+            if (j > 0) {
+                int k = value - j * value / i;
+                if (k > 0) {
+                    return eiRepairPlayerItems(player, k);
+                }
+            }
+            return 0;
         } else {
-            return repairAmount;
+            return value;
         }
     }
 }

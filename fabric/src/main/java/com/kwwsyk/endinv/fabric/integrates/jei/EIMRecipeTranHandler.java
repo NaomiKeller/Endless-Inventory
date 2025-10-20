@@ -20,6 +20,7 @@ import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.CraftingRecipe;
 import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.ShapedRecipe;
 import org.jetbrains.annotations.Nullable;
 
@@ -28,7 +29,8 @@ import java.util.*;
 /** {@link EndlessInventoryMenu}'s recipe transfer handler.
  *
  */
-public class EIMRecipeTranHandler implements IRecipeTransferHandler<EndlessInventoryMenu, CraftingRecipe> {
+@SuppressWarnings({"rawtypes"})
+public class EIMRecipeTranHandler implements IRecipeTransferHandler<EndlessInventoryMenu, RecipeHolder<CraftingRecipe>> {
 
     private static final Class<EndlessInventoryMenu> CONTAINER_CLASS = EndlessInventoryMenu.class;
     //is that dangerous?
@@ -37,7 +39,7 @@ public class EIMRecipeTranHandler implements IRecipeTransferHandler<EndlessInven
 
     private final IJeiHelpers jeiHelper;
     private final IRecipeTransferHandlerHelper transferHelper;
-    private final IRecipeTransferInfo<EndlessInventoryMenu,CraftingRecipe> playerInvInfo;
+    private final IRecipeTransferInfo playerInvInfo;
 
     public EIMRecipeTranHandler(IJeiHelpers jeiHelper,IRecipeTransferHandlerHelper transferHelper){
         this.jeiHelper = jeiHelper;
@@ -45,7 +47,7 @@ public class EIMRecipeTranHandler implements IRecipeTransferHandler<EndlessInven
         playerInvInfo = createPlayerInvInfo();
     }
 
-    private IRecipeTransferInfo<EndlessInventoryMenu,CraftingRecipe> createPlayerInvInfo(){
+    private IRecipeTransferInfo createPlayerInvInfo(){
         return this.transferHelper.createBasicRecipeTransferInfo(CONTAINER_CLASS,CONTAINER_TYPE,RecipeTypes.CRAFTING,0,9,10,36);
     }
 
@@ -70,7 +72,7 @@ public class EIMRecipeTranHandler implements IRecipeTransferHandler<EndlessInven
      * The recipe that this recipe transfer handler can use.
      */
     @Override
-    public RecipeType<CraftingRecipe> getRecipeType() {
+    public RecipeType<RecipeHolder<CraftingRecipe>> getRecipeType() {
         return RecipeTypes.CRAFTING;
     }
 
@@ -89,7 +91,7 @@ public class EIMRecipeTranHandler implements IRecipeTransferHandler<EndlessInven
      */
     @Override
     public @Nullable IRecipeTransferError transferRecipe(EndlessInventoryMenu container,
-                                                         CraftingRecipe recipe,
+                                                         RecipeHolder<CraftingRecipe> recipe,
                                                          IRecipeSlotsView recipeSlots,
                                                          Player player, boolean maxTransfer, boolean doTransfer) {
         try {
@@ -112,7 +114,12 @@ public class EIMRecipeTranHandler implements IRecipeTransferHandler<EndlessInven
 
             if (player.level().isClientSide) {
                 container.setCraftingVisible(true);//is crafter visible on server now? or needn't consider it
-                ModInfo.getPacketDistributor().sendToServer(new JeiTransferRecipePayload(container.containerId, recipe.getId(), maxTransfer));
+                var id = tryResolveRecipeId(recipe);
+                if (id != null) {
+                    ModInfo.getPacketDistributor().sendToServer(new JeiTransferRecipePayload(container.containerId, id, maxTransfer));
+                } else {
+                    return transferHelper.createInternalError();
+                }
             } else {
                 performTransfer(container, recipe, plan, player);
             }
@@ -124,14 +131,14 @@ public class EIMRecipeTranHandler implements IRecipeTransferHandler<EndlessInven
         }
     }
 
-    public static void performServerTransfer(EndlessInventoryMenu container, CraftingRecipe recipe, Player player, boolean maxTransfer) {
+    public static void performServerTransfer(EndlessInventoryMenu container, RecipeHolder<CraftingRecipe> recipe, Player player, boolean maxTransfer) {
         TransferPlan plan = createTransferPlan(container, recipe, maxTransfer);
         performTransfer(container, recipe, plan, player);
     }
 
     private static boolean sameType(ItemStack a, ItemStack b) {
         if (a.isEmpty() || b.isEmpty()) return false;
-        return ItemStack.isSameItemSameTags(a, b);
+        return ItemStack.isSameItemSameComponents(a, b);
     }
 
     private static Ingredient[] buildRecipeLayout(CraftingRecipe recipe) {
@@ -213,8 +220,8 @@ public class EIMRecipeTranHandler implements IRecipeTransferHandler<EndlessInven
         return best.selection();
     }
 
-    private static TransferPlan createTransferPlan(EndlessInventoryMenu container, CraftingRecipe recipe, boolean maxTransfer) {
-        Ingredient[] layout = buildRecipeLayout(recipe);
+    private static TransferPlan createTransferPlan(EndlessInventoryMenu container, net.minecraft.world.item.crafting.RecipeHolder<CraftingRecipe> recipe, boolean maxTransfer) {
+        Ingredient[] layout = buildRecipeLayout(recipe.value());
         List<Slot> playerInvSlots = container.getPlayerInvSlots();
         List<ItemStack> pageItems = container.getSourceInventory().getItemsAsList();
 
@@ -270,7 +277,7 @@ public class EIMRecipeTranHandler implements IRecipeTransferHandler<EndlessInven
         return new TransferPlan(layout, chosenPerSlot, craftsWanted, finalMissing);
     }
 
-    private static void performTransfer(EndlessInventoryMenu container, CraftingRecipe recipe, TransferPlan plan, Player player) {
+    private static void performTransfer(EndlessInventoryMenu container, Object recipe, TransferPlan plan, Player player) {
         container.setCraftingVisible(true);
 
         List<Slot> craftingSlots = container.getCraftingSlots();
@@ -434,7 +441,7 @@ public class EIMRecipeTranHandler implements IRecipeTransferHandler<EndlessInven
         }
 
         boolean isPlain() {
-            return !key.hasCustomData();
+            return key.components() == null || key.components().isEmpty();
         }
     }
 
@@ -518,7 +525,7 @@ public class EIMRecipeTranHandler implements IRecipeTransferHandler<EndlessInven
         }
     }
 
-    public class EIMRecipeTranInfo implements IRecipeTransferInfo<EndlessInventoryMenu,CraftingRecipe>{
+    public class EIMRecipeTranInfo implements IRecipeTransferInfo{
 
         /**
          * Return the container class that this recipe transfer helper supports.
@@ -543,7 +550,7 @@ public class EIMRecipeTranHandler implements IRecipeTransferHandler<EndlessInven
          * @since 9.5.0
          */
         @Override
-        public RecipeType<CraftingRecipe> getRecipeType() {
+        public RecipeType getRecipeType() {
             return RecipeTypes.CRAFTING;
         }
 
@@ -551,25 +558,44 @@ public class EIMRecipeTranHandler implements IRecipeTransferHandler<EndlessInven
          * Return true if this recipe transfer info can handle the given container instance and recipe.
          */
         @Override
-        public boolean canHandle(EndlessInventoryMenu container, CraftingRecipe recipe) {
-            //if(!container.isCrafterEnabled()) return false;
-            return EIMRecipeTranHandler.this.playerInvInfo.canHandle(container,recipe);
+        public boolean canHandle(net.minecraft.world.inventory.AbstractContainerMenu container, Object recipe) {
+            return container instanceof EndlessInventoryMenu;
         }
 
         /**
          * Return a list of slots for the recipe area.
          */
         @Override
-        public List<Slot> getRecipeSlots(EndlessInventoryMenu container, CraftingRecipe recipe) {
-            return container.getCraftingSlots();
+        public List<Slot> getRecipeSlots(net.minecraft.world.inventory.AbstractContainerMenu container, Object recipe) {
+            return ((EndlessInventoryMenu)container).getCraftingSlots();
         }
 
         /**
          * Return a list of slots that the transfer can use to get items for crafting, or place leftover items.
          */
         @Override
-        public List<Slot> getInventorySlots(EndlessInventoryMenu container, CraftingRecipe recipe) {
-            return container.getPlayerInvSlots();
+        public List<Slot> getInventorySlots(net.minecraft.world.inventory.AbstractContainerMenu container, Object recipe) {
+            return ((EndlessInventoryMenu)container).getPlayerInvSlots();
         }
+    }
+
+    @org.jetbrains.annotations.Nullable
+    private static net.minecraft.resources.ResourceLocation tryResolveRecipeId(Object recipeObj) {
+        try {
+            var m = recipeObj.getClass().getMethod("getId");
+            Object v = m.invoke(recipeObj);
+            if (v instanceof net.minecraft.resources.ResourceLocation rl) return rl;
+        } catch (Throwable ignored) {}
+        try {
+            var m = recipeObj.getClass().getMethod("id");
+            Object v = m.invoke(recipeObj);
+            if (v instanceof net.minecraft.resources.ResourceLocation rl) return rl;
+        } catch (Throwable ignored) {}
+        try {
+            var m = recipeObj.getClass().getMethod("value");
+            Object v = m.invoke(recipeObj);
+            if (v != null) return tryResolveRecipeId(v);
+        } catch (Throwable ignored) {}
+        return null;
     }
 }
