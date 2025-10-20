@@ -6,15 +6,12 @@ plugins {
     id 'idea'
 }
 
-
-version = mod_version
-group = mod_group_id
-
-repositories {
-    mavenLocal()
+base {
+    archivesName = "${mod_name}-${project.name}-${minecraft_version}-${mod_version}"
 }
 
 repositories {
+    mavenLocal()
     mavenCentral()
     maven {
         // location of the maven that hosts JEI files since January 2023
@@ -30,10 +27,6 @@ repositories {
         name = "Curios"
         url = uri("https://maven.theillusivec4.top/")
     }
-}
-
-jar {
-    from project(":common").sourceSets.main.output
 }
 
 dependencies {
@@ -162,6 +155,13 @@ var generateModMetadata = tasks.register("generateModMetadata", ProcessResources
 sourceSets.main.resources.srcDir generateModMetadata
 // To avoid having to run "generateModMetadata" manually, make it run on every project reload
 neoForge.ideSyncTask generateModMetadata
+
+jar {
+    // Avoid duplicate resources when merging common outputs
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    from project(":common").sourceSets.main.output
+}
+
 
 // Example configuration to allow publishing using the maven-publish plugin
 publishing {

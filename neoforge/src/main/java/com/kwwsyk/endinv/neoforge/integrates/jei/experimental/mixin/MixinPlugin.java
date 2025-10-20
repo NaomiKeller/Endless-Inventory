@@ -32,7 +32,7 @@ public class MixinPlugin implements IMixinConfigPlugin {
     }
 
     private static Boolean readBooleanFromToml(String section, String key) {
-        String fileName = "endless_inventory-common.toml";
+        String fileName = "endless_inventory-startup.toml";
         Path[] candidates = new Path[]{
                 Paths.get("run", "config", fileName),
                 Paths.get("config", fileName),

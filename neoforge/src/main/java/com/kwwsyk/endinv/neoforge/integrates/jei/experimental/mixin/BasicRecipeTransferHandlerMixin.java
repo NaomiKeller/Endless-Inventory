@@ -90,11 +90,11 @@ public abstract class BasicRecipeTransferHandlerMixin<C extends AbstractContaine
             method = "transferRecipe",
             at = @At(
                     value = "INVOKE",
-                    target = "Lmezz/jei/common/network/IConnectionToServer;sendPacketToServer(Lmezz/jei/common/network/packets/PacketJei;)V"
+                    target = "Lmezz/jei/common/network/IConnectionToServer;sendPacketToServer(Lmezz/jei/common/network/packets/PlayToServerPacket;)V"
             ),
             remap = false
     )
-    private void endinv$redirectTransferPacket(IConnectionToServer connection, Object packet) {
+    private <T extends mezz.jei.common.network.packets.PlayToServerPacket<T>> void endinv$redirectTransferPacket(IConnectionToServer connection, T packet) {
         TransferContext context = ENDINV$PLAN.get();
         if (context != null) {
             ENDINV$PLAN.remove();

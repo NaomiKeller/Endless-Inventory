@@ -6,6 +6,7 @@ import com.kwwsyk.endinv.common.client.gui.page.DisplayPage;
 import com.kwwsyk.endinv.forge.client.events.ScreenAttachment;
 import com.mojang.logging.LogUtils;
 import mezz.jei.api.constants.VanillaTypes;
+import mezz.jei.api.gui.builder.IClickableIngredientFactory;
 import mezz.jei.api.gui.handlers.IGuiContainerHandler;
 import mezz.jei.api.ingredients.IIngredientType;
 import mezz.jei.api.ingredients.ITypedIngredient;
@@ -42,12 +43,14 @@ public class AttachmentGuiHandler implements IGuiContainerHandler<AbstractContai
      * This can also be used to let JEI look up liquids in tanks directly, by returning a FluidStack.
      * Works with any ingredient type that has been registered with {@code IModIngredientRegistration}.
      *
+     * @param builder
+     * @param containerScreen
      * @param mouseX          the current X position of the mouse in screen coordinates.
      * @param mouseY          the current Y position of the mouse in screen coordinates.
-     * @since 11.5.0
+     * @since 19.23.0
      */
     @Override
-    public Optional<IClickableIngredient<?>> getClickableIngredientUnderMouse(AbstractContainerScreen<?> containerScreen, double mouseX, double mouseY) {
+    public Optional<? extends IClickableIngredient<?>> getClickableIngredientUnderMouse(IClickableIngredientFactory builder, AbstractContainerScreen<?> containerScreen, double mouseX, double mouseY) {
         if(ScreenFramework.getInstance() != null){
             return Optional.of(new ItemClickEventWrapper(ScreenFramework.getInstance().getDisplayingPage(), mouseX, mouseY));
         }
@@ -83,12 +86,12 @@ public class AttachmentGuiHandler implements IGuiContainerHandler<AbstractContai
             return new ITypedIngredient<>() {
                 @Override
                 public IIngredientType<ItemStack> getType() {
-                    return getIngredientType();
+                    return VanillaTypes.ITEM_STACK;
                 }
 
                 @Override
                 public ItemStack getIngredient() {
-                    return ItemClickEventWrapper.this.getIngredient();
+                    return hovered;
                 }
             };
         }
