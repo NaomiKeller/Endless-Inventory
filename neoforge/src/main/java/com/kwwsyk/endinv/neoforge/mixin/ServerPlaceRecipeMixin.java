@@ -16,7 +16,6 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
@@ -31,8 +30,6 @@ public class ServerPlaceRecipeMixin<C extends Container> {
     @Unique
     @Nullable
     private EndlessInventory endInv;
-    @Unique
-    private int ei$lastIndex = Integer.MIN_VALUE;
 
     @Inject(
             method = "recipeClicked",
@@ -63,22 +60,24 @@ public class ServerPlaceRecipeMixin<C extends Container> {
         }
     }
 
-    @ModifyVariable(method = "moveItemToGrid", at = @At(value = "STORE"), ordinal = 0, argsOnly = true)
-    private int ei$captureIndex(int i) { this.ei$lastIndex = i; return i; }
-
     @Inject(method = "moveItemToGrid", at = @At("RETURN"), cancellable = true)
     private void ei$afterMove(Slot slot, ItemStack stack, int maxAmount, CallbackInfoReturnable<Integer> cir) {
-        if (this.ei$lastIndex != -1) return;
         if (endInv == null) return;
+        // Vanilla returns the remaining amount still needed after moving from the player.
+        // If there is still a remainder, try to satisfy it from Endless Inventory.
+        int remaining = cir.getReturnValue();
+        if (remaining >= 0) return;
         ItemStack taken = endInv.takeItem(stack, maxAmount);
-        if (taken.isEmpty()) return;
-        int count = taken.getCount();//count<=maxAmount
-        int j = maxAmount - count;
+        if (taken.isEmpty()) {
+            cir.setReturnValue(maxAmount);
+            return;
+        }
+        int newRemaining = maxAmount - taken.getCount();
 
-        ItemStack cur = slot.getItem();//line 150-154
-        if (cur.isEmpty()) slot.set(taken.copy());
-        else cur.grow(taken.getCount());
+        ItemStack slotItem = slot.getItem();
+        if (slotItem.isEmpty()) slot.set(taken.copy());
+        else slotItem.grow(taken.getCount());
 
-        cir.setReturnValue(j);
+        cir.setReturnValue(newRemaining);
     }
 }

@@ -100,11 +100,38 @@ public abstract class BasicRecipeTransferHandlerMixin<C extends AbstractContaine
             ENDINV$PLAN.remove();
             ModInfo.getPacketDistributor().sendToServer(new JeiAttachedTransferPayload(context));
         } else {
+            // Fallback: find a compatible sendPacketToServer method by name and single parameter
+            // JEI uses an interface type for the packet; avoid exact-class lookup.
             try {
-                var m = connection.getClass().getMethod("sendPacketToServer", packet.getClass());
-                m.invoke(connection, packet);
-            } catch (Throwable ignored) {
-            }
+                boolean invoked = false;
+                Class<?> cls = connection.getClass();
+                while (cls != null && !invoked) {
+                    for (var m : cls.getMethods()) {
+                        if (!m.getName().equals("sendPacketToServer")) continue;
+                        var params = m.getParameterTypes();
+                        if (params.length != 1) continue;
+                        if (params[0].isInstance(packet)) {
+                            m.invoke(connection, packet);
+                            invoked = true;
+                            break;
+                        }
+                    }
+                    cls = cls.getSuperclass();
+                }
+                if (!invoked) {
+                    // Last resort: try declared methods as well
+                    for (var m : connection.getClass().getDeclaredMethods()) {
+                        if (!m.getName().equals("sendPacketToServer")) continue;
+                        var params = m.getParameterTypes();
+                        if (params.length != 1) continue;
+                        if (params[0].isInstance(packet)) {
+                            m.setAccessible(true);
+                            m.invoke(connection, packet);
+                            break;
+                        }
+                    }
+                }
+            } catch (Throwable ignored) {}
         }
     }
 

@@ -47,6 +47,13 @@ public class EndlessInventoryScreen extends AbstractContainerScreen<EndlessInven
 
         frameWork.addWidgetToScreen(this::addRenderableWidget);
         addCraftingToggleButton();
+        // Ensure initial UI matches menu's crafting visibility and row count
+        if (this.craftingToggleButton != null) {
+            this.craftingToggleButton.setValue(craftingVisible);
+        }
+        if (this.frameWork != null) {
+            this.frameWork.resizePageRows(menu.getVisibleRows());
+        }
     }
 
     private void addCraftingToggleButton() {

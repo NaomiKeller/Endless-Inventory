@@ -12,6 +12,9 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.crafting.CraftingRecipe;
+import net.minecraft.world.item.crafting.RecipeHolder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Optional;
 
@@ -22,6 +25,7 @@ public record JeiTransferRecipePayload(int containerId, ResourceLocation recipeI
 
     public static final CustomPacketPayload.Type<JeiTransferRecipePayload> TYPE =
             new CustomPacketPayload.Type<>(AbstractModInitializer.withModLocation("jei_transfer_recipe"));
+    private static final Logger log = LoggerFactory.getLogger(JeiTransferRecipePayload.class);
 
     public static void encode(JeiTransferRecipePayload payload, FriendlyByteBuf buffer) {
         buffer.writeVarInt(payload.containerId);
@@ -53,12 +57,14 @@ public record JeiTransferRecipePayload(int containerId, ResourceLocation recipeI
         if (menu.containerId != containerId) {
             return;
         }
-        Optional<?> optional = serverPlayer.serverLevel().getRecipeManager().byKey(recipeId);
+        Optional<RecipeHolder<?>> optional = serverPlayer.serverLevel().getRecipeManager().byKey(recipeId);
         optional.ifPresent(recipeObj -> {
-            CraftingRecipe craftingRecipe = resolveCraftingRecipe(recipeObj);
-            if (craftingRecipe != null) {
-                EIMRecipeTranHandler.performServerTransfer(menu, craftingRecipe, serverPlayer, maxTransfer);
+            if(!(recipeObj.value() instanceof CraftingRecipe)) {
+                log.error("[Packet Handle] Jei recipe transfer handler for EIM is handling non-crafting recipe");
+                return;
             }
+            RecipeHolder<CraftingRecipe> craftingRecipe = (RecipeHolder<CraftingRecipe>) recipeObj;
+            EIMRecipeTranHandler.performServerTransfer(menu, craftingRecipe, serverPlayer, maxTransfer);
         });
     }
 

@@ -239,10 +239,8 @@ public class EndlessInventoryMenu extends AbstractContainerMenu implements PageM
                 inventory.placeItemBackInInventory(stack);
             }
         }
-        ItemStack result = craftResult.removeItemNoUpdate(0);
-        if (!result.isEmpty()) {
-            inventory.placeItemBackInInventory(result);
-        }
+        // Clear the result slot without returning it to the player to avoid duplication on close
+        craftResult.removeItemNoUpdate(RESULT_SLOT_INDEX);
         craftMatrix.setChanged();
         craftResult.setChanged();
     }
