@@ -11,18 +11,20 @@ import com.kwwsyk.endinv.common.network.payloads.SyncedConfig;
 import com.kwwsyk.endinv.common.options.IServerConfig;
 import com.kwwsyk.endinv.forge.client.config.ClientConfig;
 import com.kwwsyk.endinv.forge.integrates.clothconfig.ClothConfigIntegration;
-import com.kwwsyk.endinv.forge.integrates.curio.CurioInit;
-import com.kwwsyk.endinv.forge.integrates.curio.CurioPageType;
 import com.kwwsyk.endinv.forge.nbtAttcachment.AttachingCapabilities;
 import com.kwwsyk.endinv.forge.nbtAttcachment.IEndInvUuid;
 import com.kwwsyk.endinv.forge.nbtAttcachment.ISyncedConfig;
-import com.kwwsyk.endinv.forge.network.ModPacketHandler;
+import net.minecraft.client.Minecraft;
+import net.minecraft.network.Connection;
+import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.common.ClientboundCustomPayloadPacket;
+import net.minecraft.network.protocol.common.ServerboundCustomPayloadPacket;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.flag.FeatureFlags;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.Item;
-import net.minecraftforge.common.ForgeHooks;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.ModContainer;
 import net.minecraftforge.fml.ModList;
@@ -30,9 +32,9 @@ import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.loading.FMLEnvironment;
-import net.minecraftforge.network.PacketDistributor;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraftforge.server.ServerLifecycleHooks;
 
 import java.util.UUID;
 import java.util.function.Supplier;
@@ -73,15 +75,12 @@ public class ModInitializer extends AbstractModInitializer {
             }
         }
 
-        if(ModList.get().isLoaded("curios")){
-            modEventBus.addListener(CurioInit::registerCapabilities);
-            CurioPageType.register();
-        }
+        // Curios has no Forge version for 1.21+, skip integration on Forge
     }
 
     @Override
     protected IPlatform loadOtherPlatformSpecific() {
-        return (clcItem,crrItem,slot,action,player,access)-> ForgeHooks.onItemStackedOn(clcItem,clcItem,slot,action,player,access);
+        return (clcItem,crrItem,slot,action,player,access)-> false;
     }
 
     @Override
@@ -89,17 +88,28 @@ public class ModInitializer extends AbstractModInitializer {
         return new IPacketDistributor() {
             @Override
             public void sendToServer(ModPacketPayload payload) {
-                ModPacketHandler.INSTANCE.sendToServer(payload);
+                Connection conn = Minecraft.getInstance().getConnection() != null ? Minecraft.getInstance().getConnection().getConnection() : null;
+                if (conn != null) {
+                    Packet<?> pkt = new ServerboundCustomPayloadPacket((CustomPacketPayload) payload);
+                    conn.send(pkt);
+                }
             }
 
             @Override
             public void sendToPlayer(ServerPlayer player, ModPacketPayload payload) {
-                ModPacketHandler.INSTANCE.send(PacketDistributor.PLAYER.with(()->player),payload);
+                Packet<?> pkt = new ClientboundCustomPayloadPacket((CustomPacketPayload) payload);
+                player.connection.send(pkt);
             }
 
             @Override
             public void sendToAllPlayer(ModPacketPayload payload) {
-                ModPacketHandler.INSTANCE.send(PacketDistributor.ALL.noArg(),payload);
+                var server = ServerLifecycleHooks.getCurrentServer();
+                if (server != null) {
+                    Packet<?> pkt = new ClientboundCustomPayloadPacket((CustomPacketPayload) payload);
+                    for (ServerPlayer sp : server.getPlayerList().getPlayers()) {
+                        sp.connection.send(pkt);
+                    }
+                }
             }
         };
     }

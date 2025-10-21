@@ -1,6 +1,7 @@
 package com.kwwsyk.endinv.forge.nbtAttcachment;
 
 import net.minecraft.core.Direction;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ICapabilitySerializable;
@@ -25,12 +26,12 @@ public class NBTCapability<T extends INBTSerializable<CompoundTag>> implements I
     }
 
     @Override
-    public CompoundTag serializeNBT() {
-        return backend.serializeNBT();
+    public CompoundTag serializeNBT(HolderLookup.Provider provider) {
+        return backend.serializeNBT(provider);
     }
 
     @Override
-    public void deserializeNBT(CompoundTag compoundTag) {
-        backend.deserializeNBT(compoundTag);
+    public void deserializeNBT(HolderLookup.Provider provider, CompoundTag compoundTag) {
+        backend.deserializeNBT(provider, compoundTag);
     }
 }

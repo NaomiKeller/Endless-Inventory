@@ -4,7 +4,6 @@ import com.kwwsyk.endinv.common.ModInfo;
 import com.kwwsyk.endinv.common.ModRegistries;
 import com.kwwsyk.endinv.common.menu.EndlessInventoryMenu;
 import com.kwwsyk.endinv.common.util.ItemKey;
-import com.kwwsyk.endinv.forge.network.payloads.JeiTransferRecipePayload;
 import mezz.jei.api.constants.RecipeTypes;
 import mezz.jei.api.gui.ingredient.IRecipeSlotsView;
 import mezz.jei.api.helpers.IJeiHelpers;
@@ -112,8 +111,8 @@ public class EIMRecipeTranHandler implements IRecipeTransferHandler<EndlessInven
             }
 
             if (player.level().isClientSide) {
-                container.setCraftingVisible(true);//is crafter visible on server now? or needn't consider it
-                ModInfo.getPacketDistributor().sendToServer(new JeiTransferRecipePayload(container.containerId, recipe.id(), maxTransfer));
+                container.setCraftingVisible(true);
+                ModInfo.getPacketDistributor().sendToServer(new com.kwwsyk.endinv.forge.network.payloads.JeiTransferRecipePayload(container.containerId, recipe.id(), maxTransfer));
             } else {
                 performTransfer(container, recipe.value(), plan, player);
             }
@@ -576,3 +575,5 @@ public class EIMRecipeTranHandler implements IRecipeTransferHandler<EndlessInven
         }
     }
 }
+
+

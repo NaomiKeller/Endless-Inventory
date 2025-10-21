@@ -49,10 +49,12 @@ minecraft {
             mods {
                 "${mod_id}" {
                     source(sourceSets.main)
-                    source(project(":common").sourceSets.main)
+                    //source(project(":common").sourceSets.main)
                 }
             }
             jvmArg '--add-opens=java.base/java.lang.ref=ALL-UNNAMED'
+            jvmArg "-Dforge.logging.console.level=debug"
+            jvmArg "-Dforge.logging.markers=LOADING,MODSCAN,CLASSLOADING"
         }
     }
 }
@@ -159,4 +161,17 @@ jar {
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8' // Use the UTF-8 charset for Java compilation
+}
+
+// Exclude incompatible or legacy sources from the 1.21 Forge build
+sourceSets {
+    main {
+        java {
+            exclude 'com/kwwsyk/endinv/forge/integrates/jei/experimental/**'
+            exclude 'com/kwwsyk/endinv/forge/integrates/jei/experimental/mixin/BasicRecipeTransferHandlerMixin.java'
+            exclude 'com/kwwsyk/endinv/forge/network/ModPacketHandler.java'
+            exclude 'com/kwwsyk/endinv/forge/events/PayloadReg.java'
+            exclude 'com/kwwsyk/endinv/forge/network/payloads/JeiAttachedTransferPayload.java'
+        }
+    }
 }

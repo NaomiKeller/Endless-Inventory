@@ -1,10 +1,14 @@
 package com.kwwsyk.endinv.forge.network.payloads;
 
+import com.kwwsyk.endinv.common.AbstractModInitializer;
 import com.kwwsyk.endinv.common.network.payloads.ModPacketContext;
 import com.kwwsyk.endinv.common.network.payloads.ModPacketPayload;
 import com.kwwsyk.endinv.forge.integrates.jei.experimental.AEIRecipeTransferHandler;
 import com.kwwsyk.endinv.forge.integrates.jei.experimental.AEIRecipeTransferHandler.TransferContext;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -17,6 +21,12 @@ import java.util.List;
 import java.util.Optional;
 
 public record JeiAttachedTransferPayload(TransferContext context) implements ModPacketPayload {
+
+    public static final StreamCodec<RegistryFriendlyByteBuf, JeiAttachedTransferPayload> STREAM_CODEC =
+            StreamCodec.of((buf, value) -> encode(value, buf), JeiAttachedTransferPayload::decode);
+
+    public static final CustomPacketPayload.Type<JeiAttachedTransferPayload> TYPE =
+            new CustomPacketPayload.Type<>(AbstractModInitializer.withModLocation("jei_attached_transfer"));
 
     public static void encode(JeiAttachedTransferPayload payload, FriendlyByteBuf buffer) {
         buffer.writeVarInt(payload.context.containerId());
@@ -59,6 +69,9 @@ public record JeiAttachedTransferPayload(TransferContext context) implements Mod
     public String id() {
         return "jei_attached_transfer";
     }
+
+    @Override
+    public CustomPacketPayload.Type<? extends CustomPacketPayload> type() { return TYPE; }
 
     @Override
     public void handle(ModPacketContext modContext) {
