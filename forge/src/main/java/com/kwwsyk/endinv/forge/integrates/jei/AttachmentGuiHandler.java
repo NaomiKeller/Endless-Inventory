@@ -49,7 +49,11 @@ public class AttachmentGuiHandler implements IGuiContainerHandler<AbstractContai
     @Override
     public Optional<IClickableIngredient<?>> getClickableIngredientUnderMouse(AbstractContainerScreen<?> containerScreen, double mouseX, double mouseY) {
         if(ScreenFramework.getInstance() != null){
-            return Optional.of(new ItemClickEventWrapper(ScreenFramework.getInstance().getDisplayingPage(), mouseX, mouseY));
+            DisplayPage page = ScreenFramework.getInstance().getDisplayingPage();
+
+            if(page.getOneInteractableArea(mouseX - page.getPageLeft(), mouseY - page.getPageTop()) == null) return Optional.empty();
+
+            return Optional.of(new ItemClickEventWrapper(page, mouseX, mouseY));
         }
         return Optional.empty();
     }
