@@ -133,7 +133,7 @@ public final class AutoPickHelper {
 
 
     public static void onPickupItem(IPlayerPickupItemEvent event){
-        if(!(event.getPlayer() instanceof ServerPlayer player) || isEnabled(player)){
+        if(!(event.getPlayer() instanceof ServerPlayer player) || !isEnabled(player)){
             return;
         }
         ItemEntity entity = event.getItem();
