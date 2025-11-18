@@ -8,11 +8,11 @@ import com.kwwsyk.endinv.neoforge.network.payloads.JeiTransferRecipePayload;
 import mezz.jei.api.constants.RecipeTypes;
 import mezz.jei.api.gui.ingredient.IRecipeSlotsView;
 import mezz.jei.api.helpers.IJeiHelpers;
-import mezz.jei.api.recipe.RecipeType;
 import mezz.jei.api.recipe.transfer.IRecipeTransferError;
 import mezz.jei.api.recipe.transfer.IRecipeTransferHandler;
 import mezz.jei.api.recipe.transfer.IRecipeTransferHandlerHelper;
 import mezz.jei.api.recipe.transfer.IRecipeTransferInfo;
+import mezz.jei.api.recipe.types.IRecipeType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.MenuType;
@@ -60,7 +60,7 @@ public class EIMRecipeTranHandler implements IRecipeTransferHandler<EndlessInven
     }
 
     @Override
-    public RecipeType<RecipeHolder<CraftingRecipe>> getRecipeType() {
+    public IRecipeType<RecipeHolder<CraftingRecipe>> getRecipeType() {
         return RecipeTypes.CRAFTING;
     }
 
@@ -117,11 +117,10 @@ public class EIMRecipeTranHandler implements IRecipeTransferHandler<EndlessInven
 
     private static Ingredient[] buildRecipeLayout(CraftingRecipe recipe) {
         Ingredient[] layout = new Ingredient[9];
-        Arrays.fill(layout, Ingredient.EMPTY);
         if (recipe instanceof ShapedRecipe shaped) {
             int width = Math.min(3, shaped.getWidth());
             int height = Math.min(3, shaped.getHeight());
-            List<Ingredient> ingredients = shaped.getIngredients();
+            List<Ingredient> ingredients = getRecipeIngredients(shaped);
             for (int y = 0; y < height; y++) {
                 for (int x = 0; x < width; x++) {
                     int srcIndex = y * shaped.getWidth() + x;
@@ -131,12 +130,31 @@ public class EIMRecipeTranHandler implements IRecipeTransferHandler<EndlessInven
                 }
             }
         } else {
-            List<Ingredient> ingredients = recipe.getIngredients();
+            List<Ingredient> ingredients = getRecipeIngredients(recipe);
             for (int i = 0; i < Math.min(ingredients.size(), layout.length); i++) {
                 layout[i] = ingredients.get(i);
             }
         }
         return layout;
+    }
+
+    /**
+     * NeoForge/Mojang 1.21.4 remapped CraftingRecipe no longer exposes getIngredients with the same name.
+     * Resolve the ingredients list reflectively to stay compatible across mappings.
+     */
+    @SuppressWarnings("unchecked")
+    private static List<Ingredient> getRecipeIngredients(Object recipeObj) {
+        try {
+            var m = recipeObj.getClass().getMethod("getIngredients");
+            Object v = m.invoke(recipeObj);
+            if (v instanceof List<?> list) return (List<Ingredient>) list;
+        } catch (Throwable ignored) {}
+        try {
+            var m = recipeObj.getClass().getMethod("ingredients");
+            Object v = m.invoke(recipeObj);
+            if (v instanceof List<?> list) return (List<Ingredient>) list;
+        } catch (Throwable ignored) {}
+        return Collections.emptyList();
     }
 
     @Nullable
@@ -149,14 +167,7 @@ public class EIMRecipeTranHandler implements IRecipeTransferHandler<EndlessInven
         Candidate best = Candidate.NONE;
         Set<ItemKey> seen = new HashSet<>();
 
-        for (ItemStack cand : ing.getItems()) {
-            ItemCounts counts = countAvailableOfType(cand, availability);
-            Candidate candidate = Candidate.fromCounts(counts, reservation);
-            if (!candidate.isValid()) continue;assert candidate.selection!=null;
-            if (!seen.add(candidate.selection().key())) continue;
-            best = Candidate.pickBetter(best, candidate);
-        }
-
+        // Iterate available items and test against the ingredient; avoids relying on removed API like Ingredient#getItems().
         for (ItemCounts counts : availability.all()) {
             if (!ing.test(counts.representative())) continue;
             Candidate candidate = Candidate.fromCounts(counts, reservation);
@@ -184,7 +195,7 @@ public class EIMRecipeTranHandler implements IRecipeTransferHandler<EndlessInven
 
         for (int i = 0; i < layout.length; i++) {
             Ingredient ing = layout[i];
-            if (ing.isEmpty()) continue;
+            if (ing == null || ing.isEmpty()) continue;
             Selection selection = chooseBestCandidate(ing, availability, reservation);
             if (selection.isEmpty()) {
                 missing = true;
@@ -237,7 +248,7 @@ public class EIMRecipeTranHandler implements IRecipeTransferHandler<EndlessInven
 
         for (int i = 0; i < Math.min(craftingSlots.size(), layout.length); i++) {
             Ingredient ing = layout[i];
-            if (ing.isEmpty()) continue;
+            if (ing == null || ing.isEmpty()) continue;
             Slot target = craftingSlots.get(i);
 
             int toTake = plan.craftsWanted();
@@ -247,7 +258,6 @@ public class EIMRecipeTranHandler implements IRecipeTransferHandler<EndlessInven
             ItemStack placedStack = ItemStack.EMPTY;
 
             for (Slot invSlot : playerInvSlots) {
-                if (toTake <= 0) break;
                 if (!invSlot.hasItem()) continue;
                 ItemStack in = invSlot.getItem();
                 if (!(chosen.isEmpty() ? ing.test(in) : sameType(chosen, in))) continue;
@@ -268,17 +278,19 @@ public class EIMRecipeTranHandler implements IRecipeTransferHandler<EndlessInven
             }
 
             if (toTake > 0) {
-                ItemStack template = !chosen.isEmpty() ? chosen : (ing.getItems().length > 0 ? ing.getItems()[0] : ItemStack.EMPTY);
-                if (!template.isEmpty()) {
-                    ItemStack extracted = container.tryExtractFromPage(template, toTake);
-                    if (!extracted.isEmpty()) {
-                        if (placedStack.isEmpty()) {
-                            placedStack = extracted;
-                        } else if (sameType(placedStack, extracted)) {
-                            placedStack.grow(extracted.getCount());
-                        } else {
-                            player.getInventory().placeItemBackInInventory(extracted);
-                        }
+                ItemStack extracted;
+                if (!chosen.isEmpty()) {
+                    extracted = container.tryExtractFromPage(chosen, toTake);
+                } else {
+                    extracted = container.getSourceInventory().takeFirstPredictedItem(ing, toTake);
+                }
+                if (!extracted.isEmpty()) {
+                    if (placedStack.isEmpty()) {
+                        placedStack = extracted;
+                    } else if (sameType(placedStack, extracted)) {
+                        placedStack.grow(extracted.getCount());
+                    } else {
+                        player.getInventory().placeItemBackInInventory(extracted);
                     }
                 }
             }
@@ -454,7 +466,7 @@ public class EIMRecipeTranHandler implements IRecipeTransferHandler<EndlessInven
         }
 
         @Override
-        public RecipeType getRecipeType() {
+        public IRecipeType getRecipeType() {
             return RecipeTypes.CRAFTING;
         }
 

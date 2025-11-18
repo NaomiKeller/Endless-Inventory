@@ -26,7 +26,6 @@ public abstract class AbstractModInitializer {
         <R extends T> Supplier<R> register(String id, Supplier<R> supplier);
     }
 
-    @SuppressWarnings({"removal"})
     public static ResourceLocation withModLocation(String id){
         return ResourceLocation.fromNamespaceAndPath(ModInfo.MOD_ID, id);
     }

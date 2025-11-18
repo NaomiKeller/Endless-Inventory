@@ -158,7 +158,7 @@ public final class AEIRecipeTransferHandler {
 
         for (int i = 0; i < layout.length; i++) {
             Ingredient ing = layout[i];
-            if (ing.isEmpty()) continue;
+            if (ing == null || ing.isEmpty()) continue;
             Selection selection = chooseBestCandidate(ing, availability, reservation);
             if (selection.isEmpty()) { missing = true; continue; }
             reservation.reserve(selection);
@@ -214,7 +214,7 @@ public final class AEIRecipeTransferHandler {
             ItemStack chosen = plan.chosenPerSlot()[i];
             ItemStack placedStack = ItemStack.EMPTY;
 
-            ItemStack template = !chosen.isEmpty() ? chosen : (ing.getItems().length > 0 ? ing.getItems()[0] : ItemStack.EMPTY);
+            ItemStack template = !chosen.isEmpty() ? chosen : ItemStack.EMPTY;
             if (!template.isEmpty()) {
                 ItemStack extracted = endInv.takeItem(template, toTake);
                 if (!extracted.isEmpty()) {
@@ -230,6 +230,19 @@ public final class AEIRecipeTransferHandler {
             }
 
             if (toTake > 0) {
+                if (template.isEmpty()) {
+                    ItemStack extracted = endInv.takeFirstPredictedItem(stack -> ing.test(stack), toTake);
+                    if (!extracted.isEmpty()) {
+                        if (placedStack.isEmpty()) {
+                            placedStack = extracted;
+                        } else if (sameType(placedStack, extracted)) {
+                            placedStack.grow(extracted.getCount());
+                        } else {
+                            player.getInventory().placeItemBackInInventory(extracted);
+                        }
+                        toTake -= extracted.getCount();
+                    }
+                }
                 for (Slot invSlot : inventorySlots) {
                     if (toTake <= 0) break;
                     if (!invSlot.hasItem()) continue;
@@ -272,26 +285,35 @@ public final class AEIRecipeTransferHandler {
 
     private static Ingredient[] buildRecipeLayout(Recipe<?> recipe, int targetSlots) {
         Ingredient[] layout = new Ingredient[targetSlots];
-        Arrays.fill(layout, Ingredient.EMPTY);
         if (recipe instanceof ShapedRecipe shaped) {
             int gridW = (targetSlots == 9) ? 3 : (targetSlots == 4 ? 2 : shaped.getWidth());
             int gridH = gridW > 0 ? (targetSlots / gridW) : 0;
             int width = Math.min(gridW, shaped.getWidth());
             int height = Math.min(gridH, shaped.getHeight());
-            List<Ingredient> ingredients = shaped.getIngredients();
+            List<?> ingredients = getRecipeIngredients(shaped);
             for (int y = 0; y < height; y++) {
                 for (int x = 0; x < width; x++) {
                     int srcIndex = y * shaped.getWidth() + x;
                     int dstIndex = y * gridW + x;
                     if (srcIndex < ingredients.size() && dstIndex < targetSlots) {
-                        layout[dstIndex] = ingredients.get(srcIndex);
+                        Object elem = ingredients.get(srcIndex);
+                        if (elem instanceof Ingredient ing) {
+                            layout[dstIndex] = ing;
+                        } else if (elem instanceof java.util.Optional<?> opt && opt.orElse(null) instanceof Ingredient ing2) {
+                            layout[dstIndex] = ing2;
+                        }
                     }
                 }
             }
         } else {
-            List<Ingredient> ingredients = recipe.getIngredients();
+            List<?> ingredients = getRecipeIngredients(recipe);
             for (int i = 0; i < Math.min(ingredients.size(), layout.length); i++) {
-                layout[i] = ingredients.get(i);
+                Object elem = ingredients.get(i);
+                if (elem instanceof Ingredient ing) {
+                    layout[i] = ing;
+                } else if (elem instanceof java.util.Optional<?> opt && opt.orElse(null) instanceof Ingredient ing2) {
+                    layout[i] = ing2;
+                }
             }
         }
         return layout;
@@ -299,14 +321,14 @@ public final class AEIRecipeTransferHandler {
 
     private static Ingredient[] buildLayoutFromRecipeSlots(IRecipeSlotsView slotsView, int targetSlots) {
         Ingredient[] layout = new Ingredient[targetSlots];
-        Arrays.fill(layout, Ingredient.EMPTY);
         int i = 0;
         List<IRecipeSlotView> lst = slotsView.getSlotViews(RecipeIngredientRole.INPUT);
         for (IRecipeSlotView slotView1 : lst) {
             if (i >= targetSlots) break;
             List<ItemStack> stacks = slotView1.getIngredients(VanillaTypes.ITEM_STACK).toList();
             if (!stacks.isEmpty()) {
-                layout[i] = Ingredient.of(stacks.toArray(new ItemStack[0]));
+                // Build an Ingredient from the distinct items (item identity only)
+                layout[i] = Ingredient.of(stacks.stream().map(ItemStack::getItem));
             }
             i++;
         }
@@ -315,7 +337,7 @@ public final class AEIRecipeTransferHandler {
 
     private static boolean allEmpty(Ingredient[] layout) {
         for (Ingredient ing : layout) {
-            if (!ing.isEmpty()) return false;
+            if (ing != null && !ing.isEmpty()) return false;
         }
         return true;
     }
@@ -343,15 +365,6 @@ public final class AEIRecipeTransferHandler {
     private static Selection chooseBestCandidate(Ingredient ing, ItemAvailability availability, Reservation reservation) {
         Candidate best = Candidate.NONE;
         Set<ItemKey> seen = new HashSet<>();
-
-        for (ItemStack cand : ing.getItems()) {
-            ItemCounts counts = countAvailableOfType(cand, availability);
-            Candidate candidate = Candidate.fromCounts(counts, reservation);
-            if (!candidate.isValid()) continue;
-            if (!seen.add(candidate.selection().key())) continue;
-            best = Candidate.pickBetter(best, candidate);
-        }
-
         for (ItemCounts counts : availability.all()) {
             if (!ing.test(counts.representative())) continue;
             Candidate candidate = Candidate.fromCounts(counts, reservation);
@@ -359,8 +372,22 @@ public final class AEIRecipeTransferHandler {
             if (!seen.add(candidate.selection().key())) continue;
             best = Candidate.pickBetter(best, candidate);
         }
-
         return best.selection();
+    }
+
+    @SuppressWarnings("unchecked")
+    private static List<?> getRecipeIngredients(Object recipeObj) {
+        try {
+            var m = recipeObj.getClass().getMethod("getIngredients");
+            Object v = m.invoke(recipeObj);
+            if (v instanceof List<?> list) return list;
+        } catch (Throwable ignored) {}
+        try {
+            var m = recipeObj.getClass().getMethod("ingredients");
+            Object v = m.invoke(recipeObj);
+            if (v instanceof List<?> list) return list;
+        } catch (Throwable ignored) {}
+        return Collections.emptyList();
     }
 
     @Nullable

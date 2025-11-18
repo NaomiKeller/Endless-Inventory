@@ -57,7 +57,8 @@ public record JeiTransferRecipePayload(int containerId, ResourceLocation recipeI
         if (menu.containerId != containerId) {
             return;
         }
-        Optional<RecipeHolder<?>> optional = serverPlayer.serverLevel().getRecipeManager().byKey(recipeId);
+        var key = net.minecraft.resources.ResourceKey.create(net.minecraft.core.registries.Registries.RECIPE, recipeId);
+        Optional<RecipeHolder<?>> optional = serverPlayer.serverLevel().getServer().getRecipeManager().byKey(key);
         optional.ifPresent(recipeObj -> {
             if(!(recipeObj.value() instanceof CraftingRecipe)) {
                 log.error("[Packet Handle] Jei recipe transfer handler for EIM is handling non-crafting recipe");

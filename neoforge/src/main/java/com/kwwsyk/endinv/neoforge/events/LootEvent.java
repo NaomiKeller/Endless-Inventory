@@ -133,6 +133,10 @@ public class LootEvent {
     private static boolean shouldMoveTo(Player player, ItemStack stack){
         if(stack.isEmpty()) return false;
         Item item = stack.getItem();
+        // ElytraItem class name changed across versions; compare by Items constant instead
+        if (item == Items.ELYTRA) {
+            return hasSuch(player, item);
+        }
         switch (item){
             case SwordItem swordItem -> {
                 return hasSuch(player,swordItem);
@@ -159,9 +163,6 @@ public class LootEvent {
                 return hasSuch(player,such);
             }
             case BoatItem such -> {
-                return hasSuch(player,such);
-            }
-            case ElytraItem such -> {
                 return hasSuch(player,such);
             }
             case BowItem such -> {
@@ -191,10 +192,10 @@ public class LootEvent {
     }
 
     private static boolean hasOrSwearing(Player player,ArmorItem armor){
-        EquipmentSlot slot = armor.getEquipmentSlot();
+        EquipmentSlot slot = armor.getEquipmentSlot(new ItemStack(armor));
         ItemStack equipped = player.getItemBySlot(slot);
         if(equipped.isEmpty()){
-            return player.inventoryMenu.slots.stream().anyMatch(slt-> slt.getItem().getItem() instanceof ArmorItem a1 && a1.getEquipmentSlot() == slot);
+            return player.inventoryMenu.slots.stream().anyMatch(slt-> slt.getItem().getItem() instanceof ArmorItem a1 && a1.getEquipmentSlot(slt.getItem()) == slot);
         }
         return true;
     }

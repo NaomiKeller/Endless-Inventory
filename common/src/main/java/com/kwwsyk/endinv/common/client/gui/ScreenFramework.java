@@ -360,7 +360,7 @@ public class ScreenFramework implements PageManager{
      * In {@code ItemPickerMenu} there are two situations:<br>
      *     1.When player is picking items in tab, there are 9*5+9 slots, slot in hotbar starts with index 45 ends with 53.<br>
      *     2.When player is in "Survival Inventory", the {@code slot.index} is always 0, only {@link Slot#getContainerSlot()} is valid.<br>
-     *     To be noticed, {@link Slot#getSlotIndex()} returns same value {@code Slot.slot} but it only exists in Forge's lib. This means use this in Fabric running will throw {@link NoSuchMethodError}</p>
+     *     To be noticed, {@code __may_deprecated_1.21.4__ Slot#getSlotIndex()} returns same value {@code Slot.slot} but it only exists in Forge's lib. This means use this in Fabric running will throw {@link NoSuchMethodError}</p>
      * @param clicked slot clicked in Inventory by creative player on client.
      * @return slot index that can locate correspond inventory slot used in {@link QuickMoveToPagePayload}
      */

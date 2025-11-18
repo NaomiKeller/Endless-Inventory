@@ -5,7 +5,6 @@ import com.kwwsyk.endinv.common.client.gui.ScreenFramework;
 import com.kwwsyk.endinv.neoforge.client.events.ScreenAttachment;
 import com.mojang.logging.LogUtils;
 import mezz.jei.api.constants.VanillaTypes;
-import mezz.jei.api.gui.builder.IClickableIngredientFactory;
 import mezz.jei.api.gui.handlers.IGuiContainerHandler;
 import mezz.jei.api.ingredients.IIngredientType;
 import mezz.jei.api.ingredients.ITypedIngredient;
@@ -39,7 +38,7 @@ public class AttachmentGuiHandler implements IGuiContainerHandler<AbstractContai
      * This is useful for guis that don't have normal slots (which is how JEI normally detects items under the mouse).
      * <p>
      * This can also be used to let JEI look up liquids in tanks directly, by returning a FluidStack.
-     * Works with any ingredient type that has been registered with {@link IModIngredientRegistration}.
+     *
      *
      * @param builder
      * @param containerScreen
@@ -48,8 +47,7 @@ public class AttachmentGuiHandler implements IGuiContainerHandler<AbstractContai
      * @since 19.23.0
      */
     @Override
-    public Optional<? extends IClickableIngredient<?>> getClickableIngredientUnderMouse(
-            IClickableIngredientFactory builder,
+    public Optional<IClickableIngredient<?>> getClickableIngredientUnderMouse(
             AbstractContainerScreen<?> containerScreen,
             double mouseX, double mouseY
     ) {

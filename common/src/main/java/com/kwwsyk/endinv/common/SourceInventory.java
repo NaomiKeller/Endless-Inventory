@@ -199,6 +199,23 @@ public abstract class SourceInventory {
         }
     }
 
+    //public abstract List<ItemStack> takeItems(Predicate<ItemStack> filter, int count);
+
+    /**
+     * Removes and returns the first item from the inventory that matches the given filter
+     * and satisfies the specified count. The method attempts to predict and fetch the appropriate item.
+     *
+     * @param filter the predicate to match*/
+    public ItemStack takeFirstPredictedItem(Predicate<ItemStack> filter, int count){
+        writeLock.lock();
+        try{
+            Predicate<ItemStack> finalFilter = filter.and(stack->stack.getCount()>=count);
+            return snapshotItems().stream().filter(finalFilter).findFirst().map(stack->takeItem(stack,count)).orElse(ItemStack.EMPTY);
+        }finally {
+            writeLock.unlock();
+        }
+    }
+
     /**
      * Add item to EndInv and return remain item copy.
      * If adding is performed, update EndInv State by invoking {@link #setChanged()},

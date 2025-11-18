@@ -64,7 +64,8 @@ public record JeiAttachedTransferPayload(TransferContext context) implements Mod
         if (!(modContext.player() instanceof ServerPlayer player)) return;
         AbstractContainerMenu container = player.containerMenu;
         if (container == null || container.containerId != context.containerId()) return;
-        Optional<?> optional = player.serverLevel().getRecipeManager().byKey(context.recipeId());
+        var key = net.minecraft.resources.ResourceKey.create(net.minecraft.core.registries.Registries.RECIPE, context.recipeId());
+        Optional<?> optional = player.serverLevel().getServer().getRecipeManager().byKey(key);
         if (optional.isEmpty()) return;
         Recipe<?> recipe = resolve(optional.get());
         if (recipe == null) return;
