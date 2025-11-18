@@ -6,6 +6,8 @@ import com.kwwsyk.endinv.common.util.Accessibility;
 
 public interface IServerConfig {
 
+
+
     IConfigValue<Integer> getMaxAllowedStackSize();
 
     IConfigValue<Boolean> allowInfinityMode();

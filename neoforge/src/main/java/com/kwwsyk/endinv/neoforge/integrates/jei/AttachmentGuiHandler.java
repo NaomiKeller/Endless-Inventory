@@ -5,7 +5,6 @@ import com.kwwsyk.endinv.common.client.gui.ScreenFramework;
 import com.kwwsyk.endinv.neoforge.client.events.ScreenAttachment;
 import com.mojang.logging.LogUtils;
 import mezz.jei.api.constants.VanillaTypes;
-import mezz.jei.api.gui.builder.IClickableIngredientFactory;
 import mezz.jei.api.gui.handlers.IGuiContainerHandler;
 import mezz.jei.api.ingredients.IIngredientType;
 import mezz.jei.api.ingredients.ITypedIngredient;
@@ -33,24 +32,9 @@ public class AttachmentGuiHandler implements IGuiContainerHandler<AbstractContai
         return IGuiContainerHandler.super.getGuiExtraAreas(containerScreen);
     }
 
-    /**
-     * Return a clickable ingredient under the mouse that JEI could not normally detect, used for JEI recipe lookups.
-     * <p>
-     * This is useful for guis that don't have normal slots (which is how JEI normally detects items under the mouse).
-     * <p>
-     * This can also be used to let JEI look up liquids in tanks directly, by returning a FluidStack.
-     * Works with any ingredient type that has been registered with {@link IModIngredientRegistration}.
-     *
-     * @param builder
-     * @param containerScreen
-     * @param mouseX          the current X position of the mouse in screen coordinates.
-     * @param mouseY          the current Y position of the mouse in screen coordinates.
-     * @since 19.23.0
-     */
     @Override
-    public Optional<? extends IClickableIngredient<?>> getClickableIngredientUnderMouse(
-            IClickableIngredientFactory builder,
-            AbstractContainerScreen<?> containerScreen,
+    public Optional<IClickableIngredient<?>> getClickableIngredientUnderMouse(
+            AbstractContainerScreen container,
             double mouseX, double mouseY
     ) {
         var sf = ScreenFramework.getInstance();
@@ -82,12 +66,9 @@ public class AttachmentGuiHandler implements IGuiContainerHandler<AbstractContai
             this.hovered = hovered;
             this.area = area;
         }
-
-        @Override public IIngredientType<ItemStack> getIngredientType() { return VanillaTypes.ITEM_STACK; }
-        @Override public ItemStack getIngredient() { return hovered; }
         @Override public Rect2i getArea() { return area; }
 
-        @Override @Deprecated @SuppressWarnings({"removal","nonextendable"})
+        @Override @Deprecated @SuppressWarnings({"nonextendable"})
         public ITypedIngredient<ItemStack> getTypedIngredient() {
             return new ITypedIngredient<>() {
                 @Override public IIngredientType<ItemStack> getType() { return VanillaTypes.ITEM_STACK; }

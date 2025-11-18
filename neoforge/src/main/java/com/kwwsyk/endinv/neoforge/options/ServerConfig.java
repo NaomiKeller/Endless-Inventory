@@ -50,11 +50,11 @@ public class ServerConfig {
     public final IServerConfig INSTANCE = new IServerConfig() {
 
         private static IConfigValue<Integer> convert(ModConfigSpec.IntValue value){
-            return IConfigValue.of(value::getAsInt,value::set);
+            return IConfigValue.of(value::getAsInt,value::set, CONFIG_SPEC::save);
         }
 
         private static IConfigValue<Boolean> convert(ModConfigSpec.BooleanValue value){
-            return IConfigValue.of(value::getAsBoolean,value::set);
+            return IConfigValue.of(value::getAsBoolean,value::set, CONFIG_SPEC::save);
         }
 
         @Override
