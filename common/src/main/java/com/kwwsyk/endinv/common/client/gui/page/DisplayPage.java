@@ -13,6 +13,7 @@ import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.Rect2i;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -265,7 +266,7 @@ public abstract class DisplayPage{
             return;
         }
         try {
-            graphics.blit(getIcon(),x,y,0,0,16,16,16,16);
+            graphics.blit(RenderType::guiTextured,getIcon(),x,y,0,0,16,16,16,16);
         }catch (Exception ignored){}
     }
 

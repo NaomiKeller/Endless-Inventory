@@ -111,7 +111,7 @@ public class ModInitializer extends AbstractModInitializer {
         return new RegistryCallback<>() {
             @Override
             public <R extends Item> Supplier<R> register(String id, Supplier<R> supplier) {
-                return ITEMS.register(id, supplier);
+                return (Supplier<R>) ITEMS.registerSimpleItem(id);
             }
         };
     }

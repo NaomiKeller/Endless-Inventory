@@ -10,6 +10,7 @@ import com.kwwsyk.endinv.common.autopick.events.ILivingExpDropsEvent;
 import com.kwwsyk.endinv.common.autopick.events.IPlayerPickupItemEvent;
 import com.kwwsyk.endinv.common.network.payloads.toClient.ItemPickedUpPayload;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
@@ -178,8 +179,8 @@ public final class AutoPickHelper {
             return hasSuch(player,such);
         }else if(item instanceof BoatItem such){
             return hasSuch(player,such);
-        }else if(item instanceof ElytraItem such){
-            return hasSuch(player,such);
+        }else if(item == Items.ELYTRA){
+            return hasSuch(player,item);
         }else if(item instanceof BowItem such){
             return hasSuch(player,such);
         }else if(item instanceof CrossbowItem such){
@@ -200,12 +201,19 @@ public final class AutoPickHelper {
     }
 
     private static boolean hasOrSwearing(Player player,ArmorItem armor){
-        EquipmentSlot slot = armor.getEquipmentSlot();
+        EquipmentSlot slot = armorSlot(armor);
+        if(slot == null) return true;
         ItemStack equipped = player.getItemBySlot(slot);
         if(equipped.isEmpty()){
-            return player.inventoryMenu.slots.stream().anyMatch(slt-> slt.getItem().getItem() instanceof ArmorItem a1 && a1.getEquipmentSlot() == slot);
+            return player.inventoryMenu.slots.stream().anyMatch(sl->armorSlot(sl.getItem().getItem())==slot);
         }
         return true;
+    }
+
+    private static EquipmentSlot armorSlot(Item armor){
+        var c = armor.components().get(DataComponents.EQUIPPABLE);
+        if(c==null) return null;//cantHappen
+        return c.slot();
     }
 
     //copied from ExperienceOrb.java

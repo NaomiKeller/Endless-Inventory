@@ -5,6 +5,7 @@ import com.kwwsyk.endinv.common.client.gui.page.manager.PageManager;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.*;
 
 import javax.annotation.Nullable;
@@ -21,11 +22,20 @@ public class PageType {
     public static final String DEFAULT_KEY = "all_items";
 
     private static final List<Predicate<ItemStack>> equipmentSubclassifications = List.of(
-            is-> is.getItem() instanceof ArmorItem armor && armor.getType()==ArmorItem.Type.HELMET,
-            is-> is.getItem() instanceof ArmorItem armor && armor.getType()==ArmorItem.Type.CHESTPLATE,
-            is-> is.getItem() instanceof ArmorItem armor && armor.getType()==ArmorItem.Type.LEGGINGS,
-            is-> is.getItem() instanceof ArmorItem armor && armor.getType()==ArmorItem.Type.BOOTS
+            ofEquipmentSlotType(EquipmentSlot.HEAD),
+            ofEquipmentSlotType(EquipmentSlot.CHEST),
+            ofEquipmentSlotType(EquipmentSlot.LEGS),
+            ofEquipmentSlotType(EquipmentSlot.FEET),
+            ofEquipmentSlotType(EquipmentSlot.MAINHAND),
+            ofEquipmentSlotType(EquipmentSlot.OFFHAND)
     );
+
+    private static Predicate<ItemStack> ofEquipmentSlotType(EquipmentSlot slot){
+        return it-> {
+            var comp = it.getComponents().get(DataComponents.EQUIPPABLE);
+            return comp!=null && comp.slot() == slot;
+        };
+    }
 
     public static final List<TagKey<Item>> WEAPON_TAGS = new ArrayList<>();
     public static final List<TagKey<Item>> TOOL_TAGS = new ArrayList<>();
@@ -40,7 +50,8 @@ public class PageType {
             "equipments",PageType::isDefenceEquipment,ResourceLocation.withDefaultNamespace("iron_chestplate")
     );
     public static final PageType CONSUMABLE = createClassifiedPage("consumable",PageType::isFoodOrPotion,"bread");
-    public static final PageType ENCHANTED_BOOKS = createItemEntry("enchanted_books",stack->stack.getItem() instanceof EnchantedBookItem,"enchanted_book");
+    //updatable entry: Let items who have::: .components().has(DataComponents.STORED_ENCHANTMENTS
+    public static final PageType ENCHANTED_BOOKS = createItemEntry("enchanted_books",stack->stack.getItem() == Items.ENCHANTED_BOOK,"enchanted_book");
     public static final PageType BOOKMARK = new PageType(StarredItemPage::new,"bookmark",null,ResourceLocation.withDefaultNamespace("book"));
 
     private final PageConstructor constructor;
@@ -140,7 +151,7 @@ public class PageType {
         Item item = itemStack.getItem();
         return item instanceof ArmorItem ||
                 item instanceof ShieldItem ||
-                item instanceof ElytraItem ||
+                item == Items.ELYTRA ||
                 EQUIPPABLE_TAGS.stream().anyMatch(itemStack::is);
     }
 

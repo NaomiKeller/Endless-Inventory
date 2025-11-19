@@ -7,6 +7,7 @@ import com.kwwsyk.endinv.common.client.gui.ScreenFramework;
 import com.kwwsyk.endinv.common.client.option.TextureMode;
 import com.kwwsyk.endinv.common.menu.EndlessInventoryMenu;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 
@@ -75,7 +76,7 @@ public abstract class FromResource extends SFBgRendererImpl {
         }
 
         private void renderPlayerInv(GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY, int startX, int startY){
-            guiGraphics.blit(getContainerTexture(), startX, startY,//WARN
+            guiGraphics.blit(RenderType::guiTextured, getContainerTexture(), startX, startY,
                     0.0F, 126.0F, imageWidth, 96, 256, 256);
         }
     }
@@ -100,18 +101,18 @@ public abstract class FromResource extends SFBgRendererImpl {
             if(columns!=9){
                 renderSpecialBg(guiGraphics,partialTick,mouseX,mouseY,startX,startY);
             }else {
-                guiGraphics.blit(texture(), startX, startY, 0, 0,
+                guiGraphics.blit(RenderType::guiTextured, texture(), startX, startY, 0, 0,
                         imageWidth, 17, 256, 256);
                 startY += 17;
                 int rowsToRender = rows;
                 while (rowsToRender > 0) {
                     int height = 18 * Math.min(rowsToRender, 6);
-                    guiGraphics.blit(texture(), startX, startY,
+                    guiGraphics.blit(RenderType::guiTextured, texture(), startX, startY,
                             0.0F, 17.0F, imageWidth, height, 256, 256);
                     rowsToRender -= 6;
                     startY += height;
                 }
-                guiGraphics.blit(texture(),startX,pageTop+17+18*rows,0,124,imageWidth,12,256,256);
+                guiGraphics.blit(RenderType::guiTextured, texture(),startX,pageTop+17+18*rows,0,124,imageWidth,12,256,256);
             }
 
         }
@@ -120,17 +121,17 @@ public abstract class FromResource extends SFBgRendererImpl {
                                      int startX, int startY) {
             int initialX = startX;
 
-            guiGraphics.blit(texture(), startX, startY, 0, 0,
+            guiGraphics.blit(RenderType::guiTextured, texture(), startX, startY, 0, 0,
                     7, 17, 256, 256);
             startX+=7;
             for (int columnsToRender = columns;columnsToRender>0;columnsToRender-=9) {
                 int width = 18 * Math.min(9,columnsToRender);
-                guiGraphics.blit(texture(), startX, startY, 7, 0,
+                guiGraphics.blit(RenderType::guiTextured, texture(), startX, startY, 7, 0,
                         width, 17, 256,256);
 
                 startX+=width;
             }
-            guiGraphics.blit(texture(), startX, startY, 168, 0,
+            guiGraphics.blit(RenderType::guiTextured, texture(), startX, startY, 168, 0,
                     8, 17, 256, 256);
             startX = initialX;
 
@@ -139,32 +140,32 @@ public abstract class FromResource extends SFBgRendererImpl {
                 int height = 18*Math.min(rowsToRender,6);
 
 
-                guiGraphics.blit(texture(), startX, startY, 0, 17,
+                guiGraphics.blit(RenderType::guiTextured, texture(), startX, startY, 0, 17,
                         7, height, 256, 256);
                 startX+=7;
                 for (int columnsToRender = columns;columnsToRender>0;columnsToRender-=9) {
                     int width = 18 * Math.min(9,columnsToRender);
-                    guiGraphics.blit(texture(), startX, startY, 7, 17,
+                    guiGraphics.blit(RenderType::guiTextured, texture(), startX, startY, 7, 17,
                             width, height, 256, 256);
                     startX+=width;
                 }
-                guiGraphics.blit(texture(), startX, startY, 168, 17,
+                guiGraphics.blit(RenderType::guiTextured, texture(), startX, startY, 168, 17,
                         8, height, 256, 256);
                 startX = initialX;
                 startY += height;
             }
 
-            guiGraphics.blit(texture(), startX, startY, 0, 124,
+            guiGraphics.blit(RenderType::guiTextured, texture(), startX, startY, 0, 124,
                     7, 12, 256, 256);
             startX+=7;
             for (int columnsToRender = columns;columnsToRender>0;columnsToRender-=9) {
                 int width = 18 * Math.min(9,columnsToRender);
-                guiGraphics.blit(texture(), startX, startY, 7, 124,
+                guiGraphics.blit(RenderType::guiTextured, texture(), startX, startY, 7, 124,
                         width, 12, 256, 256);
 
                 startX+=width;
             }
-            guiGraphics.blit(texture(), startX, startY, 168, 124,
+            guiGraphics.blit(RenderType::guiTextured, texture(), startX, startY, 168, 124,
                     8, 12, 256, 256);
             startX = initialX;
         }
@@ -198,13 +199,13 @@ public abstract class FromResource extends SFBgRendererImpl {
         for (int i = frameWork.firstPageIndex; i < frameWork.firstPageIndex + frameWork.pageBarCount; ++i) {
             if (i == selectedPageIndex) {
                 if (i == 0) {
-                    guiGraphics.blitSprite(getTabsTexture(TabType.TOP),pageX,pageY,32,28);
+                    guiGraphics.blitSprite(RenderType::guiTextured, getTabsTexture(TabType.TOP),pageX,pageY,32,28);
                 } else if (i == frameWork.firstPageIndex + frameWork.pageBarCount-1) {
-                    guiGraphics.blitSprite(getTabsTexture(TabType.BOTTOM),pageX,pageY,32,28);
+                    guiGraphics.blitSprite(RenderType::guiTextured, getTabsTexture(TabType.BOTTOM),pageX,pageY,32,28);
                 } else
-                    guiGraphics.blitSprite(getTabsTexture(TabType.MIDDLE),pageX,pageY,32,28);
+                    guiGraphics.blitSprite(RenderType::guiTextured, getTabsTexture(TabType.MIDDLE),pageX,pageY,32,28);
             } else {
-                guiGraphics.blitSprite(getTabsTexture(TabType.UNSELECTED),pageX+4,pageY,32,28);
+                guiGraphics.blitSprite(RenderType::guiTextured, getTabsTexture(TabType.UNSELECTED),pageX+4,pageY,32,28);
             }
             pageY+=28;
         }

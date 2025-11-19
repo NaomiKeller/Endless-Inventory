@@ -7,6 +7,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.CycleButton;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
@@ -103,7 +104,7 @@ public class EndlessInventoryScreen extends AbstractContainerScreen<EndlessInven
     private void drawCraftingBackground(GuiGraphics guiGraphics) {
         int craftX = this.leftPos;
         int craftY = this.topPos + 18 * menu.getVisibleRows() + 18;
-        guiGraphics.blit(CRAFTING_TEXTURE, craftX , craftY , 0, 12, 176, 58);
+        guiGraphics.blit(RenderType::guiTextured,CRAFTING_TEXTURE, craftX, craftY, 0, 12, 176, 58,256,256);
     }
 
     public void render(@NotNull GuiGraphics gui, int mouseX, int mouseY, float partialTick){

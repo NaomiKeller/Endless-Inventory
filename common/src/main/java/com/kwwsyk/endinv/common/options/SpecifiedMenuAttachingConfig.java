@@ -5,6 +5,7 @@ import com.mojang.logging.LogUtils;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen;
+import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
@@ -225,7 +226,7 @@ public class SpecifiedMenuAttachingConfig {
                     return new ParseStringResult(true, null, value);
                 }
 
-                MenuType<?> type = BuiltInRegistries.MENU.get(rl);
+                var type = BuiltInRegistries.MENU.get(rl).map(Holder::value).orElse(null);
                 if(type==null) return ParseStringResult.FAILED;
 
                 return new ParseStringResult(true, type, value);

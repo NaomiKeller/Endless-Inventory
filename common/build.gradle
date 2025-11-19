@@ -32,19 +32,7 @@ neoForge {
     }
 
     // Look for versions on https://projects.neoforged.net/neoforged/neoform
-    neoFormVersion = "1.21.1-20240808.144430"
-
-    runs {
-        client {
-            client()
-        }
-        server {
-            server()
-        }
-        data {
-            data()
-        }
-    }
+    neoFormVersion = neoform_version
 }
 
 configurations {

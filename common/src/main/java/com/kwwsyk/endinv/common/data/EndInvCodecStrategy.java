@@ -4,13 +4,10 @@ import com.kwwsyk.endinv.common.EndInvAffinities;
 import com.kwwsyk.endinv.common.EndlessInventory;
 import com.kwwsyk.endinv.common.util.Accessibility;
 import com.mojang.logging.LogUtils;
-import com.mojang.serialization.Codec;
-import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.component.DataComponentPatch;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.*;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -18,7 +15,7 @@ import org.slf4j.Logger;
 import java.util.List;
 import java.util.Optional;
 
-import static net.minecraft.world.item.ItemStack.ITEM_NON_AIR_CODEC;
+import static net.minecraft.world.item.ItemStack.CODEC;
 
 
 public interface EndInvCodecStrategy {
@@ -43,18 +40,18 @@ public interface EndInvCodecStrategy {
     String WHITE_LIST_KEY = "white_list";
     String ACCESSIBILITY_KEY = "Accessibility";
 
-    Codec<ItemStack> ITEM_STACK_CODEC = Codec.lazyInitialized(
-            () -> RecordCodecBuilder.create(
-                    instance -> instance.group(
-                                    ITEM_NON_AIR_CODEC.fieldOf("id").forGetter(ItemStack::getItemHolder),
-                                    Codec.INT.fieldOf("count").orElse(1).forGetter(ItemStack::getCount),
-                                    DataComponentPatch.CODEC
-                                            .optionalFieldOf("components", DataComponentPatch.EMPTY)
-                                            .forGetter(ItemStack::getComponentsPatch)
-                            )
-                            .apply(instance, ItemStack::new)
-            )
-    );
+//    Codec<ItemStack> ITEM_STACK_CODEC = Codec.lazyInitialized(
+//            () -> RecordCodecBuilder.create(
+//                    instance -> instance.group(
+//                                    CODEC.fieldOf("id").forGetter(ItemStack::getItemHolder),
+//                                    Codec.INT.fieldOf("count").orElse(1).forGetter(ItemStack::getCount),
+//                                    DataComponentPatch.CODEC
+//                                            .optionalFieldOf("components", DataComponentPatch.EMPTY)
+//                                            .forGetter(ItemStack::getComponentsPatch)
+//                            )
+//                            .apply(instance, ItemStack::new)
+//            )
+//    );
 
     default EndlessInventory deserializeEndInv(CompoundTag invTag, HolderLookup.Provider provider){
         //handle uuid and itemMap/items.
@@ -157,14 +154,14 @@ public interface EndInvCodecStrategy {
     }
 
     static CompoundTag save(ItemStack stack, CompoundTag compoundTag, HolderLookup.Provider provider) {
-        return (CompoundTag) ITEM_STACK_CODEC.encode(stack, provider.createSerializationContext(NbtOps.INSTANCE), compoundTag).getOrThrow();
+        return (CompoundTag) CODEC.encode(stack, provider.createSerializationContext(NbtOps.INSTANCE), compoundTag).getOrThrow();
     }
 
     static ItemStack loadItem(CompoundTag compoundTag, HolderLookup.Provider provider) {
         try {
             if(compoundTag.contains(DEPRECATED_COUNT_KEY)) {//load item with 'Count' count key
                 var ret = new ItemStack(
-                        BuiltInRegistries.ITEM.get(ResourceLocation.parse(compoundTag.getString("id"))),
+                        Item.CODEC.parse(provider.createSerializationContext(NbtOps.INSTANCE), compoundTag).getOrThrow(),
                         compoundTag.getInt("Count")
                 );
                 if(compoundTag.contains("components")) {
@@ -174,7 +171,7 @@ public interface EndInvCodecStrategy {
                 return ret;
             }
 
-            return ITEM_STACK_CODEC.parse(provider.createSerializationContext(NbtOps.INSTANCE), compoundTag).getOrThrow();
+            return CODEC.parse(provider.createSerializationContext(NbtOps.INSTANCE), compoundTag).getOrThrow();
         } catch (RuntimeException runtimeexception) {
             LOGGER.debug("Tried to load invalid item: {}", compoundTag, runtimeexception);
             return ItemStack.EMPTY;

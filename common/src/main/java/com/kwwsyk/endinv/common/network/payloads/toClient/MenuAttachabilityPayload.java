@@ -5,6 +5,7 @@ import com.kwwsyk.endinv.common.client.option.MenuAttachabilityCache;
 import com.kwwsyk.endinv.common.network.payloads.ModPacketContext;
 import com.kwwsyk.endinv.common.network.payloads.ModPacketPayload;
 import com.kwwsyk.endinv.common.options.SpecifiedMenuAttachingConfig;
+import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.RegistryFriendlyByteBuf;
@@ -69,10 +70,7 @@ public record MenuAttachabilityPayload(
         for (int i = 0; i < size; i++) {
             ResourceLocation id = buf.readResourceLocation();
             boolean val = buf.readBoolean();
-            MenuType<?> type = BuiltInRegistries.MENU.get(id);
-            if (type != null) {
-                map.put(type, val);
-            }
+            BuiltInRegistries.MENU.get(id).map(Holder::value).ifPresent(type -> map.put(type, val));
         }
         return new MenuAttachabilityPayload(def, inv, map);
     }

@@ -719,7 +719,7 @@ public class EndlessInventoryMenu extends AbstractContainerMenu implements PageM
         if (optional.isPresent()) {
             RecipeHolder<CraftingRecipe> holder = optional.get();
             CraftingRecipe recipe = holder.value();
-            if (this.craftResult.setRecipeUsed(level, serverPlayer, holder)) {
+            if (this.craftResult.setRecipeUsed(serverPlayer, holder)) {
                 ItemStack assembled = recipe.assemble(input, level.registryAccess());
                 if (assembled.isItemEnabled(level.enabledFeatures())) {
                     resultStack = assembled;

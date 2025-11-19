@@ -64,10 +64,11 @@ public class SortTypeSwitchBox extends AbstractWidget {
     }
 
     public boolean mouseClicked(double mouseX, double mouseY, int button){
-        if(active && visible && !this.clicked(mouseX,mouseY) && isOpen){
+        if(!super.mouseClicked(mouseX,mouseY,button) && isOpen){
             setOpen(false);
             return true;
-        }else return super.mouseClicked(mouseX,mouseY,button);
+        }
+        return false;
     }
 
     @Override
