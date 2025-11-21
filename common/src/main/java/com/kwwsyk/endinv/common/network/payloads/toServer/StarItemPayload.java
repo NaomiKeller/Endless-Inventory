@@ -1,24 +1,27 @@
 package com.kwwsyk.endinv.common.network.payloads.toServer;
 
 import com.kwwsyk.endinv.common.AbstractModInitializer;
+import com.kwwsyk.endinv.common.ModInfo;
 import com.kwwsyk.endinv.common.ServerLevelEndInv;
 import com.kwwsyk.endinv.common.network.payloads.ModPacketContext;
 import com.kwwsyk.endinv.common.network.payloads.ModPacketPayload;
+import com.kwwsyk.endinv.common.network.payloads.toClient.SetStarredPagePayload;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 
+
 public record StarItemPayload(ItemStack stack,boolean isAdding) implements ModPacketPayload {
 
     public static void encode(StarItemPayload payload, RegistryFriendlyByteBuf o){
-        ItemStack.STREAM_CODEC.encode(o, payload.stack);
+        ItemStack.OPTIONAL_STREAM_CODEC.encode(o, payload.stack);
         o.writeBoolean(payload.isAdding);
     }
 
     public static StarItemPayload decode(RegistryFriendlyByteBuf o){
-        return new StarItemPayload(ItemStack.STREAM_CODEC.decode(o),o.readBoolean());
+        return new StarItemPayload(ItemStack.OPTIONAL_STREAM_CODEC.decode(o),o.readBoolean());
     }
 
     public static final StreamCodec<RegistryFriendlyByteBuf, StarItemPayload> STREAM_CODEC =
@@ -42,10 +45,11 @@ public record StarItemPayload(ItemStack stack,boolean isAdding) implements ModPa
         if(player==null) return;
         ServerLevelEndInv.getEndInvForPlayer(player).ifPresent(endInv->{
             if(isAdding()) {
-                endInv.affinities.addStarredItem(stack());
+                endInv.affinities.addStarredItem(stack);
             }else {
-                endInv.affinities.removeStarredItem(stack());
+                endInv.affinities.removeStarredItem(stack);
             }
+            ModInfo.getPacketDistributor().sendToPlayer(player, new SetStarredPagePayload(endInv.getStarredItems()));
             endInv.setChanged();
         });
     }

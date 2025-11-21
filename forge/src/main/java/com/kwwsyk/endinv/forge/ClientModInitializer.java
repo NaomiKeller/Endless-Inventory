@@ -14,6 +14,7 @@ import net.minecraftforge.client.settings.KeyConflictContext;
 import net.minecraftforge.client.settings.KeyModifier;
 import net.minecraftforge.common.util.Lazy;
 import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.fml.ModList;
 
 import static com.kwwsyk.endinv.common.client.KeyMappings.*;
 
@@ -31,7 +32,20 @@ public class ClientModInitializer extends AbstractClientModInitializer {
     private static void regKeyMapping(RegisterKeyMappingsEvent event){
         event.register(OPEN_MENU_KEY.get());
         event.register(QUICK_MOVE_KEY.get());
-        event.register(STAR_ITEM_KEY.get());
+        if(!ModList.get().isLoaded("jei")) {
+            event.register(STAR_ITEM_KEY.get());
+        } else {
+            // Ensure the input handler checks the same mapping we register
+            STAR_ITEM_KEY = Lazy.of(() -> new KeyMapping(
+                    STAR_ITEM.key(),
+                    KeyConflictContext.GUI,
+                    KeyModifier.NONE,
+                    STAR_ITEM.type(),
+                    302, // F13 (Insert on some keyboards)
+                    KeyMappings.CATEGORY
+            ));
+            event.register(STAR_ITEM_KEY.get());
+        }
     }
 
     private static Lazy<KeyMapping> regKey(KeyMappings.EndInvKey key) {
@@ -67,13 +81,15 @@ public class ClientModInitializer extends AbstractClientModInitializer {
             public boolean isActiveAndMatches(EndInvKey endInvKey, InputConstants.Key key) {
                 if (endInvKey.equals(OPEN_MENU)) {
                     return OPEN_MENU_KEY.get().isActiveAndMatches(key);
-                } else if (endInvKey.equals(QUICK_MOVE)) {
-                    return QUICK_MOVE_KEY.get().isActiveAndMatches(key);
-                } else if (endInvKey.equals(STAR_ITEM)) {
-                    return STAR_ITEM_KEY.get().isActiveAndMatches(key);
-                } else {
-                    return regKey(endInvKey).get().isActiveAndMatches(key);
                 }
+                if (endInvKey.equals(QUICK_MOVE)) {
+                    return QUICK_MOVE_KEY.get().isActiveAndMatches(key);
+                }
+                if (endInvKey.equals(STAR_ITEM)) {
+                    return STAR_ITEM_KEY.get().isActiveAndMatches(key);
+                }
+                // Unknown key: do not synthesize a new mapping using default codes, return false
+                return false;
             }
         };
     }

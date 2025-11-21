@@ -363,6 +363,8 @@ public class ScreenFramework implements PageManager{
      *     To be noticed, {@code __may_deprecated_1.21.4__ Slot#getSlotIndex()} returns same value {@code Slot.slot} but it only exists in Forge's lib. This means use this in Fabric running will throw {@link NoSuchMethodError}</p>
      * @param clicked slot clicked in Inventory by creative player on client.
      * @return slot index that can locate correspond inventory slot used in {@link QuickMoveToPagePayload}
+     *
+     * @since 1.20.1
      */
     private int getItemPickerMenuSlotOffset(Slot clicked){
         int originalIndex = clicked.index;

@@ -277,7 +277,7 @@ public abstract class ItemPage extends DisplayPage {
     @Override
     public void pageClicked(double XOffset, double YOffset, int button, ClickType clickType) {
         int slot = getSlotByMouseOffset(XOffset,YOffset);
-        if(slot>=0&&slot<items.size()) {
+        if(slot>=0 && slot<items.size()) {
             ItemStack clicked = items.get(slot).copy();
             switch (clickType) {
                 case PICKUP -> handlePickup(clicked, button);

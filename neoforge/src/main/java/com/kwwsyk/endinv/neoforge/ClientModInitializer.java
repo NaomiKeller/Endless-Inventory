@@ -10,6 +10,7 @@ import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.ModList;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 import net.neoforged.neoforge.client.settings.KeyConflictContext;
 import net.neoforged.neoforge.client.settings.KeyModifier;
@@ -31,7 +32,20 @@ public class ClientModInitializer extends AbstractClientModInitializer {
     private static void regKeyMapping(RegisterKeyMappingsEvent event){
         event.register(OPEN_MENU_KEY.get());
         event.register(QUICK_MOVE_KEY.get());
-        event.register(STAR_ITEM_KEY.get());
+        if(!ModList.get().isLoaded("jei")) {
+            event.register(STAR_ITEM_KEY.get());
+        } else {
+            // Ensure the input handler checks the same mapping we register
+            STAR_ITEM_KEY = Lazy.of(() -> new KeyMapping(
+                    STAR_ITEM.key(),
+                    KeyConflictContext.GUI,
+                    KeyModifier.NONE,
+                    STAR_ITEM.type(),
+                    302, // F13 (Insert on some keyboards)
+                    KeyMappings.CATEGORY
+            ));
+            event.register(STAR_ITEM_KEY.get());
+        }
     }
 
     private static Lazy<KeyMapping> regKey(KeyMappings.EndInvKey key) {
