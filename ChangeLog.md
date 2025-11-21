@@ -29,6 +29,18 @@ __branch 1.21.1__
 ### Links
 - Pending bootstrap PR.
 
+## 11.21 1.1.0.3
+
+### 1.1.0.3 of 1.21.1 forge
+Loading and launching
+Resources
+
+### common
+Fix:
+- Throw armors in armor page
+- Starred Item Page will now show starred items.
+- Add translations for key bindings.
+
 __branch 1.20.1__
 
 ## 2025, before Sept: *A Brief*

@@ -38,8 +38,9 @@ public class ModPayloadHandler {
                 .optional()
                 .payloadChannel()
                 .play();
-        var channelC = channel0.clientbound()
-                .add(SyncedConfig.TYPE, SyncedConfig.STREAM_CODEC, convertClient(SyncedConfig::handle))
+        var channelB = channel0.bidirectional()
+                .add(SyncedConfig.TYPE, SyncedConfig.STREAM_CODEC, convertBi(SyncedConfig::handle));
+        var channelC = channelB.clientbound()
                 .add(EndInvMetadata.TYPE, EndInvMetadata.STREAM_CODEC, convertClient(EndInvMetadata::handle))
                 .add(ItemPickedUpPayload.TYPE, ItemPickedUpPayload.STREAM_CODEC, convertClient(ItemPickedUpPayload::handle))
                 .add(SetItemDisplayContentPayload.TYPE, SetItemDisplayContentPayload.STREAM_CODEC, convertClient(SetItemDisplayContentPayload::handle))
@@ -47,7 +48,6 @@ public class ModPayloadHandler {
                 .add(EndInvContent.TYPE, EndInvContent.STREAM_CODEC, convertClient(EndInvContent::handle))
                 .add(MenuAttachabilityPayload.TYPE, MenuAttachabilityPayload.STREAM_CODEC, convertClient(MenuAttachabilityPayload::handle));
         var channelS = channelC.serverbound()
-                .add(SyncedConfig.TYPE, SyncedConfig.STREAM_CODEC, convert(SyncedConfig::handle))
                 .add(ItemClickPayload.TYPE, ItemClickPayload.STREAM_CODEC, convert(ItemClickPayload::handle))
                 .add(CreativeItemModPayload.TYPE, CreativeItemModPayload.STREAM_CODEC, convert(CreativeItemModPayload::handle))
                 .add(ItemPageContext.TYPE, ItemPageContext.STREAM_CODEC, convert(ItemPageContext::handle))

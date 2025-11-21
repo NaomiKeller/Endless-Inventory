@@ -15,6 +15,11 @@
   "page.endinv.vanishing_enchantable": "Vanishing Enchantable",
   "page.endinv.bookmark": "Bookmark",
 
+  "key.categories.endinv": "Endless Inventory",
+  "key.endinv.open_endinv_menu": "Open EndInv Menu",
+  "key.endinv.quick_move_item": "Quick Move Item",
+  "key.endinv.star_item": "Star Item",
+
 
   "config.endinv.comment.row1": "The rows of Endless Inventory.",
   "config.endinv.comment.row2": "0 is AUTO, with GUI size limited max suit rows. Too big value so.",

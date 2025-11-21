@@ -15,7 +15,6 @@ import java.util.List;
 
 import static com.kwwsyk.endinv.common.ModInfo.getPacketDistributor;
 
-@SuppressWarnings("removal")
 public class StarredItemPage extends ItemPage{
 
     public ResourceLocation icon = ResourceLocation.fromNamespaceAndPath("minecraft", "book");
@@ -81,7 +80,7 @@ public class StarredItemPage extends ItemPage{
     }
 
     public void requestRemoteContents(){
-        sendChangesToServer();
+        getPacketDistributor().sendToServer(new StarItemPayload(ItemStack.EMPTY,false));
     }
 
     @Override
