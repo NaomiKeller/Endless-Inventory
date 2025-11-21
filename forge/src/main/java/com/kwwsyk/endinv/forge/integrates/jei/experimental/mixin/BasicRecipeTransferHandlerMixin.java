@@ -9,7 +9,7 @@ import mezz.jei.api.gui.ingredient.IRecipeSlotsView;
 import mezz.jei.api.recipe.transfer.IRecipeTransferError;
 import mezz.jei.api.recipe.transfer.IRecipeTransferInfo;
 import mezz.jei.common.network.IConnectionToServer;
-import mezz.jei.common.network.packets.PacketJei;
+import mezz.jei.common.network.packets.PlayToServerPacket;
 import mezz.jei.common.transfer.RecipeTransferOperationsResult;
 import mezz.jei.library.transfer.BasicRecipeTransferHandler;
 import net.minecraft.world.entity.player.Player;
@@ -94,11 +94,11 @@ public abstract class BasicRecipeTransferHandlerMixin<C extends AbstractContaine
             method = "transferRecipe",
             at = @At(
                     value = "INVOKE",
-                    target = "Lmezz/jei/common/network/IConnectionToServer;sendPacketToServer(Lmezz/jei/common/network/packets/PacketJei;)V"
+                    target = "Lmezz/jei/common/network/IConnectionToServer;sendPacketToServer(Lmezz/jei/common/network/packets/PlayToServerPacket;)V"
             ),
             remap = false
     )
-    private void endinv$redirectTransferPacket(IConnectionToServer connection, PacketJei packet) {
+    private void endinv$redirectTransferPacket(IConnectionToServer connection, PlayToServerPacket packet) {
         TransferContext context = ENDINV$PLAN.get();
         if (context != null) {
             ENDINV$PLAN.remove();

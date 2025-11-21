@@ -99,7 +99,7 @@ public class AttachmentGuiHandler implements IGuiContainerHandler<AbstractContai
         /**
          * @since 15.14.0
          */
-        @Override
+        @Override@SuppressWarnings("removal")
         public IIngredientType<ItemStack> getIngredientType() {
             return VanillaTypes.ITEM_STACK;
         }
@@ -107,7 +107,7 @@ public class AttachmentGuiHandler implements IGuiContainerHandler<AbstractContai
         /**
          * @since 15.14.0
          */
-        @Override
+        @Override@SuppressWarnings("removal")
         public ItemStack getIngredient() {
             return hovered;
         }

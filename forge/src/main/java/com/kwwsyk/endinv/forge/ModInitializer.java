@@ -14,12 +14,10 @@ import com.kwwsyk.endinv.forge.integrates.clothconfig.ClothConfigIntegration;
 import com.kwwsyk.endinv.forge.nbtAttcachment.AttachingCapabilities;
 import com.kwwsyk.endinv.forge.nbtAttcachment.IEndInvUuid;
 import com.kwwsyk.endinv.forge.nbtAttcachment.ISyncedConfig;
+import com.kwwsyk.endinv.forge.network.ModPayloadHandler;
 import net.minecraft.client.Minecraft;
-import net.minecraft.network.Connection;
+import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.network.protocol.Packet;
-import net.minecraft.network.protocol.common.ClientboundCustomPayloadPacket;
-import net.minecraft.network.protocol.common.ServerboundCustomPayloadPacket;
-import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.flag.FeatureFlags;
@@ -28,10 +26,10 @@ import net.minecraft.world.item.Item;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.ModContainer;
 import net.minecraftforge.fml.ModList;
-import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.loading.FMLEnvironment;
+import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.server.ServerLifecycleHooks;
@@ -46,9 +44,9 @@ public class ModInitializer extends AbstractModInitializer {
 
     public static final DeferredRegister<MenuType<?>> MENU = DeferredRegister.create(ForgeRegistries.MENU_TYPES,ModInfo.MOD_ID);
 
-    public ModInitializer() {
+    public ModInitializer(FMLJavaModLoadingContext context) {
         // Forge 要求必须提供的无参构造器
-        this(FMLJavaModLoadingContext.get().getModEventBus(), ModLoadingContext.get().getActiveContainer());
+        this(context.getModEventBus(), context.getActiveContainer());
     }
 
     public ModInitializer(IEventBus modEventBus, ModContainer container){
@@ -88,27 +86,23 @@ public class ModInitializer extends AbstractModInitializer {
         return new IPacketDistributor() {
             @Override
             public void sendToServer(ModPacketPayload payload) {
-                Connection conn = Minecraft.getInstance().getConnection() != null ? Minecraft.getInstance().getConnection().getConnection() : null;
-                if (conn != null) {
-                    Packet<?> pkt = new ServerboundCustomPayloadPacket((CustomPacketPayload) payload);
-                    conn.send(pkt);
+                ClientPacketListener netHandler = Minecraft.getInstance().getConnection();
+                if(netHandler!=null) {
+                    Packet<?> packet = NetworkDirection.PLAY_TO_SERVER.buildPacket(ModPayloadHandler.getChannel(), payload);
+                    netHandler.send(packet);
                 }
             }
 
             @Override
             public void sendToPlayer(ServerPlayer player, ModPacketPayload payload) {
-                Packet<?> pkt = new ClientboundCustomPayloadPacket((CustomPacketPayload) payload);
-                player.connection.send(pkt);
+                player.connection.send(NetworkDirection.PLAY_TO_CLIENT.buildPacket(ModPayloadHandler.getChannel(), payload));
             }
 
             @Override
             public void sendToAllPlayer(ModPacketPayload payload) {
                 var server = ServerLifecycleHooks.getCurrentServer();
                 if (server != null) {
-                    Packet<?> pkt = new ClientboundCustomPayloadPacket((CustomPacketPayload) payload);
-                    for (ServerPlayer sp : server.getPlayerList().getPlayers()) {
-                        sp.connection.send(pkt);
-                    }
+                    server.getPlayerList().broadcastAll(NetworkDirection.PLAY_TO_CLIENT.buildPacket(ModPayloadHandler.getChannel(), payload));
                 }
             }
         };

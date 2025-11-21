@@ -34,7 +34,7 @@ import java.util.*;
 /**
  * Attached Endless Inventory (Screen) Recipe Transfer Handler<br>
  * Transfer items of EndInv in any menu
- */@SuppressWarnings("removal")
+ */
 public final class AEIRecipeTransferHandler {
 
     private AEIRecipeTransferHandler() {
@@ -78,11 +78,9 @@ public final class AEIRecipeTransferHandler {
                 return Optional.empty();
             }
         }
-        ResourceLocation recipeId;
-        if (recipe instanceof Recipe<?> mcRecipe) {
-            recipeId = mcRecipe.getId();
-        } else {
-            // Best-effort: use JEI's displayed recipe location via slots view hash; fall back to container id scoping
+        ResourceLocation recipeId = tryResolveRecipeId(recipe);
+        if (recipeId == null) {
+            // Best-effort: fall back to a synthetic id scoped by the container
             recipeId = ResourceLocation.fromNamespaceAndPath("endless_inventory", "jei/unknown/" + container.containerId);
         }
         boolean requireCompleteSets = transferInfo.requireCompleteSets(container, recipe);
@@ -305,7 +303,7 @@ public final class AEIRecipeTransferHandler {
 
     private static boolean sameType(ItemStack a, ItemStack b) {
         if (a.isEmpty() || b.isEmpty()) return false;
-        return ItemStack.isSameItemSameTags(a, b);
+        return ItemStack.isSameItemSameComponents(a, b);
     }
 
     private static Ingredient[] buildRecipeLayout(Recipe<?> recipe, int targetSlots) {
@@ -484,9 +482,7 @@ public final class AEIRecipeTransferHandler {
             return inventoryCount - reservation.inventoryReserved(key);
         }
 
-        boolean isPlain() {
-            return !key.hasCustomData();
-        }
+        boolean isPlain() { return key.components()!=null && !key.components().isEmpty(); }
     }
 
     private static final class Reservation {
@@ -516,6 +512,16 @@ public final class AEIRecipeTransferHandler {
         boolean isEmpty() {
             return total.isEmpty();
         }
+    }
+
+    @Nullable
+    private static ResourceLocation tryResolveRecipeId(Object recipeObj) {
+        try {
+            var m = recipeObj.getClass().getMethod("getId");
+            Object v = m.invoke(recipeObj);
+            if (v instanceof ResourceLocation rl) return rl;
+        } catch (Throwable ignored) {}
+        return null;
     }
 
     private record Selection(ItemStack stack, ItemKey key, boolean useInventory) {

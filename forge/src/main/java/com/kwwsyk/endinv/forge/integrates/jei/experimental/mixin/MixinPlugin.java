@@ -1,6 +1,5 @@
 package com.kwwsyk.endinv.forge.integrates.jei.experimental.mixin;
 
-import com.kwwsyk.endinv.forge.StartupConfig;
 import com.mojang.logging.LogUtils;
 import org.objectweb.asm.tree.ClassNode;
 import org.slf4j.Logger;
@@ -51,34 +50,29 @@ public class MixinPlugin implements IMixinConfigPlugin {
      */
     @Override
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
-        try {
-            return StartupConfig.enableJeiAttachedTransfer();
-        } catch (IllegalStateException e) {
-            LOGGER.warn("JEI mixin config accessed before load; reading file directly.");
-            // Fallback to reading the COMMON config directly before Forge loads it
-            // Try typical dev and runtime locations
-            String fileName = "endless_inventory-common.toml";
-            java.nio.file.Path[] candidates = new java.nio.file.Path[]{
-                    java.nio.file.Paths.get("run", "config", fileName),
-                    java.nio.file.Paths.get("config", fileName),
-                    java.nio.file.Paths.get(fileName)
-            };
-            for (java.nio.file.Path p : candidates) {
-                try {
-                    if (java.nio.file.Files.isRegularFile(p)) {
-                        String content = java.nio.file.Files.readString(p);
-                        Boolean val = parseEnableFromToml(content);
-                        if (val != null) {
-                            LOGGER.info("JEI mixin config read from {}: experimental.jeiAttachedRecipeTransfer={}", p, val);
-                            return val;
-                        }
+        // Avoid touching mod config classes this early to prevent classloader conflicts (commons-lang3 Pair)
+        // Read the common config directly instead.
+        String fileName = "endless_inventory-common.toml";
+        java.nio.file.Path[] candidates = new java.nio.file.Path[]{
+                java.nio.file.Paths.get("run", "config", fileName),
+                java.nio.file.Paths.get("config", fileName),
+                java.nio.file.Paths.get(fileName)
+        };
+        for (java.nio.file.Path p : candidates) {
+            try {
+                if (java.nio.file.Files.isRegularFile(p)) {
+                    String content = java.nio.file.Files.readString(p);
+                    Boolean val = parseEnableFromToml(content);
+                    if (val != null) {
+                        LOGGER.info("JEI mixin config read from {}: experimental.jeiAttachedRecipeTransfer={}", p, val);
+                        return val;
                     }
-                } catch (Throwable ignored) {
                 }
+            } catch (Throwable ignored) {
             }
-            LOGGER.warn("JEI mixin config not found or unreadable; defaulting to disabled.");
-            return false;
         }
+        LOGGER.warn("JEI mixin config not found or unreadable; defaulting to disabled.");
+        return false;
     }
 
     private static Boolean parseEnableFromToml(String content) {

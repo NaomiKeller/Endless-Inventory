@@ -13,7 +13,7 @@ import net.minecraftforge.fml.common.Mod;
 
 import static com.kwwsyk.endinv.common.AbstractModInitializer.withModLocation;
 
-@Mod.EventBusSubscriber(modid = ModInfo.MOD_ID,bus = Mod.EventBusSubscriber.Bus.FORGE)
+@Mod.EventBusSubscriber(modid = ModInfo.MOD_ID,bus = Mod.EventBusSubscriber.Bus.FORGE)@SuppressWarnings("removal")
 public class AttachingCapabilities {
 
     public static final Capability<IEndInvUuid> END_INV_UUID = CapabilityManager.get(new CapabilityToken<>() {});

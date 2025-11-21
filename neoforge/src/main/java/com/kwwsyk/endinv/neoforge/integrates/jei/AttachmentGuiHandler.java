@@ -39,7 +39,7 @@ public class AttachmentGuiHandler implements IGuiContainerHandler<AbstractContai
      * This is useful for guis that don't have normal slots (which is how JEI normally detects items under the mouse).
      * <p>
      * This can also be used to let JEI look up liquids in tanks directly, by returning a FluidStack.
-     * Works with any ingredient type that has been registered with {@link IModIngredientRegistration}.
+     * Works with any ingredient type that has been registered with {@code IModIngredientRegistration}.
      *
      * @param builder
      * @param containerScreen
@@ -83,11 +83,13 @@ public class AttachmentGuiHandler implements IGuiContainerHandler<AbstractContai
             this.area = area;
         }
 
-        @Override public IIngredientType<ItemStack> getIngredientType() { return VanillaTypes.ITEM_STACK; }
-        @Override public ItemStack getIngredient() { return hovered; }
+        @Override @SuppressWarnings("removal")
+        public IIngredientType<ItemStack> getIngredientType() { return VanillaTypes.ITEM_STACK; }
+        @Override @SuppressWarnings("removal")
+        public ItemStack getIngredient() { return hovered; }
         @Override public Rect2i getArea() { return area; }
 
-        @Override @Deprecated @SuppressWarnings({"removal","nonextendable"})
+        @Override @Deprecated @SuppressWarnings({"nonextendable"})
         public ITypedIngredient<ItemStack> getTypedIngredient() {
             return new ITypedIngredient<>() {
                 @Override public IIngredientType<ItemStack> getType() { return VanillaTypes.ITEM_STACK; }
