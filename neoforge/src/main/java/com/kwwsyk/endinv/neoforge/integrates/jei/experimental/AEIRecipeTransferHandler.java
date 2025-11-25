@@ -1,10 +1,10 @@
 package com.kwwsyk.endinv.neoforge.integrates.jei.experimental;
 
+import com.kwwsyk.endinv.common.EndlessInventory;
 import com.kwwsyk.endinv.common.ModInfo;
 import com.kwwsyk.endinv.common.ServerLevelEndInv;
 import com.kwwsyk.endinv.common.SourceInventory;
 import com.kwwsyk.endinv.common.client.CachedSrcInv;
-import com.kwwsyk.endinv.common.menu.page.pageManager.PageMetaDataManager;
 import com.kwwsyk.endinv.common.options.ContentTransferMode;
 import com.kwwsyk.endinv.common.util.ItemKey;
 import com.kwwsyk.endinv.neoforge.client.events.ScreenAttachment;
@@ -99,11 +99,10 @@ public final class AEIRecipeTransferHandler {
             List<Slot> recipeSlots,
             List<Slot> inventorySlots,
             ServerPlayer player,
-            @Nullable PageMetaDataManager manager,
             boolean maxTransfer,
             boolean requireCompleteSets
     ) {
-        SourceInventory endInv = ServerLevelEndInv.getEndInvForPlayer(player).orElse(null);
+        EndlessInventory endInv = ServerLevelEndInv.getEndInvForPlayer(player).orElse(null);
         if (endInv == null) {
             return;
         }
@@ -112,22 +111,12 @@ public final class AEIRecipeTransferHandler {
             return;
         }
         performTransfer(container, plan, player, recipeSlots, inventorySlots, endInv);
-        if (manager != null) {
-            manager.sendEndInvData();
-        } else {
-            var mode = com.kwwsyk.endinv.common.ModInfo.getServerConfig().transferMode().get();
-            switch (mode) {
-                case ALL -> com.kwwsyk.endinv.common.ModInfo.getPacketDistributor()
-                        .sendToPlayer(player, new com.kwwsyk.endinv.common.network.payloads.toClient.EndInvContent(endInv.getItemMap()));
-                case PART -> com.kwwsyk.endinv.common.ModInfo.getPacketDistributor()
-                        .sendToPlayer(player, com.kwwsyk.endinv.common.network.payloads.toClient.EndInvMetadata.getWith((com.kwwsyk.endinv.common.EndlessInventory) endInv));
-            }
+        switch (ModInfo.getServerConfig().transferMode().get()) {
+            case ALL -> ModInfo.getPacketDistributor()
+                    .sendToPlayer(player, new com.kwwsyk.endinv.common.network.payloads.toClient.EndInvContent(endInv.getItemMap()));
+            case PART -> ModInfo.getPacketDistributor()
+                    .sendToPlayer(player, com.kwwsyk.endinv.common.network.payloads.toClient.EndInvMetadata.getWith(endInv));
         }
-    }
-
-    @Nullable
-    public static PageMetaDataManager getServerManager(ServerPlayer player) {
-        return ServerLevelEndInv.checkAndGetManagerForPlayer(player).orElse(null);
     }
 
     private static TransferPlan createTransferPlan(

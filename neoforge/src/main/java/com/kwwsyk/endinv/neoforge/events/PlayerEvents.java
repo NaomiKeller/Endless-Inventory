@@ -7,7 +7,7 @@ import com.kwwsyk.endinv.common.network.payloads.toClient.EndInvContent;
 import com.kwwsyk.endinv.common.network.payloads.toClient.EndInvMetadata;
 import com.kwwsyk.endinv.common.network.payloads.toClient.MenuAttachabilityPayload;
 import com.kwwsyk.endinv.common.options.ContentTransferMode;
-import com.kwwsyk.endinv.neoforge.options.ServerConfig;
+import com.kwwsyk.endinv.common.options.ServerConfigs;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -34,7 +34,7 @@ public class PlayerEvents {
                                 menuCfg.isInventoryAttachable(),
                                 menuCfg.getConfigs()
                         ));
-                if(ServerConfig.CONFIG.TRANSFER_MODE.get()== ContentTransferMode.ALL){
+                if(ServerConfigs.ENDINV_BEHAVIOR.TransferMode.get()== ContentTransferMode.ALL){
                     ServerLevelEndInv.getEndInvForPlayer(serverPlayer).ifPresent(endInv -> {
                         PacketDistributor.sendToPlayer(serverPlayer,new EndInvContent(endInv.getItemMap()));
                         PacketDistributor.sendToPlayer(serverPlayer,EndInvMetadata.getWith(endInv));

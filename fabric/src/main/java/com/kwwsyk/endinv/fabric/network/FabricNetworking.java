@@ -5,11 +5,9 @@ import com.kwwsyk.endinv.common.network.payloads.ModPacketPayload;
 import com.kwwsyk.endinv.common.network.payloads.SyncedConfig;
 import com.kwwsyk.endinv.common.network.payloads.toClient.*;
 import com.kwwsyk.endinv.common.network.payloads.toServer.*;
-import com.kwwsyk.endinv.fabric.network.payloads.JeiTransferRecipePayload;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.server.level.ServerPlayer;
 
 public final class FabricNetworking {
@@ -26,9 +24,9 @@ public final class FabricNetworking {
         c2s.register(StarItemPayload.TYPE, StarItemPayload.STREAM_CODEC);
         c2s.register(ToggleCraftingPayload.TYPE, ToggleCraftingPayload.STREAM_CODEC);
         c2s.register(SyncedConfig.TYPE, SyncedConfig.STREAM_CODEC);
-        if (FabricLoader.getInstance().isModLoaded("jei")) {
-            c2s.register(JeiTransferRecipePayload.TYPE, JeiTransferRecipePayload.STREAM_CODEC);
-        }
+//        if (FabricLoader.getInstance().isModLoaded("jei")) {
+//            c2s.register(JeiTransferRecipePayload.TYPE, JeiTransferRecipePayload.STREAM_CODEC);
+//        }
 
         var s2c = PayloadTypeRegistry.playS2C();
         s2c.register(EndInvContent.TYPE, EndInvContent.STREAM_CODEC);
@@ -76,10 +74,10 @@ public final class FabricNetworking {
                 (payload, context) -> context.server().execute(() -> payload.handle(context(context.player()))));
         ServerPlayNetworking.registerGlobalReceiver(SyncedConfig.TYPE,
                 (payload, context) -> context.server().execute(() -> payload.handle(context(context.player()))));
-        if (FabricLoader.getInstance().isModLoaded("jei")) {
+/*        if (FabricLoader.getInstance().isModLoaded("jei")) {
             ServerPlayNetworking.registerGlobalReceiver(JeiTransferRecipePayload.TYPE,
                     (payload, context) -> context.server().execute(() -> payload.handle(context(context.player()))));
-        }
+        }*/
     }
 
     public static void sendToServer(ModPacketPayload payload) {

@@ -17,7 +17,7 @@ public class ServerConfig {
     public final ForgeConfigSpec.BooleanValue ENABLE_AUTO_PICK;
     public final ForgeConfigSpec.EnumValue<ContentTransferMode> TRANSFER_MODE;
     public final ForgeConfigSpec.EnumValue<Accessibility> DEFAULT_ACCESSIBILITY;
-    public final ForgeConfigSpec.EnumValue<MissingEndInvPolicy> CREATION_MODE;
+    public final ForgeConfigSpec.EnumValue<CreationEndinvStrategy> CREATION_MODE;
     public final ForgeConfigSpec.BooleanValue CONVERT_EMPTY_TAG;
 
     public final ForgeConfigSpec.ConfigValue<List<?>> SPECIFIED_MENU_ATTACHABLE;
@@ -40,7 +40,7 @@ public class ServerConfig {
         DEFAULT_ACCESSIBILITY = builder
                 .defineEnum("defaultAccessibility",Accessibility.PUBLIC);
         CREATION_MODE = builder
-                .defineEnum("creationMode",MissingEndInvPolicy.CREATE_PER_PLAYER);
+                .defineEnum("creationMode", CreationEndinvStrategy.CREATE_PER_PLAYER);
         CONVERT_EMPTY_TAG = builder
                 .comment("Convert itemstack with empty tag {} to null tag, for the bugs that item cannot be taken/stacked.")
                 .define("convert_empty_tag",true);
@@ -104,7 +104,7 @@ public class ServerConfig {
         }
 
         @Override
-        public IConfigValue<MissingEndInvPolicy> policyHandlingMissing() {
+        public IConfigValue<CreationEndinvStrategy> policyHandlingMissing() {
             return IConfigValue.of(CREATION_MODE,CREATION_MODE::set);
         }
 

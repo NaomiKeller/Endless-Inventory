@@ -20,8 +20,7 @@ import java.util.*;
 /**A menu attachability config of specified menu types with better priority
  *
  */
-@SuppressWarnings("deprecation")
-public class SpecifiedMenuAttachingConfig {
+public class SpecifiedMenuAttachingConfig{
 
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final Codec<Map<MenuType<?>,Boolean>> MAP_CODEC = Codec.unboundedMap(
@@ -165,8 +164,8 @@ public class SpecifiedMenuAttachingConfig {
 
         public static final String[] configComments = new String[]{
                 "The list holds menu attachability configs",
-                "The format is \"namespace:id:\"",
-                "Such as \"endless_inventory:endinv_menu:false\" (Meanwhile endinv_menu will never be attached)",
+                "The format is \"namespace:id\"",
+                "Such as \"endless_inventory:endinv_menu:false\" (Meanwhile, notice that endinv_menu will never be attached)",
                 "Use \"inventory:true(false)\" for inventory menu."
         };
 
@@ -261,6 +260,34 @@ public class SpecifiedMenuAttachingConfig {
          public record ParseStringResult(boolean success, @Nullable MenuType<?> type, boolean value){
 
              public static final ParseStringResult FAILED = new ParseStringResult(false,null,false);
+        }
+    }
+
+    public static class Entry extends ComplexConfigEntryImpl<SpecifiedMenuAttachingConfig>{
+
+        public static final String[] COMMENTS = Parser.configComments;
+        public static final Entry INSTANCE = new Entry("specifiedMenuAttachability",new String[]{},SpecifiedMenuAttachingConfig.DEFAULT);
+
+        private final ListEntry<String> menuKey2bools = new ListEntry<>("container2attachable",COMMENTS,new ArrayList<>());
+
+        public Entry(String key, String[] comments, SpecifiedMenuAttachingConfig defaultValue) {
+            super(key, comments, defaultValue);
+        }
+
+        @Override
+        public ConfigEntryImpl<?>[] fields() {
+            return new ConfigEntryImpl[]{menuKey2bools};
+        }
+
+        @Override
+        public SpecifiedMenuAttachingConfig get() {
+            return Parser.readList(menuKey2bools.get());
+        }
+
+        @Override
+        public void set(SpecifiedMenuAttachingConfig config) {
+            menuKey2bools.set(new Parser(config).encodeConfig());
+            save();
         }
     }
 }

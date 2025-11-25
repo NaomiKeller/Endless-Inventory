@@ -1,4 +1,17 @@
 # Change Log
+
+__branch 1.21.4__
+
+Removed integrates/jei payloads/jei. Remember to bring it back in later versions. Copy them from the 1.21.1 branch.
+
+## 2025-11-26 1.1.0.3 -> 1.1.1
+
+Better config, on code and performance.
+@IConfigEntry.java and its implementation.
+@ConfigEntryImpl sealed class
+@neoforge/ServerConfig shows how to use them.
+Write by hand mainly.
+
 __branch 1.21.1__
 
 ## 2025-10-18

@@ -5,11 +5,9 @@
   "package": "com.kwwsyk.endinv.forge.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
-    "ServerCustomPayloadMixin",
-    "ServerPlaceRecipeMixin"
+    "ServerCustomPayloadMixin"
   ],
   "client": [
-    "ClientCustomPayloadMixin",
-    "RecipeBookComponentMixin"
+    "ClientCustomPayloadMixin"
   ]
 }

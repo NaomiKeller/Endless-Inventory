@@ -2,9 +2,9 @@ package com.kwwsyk.endinv.fabric;
 
 import com.google.gson.*;
 import com.kwwsyk.endinv.common.options.ContentTransferMode;
+import com.kwwsyk.endinv.common.options.CreationEndinvStrategy;
 import com.kwwsyk.endinv.common.options.IConfigValue;
 import com.kwwsyk.endinv.common.options.IServerConfig;
-import com.kwwsyk.endinv.common.options.MissingEndInvPolicy;
 import com.kwwsyk.endinv.common.util.Accessibility;
 import net.fabricmc.loader.api.FabricLoader;
 import org.slf4j.Logger;
@@ -41,7 +41,7 @@ public final class ServerConfig implements IServerConfig {
     private boolean attaching = true;
     private ContentTransferMode transferModeValue = ContentTransferMode.ALL;
     private Accessibility defaultAccess = Accessibility.PUBLIC;
-    private MissingEndInvPolicy creationPolicy = MissingEndInvPolicy.CREATE_PER_PLAYER;
+    private CreationEndinvStrategy creationPolicy = CreationEndinvStrategy.CREATE_PER_PLAYER;
     private boolean convertEmpty = true;
     private com.kwwsyk.endinv.common.options.SpecifiedMenuAttachingConfig specifiedAttach = new com.kwwsyk.endinv.common.options.SpecifiedMenuAttachingConfig();
 
@@ -90,7 +90,7 @@ public final class ServerConfig implements IServerConfig {
             }
             if (json.has(CREATION_MODE) && json.get(CREATION_MODE).isJsonPrimitive()) {
                 try {
-                    creationPolicy = MissingEndInvPolicy.valueOf(json.get(CREATION_MODE).getAsString());
+                    creationPolicy = CreationEndinvStrategy.valueOf(json.get(CREATION_MODE).getAsString());
                 } catch (IllegalArgumentException ex) {
                     LOGGER.warn("Unknown creation mode in config: {}", json.get(CREATION_MODE).getAsString());
                 }
@@ -192,7 +192,7 @@ public final class ServerConfig implements IServerConfig {
     }
 
     @Override
-    public IConfigValue<MissingEndInvPolicy> policyHandlingMissing() {
+    public IConfigValue<CreationEndinvStrategy> policyHandlingMissing() {
         return tracked(() -> creationPolicy, value -> creationPolicy = value);
     }
 

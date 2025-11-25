@@ -4,7 +4,6 @@ import com.kwwsyk.endinv.common.network.payloads.ModPacketContext;
 import com.kwwsyk.endinv.common.network.payloads.SyncedConfig;
 import com.kwwsyk.endinv.common.network.payloads.toServer.*;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.server.level.ServerPlayer;
 
 public final class FabricServerNetworking {
@@ -20,10 +19,10 @@ public final class FabricServerNetworking {
         ServerPlayNetworking.registerGlobalReceiver(StarItemPayload.TYPE, (payload, ctx) -> ctx.server().execute(() -> payload.handle(context(ctx.player()))));
         ServerPlayNetworking.registerGlobalReceiver(ToggleCraftingPayload.TYPE, (payload, ctx) -> ctx.server().execute(() -> payload.handle(context(ctx.player()))));
         ServerPlayNetworking.registerGlobalReceiver(SyncedConfig.TYPE, (payload, ctx) -> ctx.server().execute(() -> payload.handle(context(ctx.player()))));
-        if (FabricLoader.getInstance().isModLoaded("jei")) {
+/*        if (FabricLoader.getInstance().isModLoaded("jei")) {
             ServerPlayNetworking.registerGlobalReceiver(com.kwwsyk.endinv.fabric.network.payloads.JeiTransferRecipePayload.TYPE,
                     (payload, ctx) -> ctx.server().execute(() -> payload.handle(context(ctx.player()))));
-        }
+        }*/
     }
 
 

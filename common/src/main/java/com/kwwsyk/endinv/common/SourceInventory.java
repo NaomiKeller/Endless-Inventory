@@ -4,7 +4,6 @@ import com.kwwsyk.endinv.common.util.*;
 import com.mojang.logging.LogUtils;
 import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
 import net.minecraft.Util;
-import net.minecraft.core.component.DataComponentPatch;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import org.slf4j.Logger;
@@ -16,8 +15,6 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import static com.kwwsyk.endinv.common.ModInfo.getServerConfig;
 
 /**Holder of core and shared ({@link EndlessInventory}&{@link com.kwwsyk.endinv.common.client.CachedSrcInv} endless INVENTORY logic.
  */
@@ -168,12 +165,13 @@ public abstract class SourceInventory {
             if (state == null) {
                 LOGGER.warn("EI:takeItem: no state for {}", key);
                 LOGGER.debug("EI:Current Source Inventory: Class:{},UUID:{},Items:{}",this.getClass(),uuid,buildSnapshotLocked());
-                if(getServerConfig().doConvertEmptyTag().get() && key.components() != null){
-                    key = new ItemKey(key.item(), DataComponentPatch.EMPTY);
-                    if((state=itemMap.get(key))!=null){
-                        LOGGER.info("EI:takeItem: converted ItemKey with empty tag {} to null tag",ItemKey.asKey(stack));
-                    }else return ItemStack.EMPTY;
-                }else return ItemStack.EMPTY;
+//                if(getServerConfig().doConvertEmptyTag().get() && key.components() != null){
+//                    key = new ItemKey(key.item(), DataComponentPatch.EMPTY);
+//                    if((state=itemMap.get(key))!=null){
+//                        LOGGER.info("EI:takeItem: converted ItemKey with empty tag {} to null tag",ItemKey.asKey(stack));
+//                    }else return ItemStack.EMPTY;
+//                }else
+                    return ItemStack.EMPTY;
             }
             LOGGER.info("EI:takeItem: key={} availableCount={} requestedCount={}", key, state.count(), count);
             if(state.count() >= maxStackSize && infinityMode){

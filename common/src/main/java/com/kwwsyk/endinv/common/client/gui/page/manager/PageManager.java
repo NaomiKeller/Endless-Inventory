@@ -109,7 +109,4 @@ public interface PageManager extends PageMetaDataManager {
         CachedConfig.setSearching(searching);
     }
 
-    @Override
-    default void sendEndInvData() {//do nop as in the client
-    }
 }

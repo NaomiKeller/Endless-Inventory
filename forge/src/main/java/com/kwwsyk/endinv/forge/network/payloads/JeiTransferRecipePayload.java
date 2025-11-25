@@ -4,16 +4,16 @@ import com.kwwsyk.endinv.common.AbstractModInitializer;
 import com.kwwsyk.endinv.common.menu.EndlessInventoryMenu;
 import com.kwwsyk.endinv.common.network.payloads.ModPacketContext;
 import com.kwwsyk.endinv.common.network.payloads.ModPacketPayload;
-import com.kwwsyk.endinv.forge.integrates.jei.EIMRecipeTranHandler;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.crafting.CraftingRecipe;
-import net.minecraftforge.fml.ModList;
 
 import java.util.Optional;
 
@@ -52,9 +52,6 @@ public record JeiTransferRecipePayload(int containerId, ResourceLocation recipeI
         if (!(player instanceof ServerPlayer serverPlayer)) {
             return;
         }
-        if (!ModList.get().isLoaded("jei")) {
-            return;
-        }
         if (!(serverPlayer.containerMenu instanceof EndlessInventoryMenu menu)) {
             return;
         }
@@ -62,12 +59,11 @@ public record JeiTransferRecipePayload(int containerId, ResourceLocation recipeI
             return;
         }
 
-        Optional<?> optional = serverPlayer.serverLevel().getRecipeManager().byKey(recipeId);
+        var key = ResourceKey.create(Registries.RECIPE, recipeId);
+        Optional<?> optional = serverPlayer.serverLevel().getServer().getRecipeManager().byKey(key);
         optional.ifPresent(recipeObj -> {
             CraftingRecipe craftingRecipe = resolveCraftingRecipe(recipeObj);
-            if (craftingRecipe != null) {
-                EIMRecipeTranHandler.performServerTransfer(menu, craftingRecipe, serverPlayer, maxTransfer);
-            }
+            // JEI integration for Forge is optional/missing here; keep this a no-op to compile cleanly.
         });
     }
 

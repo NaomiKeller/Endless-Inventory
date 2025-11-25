@@ -15,7 +15,7 @@ import javax.annotation.Nullable;
 import java.util.*;
 
 /**An item container may have endless storage.*/
-public class EndlessInventory extends SourceInventory {
+public class EndlessInventory extends SourceInventory {//todo add content transfer mode as a field
 
     private static final Logger LOGGER = LogUtils.getLogger();
 
@@ -91,8 +91,10 @@ public class EndlessInventory extends SourceInventory {
         return lastModTime;
     }
 
-    public void broadcastChanges(){
-        /*this.viewers.forEach(player -> ServerLevelEndInv.checkAndGetManagerForPlayer(player)
-                .ifPresent(manager -> manager.getDisplayingPage().syncContentToClient(player)));*/
+    public void broadcastChanges(){//todo handle sending changes and client receiving ...
+        this.viewers.forEach(player -> ServerLevelEndInv.checkAndGetManagerForPlayer(player)
+                .ifPresent(manager -> {
+                    //manager.getDisplayingPageId().syncContentToClient(player)
+                }));
     }
 }

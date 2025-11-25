@@ -59,12 +59,15 @@ public abstract class ItemEntityPickupMixin {
     }
 
     private static boolean hasOrWearing(Player player, ArmorItem armor) {
-        EquipmentSlot slot = armor.getEquipmentSlot();
-        ItemStack equipped = player.getItemBySlot(slot);
-        if (equipped.isEmpty()) {
-            return player.inventoryMenu.slots.stream().anyMatch(slt -> slt.getItem().getItem() instanceof ArmorItem a1 && a1.getEquipmentSlot() == slot);
+        // Wearing: check all armor slots for the exact same item instance
+        for (EquipmentSlot eq : new EquipmentSlot[]{EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET}) {
+            ItemStack equipped = player.getItemBySlot(eq);
+            if (!equipped.isEmpty() && equipped.getItem() == armor) {
+                return true;
+            }
         }
-        return true;
+        // In inventory: any slot containing the exact same item instance
+        return player.inventoryMenu.slots.stream().anyMatch(slt -> slt.getItem().getItem() == armor);
     }
 
     private static boolean shouldMoveTo(Player player, ItemStack stack) {
@@ -87,8 +90,6 @@ public abstract class ItemEntityPickupMixin {
         } else if (item instanceof ShearsItem such) {
             return hasSuch(player, such);
         } else if (item instanceof BoatItem such) {
-            return hasSuch(player, such);
-        } else if (item instanceof ElytraItem such) {
             return hasSuch(player, such);
         } else if (item instanceof BowItem such) {
             return hasSuch(player, such);

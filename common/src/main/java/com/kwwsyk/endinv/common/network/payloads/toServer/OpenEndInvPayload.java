@@ -75,7 +75,7 @@ public record OpenEndInvPayload(boolean openNew, int rows, int columns) implemen
             ServerLevelEndInv.getEndInvForPlayer(player).ifPresent(endInv->{
                 AttachingMonitor manager = new AttachingMonitor(player.containerMenu, endInv ,player);
                 ServerLevelEndInv.PAGE_META_DATA_MANAGER.put(player,manager);
-                manager.sendEndInvData();
+                //manager.sendEndInvData(); Deprecated: let page request data
             });
 
         }

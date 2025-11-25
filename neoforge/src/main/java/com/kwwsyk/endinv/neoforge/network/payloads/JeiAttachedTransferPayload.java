@@ -69,7 +69,6 @@ public record JeiAttachedTransferPayload(TransferContext context) implements Mod
         if (optional.isEmpty()) return;
         Recipe<?> recipe = resolve(optional.get());
         if (recipe == null) return;
-        var manager = AEIRecipeTransferHandler.getServerManager(player);
         List<Slot> craftingSlots = collectSlots(container, context.craftingSlotIndexes());
         List<Slot> inventorySlots = collectSlots(container, context.inventorySlotIndexes());
         if (craftingSlots.size() != context.craftingSlotIndexes().size() || inventorySlots.size() != context.inventorySlotIndexes().size()) return;
@@ -79,7 +78,6 @@ public record JeiAttachedTransferPayload(TransferContext context) implements Mod
                 craftingSlots,
                 inventorySlots,
                 player,
-                manager,
                 context.maxTransfer(),
                 context.requireCompleteSets()
         );

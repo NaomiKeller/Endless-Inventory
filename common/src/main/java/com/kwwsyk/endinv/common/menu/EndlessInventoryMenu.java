@@ -348,16 +348,20 @@ public class EndlessInventoryMenu extends AbstractContainerMenu implements PageM
             }else if(this.quickcraftStatus!=0){
                 this.resetQuickCraft();
             }
-            switch (clickType){
-                case PICKUP -> MenuClickHandler.handlePickup(this,slotId,button,player);
-                case QUICK_MOVE -> MenuClickHandler.handleQuickMove(this,slotId,button,player);
-                case SWAP -> MenuClickHandler.handleSwap(this,slotId,button,player);
-                case THROW -> MenuClickHandler.handleThrow(this,slotId,button,player);
-                case CLONE -> MenuClickHandler.handleClone(this,slotId,button,player);
-                case PICKUP_ALL -> this.handlePickupAll(slotId, button, player);
-                default -> {
-                    return;
-                }
+            if (clickType == ClickType.PICKUP) {
+                MenuClickHandler.handlePickup(this, slotId, button, player);
+            } else if (clickType == ClickType.QUICK_MOVE) {
+                MenuClickHandler.handleQuickMove(this, slotId, button, player);
+            } else if (clickType == ClickType.SWAP) {
+                MenuClickHandler.handleSwap(this, slotId, button, player);
+            } else if (clickType == ClickType.THROW) {
+                MenuClickHandler.handleThrow(this, slotId, button, player);
+            } else if (clickType == ClickType.CLONE) {
+                MenuClickHandler.handleClone(this, slotId, button, player);
+            } else if (clickType == ClickType.PICKUP_ALL) {
+                this.handlePickupAll(slotId, button, player);
+            } else {
+                return;
             }
             if(this.getSourceInventory() instanceof EndlessInventory endinv){
                 this.setItemSize(endinv.getItemSize());
@@ -621,15 +625,6 @@ public class EndlessInventoryMenu extends AbstractContainerMenu implements PageM
     @Override
     public PageData getPageData() {
         return new PageData(getDisplayingPageId(), baseRows, columns(), sortType(), isSortReversed(), searching());
-    }
-
-    @Override
-    public void sendEndInvData(){
-        if(sourceInventory instanceof EndlessInventory endlessInventory){
-            itemSize.set(endlessInventory.getItemSize());
-            maxStackSize.set(endlessInventory.getMaxItemStackSize());
-            infinityMode.set((endlessInventory.isInfinityMode()?1:0));
-        }
     }
 
     @Override

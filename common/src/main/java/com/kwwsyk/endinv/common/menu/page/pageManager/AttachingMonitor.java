@@ -1,12 +1,10 @@
 package com.kwwsyk.endinv.common.menu.page.pageManager;
 
 import com.kwwsyk.endinv.common.EndlessInventory;
-import com.kwwsyk.endinv.common.ModInfo;
 import com.kwwsyk.endinv.common.SourceInventory;
 import com.kwwsyk.endinv.common.menu.page.PageType;
 import com.kwwsyk.endinv.common.menu.page.PageTypeRegistry;
 import com.kwwsyk.endinv.common.network.payloads.PageData;
-import com.kwwsyk.endinv.common.network.payloads.toClient.EndInvMetadata;
 import com.kwwsyk.endinv.common.util.SortType;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
@@ -34,7 +32,6 @@ public class AttachingMonitor implements PageMetaDataManager{
     private final ServerPlayer player;
     //client for page switch
     private final List<String> PageIdList;
-    private final List<PageType> pageTypeList;
     private String DisplayingPageId;
     private int displayingPageIndex;
     private final PageQuickMoveHandler quickMoveHandler;
@@ -48,8 +45,7 @@ public class AttachingMonitor implements PageMetaDataManager{
         this.menu = menu;
         this.endinv = endinv;
         this.player = player;
-        pageTypeList = PageTypeRegistry.getDisplayPages();
-        PageIdList = pageTypeList.stream().map(tp->tp.registerName).toList();
+        PageIdList = PageTypeRegistry.getIdList();
         this.rows = 9;
         this.columns = 9;
         this.sortType = SortType.DEFAULT;
@@ -160,14 +156,12 @@ public class AttachingMonitor implements PageMetaDataManager{
     public void setSearching(String searching) {
         this.searching= searching;
     }
-
-    @Override
-    public void sendEndInvData() {
+/*    public void sendEndInvData() {
         var distributor = ModInfo.getPacketDistributor();
         var cfg = ModInfo.getServerConfig();
         distributor.sendToPlayer(player, EndInvMetadata.getWith(endinv));
         switch (cfg.transferMode().get()) {
-            case ALL -> distributor.sendToPlayer(player, new com.kwwsyk.endinv.common.network.payloads.toClient.EndInvContent(endinv.getItemMap()));
+            case ALL -> distributor.sendToPlayer(player, new EndInvContent(endinv.getItemMap()));
             case PART -> {
                 int length = rows * columns;
                 var view = endinv.getSortedAndFilteredItemView(0, length, sortType, reverseSort, getDisplayingPageType().itemClassify, searching);
@@ -175,10 +169,10 @@ public class AttachingMonitor implements PageMetaDataManager{
                 for (int i = 0; i < view.size() && i < length; ++i) {
                     stacks.set(i, view.get(i));
                 }
-                distributor.sendToPlayer(player, new com.kwwsyk.endinv.common.network.payloads.toClient.SetItemDisplayContentPayload(stacks));
+                distributor.sendToPlayer(player, new SetItemDisplayContentPayload(stacks));
             }
         }
-    }
+    }*/
 
     @Override
     public void switchPageWithId(String id) {
@@ -197,7 +191,7 @@ public class AttachingMonitor implements PageMetaDataManager{
 
     @Override
     public PageType getDisplayingPageType() {
-        return pageTypeList.get(displayingPageIndex);
+        return PageTypeRegistry.byId(DisplayingPageId);
     }
 }
 

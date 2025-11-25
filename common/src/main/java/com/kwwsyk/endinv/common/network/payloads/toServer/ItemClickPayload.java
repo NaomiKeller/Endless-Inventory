@@ -36,8 +36,6 @@ public record ItemClickPayload(ItemStack stack, int button, ClickType clickType)
 
     private static final Logger LOGGER = LogUtils.getLogger();
 
-
-
     public static ItemClickPayload decode(RegistryFriendlyByteBuf buf) {
         return new ItemClickPayload(
                 ItemStack.OPTIONAL_STREAM_CODEC.decode(buf),
@@ -66,8 +64,7 @@ public record ItemClickPayload(ItemStack stack, int button, ClickType clickType)
         }
         EndlessInventory endInv = opt.get();
 
-        switch (clickType){
-            case PICKUP -> {
+        if (clickType == ClickType.PICKUP) {
                 if(!carried.isEmpty()){
                     ItemStack remain = endInv.addItem(carried);
                     menu.setCarried(remain);
@@ -82,8 +79,7 @@ public record ItemClickPayload(ItemStack stack, int button, ClickType clickType)
                     }else menu.setCarried(taken);
                     if(!stack.isEmpty()) endInv.setChanged();
                 }
-            }
-            case SWAP -> {
+        } else if (clickType == ClickType.SWAP) {
                 Inventory inventory = player.getInventory();
                 ItemStack inventoryItem = inventory.getItem(button);
                 boolean a = !inventoryItem.isEmpty();
@@ -111,14 +107,12 @@ public record ItemClickPayload(ItemStack stack, int button, ClickType clickType)
                     }
                 }
                 endInv.setChanged();
-            }
-            case THROW -> {
+        } else if (clickType == ClickType.THROW) {
                 ItemStack thrown = endInv.takeItem(stack);
                 LOGGER.debug("ItemClickPayload.THROW: thrown={}", thrown);
                 player.drop(thrown,true);
                 endInv.setChanged();
-            }
-            case PICKUP_ALL -> {
+        } else if (clickType == ClickType.PICKUP_ALL) {
                 int startIndex = menu.slots.size() - 1; //changed: reversed button==0 condition
                 for(int index = startIndex; index>=0 ; --index){
                     Slot scanning = menu.slots.get(index);
@@ -132,21 +126,18 @@ public record ItemClickPayload(ItemStack stack, int button, ClickType clickType)
                         endInv.setChanged();
                     }
                 }
-            }
-            case CLONE -> {
+        } else if (clickType == ClickType.CLONE) {
                 if(player.isCreative() && carried.isEmpty()){
                     menu.setCarried(stack.copyWithCount(stack.getMaxStackSize()));
                     LOGGER.debug("ItemClickPayload.CLONE: cloned stack={}", stack);
                 }
-            }
-            case QUICK_MOVE -> {
+        } else if (clickType == ClickType.QUICK_MOVE) {
                 ItemStack taken = endInv.takeItem(stack);
                 LOGGER.debug("ItemClickPayload.QUICK_MOVE: taken={}", taken);
                 ItemStack remain = new PageQuickMoveHandler(menu).quickMoveFromPage(taken);
                 LOGGER.debug("ItemClickPayload.QUICK_MOVE: remain after quickMove={}", remain);
                 endInv.addItem(remain);
                 endInv.setChanged();
-            }
         }
 
 

@@ -3,9 +3,7 @@ package com.kwwsyk.endinv.common;
 import com.kwwsyk.endinv.common.item.ScreenDebugger;
 import com.kwwsyk.endinv.common.item.TestEndInv;
 import com.kwwsyk.endinv.common.menu.EndlessInventoryMenu;
-import com.kwwsyk.endinv.common.menu.page.PageType;
 import com.kwwsyk.endinv.common.network.payloads.SyncedConfig;
-import net.minecraft.core.Registry;
 import net.minecraft.world.inventory.MenuType;
 
 import java.util.UUID;
@@ -14,17 +12,6 @@ import java.util.function.Supplier;
 public final class ModRegistries {
 
     private ModRegistries(){}
-
-    private static Registry<PageType> PAGE_TYPE_REG;
-
-
-    static void setPageTypeReg(Registry<PageType> reg){
-        PAGE_TYPE_REG = reg;
-    }
-
-    public static Registry<PageType> getPageTypeReg() {
-        return PAGE_TYPE_REG;
-    }
 
     public static class Items{
 

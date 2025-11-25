@@ -4,7 +4,7 @@ import com.kwwsyk.endinv.common.client.CachedSrcInv;
 import com.kwwsyk.endinv.common.util.recipeTransferHelper.RecipeItemProvider;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.recipebook.RecipeBookComponent;
-import net.minecraft.world.entity.player.StackedContents;
+import net.minecraft.world.entity.player.StackedItemContents;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -18,20 +18,20 @@ public class RecipeBookComponentMixin {
 
     @Final
     @Shadow
-    private StackedContents stackedContents;
+    private StackedItemContents stackedContents;
     @Shadow
     protected Minecraft minecraft;
     @Unique
     private final CachedSrcInv srcInv = CachedSrcInv.INSTANCE;
 
-    @Inject(method = "initVisuals", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/inventory/RecipeBookMenu;fillCraftSlotsStackedContents(Lnet/minecraft/world/entity/player/StackedContents;)V"))
+    @Inject(method = "initVisuals", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/inventory/RecipeBookMenu;fillCraftSlotsStackedContents(Lnet/minecraft/world/entity/player/StackedItemContents;)V"))
     private void fillEndInvStackedContents(CallbackInfo ci) {
-        RecipeItemProvider.fillStackedContents(srcInv.getItemsAsList(), stackedContents);
+        RecipeItemProvider.fillStackedItemContents(srcInv.getItemsAsList(), stackedContents);
     }
 
-    @Inject(method = "updateStackedContents", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/inventory/RecipeBookMenu;fillCraftSlotsStackedContents(Lnet/minecraft/world/entity/player/StackedContents;)V"))
+    @Inject(method = "updateStackedContents", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/inventory/RecipeBookMenu;fillCraftSlotsStackedContents(Lnet/minecraft/world/entity/player/StackedItemContents;)V"))
     private void updateStackedContentsOfEndInv(CallbackInfo ci) {
-        RecipeItemProvider.fillStackedContents(srcInv.getItemsAsList(), stackedContents);
+        RecipeItemProvider.fillStackedItemContents(srcInv.getItemsAsList(), stackedContents);
     }
 }
 

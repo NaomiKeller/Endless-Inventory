@@ -6,13 +6,13 @@ import com.kwwsyk.endinv.common.util.Accessibility;
 
 public interface IServerConfig {
 
-    IConfigValue<Integer> getMaxAllowedStackSize();
+    IConfigValue<Integer> getMaxAllowedStackSize();//
 
-    IConfigValue<Boolean> allowInfinityMode();
+    IConfigValue<Boolean> allowInfinityMode();//
 
-    IConfigValue<Boolean> enableAttaching();
+    IConfigValue<Boolean> enableAttaching();//
 
-    IConfigValue<Boolean> enableAutoPick();
+    IConfigValue<Boolean> enableAutoPick();//todo
 
     default void onAttachingOrAutopickConfigChanged(){
         ModInfo.getPacketDistributor().sendToAllPlayer(new SyncedConfig(enableAttaching().get(),enableAutoPick().get()));
@@ -33,13 +33,19 @@ public interface IServerConfig {
         ModInfo.getPacketDistributor().sendToAllPlayer(payload);
     }
 
-    IConfigValue<ContentTransferMode> transferMode();
+    IConfigValue<ContentTransferMode> transferMode();//
 
-    IConfigValue<Accessibility> defaultAccessibility();
+    IConfigValue<Accessibility> defaultAccessibility();//
 
-    IConfigValue<MissingEndInvPolicy> policyHandlingMissing();
+    IConfigValue<CreationEndinvStrategy> policyHandlingMissing();//
 
-    IConfigValue<Boolean> doConvertEmptyTag();
+    /**itemstack's component is never null
+     * @see net.minecraft.world.item.ItemStack
+     * @deprecated needn't to impl
+     * @since 1.21.4
+     */
+    @Deprecated
+    IConfigValue<Boolean> doConvertEmptyTag();//
 
     IConfigValue<SpecifiedMenuAttachingConfig> specifiedMenuAttachability();
 }

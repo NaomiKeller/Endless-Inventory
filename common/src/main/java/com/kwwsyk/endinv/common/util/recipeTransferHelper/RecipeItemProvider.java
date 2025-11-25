@@ -1,6 +1,7 @@
 package com.kwwsyk.endinv.common.util.recipeTransferHelper;
 
 import net.minecraft.world.entity.player.StackedContents;
+import net.minecraft.world.entity.player.StackedItemContents;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
 
@@ -16,5 +17,7 @@ public interface RecipeItemProvider {
         stackSource.forEach(is->stackedContents.account(is,Integer.MAX_VALUE));
     }
 
-
+    static void fillStackedItemContents(List<ItemStack> stackSource, StackedItemContents stackedContents){
+        stackSource.forEach(is-> stackedContents.accountStack(is, Integer.MAX_VALUE));
+    }
 }

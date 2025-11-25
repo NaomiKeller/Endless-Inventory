@@ -279,15 +279,18 @@ public abstract class ItemPage extends DisplayPage {
         int slot = getSlotByMouseOffset(XOffset,YOffset);
         if(slot>=0 && slot<items.size()) {
             ItemStack clicked = items.get(slot).copy();
-            switch (clickType) {
-                case PICKUP -> handlePickup(clicked, button);
-                case QUICK_MOVE -> handleQuickMove(clicked);
-                case SWAP -> handleSwap(clicked, button);
-                case THROW -> handleThrow(clicked);
-                case PICKUP_ALL -> handlePickupAll(clicked);
-                case CLONE -> handleClone(clicked);
-                default -> {
-                }
+            if (clickType == ClickType.PICKUP) {
+                handlePickup(clicked, button);
+            } else if (clickType == ClickType.QUICK_MOVE) {
+                handleQuickMove(clicked);
+            } else if (clickType == ClickType.SWAP) {
+                handleSwap(clicked, button);
+            } else if (clickType == ClickType.THROW) {
+                handleThrow(clicked);
+            } else if (clickType == ClickType.PICKUP_ALL) {
+                handlePickupAll(clicked);
+            } else if (clickType == ClickType.CLONE) {
+                handleClone(clicked);
             }
             LOGGER.info("EI:sending:ItemClickPayload: player={} clickType={} button={} stack={}"
                     ,meta.getPlayer(),clickType,button, clicked);

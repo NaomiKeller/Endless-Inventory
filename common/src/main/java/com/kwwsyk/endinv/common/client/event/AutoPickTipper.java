@@ -83,15 +83,12 @@ public class AutoPickTipper {
 
     @SuppressWarnings("deprecation")
     private static int rarityColor(Rarity rarity){
-        switch (rarity){
-            case COMMON -> {
-                return 0x88ffffff;
-            }
-            default -> {
-                var color = rarity.color();
-                Integer rgb = color != null ? color.getColor() : null;
-                return rgb != null ? (0xff000000 | rgb) : 0x88ffffff;
-            }
+        if (rarity == Rarity.COMMON) {
+            return 0x88ffffff;
+        } else {
+            var color = rarity.color();
+            Integer rgb = color != null ? color.getColor() : null;
+            return rgb != null ? (0xff000000 | rgb) : 0x88ffffff;
         }
     }
 

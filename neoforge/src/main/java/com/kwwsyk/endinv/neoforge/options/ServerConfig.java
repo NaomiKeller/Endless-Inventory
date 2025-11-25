@@ -1,44 +1,75 @@
 package com.kwwsyk.endinv.neoforge.options;
 
-import com.kwwsyk.endinv.common.options.ContentTransferMode;
-import com.kwwsyk.endinv.common.options.IConfigValue;
-import com.kwwsyk.endinv.common.options.IServerConfig;
-import com.kwwsyk.endinv.common.options.MissingEndInvPolicy;
+import com.kwwsyk.endinv.common.options.*;
 import com.kwwsyk.endinv.common.util.Accessibility;
 import net.neoforged.neoforge.common.ModConfigSpec;
 import org.apache.commons.lang3.tuple.Pair;
+
+import java.util.function.Supplier;
+
+import static com.kwwsyk.endinv.common.options.ServerConfigs.*;
 
 public class ServerConfig {
 
     public static final ServerConfig CONFIG;
     public static final ModConfigSpec CONFIG_SPEC;
-    public final ModConfigSpec.IntValue MAX_STACK_SIZE;
-    public final ModConfigSpec.BooleanValue ENABLE_INFINITE;
-    public final ModConfigSpec.BooleanValue ENABLE_AUTO_PICK;
-    public final ModConfigSpec.EnumValue<ContentTransferMode> TRANSFER_MODE;
-    public final ModConfigSpec.EnumValue<Accessibility> DEFAULT_ACCESSIBILITY;
-    public final ModConfigSpec.EnumValue<MissingEndInvPolicy> CREATION_MODE;
-    public final ModConfigSpec.BooleanValue CONVERT_EMPTY_TAG;
+
+    //public final ModConfigSpec.ListValueSpec SMC;
 
     private ServerConfig(ModConfigSpec.Builder builder){
-        MAX_STACK_SIZE = builder
-                .translation("config.endinv.comment.max_stack_size")
-                .defineInRange("ItemCapacity.maxStackSize",Integer.MAX_VALUE,0,Integer.MAX_VALUE);
-        ENABLE_INFINITE = builder
-                .translation("config.endinv.comment.enable_infinite1")
-                .define("ItemCapacity.enableInfinite",false);
-        ENABLE_AUTO_PICK = builder
-                .comment("Will enable player to auto pick item and exp")
-                .define("autoPickUtility",false);
-        TRANSFER_MODE = builder
-                .defineEnum("TransferMode",ContentTransferMode.ALL);
-        DEFAULT_ACCESSIBILITY = builder
-                .defineEnum("defaultAccessibility",Accessibility.PUBLIC);
-        CREATION_MODE = builder
-                .defineEnum("creationMode",MissingEndInvPolicy.CREATE_PER_PLAYER);
-        CONVERT_EMPTY_TAG = builder
-                .comment("Convert itemstack with empty tag {} to null tag, for the bugs that item cannot be taken/stacked.")
-                .define("convert_empty_tag",true);
+        ServerConfigs.getForgeConfigEntries().forEach(cfg->{
+            cfg.initializeSaver(() -> CONFIG_SPEC.save());//don't change it to method reference; else NPE thrown
+            recursiveBuild(builder,cfg);
+        });
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <T, E extends Enum<E>> void recursiveBuild(ModConfigSpec.Builder builder, ConfigEntryImpl<T> cfg){
+        switch (cfg){
+            case ConfigEntryImpl.BooleanEntry booleanEntry -> {
+                var configValue = builder.comment(booleanEntry.comments()).define(booleanEntry.key(), booleanEntry.defaultValue());
+                booleanEntry.initialize(configValue,configValue::set);
+            }
+            case ConfigEntryImpl.IntEntry intEntry -> {
+                var cv = builder.comment(intEntry.comments()).defineInRange(intEntry.key(), intEntry.defaultValue(), intEntry.getMin(), intEntry.getMax());
+                intEntry.initialize(cv,cv::set);
+            }
+            case ConfigEntryImpl.StringEntry stringEntry -> {
+                var cv = builder.comment(stringEntry.comments()).define(stringEntry.key(), stringEntry.defaultValue());
+                stringEntry.initialize(cv,cv::set);
+            }
+            case ConfigEntryImpl.DoubleEntry doubleEntry -> {
+                var cv = builder.comment(doubleEntry.comments()).defineInRange(doubleEntry.key(), doubleEntry.defaultValue(), doubleEntry.getMin(), doubleEntry.getMax());
+                doubleEntry.initialize(cv,cv::set);
+            }
+            case ConfigEntryImpl.EnumEntry<?> enumEntry -> {//how to deal with the recursive typed param: E extends Enum<E extends Enum<E...>>? /*HERE the (E) transformation is necessary, else compile errors, but IDEA doesn't*/I finally tried wip out Types
+                ModConfigSpec.ConfigValue<T> cv = (ModConfigSpec.ConfigValue<T>) builder.comment(enumEntry.comments()).defineEnum(enumEntry.key(),(E)enumEntry.defaultValue());
+                cfg.initialize(cv, cv::set);
+            }
+            case ConfigEntryImpl.ListEntry<?> listEntry -> {
+                var cv = builder.comment(listEntry.comments()).defineListAllowEmpty(listEntry.key(),listEntry.defaultValue(),(Supplier)listEntry.getNewValSupplier(),listEntry.getNewValPredicate());
+                listEntry.initialize(cv, cv::set);
+            }
+            case ConfigEntryImpl.FloatEntry floatEntry -> {
+                var cv = builder.comment(floatEntry.comments()).defineInRange(floatEntry.key(), floatEntry.defaultValue(), floatEntry.getMin(), floatEntry.getMax());
+                floatEntry.initialize(()-> cv.get().floatValue(), f -> cv.set((double) f));
+            }
+            case ConfigEntryImpl.LongEntry longEntry -> {
+                var cv = builder.comment(longEntry.comments()).defineInRange(longEntry.key(), longEntry.defaultValue(), longEntry.getMin(), longEntry.getMax());
+                longEntry.initialize(cv,cv::set);
+            }
+            case ComplexConfigEntryImpl<?> complexEntry -> {
+                builder.push(complexEntry.key());
+                builder.comment(complexEntry.comments());
+                builder.comment("");
+                for(ConfigEntryImpl<?> field : complexEntry.fields()) recursiveBuild(builder,field);
+                builder.pop();
+            }
+            default -> {
+                ModConfigSpec.ConfigValue<T> cv = builder.comment(cfg.comments()).define(cfg.key(), cfg.defaultValue());//good luck to you
+                cfg.initialize(cv, cv::set);
+            }
+        }
     }
 
     static {
@@ -59,17 +90,17 @@ public class ServerConfig {
 
         @Override
         public IConfigValue<Integer> getMaxAllowedStackSize() {
-            return convert(MAX_STACK_SIZE);
+            return ENDINV_BEHAVIOR.MaxStackSize;
         }
 
         @Override
         public IConfigValue<Boolean> allowInfinityMode() {
-            return convert(ENABLE_INFINITE);
+            return ENDINV_BEHAVIOR.EnableInfinity;
         }
 
         @Override
         public IConfigValue<Boolean> enableAutoPick() {
-            return convert(ENABLE_AUTO_PICK);
+            return ENABLE_AUTOPICK;
         }
 
         @Override
@@ -89,33 +120,33 @@ public class ServerConfig {
         @Override
         public IConfigValue<Boolean> enableAttaching() {
             // NeoForge config: default to true; can be expanded later
-            return IConfigValue.of(() -> true, v -> {});
+            return DEFAULT_ATTACH;
         }
 
         @Override
         public IConfigValue<ContentTransferMode> transferMode() {
-            return IConfigValue.of(TRANSFER_MODE,TRANSFER_MODE::set);
+            return ENDINV_BEHAVIOR.TransferMode;
         }
 
         @Override
         public IConfigValue<Accessibility> defaultAccessibility() {
-            return IConfigValue.of(DEFAULT_ACCESSIBILITY,DEFAULT_ACCESSIBILITY::set);
+            return ENDINV_BEHAVIOR.Access;
         }
 
         @Override
-        public IConfigValue<MissingEndInvPolicy> policyHandlingMissing() {
-            return IConfigValue.of(CREATION_MODE,CREATION_MODE::set);
+        public IConfigValue<CreationEndinvStrategy> policyHandlingMissing() {
+            return CREATION_MODE;
         }
 
-        @Override
+        @Override@Deprecated
         public IConfigValue<Boolean> doConvertEmptyTag() {
-            return convert(CONFIG.CONVERT_EMPTY_TAG);
+            return null;
         }
 
         @Override
-        public IConfigValue<com.kwwsyk.endinv.common.options.SpecifiedMenuAttachingConfig> specifiedMenuAttachability() {
+        public IConfigValue<SpecifiedMenuAttachingConfig> specifiedMenuAttachability() {
             // NeoForge: default empty config
-            return IConfigValue.of(() -> com.kwwsyk.endinv.common.options.SpecifiedMenuAttachingConfig.DEFAULT, v -> {});
+            return SPECIFIED_ATTACHABILITY;
         }
     };
 }
