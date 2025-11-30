@@ -1,12 +1,7 @@
 package com.kwwsyk.endinv.forge.events;
 
 import com.kwwsyk.endinv.common.ModInfo;
-import com.kwwsyk.endinv.common.ModRegistries;
-import com.kwwsyk.endinv.common.ServerLevelEndInv;
-import com.kwwsyk.endinv.common.network.payloads.toClient.EndInvContent;
-import com.kwwsyk.endinv.common.network.payloads.toClient.EndInvMetadata;
-import com.kwwsyk.endinv.common.options.ContentTransferMode;
-import com.kwwsyk.endinv.forge.ServerConfig;
+import com.kwwsyk.endinv.common.event.PlayerEventHelper;
 import com.kwwsyk.endinv.forge.nbtAttcachment.AttachingCapabilities;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
@@ -23,23 +18,7 @@ public class PlayerEvents {
     public static void tick(TickEvent.PlayerTickEvent event){
         if(event.phase == TickEvent.Phase.END && event.player instanceof ServerPlayer serverPlayer){
             if(tickRefresh) {
-                ModInfo.getPacketDistributor().sendToPlayer(serverPlayer, ModRegistries.NbtAttachments.getSyncedConfig().getWith(serverPlayer));
-                // Send effective menu attachability
-                var serverCfg = ModInfo.getServerConfig();
-                var menuCfg = serverCfg.specifiedMenuAttachability().get();
-                boolean defaultAttach = serverCfg.enableAttaching().get();
-                ModInfo.getPacketDistributor().sendToPlayer(serverPlayer,
-                        new com.kwwsyk.endinv.common.network.payloads.toClient.MenuAttachabilityPayload(
-                                defaultAttach,
-                                menuCfg.isInventoryAttachable(),
-                                menuCfg.getConfigs()
-                        ));
-                if(ServerConfig.CONFIG.TRANSFER_MODE.get()== ContentTransferMode.ALL){
-                    ServerLevelEndInv.getEndInvForPlayer(serverPlayer).ifPresent(endInv -> {
-                        ModInfo.getPacketDistributor().sendToPlayer(serverPlayer,new EndInvContent(endInv.getItemMap()));
-                        ModInfo.getPacketDistributor().sendToPlayer(serverPlayer,EndInvMetadata.getWith(endInv));
-                    });
-                }
+                PlayerEventHelper.sendData(serverPlayer);
                 tickRefresh = false ;
             }
         }

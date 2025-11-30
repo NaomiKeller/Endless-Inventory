@@ -34,7 +34,6 @@ public class AttachingMonitor implements PageMetaDataManager{
     private final ServerPlayer player;
     //client for page switch
     private final List<String> PageIdList;
-    private final List<PageType> pageTypeList;
     private String DisplayingPageId;
     private int displayingPageIndex;
     private final PageQuickMoveHandler quickMoveHandler;
@@ -48,8 +47,7 @@ public class AttachingMonitor implements PageMetaDataManager{
         this.menu = menu;
         this.endinv = endinv;
         this.player = player;
-        pageTypeList = PageTypeRegistry.getDisplayPages();
-        PageIdList = pageTypeList.stream().map(tp->tp.registerName).toList();
+        PageIdList = PageTypeRegistry.getIdList();
         this.rows = 9;
         this.columns = 9;
         this.sortType = SortType.DEFAULT;
@@ -197,7 +195,7 @@ public class AttachingMonitor implements PageMetaDataManager{
 
     @Override
     public PageType getDisplayingPageType() {
-        return pageTypeList.get(displayingPageIndex);
+        return PageTypeRegistry.byId(DisplayingPageId);
     }
 }
 

@@ -172,9 +172,7 @@ public class ModInitializer extends AbstractModInitializer {
         );
         return new NbtAttachment<>() {
             @Override
-            @Nullable
             public SyncedConfig getWith(Player player) {
-                if (!player.hasData(SYNCED_CONFIG)) return null;
                 return player.getData(SYNCED_CONFIG);
             }
 

@@ -29,6 +29,10 @@ __branch 1.21.1__
 ### Links
 - Pending bootstrap PR.
 
+## 12.1 1.1.0.4
+Neoforge and forge: Fixed player next joining the game crashes when opening EndInv.
+- In fact, the problem is that only the first player joined the server can receive the init data packet in @PlayerEvent.
+
 ## 11.21 1.1.0.3
 
 ### 1.1.0.3 of 1.21.1 forge
