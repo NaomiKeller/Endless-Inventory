@@ -2,8 +2,9 @@ package com.kwwsyk.endinv.common.options;
 
 import com.kwwsyk.endinv.common.ModInfo;
 import com.kwwsyk.endinv.common.network.payloads.SyncedConfig;
+import com.kwwsyk.endinv.common.options.config.IConfigValue;
 import com.kwwsyk.endinv.common.util.Accessibility;
-
+@Deprecated
 public interface IServerConfig {
 
     IConfigValue<Integer> getMaxAllowedStackSize();//

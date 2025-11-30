@@ -5,10 +5,7 @@ import com.kwwsyk.endinv.common.SourceInventory;
 import com.kwwsyk.endinv.common.client.CachedSrcInv;
 import com.kwwsyk.endinv.common.client.ClientModInfo;
 import com.kwwsyk.endinv.common.client.KeyMappings;
-import com.kwwsyk.endinv.common.client.gui.bg.FromResource;
-import com.kwwsyk.endinv.common.client.gui.bg.SFBgRenderer;
-import com.kwwsyk.endinv.common.client.gui.bg.ScreenRectangleWidgetParam;
-import com.kwwsyk.endinv.common.client.gui.bg.Transparent;
+import com.kwwsyk.endinv.common.client.gui.bg.*;
 import com.kwwsyk.endinv.common.client.gui.page.DisplayPage;
 import com.kwwsyk.endinv.common.client.gui.page.ItemPage;
 import com.kwwsyk.endinv.common.client.gui.page.manager.PageManager;
@@ -53,10 +50,10 @@ public class ScreenFramework implements PageManager{
     public final AbstractContainerScreen<?> screen;
     public final AbstractContainerMenu menu;
 
-    private ScreenRectangleWidgetParam searchBoxParam;
-    private ScreenRectangleWidgetParam sortBoxParam;
-    private ScreenRectangleWidgetParam configButtonParam;
-    private ScreenRectangleWidgetParam pageBarScrollUpButtonParam, pageBarScrollDownButtonParam;
+    private IRectangleParam searchBoxParam;
+    private IRectangleParam sortBoxParam;
+    private IRectangleParam configButtonParam;
+    private IRectangleParam pageBarScrollUpButtonParam, pageBarScrollDownButtonParam;
     public SFBgRenderer SFBgRenderer;
     public final int pageBarCount;
     public int firstPageIndex = 0;

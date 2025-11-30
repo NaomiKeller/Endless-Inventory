@@ -4,7 +4,7 @@ import com.kwwsyk.endinv.common.ModInfo;
 import com.kwwsyk.endinv.common.ModRegistries;
 import com.kwwsyk.endinv.common.ServerLevelEndInv;
 import com.kwwsyk.endinv.common.network.payloads.toClient.ItemPickedUpPayload;
-import com.kwwsyk.endinv.fabric.ServerConfig;
+import com.kwwsyk.endinv.common.options.ServerConfigs;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.item.ItemEntity;
@@ -21,7 +21,7 @@ public abstract class ItemEntityPickupMixin {
     @Inject(method = "playerTouch", at = @At("HEAD"))
     private void endlessinv$autopick(Player player, CallbackInfo ci) {
         if (!(player instanceof ServerPlayer serverPlayer)) return;
-        if (!ServerConfig.INSTANCE.enableAutoPick().get()) return;
+        if (!ServerConfigs.ENABLE_AUTOPICK.get()) return;
         if (!isPlayerEnabledAutoPick(serverPlayer)) return;
 
         ItemEntity self = (ItemEntity) (Object) this;

@@ -1,4 +1,4 @@
-package com.kwwsyk.endinv.common.options;
+package com.kwwsyk.endinv.common.options.config;
 
 public interface AutoSavable<T> extends IConfigValue<T>{
 
@@ -6,11 +6,11 @@ public interface AutoSavable<T> extends IConfigValue<T>{
 
     /**@implNote should invoke {@link #save()}
      * <pre>
-     *     e.g.
-     *     set(T t){
-     *         **original set func**
-     *         save(); //invoke save()
-     *     }
+     * e.g.,
+     * set(T t){
+     *     **original set func**
+     *     save(); //invoke save()
+     * }
      * </pre>
      */
     void set(T t);

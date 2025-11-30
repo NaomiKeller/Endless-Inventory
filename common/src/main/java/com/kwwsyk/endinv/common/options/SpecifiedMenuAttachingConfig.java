@@ -1,6 +1,8 @@
 package com.kwwsyk.endinv.common.options;
 
 import com.kwwsyk.endinv.common.ModInfo;
+import com.kwwsyk.endinv.common.options.config.ComplexConfigEntryImpl;
+import com.kwwsyk.endinv.common.options.config.ConfigEntryImpl;
 import com.mojang.logging.LogUtils;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
@@ -263,7 +265,7 @@ public class SpecifiedMenuAttachingConfig{
         }
     }
 
-    public static class Entry extends ComplexConfigEntryImpl<SpecifiedMenuAttachingConfig>{
+    public static class Entry extends ComplexConfigEntryImpl<SpecifiedMenuAttachingConfig> {
 
         public static final String[] COMMENTS = Parser.configComments;
         public static final Entry INSTANCE = new Entry("specifiedMenuAttachability",new String[]{},SpecifiedMenuAttachingConfig.DEFAULT);

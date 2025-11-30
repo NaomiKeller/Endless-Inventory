@@ -1,6 +1,6 @@
 package com.kwwsyk.endinv.fabric.mixin;
 
-import com.kwwsyk.endinv.fabric.ServerConfig;
+import com.kwwsyk.endinv.common.options.ServerConfigs;
 import com.kwwsyk.endinv.fabric.event.MobDeathRedirect;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
@@ -18,7 +18,7 @@ public abstract class LivingEntityDropMixin {
         if (source == null) return;
         var attacker = source.getEntity();
         if (attacker instanceof ServerPlayer sp) {
-            if (ServerConfig.INSTANCE.enableAutoPick().get()) {
+            if (ServerConfigs.ENABLE_AUTOPICK.get()) {
                 MobDeathRedirect.set(sp);
             }
         }

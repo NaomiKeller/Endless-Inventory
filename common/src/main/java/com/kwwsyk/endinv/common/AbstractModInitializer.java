@@ -6,7 +6,6 @@ import com.kwwsyk.endinv.common.menu.EndlessInventoryMenu;
 import com.kwwsyk.endinv.common.menu.page.PageType;
 import com.kwwsyk.endinv.common.network.IPacketDistributor;
 import com.kwwsyk.endinv.common.network.payloads.SyncedConfig;
-import com.kwwsyk.endinv.common.options.IServerConfig;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
@@ -59,7 +58,7 @@ public abstract class AbstractModInitializer {
 
     protected abstract IPacketDistributor loadPacketDistributor();
 
-    protected abstract IServerConfig loadServerConfig();
+    protected abstract void loadServerConfig();
 
     protected abstract RegistryCallback<Item> itemReg();
 

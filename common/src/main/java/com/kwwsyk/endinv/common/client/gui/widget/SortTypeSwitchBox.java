@@ -1,7 +1,7 @@
 package com.kwwsyk.endinv.common.client.gui.widget;
 
 import com.kwwsyk.endinv.common.client.gui.ScreenFramework;
-import com.kwwsyk.endinv.common.client.gui.bg.ScreenRectangleWidgetParam;
+import com.kwwsyk.endinv.common.client.gui.bg.IRectangleParam;
 import com.kwwsyk.endinv.common.client.gui.page.manager.PageManager;
 import com.kwwsyk.endinv.common.client.option.CachedConfig;
 import com.kwwsyk.endinv.common.util.SortType;
@@ -28,7 +28,7 @@ public class SortTypeSwitchBox extends AbstractWidget {
         this.singleBoxHeight = height;
     }
 
-    public SortTypeSwitchBox(ScreenFramework screen, PageManager pageManager, ScreenRectangleWidgetParam sortTypeSwitchBoxParam){
+    public SortTypeSwitchBox(ScreenFramework screen, PageManager pageManager, IRectangleParam sortTypeSwitchBoxParam){
         this(screen,
                 pageManager,
                 sortTypeSwitchBoxParam.XPos(),

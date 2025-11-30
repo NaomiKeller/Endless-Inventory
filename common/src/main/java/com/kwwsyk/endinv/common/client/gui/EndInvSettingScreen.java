@@ -1,6 +1,6 @@
 package com.kwwsyk.endinv.common.client.gui;
 
-import com.kwwsyk.endinv.common.options.IConfigValue;
+import com.kwwsyk.endinv.common.options.config.IConfigValue;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.Util;
 import net.minecraft.client.gui.Font;

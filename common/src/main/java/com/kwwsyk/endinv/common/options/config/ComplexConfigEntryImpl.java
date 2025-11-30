@@ -1,6 +1,6 @@
-package com.kwwsyk.endinv.common.options;
+package com.kwwsyk.endinv.common.options.config;
 
-public abstract non-sealed class ComplexConfigEntryImpl<C> extends ConfigEntryImpl<C> implements IConfigEntry.Complex<C>{
+public abstract non-sealed class ComplexConfigEntryImpl<C> extends ConfigEntryImpl<C> implements IConfigValue<C>, AutoSavable<C> {
 
     public ComplexConfigEntryImpl(String key, String[] comments, C defaultValue) {
         super(key, comments, defaultValue);
@@ -25,4 +25,6 @@ public abstract non-sealed class ComplexConfigEntryImpl<C> extends ConfigEntryIm
     public void setInitialized() {
         isInitialized = true;
     }
+
+    public abstract ConfigEntryImpl<?>[] fields();
 }

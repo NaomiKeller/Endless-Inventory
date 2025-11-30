@@ -1,5 +1,7 @@
 package com.kwwsyk.endinv.common.options;
 
+import com.kwwsyk.endinv.common.options.config.ComplexConfigEntryImpl;
+import com.kwwsyk.endinv.common.options.config.ConfigEntryImpl;
 import com.kwwsyk.endinv.common.util.Accessibility;
 
 /**Config for default behaviors of an Endless Inventory
@@ -7,7 +9,7 @@ import com.kwwsyk.endinv.common.util.Accessibility;
  * Use via {code Behavior.Field.get()/set()}<br>
  * It's unrecommended to use {@link #get()} or {@link #set(Present)} directly.
  */
-public class DefaultEndinvBehavior extends ComplexConfigEntryImpl<DefaultEndinvBehavior.Present>{
+public class DefaultEndinvBehavior extends ComplexConfigEntryImpl<DefaultEndinvBehavior.Present> {
 
     private static final String COMMENT_INFINITY = "when item count reaches max stack count, this item will be served as infinity";
     private static final String[] COMMENT_TRANSFERMODE = new String[]{"Controls how server Endless Inventory transfer contents to client",

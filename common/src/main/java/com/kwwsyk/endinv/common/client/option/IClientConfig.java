@@ -1,6 +1,6 @@
 package com.kwwsyk.endinv.common.client.option;
 
-import com.kwwsyk.endinv.common.options.IConfigValue;
+import com.kwwsyk.endinv.common.options.config.IConfigValue;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 

@@ -3,7 +3,7 @@ package com.kwwsyk.endinv.neoforge.client.config;
 import com.kwwsyk.endinv.common.client.option.IClientConfig;
 import com.kwwsyk.endinv.common.client.option.TextureMode;
 import com.kwwsyk.endinv.common.menu.page.PageTypeRegistry;
-import com.kwwsyk.endinv.common.options.IConfigValue;
+import com.kwwsyk.endinv.common.options.config.IConfigValue;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.neoforged.neoforge.common.ModConfigSpec;

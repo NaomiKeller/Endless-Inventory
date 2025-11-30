@@ -4,7 +4,7 @@ import com.google.gson.*;
 import com.kwwsyk.endinv.common.client.option.IClientConfig;
 import com.kwwsyk.endinv.common.client.option.TextureMode;
 import com.kwwsyk.endinv.common.menu.page.PageType;
-import com.kwwsyk.endinv.common.options.IConfigValue;
+import com.kwwsyk.endinv.common.options.config.IConfigValue;
 import com.kwwsyk.endinv.common.util.SortType;
 import net.fabricmc.loader.api.FabricLoader;
 import org.slf4j.Logger;

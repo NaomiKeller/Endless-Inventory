@@ -1,9 +1,17 @@
 package com.kwwsyk.endinv.common.options;
 
+import com.kwwsyk.endinv.common.options.config.ConfigEntryImpl;
+import com.kwwsyk.endinv.common.options.config.IConfigValue;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public final class ServerConfigs {
+
+    /// Implementations:
+    /// @see com.kwwsyk.endinv.neoforge.options.ServerConfig
+    /// @see com.kwwsyk.endinv.forge.ServerConfig
+    /// @see com.kwwsyk.endinv.fabric.ModInit
 
     private ServerConfigs(){}
 
@@ -23,13 +31,13 @@ public final class ServerConfigs {
         return configEntry;
     }
 
-    public static List<ConfigEntryImpl<?>> getForgeConfigEntries(){
+    public static List<ConfigEntryImpl<?>> getConfigs(){
         return forgeConfigEntries;
     }
 
-    public static final IConfigEntry<CreationEndinvStrategy> CREATION_MODE = register(new ConfigEntryImpl.EnumEntry<>("EndinvCreationMode", CMT_CREATION_MODE, CreationEndinvStrategy.CREATE_PER_PLAYER));
-    public static final IConfigEntry<Boolean> DEFAULT_ATTACH = register(new ConfigEntryImpl.BooleanEntry("DefaultAttach", new String[]{"Whether the endless inventory's display pages view is attached by default"}, true));
+    public static final ConfigEntryImpl<CreationEndinvStrategy> CREATION_MODE = register(new ConfigEntryImpl.EnumEntry<>("EndinvCreationMode", CMT_CREATION_MODE, CreationEndinvStrategy.CREATE_PER_PLAYER));
+    public static final ConfigEntryImpl<Boolean> DEFAULT_ATTACH = register(new ConfigEntryImpl.BooleanEntry("DefaultAttach", new String[]{"Whether the endless inventory's display pages view is attached by default"}, true));
     public static final DefaultEndinvBehavior ENDINV_BEHAVIOR = register(DefaultEndinvBehavior.INSTANCE);
     public static final SpecifiedMenuAttachingConfig.Entry SPECIFIED_ATTACHABILITY = register(SpecifiedMenuAttachingConfig.Entry.INSTANCE);
-    public static final IConfigEntry<Boolean> ENABLE_AUTOPICK = register(new ConfigEntryImpl.BooleanEntry("EnableAutoPick", new String[]{"Whether the endless inventory will auto pick up items when they are dropped"}, true));
+    public static final ConfigEntryImpl<Boolean> ENABLE_AUTOPICK = register(new ConfigEntryImpl.BooleanEntry("EnableAutoPick", new String[]{"Whether the endless inventory will auto pick up items when they are dropped"}, true));
 }

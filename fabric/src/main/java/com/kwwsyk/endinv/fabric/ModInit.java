@@ -7,7 +7,8 @@ import com.kwwsyk.endinv.common.NbtAttachment;
 import com.kwwsyk.endinv.common.menu.EndlessInventoryMenu;
 import com.kwwsyk.endinv.common.network.IPacketDistributor;
 import com.kwwsyk.endinv.common.network.payloads.SyncedConfig;
-import com.kwwsyk.endinv.common.options.IServerConfig;
+import com.kwwsyk.endinv.common.options.ServerConfigs;
+import com.kwwsyk.endinv.common.options.config.json.JsonConfigurationHandler;
 import com.kwwsyk.endinv.fabric.event.FabricEvents;
 import com.kwwsyk.endinv.fabric.integrates.clothconfig.ClothConfigIntegration;
 import com.kwwsyk.endinv.fabric.nbtAttachment.FabricNbtStorage;
@@ -58,20 +59,20 @@ public class ModInit extends AbstractModInitializer implements ModInitializer {
     }
 
     @Override
-    protected IServerConfig loadServerConfig() {
-        return ServerConfig.INSTANCE;
+    protected void loadServerConfig() {
+        new JsonConfigurationHandler(FabricLoader.getInstance().getConfigDir().resolve("endless_inventory-server.json"), ServerConfigs.getConfigs())
+                .load();
     }
 
     @Override
     protected RegistryCallback<Item> itemReg() {
         return new RegistryCallback<>() {
             @Override
-            @SuppressWarnings("unchecked")
             public <R extends Item> Supplier<R> register(String id, Supplier<R> supplier) {
                 ResourceLocation location = withModLocation(id);
                 R item = supplier.get();
-                Item registered = net.minecraft.core.Registry.register(BuiltInRegistries.ITEM, location, item);
-                return () -> (R) registered;
+                R registered = net.minecraft.core.Registry.register(BuiltInRegistries.ITEM, location, item);
+                return () -> registered;
             }
         };
     }
@@ -95,7 +96,7 @@ public class ModInit extends AbstractModInitializer implements ModInitializer {
         return () -> {
             @SuppressWarnings({"rawtypes", "unchecked"})
             net.minecraft.world.inventory.MenuType raw = new net.minecraft.world.inventory.MenuType(
-                    (net.minecraft.world.inventory.MenuType.MenuSupplier) (net.minecraft.world.inventory.MenuType.MenuSupplier) (id, inventory) -> {
+                    (id, inventory) -> {
                         try {
                             Class<?> cls = Class.forName("com.kwwsyk.endinv.common.menu.EndlessInventoryMenu");
                             java.lang.reflect.Method m = cls.getMethod("createClient", int.class, net.minecraft.world.entity.player.Inventory.class);

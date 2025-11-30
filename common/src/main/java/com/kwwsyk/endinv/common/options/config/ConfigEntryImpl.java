@@ -1,4 +1,4 @@
-package com.kwwsyk.endinv.common.options;
+package com.kwwsyk.endinv.common.options.config;
 
 import com.mojang.logging.LogUtils;
 import org.slf4j.Logger;
@@ -9,7 +9,7 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
-public sealed abstract class ConfigEntryImpl<T> implements IConfigEntry<T>
+public sealed abstract class ConfigEntryImpl<T> implements AutoSavable<T>, IConfigValue<T>
         permits ComplexConfigEntryImpl, ConfigEntryImpl.BooleanEntry, ConfigEntryImpl.EnumEntry, ConfigEntryImpl.ListEntry, ConfigEntryImpl.RangedEntry, ConfigEntryImpl.StringEntry
 {
 
@@ -17,7 +17,7 @@ public sealed abstract class ConfigEntryImpl<T> implements IConfigEntry<T>
     public boolean checkInitializationStrict = false;
 
     protected final String key;
-    protected final String[] comments;
+    protected final Supplier<String[]> comments;
     protected final T defaultValue;
 
     private Supplier<T> getter;
@@ -28,7 +28,7 @@ public sealed abstract class ConfigEntryImpl<T> implements IConfigEntry<T>
 
     public ConfigEntryImpl(String key, String[] comments, T defaultValue, Supplier<T> getter, Consumer<T> setter){
         this.key = key;
-        this.comments = comments;
+        this.comments = new LocaleComments(comments);
         this.defaultValue = defaultValue;
         this.getter = getter;
         this.setter = setter;
@@ -37,7 +37,7 @@ public sealed abstract class ConfigEntryImpl<T> implements IConfigEntry<T>
 
     public ConfigEntryImpl(String key, String[] comments, T defaultValue){
         this.key = key;
-        this.comments = comments;
+        this.comments = new LocaleComments(comments);
         this.defaultValue = defaultValue;
     }
 
@@ -50,7 +50,7 @@ public sealed abstract class ConfigEntryImpl<T> implements IConfigEntry<T>
         isInitialized = true;
     }
 
-    public void initializeSaver(Runnable saver){
+    public void setSaver(Runnable saver){
         this.saver = saver;
     }
 
@@ -63,17 +63,14 @@ public sealed abstract class ConfigEntryImpl<T> implements IConfigEntry<T>
         }
     }
 
-    @Override
     public String key() {
         return key;
     }
 
-    @Override
     public String[] comments() {
-        return comments;
+        return comments.get();
     }
 
-    @Override
     public T defaultValue() {
         return defaultValue;
     }
@@ -95,18 +92,17 @@ public sealed abstract class ConfigEntryImpl<T> implements IConfigEntry<T>
         save();
     }
 
-    @Override
     public boolean isInitialized() {
         return isInitialized;
     }
 
-    public static final class BooleanEntry extends ConfigEntryImpl<Boolean>{
+    public static final class BooleanEntry extends ConfigEntryImpl<Boolean> implements IConfigValue<Boolean>, AutoSavable<Boolean> {
         public BooleanEntry(String key, String[] comments, boolean defaultValue){
             super(key,comments,defaultValue);
         }
     }
 
-    public static abstract sealed class RangedEntry<N extends Comparable<? super N>> extends ConfigEntryImpl<N>{
+    public static abstract sealed class RangedEntry<N extends Comparable<? super N>> extends ConfigEntryImpl<N> implements IConfigValue<N>, AutoSavable<N> {
         private final N min;
         private final N max;
 
@@ -122,7 +118,6 @@ public sealed abstract class ConfigEntryImpl<T> implements IConfigEntry<T>
         public N getMax(){
             return max;
         }
-
     }
 
     public static final class IntEntry extends RangedEntry<Integer>{
@@ -135,7 +130,7 @@ public sealed abstract class ConfigEntryImpl<T> implements IConfigEntry<T>
         }
     }
 
-    public static final class StringEntry extends ConfigEntryImpl<String>{
+    public static final class StringEntry extends ConfigEntryImpl<String> implements IConfigValue<String>, AutoSavable<String> {
         public StringEntry(String key, String[] comments, String defaultValue){
             super(key,comments,defaultValue);
         }
@@ -151,12 +146,11 @@ public sealed abstract class ConfigEntryImpl<T> implements IConfigEntry<T>
         }
     }
 
-    public static final class EnumEntry<E extends Enum<E>> extends ConfigEntryImpl<E>{
+    public static final class EnumEntry<E extends Enum<E>> extends ConfigEntryImpl<E> implements IConfigValue<E>, AutoSavable<E> {
         public EnumEntry(String key, String[] comments, E defaultValue){
             super(key,comments,defaultValue);
         }
 
-        @Override
         public void initialize(Supplier<E> getter, Consumer<? super E> setter) {
             super.initialize(getter, setter);
         }
@@ -166,9 +160,10 @@ public sealed abstract class ConfigEntryImpl<T> implements IConfigEntry<T>
             initialize((Supplier<E>) getter, setter);
         }
     }
-    public static final class ListEntry<E> extends ConfigEntryImpl<List<E>>{
+    public static final class ListEntry<E> extends ConfigEntryImpl<List<E>> implements IConfigValue<List<E>>, AutoSavable<List<E>> {
         private Supplier<? extends E> newValSupplier = null;
         private Predicate<Object> newValPredicate = o -> true;
+        private int minLen = 0,maxLen = Integer.MAX_VALUE;
 
         public ListEntry(String key, String[] comments, List<E> defaultValue){
             super(key,comments,defaultValue);
@@ -187,6 +182,23 @@ public sealed abstract class ConfigEntryImpl<T> implements IConfigEntry<T>
 
         public Predicate<Object> getNewValPredicate() {
             return newValPredicate;
+        }
+
+        public int getMinLen() {
+            return minLen;
+        }
+
+        public int getMaxLen() {
+            return maxLen;
+        }
+
+        public ListEntry<E> setRange(int minLen, int maxLen) {
+            if(minLen > maxLen || minLen < 0){
+                throw new IllegalArgumentException("minLen must be less than maxLen and greater than 0");
+            }
+            this.minLen = minLen;
+            this.maxLen = maxLen;
+            return this;
         }
     }
     public static final class FloatEntry extends RangedEntry<Float>{
