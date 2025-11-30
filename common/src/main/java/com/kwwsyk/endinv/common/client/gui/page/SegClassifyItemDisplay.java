@@ -4,12 +4,10 @@ import com.kwwsyk.endinv.common.client.CachedSrcInv;
 import com.kwwsyk.endinv.common.client.gui.page.manager.PageManager;
 import com.kwwsyk.endinv.common.client.option.CachedConfig;
 import com.kwwsyk.endinv.common.menu.page.PageType;
-import com.kwwsyk.endinv.common.network.payloads.toServer.ItemClickPayload;
 import com.mojang.logging.LogUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.util.Mth;
-import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import org.jetbrains.annotations.NotNull;
@@ -18,8 +16,6 @@ import org.slf4j.Logger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
-
-import static com.kwwsyk.endinv.common.ModInfo.getPacketDistributor;
 
 /**
  * Item display page that groups entries into segments defined by sub classifications.
@@ -117,35 +113,6 @@ public class SegClassifyItemDisplay extends ItemDisplay {
             }
         }
         guiGraphics.pose().popPose();
-    }
-
-    @Override
-    public void pageClicked(double XOffset, double YOffset, int button, ClickType clickType) {
-        int slot = getSlotByMouseOffset(XOffset, YOffset);
-        if (slot < 0 || slot >= items.size()) {
-            return;
-        }
-        int viewIndex = startIndex + slot;
-        ItemStack clicked = viewIndex < segmentedView.size() ? segmentedView.get(viewIndex).copy() : ItemStack.EMPTY;
-        if (clicked.isEmpty()) {
-            return;
-        }
-        switch (clickType) {
-            case PICKUP -> handlePickup(clicked, button);
-            case QUICK_MOVE -> handleQuickMove(clicked);
-            case SWAP -> handleSwap(clicked, button);
-            case THROW -> handleThrow(clicked);
-            case PICKUP_ALL -> handlePickupAll(clicked);
-            case CLONE -> handleClone(clicked);
-            default -> {
-            }
-        }
-        LOGGER.info("EI:sending:ItemClickPayload: player={} clickType={} button={} stack={}",
-                meta.getPlayer(), clickType, button, clicked);
-        getPacketDistributor().sendToServer(new ItemClickPayload(
-                clicked.getCount() > 64 ? clicked.copyWithCount(64) : clicked.copy(),
-                button, clickType));
-        this.refreshItems();
     }
 
     @Override

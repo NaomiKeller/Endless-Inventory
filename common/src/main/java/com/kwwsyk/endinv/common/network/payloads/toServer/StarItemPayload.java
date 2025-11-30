@@ -1,8 +1,10 @@
 package com.kwwsyk.endinv.common.network.payloads.toServer;
 
+import com.kwwsyk.endinv.common.ModInfo;
 import com.kwwsyk.endinv.common.ServerLevelEndInv;
 import com.kwwsyk.endinv.common.network.payloads.ModPacketContext;
 import com.kwwsyk.endinv.common.network.payloads.ModPacketPayload;
+import com.kwwsyk.endinv.common.network.payloads.toClient.SetStarredPagePayload;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
@@ -28,10 +30,11 @@ public record StarItemPayload(ItemStack stack,boolean isAdding) implements ModPa
         if(player==null) return;
         ServerLevelEndInv.getEndInvForPlayer(player).ifPresent(endInv->{
             if(isAdding()) {
-                endInv.affinities.addStarredItem(stack());
+                endInv.affinities.addStarredItem(stack);
             }else {
-                endInv.affinities.removeStarredItem(stack());
+                endInv.affinities.removeStarredItem(stack);
             }
+            ModInfo.getPacketDistributor().sendToPlayer(player, new SetStarredPagePayload(endInv.getStarredItems()));
             endInv.setChanged();
         });
     }

@@ -81,7 +81,7 @@ public class StarredItemPage extends ItemPage{
     }
 
     public void requestRemoteContents(){
-        sendChangesToServer();
+        getPacketDistributor().sendToServer(new StarItemPayload(ItemStack.EMPTY,false));
     }
 
     @Override

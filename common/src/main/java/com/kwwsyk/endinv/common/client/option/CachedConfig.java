@@ -6,10 +6,12 @@ import com.kwwsyk.endinv.common.menu.page.PageType;
 import com.kwwsyk.endinv.common.network.payloads.PageData;
 import com.kwwsyk.endinv.common.network.payloads.SyncedConfig;
 import com.kwwsyk.endinv.common.util.SortType;
+import com.mojang.logging.LogUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.player.LocalPlayer;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
 
 /**Caches that keep pages' options, including:<br>
  * <ul>
@@ -18,6 +20,8 @@ import org.jetbrains.annotations.Nullable;
  * </ul>
  */
 public final class CachedConfig {
+
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     private static String pageRegKey = PageType.DEFAULT_KEY;
     private static int rows = 6;
@@ -53,6 +57,10 @@ public final class CachedConfig {
         attaching = config.attaching().get();
         //server attaching data is prior
         SyncedConfig serverFlags = ModRegistries.NbtAttachments.getSyncedConfig().getWith(player);
+        if(serverFlags==null) {
+            LOGGER.warn("Player {} has no synced config.", player.getName().getString());
+            return;
+        }
         if (!serverFlags.equals(cachedFlags)) {
             cachedFlags = serverFlags;
         }
