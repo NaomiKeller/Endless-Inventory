@@ -1,7 +1,7 @@
 package com.kwwsyk.endinv.common.menu.page;
 
+import com.kwwsyk.endinv.common.client.gui.ScreenFramework;
 import com.kwwsyk.endinv.common.client.gui.page.*;
-import com.kwwsyk.endinv.common.client.gui.page.manager.PageManager;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
@@ -45,7 +45,7 @@ public class PageType {
     public static final PageType WEAPONS = createClassifiedPage("weapons",PageType::isWeapon,"iron_sword");
     public static final PageType TOOLS = createClassifiedPage("tools",PageType::isTool,"iron_pickaxe");
     public static final PageType EQUIPMENTS = new PageType(
-            (type,manager)->new SegClassifyItemDisplay(type,manager,equipmentSubclassifications,false,true),
+            (type,manager)->new SegClassifyItemDisplay(type, manager,equipmentSubclassifications,false,true),
             "equipments",PageType::isDefenceEquipment,ResourceLocation.withDefaultNamespace("iron_chestplate")
     );
     public static final PageType CONSUMABLE = createClassifiedPage("consumable",PageType::isFoodOrPotion,"bread");
@@ -63,7 +63,7 @@ public class PageType {
     public interface PageConstructor {
         /**
          * DisplayPage's constructor or it's variation.
-         * Called by {@link com.kwwsyk.endinv.common.client.gui.ScreenFramework}'s constructor
+         * Called by {@link ScreenFramework}'s constructor
          *
          * @since 1.1.0
          *
@@ -71,7 +71,7 @@ public class PageType {
          * @param manager since 1.1.0, it's always ScreenFramework/
          * @return
          */
-        DisplayPage create(PageType pageType, PageManager manager);
+        DisplayPage create(PageType pageType, ScreenFramework manager);
     }
 
     public PageType(PageConstructor constructor, String registerName){
@@ -108,7 +108,7 @@ public class PageType {
      * @param meta
      * @return
      */
-    public DisplayPage buildPage(PageManager meta){
+    public DisplayPage buildPage(ScreenFramework meta){
         var page =  constructor.create(this, meta);
         if(icon!=null) page.icon = icon;
         return page;

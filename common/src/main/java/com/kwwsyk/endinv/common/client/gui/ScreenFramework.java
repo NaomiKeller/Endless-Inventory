@@ -12,6 +12,7 @@ import com.kwwsyk.endinv.common.client.gui.bg.Transparent;
 import com.kwwsyk.endinv.common.client.gui.page.DisplayPage;
 import com.kwwsyk.endinv.common.client.gui.page.ItemPage;
 import com.kwwsyk.endinv.common.client.gui.page.manager.PageManager;
+import com.kwwsyk.endinv.common.client.gui.widget.PageSwitchBar;
 import com.kwwsyk.endinv.common.client.gui.widget.SortTypeSwitchBox;
 import com.kwwsyk.endinv.common.client.option.AttachedMenuOptions;
 import com.kwwsyk.endinv.common.client.option.ClientConfigs;
@@ -56,6 +57,7 @@ public class ScreenFramework implements PageManager{
     public final AbstractContainerMenu menu;
 
     private final IRectangleParam searchBoxParam,sortBoxParam,reverseSortButtonParam,configButtonParam,pageBarScrollUpButtonParam, pageBarScrollDownButtonParam;
+    private final PageSwitchBar pageSwitchBar;
     public SFBgRenderer SFBgRenderer;
     public final int pageBarCount;
 
@@ -63,7 +65,7 @@ public class ScreenFramework implements PageManager{
     public static String searching = "";
     public static SortType sortType = SortType.DEFAULT;
     public static boolean reverseSort = false;
-    public static PageType displayingPageType;
+    public static PageType displayingPageType = PageType.ALL_ITEMS;
 
     //Always pageBarCount + firstPageIndex <= meta.getPages.size()
     public int leftPos, topPos;
@@ -106,24 +108,25 @@ public class ScreenFramework implements PageManager{
         this.SFBgRenderer = new FromResource.MenuMode(this, param.pageSwitchBarConfig().tabParam());
 
         //------WIDGET DATA-------
-        this.pages = buildPages(param.pages());//is page a widget? but init page bar count indeed needs it.
-        //page switch bar
-        this.pageBarCount = Math.min(param.pageTabCount(), getPages().size());
-        this.pageBarScrollUpButtonParam = param.pageTabIncA();
-        this.pageBarScrollDownButtonParam = param.pageTabDecA();
-        //other
-        int searchBoxY = this.topPos + 17 + 18 * rows + 12;
-        this.searchBoxParam = param.searchBoxA();
-        this.configButtonParam = param.configButtonA();
-        this.sortBoxParam = param.sortBoxA();
-        this.reverseSortButtonParam = param.reverseSortButtonA();
-
         //------PAGES-----------
         //------prepare page data---------
         this.pageX = param.pageParamA().x();
         this.pageY = param.pageParamA().y();
         this.pageXSize = param.pageParamA().width();
         this.pageYSize = param.pageParamA().height();
+        this.pages = buildPages(param.pages());//is page a widget? but init page bar count indeed needs it.
+        //page switch bar
+        this.pageBarCount = Math.min(param.pageTabCount(), getPages().size());
+        this.pageSwitchBar = new PageSwitchBar(this, param.pageSwitchBarConfig().applyOffset(leftPos, topPos), pageBarCount, param.textureMode());
+        this.pageBarScrollUpButtonParam = param.pageTabIncA();
+        this.pageBarScrollDownButtonParam = param.pageTabDecA();
+        //other
+        this.searchBoxParam = param.searchBoxA();
+        this.configButtonParam = param.configButtonA();
+        this.sortBoxParam = param.sortBoxA();
+        this.reverseSortButtonParam = param.reverseSortButtonA();
+
+
         //--base info should be all initialized--
 
         //---construct and switch displaying pages---
@@ -155,9 +158,16 @@ public class ScreenFramework implements PageManager{
                 new Transparent(this, param.pageTabA());
 
         //---WIDGET DATA---
+        //------PAGES-----------
+        //------prepare page data---------
+        this.pageX = param.pageParamA().x();
+        this.pageY = param.pageParamA().y();
+        this.pageXSize = param.pageParamA().width();
+        this.pageYSize = param.pageParamA().height();
         this.pages = buildPages(param.pages());//is page a widget? but init page bar count indeed needs it.
         //page switch bar
         this.pageBarCount = Math.min(param.pageTabCount(), getPages().size());
+        this.pageSwitchBar = new PageSwitchBar(this, param.pageSwitchBarParam.applyOffset(leftPos,topPos), pageBarCount, param.textureMode());
         this.pageBarScrollUpButtonParam = param.pageTabIncA();
         this.pageBarScrollDownButtonParam = param.pageTabDecA();
         //other
@@ -166,12 +176,7 @@ public class ScreenFramework implements PageManager{
         this.sortBoxParam = param.sortBoxA();
         this.reverseSortButtonParam = param.reverseSortButtonA();
 
-        //------PAGES-----------
-        //------prepare page data---------
-        this.pageX = param.pageParamA().x();
-        this.pageY = param.pageParamA().y();
-        this.pageXSize = param.pageParamA().width();
-        this.pageYSize = param.pageParamA().height();
+
         //--base info should be all initialized--
 
         //---construct and switch displaying pages---
@@ -228,6 +233,7 @@ public class ScreenFramework implements PageManager{
             widgets.add(down);
         }
 
+        widgets.add(pageSwitchBar);
         widgets.add(configButton);
         widgets.add(reverseSortButton);
         widgets.add(searchBox);
@@ -237,13 +243,11 @@ public class ScreenFramework implements PageManager{
     public void addWidgetToScreen(Consumer<AbstractWidget> installer) {
         widgets.forEach(installer);
     }
-
-    public void renderPre(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-    }
+    @SuppressWarnings("unused")
+    public void renderPre(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {}
 
     public void renderBg(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         SFBgRenderer.renderBg(guiGraphics, partialTick, mouseX, mouseY);
-        getDisplayingPage().initRenderer(this, getPageX(), getPageY());
         getDisplayingPage().renderBg(SFBgRenderer, guiGraphics, partialTick, mouseX, mouseY);
     }
 
@@ -255,7 +259,6 @@ public class ScreenFramework implements PageManager{
 
         isHoveringOnPage = hasClickedOnPage(mouseX, mouseY);
 
-        getDisplayingPage().initRenderer(this, getPageX(), getPageY());
         getDisplayingPage().render(guiGraphics, mouseX, mouseY, partialTick);
 
         if (searchBox.isHovered() && !searchBox.isFocused()) guiGraphics.renderTooltip(mc.font, List.of(
@@ -275,21 +278,11 @@ public class ScreenFramework implements PageManager{
                 && !sortTypeSwitchBox.isHovered();
     }
 
-    protected int hasClickedOnPageSwitchBar(double mouseX, double mouseY) {
-        double XOffset = mouseX - SFBgRenderer.pageSwitchBarParam().x();
-        double YOffset = mouseY - SFBgRenderer.pageSwitchBarParam().y();
-        if (XOffset < 0 || XOffset > SFBgRenderer.pageSwitchBarParam().width() || YOffset < 0) return -1;
-        int index = (int) YOffset / SFBgRenderer.pageSwitchBarParam().height();
-        if (index < 0 || index >= pageBarCount) return -1;
-        return index;
-    }
-
-    protected void pageSwitched(int index) {
+    public void pageSwitched(int index) {
         switchPageWithIndex(index + firstPageIndex);
         //getDisplayingPage().syncContentToServer();
         this.searchBox.setVisible(getDisplayingPage().hasSearchbox());
         this.sortTypeSwitchBox.visible = getDisplayingPage().hasSortTypeSwitchBar();
-        displayingPageType = getDisplayingPageType();
     }
 
     public void switchSortTypeTo(SortType type) {
@@ -300,22 +293,18 @@ public class ScreenFramework implements PageManager{
     }
 
     private boolean isHovering(Slot slot, double mouseX, double mouseY) {
-        return this.isHovering(slot.x, slot.y, 16, 16, mouseX, mouseY);
-    }
-
-    protected boolean isHovering(int x, int y, int width, int height, double mouseX, double mouseY) {
         int i = containerScreenHelper.getGuiLeft(screen);
         int j = containerScreenHelper.getGuiTop(screen);
         mouseX -= i;
         mouseY -= j;
-        return mouseX >= (double) (x - 1)
-                && mouseX < (double) (x + width + 1)
-                && mouseY >= (double) (y - 1)
-                && mouseY < (double) (y + height + 1);
+        return mouseX >= (double) (slot.x - 1)
+                && mouseX < (double) (slot.x + 16 + 1)
+                && mouseY >= (double) (slot.y - 1)
+                && mouseY < (double) (slot.y + 16 + 1);
     }
 
-    public boolean hoveringOnPage() {
-        return !sortTypeSwitchBox.isHovered();
+    public boolean overridePageHovering() {
+        return sortTypeSwitchBox.isHovered();
     }
 
     @Nullable
@@ -342,8 +331,6 @@ public class ScreenFramework implements PageManager{
             getDisplayingPage().tryInsertItem(itemStack);
             ModInfo.getPacketDistributor().sendToServer(new CreativeItemModPayload(itemStack, true));
         } else {
-            boolean canAttach = (screen instanceof EndlessInventoryScreen) || com.kwwsyk.endinv.common.client.option.MenuAttachabilityCache.isAttachable(screen);
-            if (!canAttach) return;
             ItemStack remain = getDisplayingPage().tryInsertItem(itemStack);
             clicked.setByPlayer(remain);
             clicked.onTake(getPlayer(), itemStack);
@@ -398,12 +385,13 @@ public class ScreenFramework implements PageManager{
                 return true;
             }
         }
-        //handle clicked on the page switch bar
-        int pageIndex = hasClickedOnPageSwitchBar(mouseX, mouseY);
-        if (pageIndex >= 0) {
-            pageSwitched(pageIndex);
-            return true;
-        }
+//        //handle clicked on the page switch bar
+        if(pageSwitchBar.mouseClicked(mouseX, mouseY, keyCode)) return true;
+//        int pageIndex = hasClickedOnPageSwitchBar(mouseX, mouseY);
+//        if (pageIndex >= 0) {
+//            pageSwitched(pageIndex);
+//            return true;
+//        }
         //
         if (hasClickedOnPage(mouseX, mouseY)) {
             sortTypeSwitchBox.setOpen(false);
@@ -447,7 +435,7 @@ public class ScreenFramework implements PageManager{
 
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollY) {
         if (hasClickedOnPage(mouseX, mouseY)) {
-            return getDisplayingPage().mouseScrolled(mouseX - getPageX(), mouseY = getPageY(), scrollY);
+            return getDisplayingPage().mouseScrolled(mouseX - getPageX(), getPageY(), scrollY);
         }
         return false;
     }
@@ -524,21 +512,21 @@ public class ScreenFramework implements PageManager{
 
     public int getPageX() {
         // Combine the static anchor and the debug offset for consistent hit tests.
-        return pageX + pageOffsetX;
+        return pageX;
     }
 
     public int getPageY() {
         // Combine the static anchor and the debug offset for consistent hit tests.
-        return pageY + pageOffsetY;
+        return pageY;
     }
 
     public void move(int deltaX, int deltaY) {
         // Support debug nudging without rebuilding the widget tree.
-        this.pageOffsetX += deltaX;
-        this.pageOffsetY += deltaY;
+        this.pageX += deltaX;
+        this.pageY += deltaY;
         DisplayPage current = getDisplayingPage();
         if (current != null) {
-            current.move(deltaX, deltaY);
+            current.syncPos(deltaX, deltaY);
         }
     }
 
@@ -570,6 +558,7 @@ public class ScreenFramework implements PageManager{
     @Override
     public void switchPageWithIndex(int index) {
         this.displayingPage = pages.get(index);
+        displayingPageType = displayingPage.getPageType();
         displayingPage.initializeContents();
     }
 

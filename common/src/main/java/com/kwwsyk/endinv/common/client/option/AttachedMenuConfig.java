@@ -6,6 +6,8 @@ import com.kwwsyk.endinv.common.options.config.ComplexConfigEntryImpl;
 import com.kwwsyk.endinv.common.options.config.ConfigEntryImpl;
 import com.kwwsyk.endinv.common.options.config.EntryPresentable;
 
+import java.util.List;
+
 public class AttachedMenuConfig extends ComplexConfigEntryImpl<AttachedMenuOptions> {
     
     public static final AttachedMenuConfig INSTANCE = new AttachedMenuConfig("Attached Screen(Menu) Options", new String[]{"Attached Menu Options"});
@@ -21,7 +23,7 @@ public class AttachedMenuConfig extends ComplexConfigEntryImpl<AttachedMenuOptio
     public final ListEntry<String> DontDisplayPages = new ListEntry<>(
             "HidePages",
             new String[]{"The pages will not have a tab in the page switch bar to be switched to"},
-            PageTypeRegistry.getIdList()
+            List.of()
     );
     public final EnumEntry<TextureMode> TextureMode = new EnumEntry<>(
             "TextureMode",
@@ -50,6 +52,29 @@ public class AttachedMenuConfig extends ComplexConfigEntryImpl<AttachedMenuOptio
     
     @Override
     public AttachedMenuOptions get() {
+        AttachedMenuOptions.BasicLayout basicLayout = BasicLayout.get();
+        switch (basicLayout){
+            case LEFT: {
+                return AttachedMenuOptions.ofLeft(
+                        TopPos.get(),
+                        PageBasicLayout.get(),
+                        PageTypeRegistry.displayingPages(DontDisplayPages.get()),
+                        TextureMode.get(),
+                        IRectangleParam.fromConfigEntry(PageRectangle)
+                );
+            }
+            case MERGE_JEI:{}
+            case RIGHT:{
+                return AttachedMenuOptions.ofRight(
+                        LeftPos.get(),
+                        TopPos.get(),
+                        PageBasicLayout.get(),
+                        PageTypeRegistry.displayingPages(DontDisplayPages.get()),
+                        TextureMode.get(),
+                        IRectangleParam.fromConfigEntry(PageRectangle)
+                );
+            }
+        }
         return new AttachedMenuOptions(
                 BasicLayout.get(),
                 PageBasicLayout.get(),
@@ -67,6 +92,7 @@ public class AttachedMenuConfig extends ComplexConfigEntryImpl<AttachedMenuOptio
     
     @Override
     public void set(AttachedMenuOptions attachedMenuOptions) {
+        freezeFieldSaver();
         BasicLayout.set(attachedMenuOptions.basicLayout);
         PageBasicLayout.set(attachedMenuOptions.pageParam);
         DontDisplayPages.set(PageTypeRegistry.dontDisplayPages(attachedMenuOptions.pages()));
@@ -79,6 +105,8 @@ public class AttachedMenuConfig extends ComplexConfigEntryImpl<AttachedMenuOptio
         SortBoxParam.set(IRectangleParam.toList(attachedMenuOptions.sortBoxParam));
         ConfigButtonParam.set(IRectangleParam.toList(attachedMenuOptions.configButtonParam));
         ReverseSortButtonParam.set(IRectangleParam.toList(attachedMenuOptions.reverseSortButtonParam));
+        unfreezeFieldSaver();
+        save();
     }
 
     @Override

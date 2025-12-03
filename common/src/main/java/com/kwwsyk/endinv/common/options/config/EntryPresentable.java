@@ -19,8 +19,8 @@ public interface EntryPresentable {
         E[] values = clazz.getEnumConstants();
         String[] out = new String[values.length + 1];
         out[0] = basicComment + " Values:";
-        for(int i = 1; i < values.length + 1; i++){
-            out[i] = values[i].name() + ": " + values[i].description();
+        for(int i = 0; i < values.length; i++){
+            out[i + 1] = values[i].name() + ": " + values[i].description();
         }
         return out;
     }

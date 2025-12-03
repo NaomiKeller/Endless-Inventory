@@ -2,8 +2,6 @@ package com.kwwsyk.endinv.common.client.gui.bg;
 
 import com.kwwsyk.endinv.common.client.ClientModInfo;
 import com.kwwsyk.endinv.common.client.gui.ScreenFramework;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 
 public abstract class SFBgRendererImpl implements SFBgRenderer {
@@ -31,22 +29,6 @@ public abstract class SFBgRendererImpl implements SFBgRenderer {
         this.menuTop = ClientModInfo.containerScreenHelper.getGuiTop(screen);
         this.pageLeft = frameWork.leftPos;
         this.pageTop = frameWork.topPos;
-    }
-
-    protected void renderPageBarContent(GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY){
-        int pageX = pageSwitchTabParam.x();
-        int pageY = pageSwitchTabParam.y();
-        int selectedPageIndex = frameWork.getDisplayingPageIndex();
-        for (int i = frameWork.firstPageIndex; i < frameWork.firstPageIndex+ frameWork.pageBarCount; ++i) {
-            frameWork.getPages().get(i).renderPageIcon(guiGraphics, pageX + 15, pageY + 5, partialTick);
-            if (mouseX > pageX && mouseX < pageX + 32 && mouseY > pageY && mouseY < pageY + 28) {
-                guiGraphics.pose().pushPose();
-                guiGraphics.pose().translate(0, 0, 550.0f);
-                guiGraphics.renderTooltip(Minecraft.getInstance().font, frameWork.getPages().get(i).name, mouseX, mouseY);
-                guiGraphics.pose().popPose();
-            }
-            pageY += 28;
-        }
     }
 
     @Override

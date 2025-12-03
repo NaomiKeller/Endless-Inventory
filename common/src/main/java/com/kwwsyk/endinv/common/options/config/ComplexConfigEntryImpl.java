@@ -2,6 +2,25 @@ package com.kwwsyk.endinv.common.options.config;
 
 public abstract non-sealed class ComplexConfigEntryImpl<C> extends ConfigEntryImpl<C> implements IConfigValue<C>, AutoSavable<C> {
 
+    private boolean frozen;
+
+    protected class LazySaver implements Runnable{
+
+        @Override
+        public void run() {
+            if(frozen) return;
+            save();
+        }
+    }
+
+    protected void freezeFieldSaver(){
+        frozen = true;
+    }
+
+    protected void unfreezeFieldSaver(){
+        frozen = false;
+    }
+
     public ComplexConfigEntryImpl(String key, String[] comments, C defaultValue) {
         super(key, comments, defaultValue);
     }
@@ -30,4 +49,12 @@ public abstract non-sealed class ComplexConfigEntryImpl<C> extends ConfigEntryIm
     }
 
     public abstract ConfigEntryImpl<?>[] fields();
+
+    @Override
+    public void setSaver(Runnable saver){
+        super.setSaver(saver);
+        for(var field : fields()){
+            field.setSaver(new LazySaver());
+        }
+    }
 }

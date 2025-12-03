@@ -1,6 +1,5 @@
 package com.kwwsyk.endinv.common.menu.page;
 
-import com.kwwsyk.endinv.common.client.option.ClientConfigs;
 import it.unimi.dsi.fastutil.Pair;
 import it.unimi.dsi.fastutil.objects.ObjectIntImmutablePair;
 
@@ -15,8 +14,6 @@ public class PageTypeRegistry {
     private static final LinkedHashMap<String, PageType> PAGE_TYPES = new LinkedHashMap<>();
     private static final List<String> INDEX_LIST = new ArrayList<>();
     private static final List<Integer> ORDER = new ArrayList<>();
-
-    private static List<PageType> cache = null;
 
     static {
         register(ALL_ITEMS,0);
@@ -35,7 +32,6 @@ public class PageTypeRegistry {
         PAGE_TYPES.put(id, type);
         INDEX_LIST.add(id);
         ORDER.add(getLastPageOrder() + ORDER_INTERVAL);
-        cache = null;//inlined
     }
 
     public static void register(PageType type, int order) {
@@ -44,16 +40,10 @@ public class PageTypeRegistry {
         PAGE_TYPES.put(id, type);
         INDEX_LIST.add(id);
         ORDER.add(order);
-        cache = null;//inlined
     }
 
     public static List<PageType> getDisplayPages(){
-        return cache!=null? cache :
-                (cache = getSortedList().stream()
-                        .filter(str-> !ClientConfigs.EIM_CONFIG.DontDisplayPages.get().contains(str))
-                        .map(PAGE_TYPES::get)
-                        .toList()
-                );
+        return PAGE_TYPES.values().stream().toList();
     }
 
     public static int getLastPageOrder(){
@@ -98,7 +88,6 @@ public class PageTypeRegistry {
     }
 
     public static void setChanged(){
-        cache = null;
     }
 
     public static List<String> getIdList(){

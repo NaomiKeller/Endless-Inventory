@@ -24,7 +24,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import static com.kwwsyk.endinv.common.client.CachedSrcInv.INSTANCE;
-public class EndInvSettingScreen extends Screen {
+public class EndInvSettingScreen extends Screen {//todo improve it for updated config system
 
     //private static final ResourceLocation BLANK_LOCATION = new ResourceLocation("minecraft","textures/gui/demo_background.png");
     private static final int CONFIG_ENTRY_Y_OFFSET = 17;
@@ -75,7 +75,7 @@ public class EndInvSettingScreen extends Screen {
             addInfoEntry(Component.translatable("endinv.info.owner_uuid"),INSTANCE::getOwnerUUID);
             addInfoEntry(Component.translatable("endinv.info.white_list_size"),()->"Size :"+INSTANCE.white_list.size());
         } else {
-            addConfigEntry("endinv.setting.rows", ClientConfigs.EIM_CONFIG.Rows);
+            addConfigEntry("endinv.setting.rows", ClientConfigs.ATTACHED_MENU_CONFIG.PageBasicLayout.Rows);
             addConfigEntry("endinv.setting.columns", ClientConfigs.ATTACHED_MENU_CONFIG.PageBasicLayout.Columns);
             addConfigEntry("endinv.setting.auto_suit", ClientConfigs.ATTACHED_MENU_CONFIG.PageBasicLayout.autoColumns);
             addConfigEntry("endinv.setting.attaching", ClientConfigs.DO_ATTACH);

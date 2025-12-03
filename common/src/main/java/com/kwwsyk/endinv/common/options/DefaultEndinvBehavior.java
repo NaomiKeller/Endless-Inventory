@@ -58,10 +58,12 @@ public class DefaultEndinvBehavior extends ComplexConfigEntryImpl<DefaultEndinvB
         if(!isInitialized() && this.checkInitializationStrict){
             throw new IllegalStateException("ConfigEntries are not initialized completely yet!");
         }
+        freezeFieldSaver();
         EnableInfinity.set(defaultEndinvBehavior.infinityMode());
         MaxStackSize.set(defaultEndinvBehavior.maxStackSize());
         TransferMode.set(defaultEndinvBehavior.transferMode());
         Access.set(defaultEndinvBehavior.accessibility());
+        unfreezeFieldSaver();
         save();
     }
 }

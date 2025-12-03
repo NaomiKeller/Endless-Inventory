@@ -3,7 +3,7 @@ package com.kwwsyk.endinv.common.client.gui.page;
 import com.kwwsyk.endinv.common.ModInfo;
 import com.kwwsyk.endinv.common.client.CachedSrcInv;
 import com.kwwsyk.endinv.common.client.gui.EndlessInventoryScreen;
-import com.kwwsyk.endinv.common.client.gui.page.manager.PageManager;
+import com.kwwsyk.endinv.common.client.gui.ScreenFramework;
 import com.kwwsyk.endinv.common.menu.page.PageType;
 import com.kwwsyk.endinv.common.network.payloads.PageData;
 import com.kwwsyk.endinv.common.network.payloads.toServer.CreativeItemModPayload;
@@ -47,9 +47,9 @@ public abstract class ItemPage extends DisplayPage {
 
     protected List<ItemStack> inQueueStacks = null;
 
-    public ItemPage(PageType pageType, PageManager manager) {
-        super(pageType, manager);
-        this.length = meta.rows()* meta.columns();
+    public ItemPage(PageType pageType, ScreenFramework framework) {
+        super(pageType, framework);
+        this.length = this.framework.rows()* this.framework.columns();
     }
 
     /**
@@ -58,13 +58,13 @@ public abstract class ItemPage extends DisplayPage {
     @Override
     public void resize(int rows) {
         int targetRows = Math.max(1, rows);
-        this.length = targetRows * meta.columns();
+        this.length = targetRows * framework.columns();
         initializeContents(this.startIndex, this.length);
     }
 
     @Override
     public void scrollTo(float pos) {
-        int startIndex = getRowIndexForScroll(pos)* meta.columns();
+        int startIndex = getRowIndexForScroll(pos)* framework.columns();
         this.initializeContents(startIndex,this.length);
     }
 
@@ -73,7 +73,7 @@ public abstract class ItemPage extends DisplayPage {
      */
     @Override
     public void initializeContents() {
-        initializeContents(0,meta.rows()*meta.columns());
+        initializeContents(0, framework.rows()* framework.columns());
     }
 
     /**The <em>init</em> method of ItemPage, it will change the startIndex and length of page and init a new {@link #items} list.
@@ -83,7 +83,7 @@ public abstract class ItemPage extends DisplayPage {
      */
     protected void initializeContents(int startIndex, int length) {
         this.startIndex = startIndex;
-        this.length = Math.min(length, meta.rows()* meta.columns());
+        this.length = Math.min(length, framework.rows()* framework.columns());
         // ensure internal invariants
         if(this.items==null || this.items.size()!=this.length) this.items = NonNullList.withSize(this.length, ItemStack.EMPTY);
         if(length != this.items.size()){
@@ -106,7 +106,7 @@ public abstract class ItemPage extends DisplayPage {
      * For ItemPage and ItemDisplay: also used to request contents as sending {@link ItemPageContext} has such side effect.
      */
     public void sendChangesToServer() {
-        var layout = new PageData(this.id, meta.rows(), meta.columns(), meta.sortType(), meta.isSortReversed(), meta.searching());
+        var layout = new PageData(this.id, framework.rows(), framework.columns(), framework.sortType(), framework.isSortReversed(), framework.searching());
         getPacketDistributor().sendToServer(new ItemPageContext(startIndex, length, layout));//send this packet will receive a content packet as callback
     }
 
@@ -124,8 +124,9 @@ public abstract class ItemPage extends DisplayPage {
     }
 
     public int getSlotByMouseOffset(double XOffset, double YOffset){
-        if(XOffset<0||YOffset<0||XOffset>18* meta.columns()||YOffset>18* meta.rows()) return -1;
-        return (int)XOffset/18 + meta.columns()*((int)YOffset/18);
+        XOffset = XOffset - MARGIN_SIDE_WIDTH; YOffset = YOffset - MARGIN_TOP_HEIGHT;
+        if(XOffset<0||YOffset<0||XOffset>18* framework.columns()||YOffset>18* framework.rows()) return -1;
+        return (int)XOffset/18 + framework.columns()*((int)YOffset/18);
     }
 
     /**
@@ -149,8 +150,8 @@ public abstract class ItemPage extends DisplayPage {
     public Rect2i getSlotArea(int slot){
         if(slot<0) return null;
         final int slotSize = 18;
-        final int rowAt = slot / meta.columns();
-        final int columnAt = slot % meta.columns();
+        final int rowAt = slot / framework.columns();
+        final int columnAt = slot % framework.columns();
         return new Rect2i(leftPos+slotSize*columnAt, topPos+slotSize*rowAt, slotSize, slotSize);
     }
 
@@ -181,12 +182,13 @@ public abstract class ItemPage extends DisplayPage {
         int rowIndex = 0;
         int columnIndex = 0;
         for(ItemStack stack : items){
-            if(stack.isEmpty() && !stack.is(Items.AIR)) renderEmpty(guiGraphics,leftPos+columnIndex*18,topPos+rowIndex*18+1,stack);
-            guiGraphics.renderItem(stack,leftPos+columnIndex*18,topPos+rowIndex*18+1,columnIndex+rowIndex*180);
+            int itemX = leftPos + MARGIN_SIDE_WIDTH + columnIndex*18,itemY = topPos + MARGIN_TOP_HEIGHT + rowIndex*18+1;
+            if(stack.isEmpty() && !stack.is(Items.AIR)) renderEmpty(guiGraphics,itemX,itemY,stack);
+            guiGraphics.renderItem(stack,itemX,itemY,columnIndex+rowIndex*180);
             if(!isHiddenBySortBox(rowIndex,columnIndex))
-                guiGraphics.renderItemDecorations(Minecraft.getInstance().font, stack,leftPos+columnIndex*18,topPos+rowIndex*18+1, getDisplayAmount(stack));
+                guiGraphics.renderItemDecorations(Minecraft.getInstance().font, stack,itemX,itemY, getDisplayAmount(stack));
             columnIndex++;
-            if(columnIndex>= meta.columns()){
+            if(columnIndex>= framework.columns()){
                 columnIndex=0;
                 rowIndex++;
             }
@@ -213,7 +215,7 @@ public abstract class ItemPage extends DisplayPage {
         double value;
         String suffix;
 
-        if(count == this.meta.getMaxStackSize() && meta.enableInfinity()){
+        if(count == this.framework.getMaxStackSize() && framework.enableInfinity()){
             return "∞";
         }
 
@@ -251,14 +253,14 @@ public abstract class ItemPage extends DisplayPage {
         graphics.pose().popPose();
     }
     protected void renderSlotHighlight(GuiGraphics graphics, int mouseX, int mouseY, float partialTick){
-        for(int u = 0; u< meta.columns(); ++u){
-            for(int v = 0; v< meta.rows(); ++v){
-                int x1 = leftPos+18*u-1;
-                int x2 = leftPos+18*u+16;
-                int y1 = topPos+18*v+1;
-                int y2 = topPos+18*v+18;
+        for(int u = 0; u< framework.columns(); ++u){
+            for(int v = 0; v< framework.rows(); ++v){
+                int x1 = leftPos+MARGIN_SIDE_WIDTH+18*u;
+                int x2 = leftPos+MARGIN_SIDE_WIDTH+18*u+17;
+                int y1 = topPos+MARGIN_TOP_HEIGHT+18*v+1;
+                int y2 = topPos+MARGIN_TOP_HEIGHT+18*v+18;
                 if(mouseX>x1 && mouseX<x2 && mouseY>y1 && mouseY<y2){
-                    if(!meta.getMenu().getCarried().isEmpty()) return;
+                    if(!framework.getMenu().getCarried().isEmpty()) return;
                     graphics.fillGradient(RenderType.guiOverlay(),x1,y1,x2,y2,0x80ffffff,0x80ffffff,0);
                 }
             }
@@ -293,7 +295,7 @@ public abstract class ItemPage extends DisplayPage {
                 handleClone(clicked);
             }
             LOGGER.info("EI:sending:ItemClickPayload: player={} clickType={} button={} stack={}"
-                    ,meta.getPlayer(),clickType,button, clicked);
+                    , framework.getPlayer(),clickType,button, clicked);
             ModInfo.getPacketDistributor().sendToServer(new ItemClickPayload(
                     clicked.getCount() > 64 ? clicked.copyWithCount(64) : clicked.copy(),
                     button,clickType));
@@ -322,16 +324,16 @@ public abstract class ItemPage extends DisplayPage {
     }
 
     public boolean isFull(ItemStack itemStack){
-        return itemStack.getCount() >= meta.getMaxStackSize();
+        return itemStack.getCount() >= framework.getMaxStackSize();
     }
 
     public boolean isInfinite(ItemStack itemStack){
-        return  isFull(itemStack) && meta.enableInfinity();
+        return  isFull(itemStack) && framework.enableInfinity();
     }
 
     protected void handleQuickMove(ItemStack clicked){
         ItemStack taken = takeItem(clicked);
-        ItemStack remain = meta.quickMoveFromPage(taken);
+        ItemStack remain = framework.quickMoveFromPage(taken);
         addItem(remain);
         setChanged();
     }
@@ -347,24 +349,24 @@ public abstract class ItemPage extends DisplayPage {
     }
 
     protected void handlePickup(ItemStack clicked, int keyCode){
-        ItemStack carried = meta.getMenu().getCarried();
+        ItemStack carried = framework.getMenu().getCarried();
         if(!carried.isEmpty()){
             ItemStack remain = addItem(carried.copy());
-            if(ModInfo.isClientLoaded() && meta.getMenu() instanceof CreativeModeInventoryScreen.ItemPickerMenu){
+            if(ModInfo.isClientLoaded() && framework.getMenu() instanceof CreativeModeInventoryScreen.ItemPickerMenu){
                 getPacketDistributor().sendToServer(new CreativeItemModPayload(carried.copy(),true));
             }
-            meta.getMenu().setCarried(remain);
+            framework.getMenu().setCarried(remain);
             setChanged();
         }else{
             int count = Math.min(clicked.getCount(),clicked.getMaxStackSize());
             int takenCount = keyCode==0 ? count : (count + 1) / 2;
-            meta.getMenu().setCarried(takeItem(clicked,takenCount));
-            if(!meta.getMenu().getCarried().isEmpty()) setChanged();
+            framework.getMenu().setCarried(takeItem(clicked,takenCount));
+            if(!framework.getMenu().getCarried().isEmpty()) setChanged();
         }
     }
 
     protected void handleSwap(ItemStack clicked, int inventorySlotId){
-        Player player = meta.getPlayer();
+        Player player = framework.getPlayer();
         Inventory inventory = player.getInventory();
         ItemStack inventoryItem = inventory.getItem(inventorySlotId);
         boolean a = !inventoryItem.isEmpty();
@@ -389,17 +391,17 @@ public abstract class ItemPage extends DisplayPage {
         setChanged();
     }
     protected void handleThrow(ItemStack clicked){
-        Player player = meta.getPlayer();
+        Player player = framework.getPlayer();
         ItemStack thrown = takeItem(clicked);
         player.drop(thrown,true);
         setChanged();
     }
     protected void handlePickupAll(ItemStack clicked){
-        Player player = meta.getPlayer();
-        ItemStack carried = meta.getMenu().getCarried();
-        int startIndex = meta.getMenu().slots.size() - 1; //changed: reversed button==0 condition
+        Player player = framework.getPlayer();
+        ItemStack carried = framework.getMenu().getCarried();
+        int startIndex = framework.getMenu().slots.size() - 1; //changed: reversed button==0 condition
         for(int index = startIndex; index>=0 ; --index){
-            Slot scanning = meta.getMenu().slots.get(index);
+            Slot scanning = framework.getMenu().slots.get(index);
             if(!(scanning.container instanceof Inventory)) break;
             ItemStack scanningItem =scanning.getItem();
             if (ItemStack.isSameItemSameComponents(carried, scanningItem)) {
@@ -411,9 +413,9 @@ public abstract class ItemPage extends DisplayPage {
         }
     }
     protected void handleClone(ItemStack clicked){
-        Player player = meta.getPlayer();
-        if(player.getAbilities().instabuild && meta.getMenu().getCarried().isEmpty()){
-            meta.getMenu().setCarried(clicked.copyWithCount(clicked.getMaxStackSize()));
+        Player player = framework.getPlayer();
+        if(player.getAbilities().instabuild && framework.getMenu().getCarried().isEmpty()){
+            framework.getMenu().setCarried(clicked.copyWithCount(clicked.getMaxStackSize()));
         }
     }
 }

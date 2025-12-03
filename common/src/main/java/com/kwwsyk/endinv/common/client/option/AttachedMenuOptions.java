@@ -31,10 +31,10 @@ public class AttachedMenuOptions implements SFParamProvider{
         public String description() { return description; }
     }
 
-    static final IRectangleParam PAGE_RECTANGLE = new ScreenRectangleWidgetParam(0,0,9*18 + 8 + 8, 17 + 15*18 + 17);
+    static final IRectangleParam PAGE_RECTANGLE = new ScreenRectangleWidgetParam(0,0,9*18 + 8 + 8, 17 + 15*18 + 12);
     static final IRectangleParam SEARCH_BOX = new ScreenRectangleWidgetParam(1, 17 + 15*18 + 12, 8 + 9*18 + 8, 15);
-    static final IRectangleParam SORT_BOX = new ScreenRectangleWidgetParam(20 + 6, 20 + 5, 77, 12);
-    static final IRectangleParam REVERSE_SORT_BUTTON = new ScreenRectangleWidgetParam(20 + 6 + 77 + 2, 20 + 5, 12, 12);
+    static final IRectangleParam SORT_BOX = new ScreenRectangleWidgetParam(6, 5, 77, 12);
+    static final IRectangleParam REVERSE_SORT_BUTTON = new ScreenRectangleWidgetParam(6 + 77 + 2, 5, 12, 12);
     static final IRectangleParam CONFIG_BUTTON = new ScreenRectangleWidgetParam(-20,-20,20,20);
 
     public static final AttachedMenuOptions DEFAULT = new AttachedMenuOptions(
@@ -62,7 +62,7 @@ public class AttachedMenuOptions implements SFParamProvider{
     final TextureMode textureMode;
     final IRectangleParam pageRectangleParam;
     //only active in FULL_CUSTOMIZE mode
-    final PageSwitchBarConfig.Param pageSwitchBarParam;
+    public final PageSwitchBarConfig.Param pageSwitchBarParam;
     final IRectangleParam searchBoxParam;
     final IRectangleParam sortBoxParam;
     final IRectangleParam configButtonParam;
@@ -141,13 +141,13 @@ public class AttachedMenuOptions implements SFParamProvider{
                         new PageBasicLayoutConfig.Param(rows, columns, false,false),
                         displayPages, pageSwitchBarParam, leftPos, topPos, textureMode,
                         new ScreenRectangleWidgetParam(
-                                leftPos, topPos,
+                                0, 0,
                                 textureMode==TextureMode.TRANSPARENT ? pageRectangleParam.width() : columns * 18 + 8 + 8,
-                                textureMode==TextureMode.TRANSPARENT ? pageRectangleParam.height() : rows * 18 + 17 + 17
+                                textureMode==TextureMode.TRANSPARENT ? pageRectangleParam.height() : rows * 18 + 17 + 12
                         ),
-                        adjustSearchBox(screen, textureMode == TextureMode.TRANSPARENT ? pageRectangleParam.height() : rows * 18 +17+17),
+                        adjustSearchBox(screen, textureMode == TextureMode.TRANSPARENT ? pageRectangleParam.height() : rows * 18 +17+12),
                         sortBoxParam,
-                        adjustConfigButton(textureMode == TextureMode.TRANSPARENT ? pageRectangleParam.height() : rows * 18 +17+17),
+                        adjustConfigButton(textureMode == TextureMode.TRANSPARENT ? pageRectangleParam.height() : rows * 18 +17+12),
                         reverseSortButtonParam
                 );
             }
@@ -166,13 +166,13 @@ public class AttachedMenuOptions implements SFParamProvider{
                         screen.width - sfW, topPos,
                         textureMode,
                         new ScreenRectangleWidgetParam(
-                                leftPos, topPos,
+                                0, 0,
                                 textureMode==TextureMode.TRANSPARENT ? pageRectangleParam.width() : columns * 18 + 8 + 8,
-                                textureMode==TextureMode.TRANSPARENT ? pageRectangleParam.height() : rows * 18 + 17 + 17
+                                textureMode==TextureMode.TRANSPARENT ? pageRectangleParam.height() : rows * 18 + 17 + 12
                         ),
-                        adjustSearchBox(screen, textureMode == TextureMode.TRANSPARENT ? pageRectangleParam.height() : rows * 18 +17+17),
+                        adjustSearchBox(screen, textureMode == TextureMode.TRANSPARENT ? pageRectangleParam.height() : rows * 18 +17+12),
                         sortBoxParam,
-                        adjustConfigButton(textureMode == TextureMode.TRANSPARENT ? pageRectangleParam.height() : rows * 18 +17+17),
+                        adjustConfigButton(textureMode == TextureMode.TRANSPARENT ? pageRectangleParam.height() : rows * 18 +17+12),
                         reverseSortButtonParam
                 );
             }
@@ -194,7 +194,7 @@ public class AttachedMenuOptions implements SFParamProvider{
         // marginH = 17
         int rows = pageParam.rows();
         if (pageParam.autoRows()) {
-            rows = Math.floorDiv(givenPageY - 17 - 17, 18);
+            rows = Math.floorDiv(givenPageY - 17 - 12, 18);
         }
         return Math.min(rows, pageParam.rows());
     }
@@ -260,42 +260,42 @@ public class AttachedMenuOptions implements SFParamProvider{
 
     @Override
     public IRectangleParam pageParamA() {
-        return pageRectangleParam.absolute(leftPos, topPos);
+        return pageRectangleParam.applyOffset(leftPos, topPos);
     }
 
     @Override
     public IRectangleParam pageTabA() {
-        return pageSwitchBarParam.tabParam().absolute(leftPos, topPos);
+        return pageSwitchBarParam.tabParam().applyOffset(leftPos, topPos);
     }
 
     @Override
     public IRectangleParam pageTabDecA() {
-        return pageSwitchBarParam.buttonDec().absolute(leftPos, topPos);
+        return pageSwitchBarParam.buttonDec().applyOffset(leftPos, topPos);
     }
 
     @Override
     public IRectangleParam pageTabIncA() {
-        return pageSwitchBarParam.buttonInc().absolute(leftPos, topPos);
+        return pageSwitchBarParam.buttonInc().applyOffset(leftPos, topPos);
     }
 
     @Override
     public IRectangleParam sortBoxA() {
-        return sortBoxParam.absolute(leftPos, topPos);
+        return sortBoxParam.applyOffset(leftPos, topPos);
     }
 
     @Override
     public IRectangleParam configButtonA() {
-        return configButtonParam.absolute(leftPos, topPos);
+        return configButtonParam.applyOffset(leftPos, topPos);
     }
 
     @Override
     public IRectangleParam reverseSortButtonA() {
-        return reverseSortButtonParam.absolute(leftPos, topPos);
+        return reverseSortButtonParam.applyOffset(leftPos, topPos);
     }
 
     @Override
     public IRectangleParam searchBoxA() {
-        return searchBoxParam.absolute(leftPos, topPos);
+        return searchBoxParam.applyOffset(leftPos, topPos);
     }
 
     @Override

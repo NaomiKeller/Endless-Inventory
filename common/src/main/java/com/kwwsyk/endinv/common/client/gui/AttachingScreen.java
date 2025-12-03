@@ -48,8 +48,9 @@ public class AttachingScreen<T extends AbstractContainerMenu>{
         try{
             return ClientConfigs.DO_ATTACH.get()
                     && getSyncedConfig().getWith(Minecraft.getInstance().player).checkForAttaching()
+                    && ClientConfigs.SPECIFIED_ATTACHABILITY.get().isMenuAttachable(screen.getMenu())
                     && MenuAttachabilityCache.isAttachable(screen);
-        } catch (NullPointerException e){
+        } catch (RuntimeException e){
             LOGGER.error("", e);
         }
         return false;

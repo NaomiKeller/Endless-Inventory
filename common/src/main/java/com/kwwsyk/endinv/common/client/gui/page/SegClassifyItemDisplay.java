@@ -1,7 +1,7 @@
 package com.kwwsyk.endinv.common.client.gui.page;
 
 import com.kwwsyk.endinv.common.client.CachedSrcInv;
-import com.kwwsyk.endinv.common.client.gui.page.manager.PageManager;
+import com.kwwsyk.endinv.common.client.gui.ScreenFramework;
 import com.kwwsyk.endinv.common.menu.page.PageType;
 import com.mojang.logging.LogUtils;
 import net.minecraft.client.Minecraft;
@@ -40,11 +40,11 @@ public class SegClassifyItemDisplay extends ItemDisplay {
     private final List<Integer> pageSeparatorRows = new ArrayList<>();
 
     public SegClassifyItemDisplay(PageType pageType,
-                                  PageManager metaDataManager,
+                                  ScreenFramework screenFramework,
                                   List<Predicate<ItemStack>> subClassifies,
                                   boolean includeRemainItems,
                                   boolean keepClassifiedItemInNextSeg) {
-        super(pageType, metaDataManager);
+        super(pageType, screenFramework);
         this.subClassifies = subClassifies == null ? List.of() : List.copyOf(subClassifies);
         this.includeRemainItems = includeRemainItems;
         this.keepClassifiedItemInNextSeg = keepClassifiedItemInNextSeg;
@@ -91,19 +91,18 @@ public class SegClassifyItemDisplay extends ItemDisplay {
         guiGraphics.pose().translate(0.0F, 0.0F, 100.0F);
         int rowIndex = 0;
         int columnIndex = 0;
-        int columns = meta.columns();
-        for (ItemStack item : items) {//debug: items not seg-ged
+        int columns = framework.columns();
+        for (ItemStack item : items) {
+            int itemX = leftPos + MARGIN_SIDE_WIDTH + columnIndex*18,itemY = topPos + MARGIN_TOP_HEIGHT + rowIndex*18+1;
             if (columnIndex == 0 && pageSeparatorRows.contains(rowIndex)) {
-                int y = topPos + rowIndex * 18;
-                guiGraphics.fill(leftPos, y, leftPos + columns * 18 - 2, y + 1, 0xFF5A5A5A);
+                guiGraphics.hLine(itemX, leftPos + MARGIN_SIDE_WIDTH + columns * 18 - 2, itemY, 0xFF5A5A5A);
             }
             if (item.isEmpty() && !item.is(Items.AIR)) {
-                renderEmpty(guiGraphics, leftPos + columnIndex * 18, topPos + rowIndex * 18 + 1, item);
+                renderEmpty(guiGraphics, itemX, itemY, item);
             }
-            guiGraphics.renderItem(item, leftPos + columnIndex * 18, topPos + rowIndex * 18 + 1, columnIndex + rowIndex * 180);
+            guiGraphics.renderItem(item, itemX, itemY, columnIndex + rowIndex * 180);
             if (!isHiddenBySortBox(rowIndex, columnIndex)) {
-                guiGraphics.renderItemDecorations(Minecraft.getInstance().font, item,
-                        leftPos + columnIndex * 18, topPos + rowIndex * 18 + 1, getDisplayAmount(item));
+                guiGraphics.renderItemDecorations(Minecraft.getInstance().font, item, itemX, itemY, getDisplayAmount(item));
             }
             columnIndex++;
             if (columnIndex >= columns) {
@@ -215,7 +214,7 @@ public class SegClassifyItemDisplay extends ItemDisplay {
             return;
         }
         target.addAll(segment);
-        int columns = meta.columns();
+        int columns = framework.columns();
         if (columns <= 0) {
             return;
         }
@@ -230,7 +229,7 @@ public class SegClassifyItemDisplay extends ItemDisplay {
     }
 
     private void updateDisplayedSlice() {
-        int columns = Math.max(1, meta.columns());
+        int columns = Math.max(1, framework.columns());
         int fromIndex = Math.min(startIndex, segmentedView.size());
         int toIndex = Math.min(fromIndex + length, segmentedView.size());
         List<ItemStack> slice = segmentedView.subList(fromIndex, toIndex);

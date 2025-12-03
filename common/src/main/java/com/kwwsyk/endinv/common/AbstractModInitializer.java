@@ -35,7 +35,7 @@ public abstract class AbstractModInitializer {
         registerItems(itemReg());
         registerMenuType(menuReg());
         registerNbtAttachment();
-        ModInfo.setServerConfig(loadServerConfig());
+        loadServerConfig();
         ModInfo.setPacketDistributor(loadPacketDistributor());
         ModInfo.platformContext = loadOtherPlatformSpecific();
     }

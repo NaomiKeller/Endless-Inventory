@@ -1,10 +1,10 @@
 package com.kwwsyk.endinv.common.client.gui.page;
 
 import com.kwwsyk.endinv.common.client.gui.EndlessInventoryScreen;
+import com.kwwsyk.endinv.common.client.gui.ScreenFramework;
 import com.kwwsyk.endinv.common.client.gui.bg.FromResource;
 import com.kwwsyk.endinv.common.client.gui.bg.SFBgRenderer;
 import com.kwwsyk.endinv.common.client.gui.bg.Transparent;
-import com.kwwsyk.endinv.common.client.gui.page.manager.PageManager;
 import com.kwwsyk.endinv.common.client.option.ClientConfigs;
 import com.kwwsyk.endinv.common.client.option.TextureMode;
 import com.kwwsyk.endinv.common.menu.page.PageType;
@@ -31,9 +31,9 @@ public class ItemEntryDisplay extends ItemDisplay{
 
     protected SFBgRenderer.PageBgRender renderer = null;
 
-    public ItemEntryDisplay(PageType pageType, PageManager metaDataManager) {
-        super(pageType,metaDataManager);
-        this.length = meta.rows();
+    public ItemEntryDisplay(PageType pageType, ScreenFramework screenFramework) {
+        super(pageType,screenFramework);
+        this.length = framework.rows();
     }
 
     @Override
@@ -45,7 +45,7 @@ public class ItemEntryDisplay extends ItemDisplay{
     @Override
     public void initializeContents(int startIndex, int length) {
         this.startIndex = startIndex;
-        this.length = Math.min(length, meta.rows());
+        this.length = Math.min(length, framework.rows());
         if(items==null || length!=this.items.size()){
             this.items = NonNullList.withSize(length,ItemStack.EMPTY);
         }
@@ -64,14 +64,15 @@ public class ItemEntryDisplay extends ItemDisplay{
 
     @Override
     public int getSlotByMouseOffset(double XOffset, double YOffset) {
-        if(XOffset<0||YOffset<0||XOffset>18* meta.columns()||YOffset>18* meta.rows()) return -1;
+        XOffset = XOffset - MARGIN_SIDE_WIDTH; YOffset = YOffset - MARGIN_TOP_HEIGHT;
+        if(XOffset<0||YOffset<0||XOffset>18* framework.columns()||YOffset>18* framework.rows()) return -1;
         return (int)YOffset/18;
     }
 
     @Override
     public Rect2i getSlotArea(int slot) {
         final int slotHeight = 18;
-        final int slotWidth = meta.columns() * 18;
+        final int slotWidth = framework.columns() * 18;
         return new Rect2i(leftPos, topPos+slotHeight*slot, slotWidth, slotHeight);
     }
 
@@ -97,7 +98,7 @@ public class ItemEntryDisplay extends ItemDisplay{
             if(!isHiddenBySortBox(rowIndex,columnIndex))
                 guiGraphics.renderItemDecorations(Minecraft.getInstance().font, stack, leftPos,topPos+rowIndex*18+1, getDisplayAmount(stack));
             rowIndex++;
-            if(rowIndex>= meta.rows()) break;
+            if(rowIndex>= framework.rows()) break;
         }
         guiGraphics.pose().popPose();
     }
@@ -115,7 +116,7 @@ public class ItemEntryDisplay extends ItemDisplay{
             }
             Component tip1 = Component.literal(tip.getString());
             int strX1 = strX + font.width(tip.getVisualOrderText());
-            if(strX1 >= x + meta.columns()*18 -18-3){
+            if(strX1 >= x + framework.columns()*18 -18-3){
                 graphics.drawString(font,Component.literal("..."),strX,y,0xFFFFFF00);
                 break;
             }
@@ -142,13 +143,13 @@ public class ItemEntryDisplay extends ItemDisplay{
     }
 
     protected void renderSlotHighlight(GuiGraphics graphics, int mouseX, int mouseY, float partialTick){
-        for(int v = 0; v< meta.rows(); ++v){
-            int x1 = leftPos;
-            int x2 = leftPos + meta.columns()*18 -2;
-            int y1 = topPos+18*v+1;
-            int y2 = topPos+18*v+18;
+        for(int v = 0; v< framework.rows(); ++v){
+            int x1 = leftPos + MARGIN_SIDE_WIDTH;
+            int x2 = leftPos + MARGIN_SIDE_WIDTH + framework.columns()*18 -2;
+            int y1 = topPos + MARGIN_TOP_HEIGHT + 18*v+1;
+            int y2 = topPos + MARGIN_TOP_HEIGHT + 18*v+18;
             if(mouseX>x1 && mouseX<x2 && mouseY>y1 && mouseY<y2){
-                if(!meta.getMenu().getCarried().isEmpty()) return;
+                if(!framework.getMenu().getCarried().isEmpty()) return;
                 graphics.fillGradient(RenderType.guiOverlay(),x1,y1,x2,y2,0x80ffffff,0x80ffffff,0);
             }
         }
@@ -166,24 +167,24 @@ public class ItemEntryDisplay extends ItemDisplay{
             if(mode == TextureMode.DEDICATED_LOCATION) return fromResource.dedicatePageBgRender(FromResource.ITEM_ENTRY_DISPLAY_RESOURCE);
             return (guiGraphics, partialTicks, mouseX, mouseY) ->{// assert mode = from_resource
                 sfBgRenderer.getDefaultPageBgRenderer().ifPresent(bgRenderer -> bgRenderer.renderBg(guiGraphics, partialTicks, mouseX, mouseY));
-                int pageX = sfBgRenderer.getScreenFrameWork().getPageX();
-                int startY = sfBgRenderer.getScreenFrameWork().getPageY();
-                for(int i = 0; i< meta.rows(); ++i){
-                    guiGraphics.fill(pageX,startY,pageX+18* meta.columns()-2,startY+1,0xFF373737);
-                    guiGraphics.fill(pageX,startY+1,pageX+18* meta.columns()-2,startY+17,0xFF8b8b8b);
-                    guiGraphics.fill(pageX,startY+17,pageX+18* meta.columns()-2,startY+18,0xFFFFFFFF);
+                int pageX = leftPos + MARGIN_SIDE_WIDTH;
+                int startY = topPos + MARGIN_TOP_HEIGHT;
+                for(int i = 0; i< framework.rows(); ++i){
+                    guiGraphics.fill(pageX,startY,pageX+18* framework.columns()-2,startY+1,0xFF373737);
+                    guiGraphics.fill(pageX,startY+1,pageX+18* framework.columns()-2,startY+17,0xFF8b8b8b);
+                    guiGraphics.fill(pageX,startY+17,pageX+18* framework.columns()-2,startY+18,0xFFFFFFFF);
                     startY+=18;
                 }
             };
         }
         return (guiGraphics, partialTicks, mouseX, mouseY) ->{//assert mode = transparent
             ((Transparent)framework.SFBgRenderer).new GridPageRenderer().renderBg(guiGraphics, partialTicks, mouseX, mouseY);
-            int pageX = sfBgRenderer.getScreenFrameWork().getPageX();
-            int startY = sfBgRenderer.getScreenFrameWork().getPageY();
-            for(int i = 0; i< meta.rows(); ++i){
-                guiGraphics.fill(pageX,startY,pageX+18* meta.columns()-2,startY+1,0xFF373737);
-                guiGraphics.fill(pageX,startY+1,pageX+18* meta.columns()-2,startY+17,0x37606037);
-                guiGraphics.fill(pageX,startY+17,pageX+18* meta.columns()-2,startY+18,0xFFFFFFFF);
+            int pageX = leftPos + MARGIN_SIDE_WIDTH;
+            int startY = topPos + MARGIN_TOP_HEIGHT;
+            for(int i = 0; i< framework.rows(); ++i){
+                guiGraphics.fill(pageX,startY,pageX+18* framework.columns()-2,startY+1,0xFF373737);
+                guiGraphics.fill(pageX,startY+1,pageX+18* framework.columns()-2,startY+17,0x37606037);
+                guiGraphics.fill(pageX,startY+17,pageX+18* framework.columns()-2,startY+18,0xFFFFFFFF);
                 startY+=18;
             }
         };

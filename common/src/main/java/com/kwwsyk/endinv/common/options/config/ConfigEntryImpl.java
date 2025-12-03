@@ -20,9 +20,9 @@ public sealed abstract class ConfigEntryImpl<T> implements AutoSavable<T>, IConf
     protected final Supplier<String[]> comments;
     protected final T defaultValue;
 
-    private Supplier<T> getter;
-    private Consumer<? super T> setter;
-    private Runnable saver;
+    protected Supplier<T> getter;
+    protected Consumer<? super T> setter;
+    protected Runnable saver;
 
     protected boolean isInitialized = false;
 

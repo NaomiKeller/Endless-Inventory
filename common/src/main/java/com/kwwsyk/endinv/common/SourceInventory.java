@@ -46,9 +46,9 @@ public abstract class SourceInventory {
         this.items = new ArrayList<>();
         this.itemMap = new Object2ObjectLinkedOpenHashMap<>();
         this.uuid = uuid;
-        this.maxStackSize = ModInfo.getServerConfig().getMaxAllowedStackSize().get();
-        this.infinityMode = ModInfo.getServerConfig().allowInfinityMode().get();
-        this.accessibility = ModInfo.getServerConfig().defaultAccessibility().get();
+        this.maxStackSize = com.kwwsyk.endinv.common.options.ServerConfigs.ENDINV_BEHAVIOR.MaxStackSize.get();
+        this.infinityMode = com.kwwsyk.endinv.common.options.ServerConfigs.ENDINV_BEHAVIOR.EnableInfinity.get();
+        this.accessibility = com.kwwsyk.endinv.common.options.ServerConfigs.ENDINV_BEHAVIOR.Access.get();
     }
 
 

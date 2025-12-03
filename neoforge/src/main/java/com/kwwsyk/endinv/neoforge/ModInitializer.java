@@ -8,7 +8,6 @@ import com.kwwsyk.endinv.common.menu.EndlessInventoryMenu;
 import com.kwwsyk.endinv.common.network.IPacketDistributor;
 import com.kwwsyk.endinv.common.network.payloads.ModPacketPayload;
 import com.kwwsyk.endinv.common.network.payloads.SyncedConfig;
-import com.kwwsyk.endinv.common.options.IServerConfig;
 import com.kwwsyk.endinv.neoforge.client.config.ClientConfig;
 import com.kwwsyk.endinv.neoforge.options.ServerConfig;
 import com.kwwsyk.endinv.neoforge.options.StartupConfig;
@@ -102,8 +101,7 @@ public class ModInitializer extends AbstractModInitializer {
     }
 
     @Override
-    protected IServerConfig loadServerConfig() {
-        return ServerConfig.CONFIG.INSTANCE;
+    protected void loadServerConfig() {
     }
 
     @Override

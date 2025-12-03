@@ -1,15 +1,11 @@
 package com.kwwsyk.endinv.neoforge.options;
 
-import com.kwwsyk.endinv.common.options.*;
+import com.kwwsyk.endinv.common.options.ServerConfigs;
 import com.kwwsyk.endinv.common.options.config.ConfigEntryImpl;
-import com.kwwsyk.endinv.common.options.config.IConfigValue;
-import com.kwwsyk.endinv.common.util.Accessibility;
 import net.neoforged.neoforge.common.ModConfigSpec;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.function.Supplier;
-
-import static com.kwwsyk.endinv.common.options.ServerConfigs.*;
 
 public class ServerConfig {
 
@@ -65,6 +61,7 @@ public class ServerConfig {
                 builder.comment(complexEntry.comments());
                 builder.comment("");
                 for(com.kwwsyk.endinv.common.options.config.ConfigEntryImpl<?> field : complexEntry.fields()) recursiveBuild(builder,field);
+                complexEntry.setInitialized();
                 builder.pop();
             }
             default -> {
@@ -80,75 +77,4 @@ public class ServerConfig {
         CONFIG_SPEC = pair.getRight();
     }
 
-    public final IServerConfig INSTANCE = new IServerConfig() {
-
-        private static com.kwwsyk.endinv.common.options.config.IConfigValue<Integer> convert(ModConfigSpec.IntValue value){
-            return com.kwwsyk.endinv.common.options.config.IConfigValue.of(value::getAsInt,value::set);
-        }
-
-        private static com.kwwsyk.endinv.common.options.config.IConfigValue<Boolean> convert(ModConfigSpec.BooleanValue value){
-            return com.kwwsyk.endinv.common.options.config.IConfigValue.of(value::getAsBoolean,value::set);
-        }
-
-        @Override
-        public com.kwwsyk.endinv.common.options.config.IConfigValue<Integer> getMaxAllowedStackSize() {
-            return ENDINV_BEHAVIOR.MaxStackSize;
-        }
-
-        @Override
-        public com.kwwsyk.endinv.common.options.config.IConfigValue<Boolean> allowInfinityMode() {
-            return ENDINV_BEHAVIOR.EnableInfinity;
-        }
-
-        @Override
-        public com.kwwsyk.endinv.common.options.config.IConfigValue<Boolean> enableAutoPick() {
-            return ENABLE_AUTOPICK;
-        }
-
-        @Override
-        public void onAttachingOrAutopickConfigChanged() {
-            CONFIG_SPEC.save();
-        }
-
-        /**
-         * Notify all players that the server's specified menu attachability has changed.
-         * Broadcasts an effective attachability snapshot for client-side checks.
-         */
-        @Override
-        public void onSpecifiedMenuAttachabilityChanged() {
-            CONFIG_SPEC.save();
-        }
-
-        @Override
-        public com.kwwsyk.endinv.common.options.config.IConfigValue<Boolean> enableAttaching() {
-            // NeoForge config: default to true; can be expanded later
-            return DEFAULT_ATTACH;
-        }
-
-        @Override
-        public com.kwwsyk.endinv.common.options.config.IConfigValue<ContentTransferMode> transferMode() {
-            return ENDINV_BEHAVIOR.TransferMode;
-        }
-
-        @Override
-        public com.kwwsyk.endinv.common.options.config.IConfigValue<Accessibility> defaultAccessibility() {
-            return ENDINV_BEHAVIOR.Access;
-        }
-
-        @Override
-        public com.kwwsyk.endinv.common.options.config.IConfigValue<CreationEndinvStrategy> policyHandlingMissing() {
-            return CREATION_MODE;
-        }
-
-        @Override@Deprecated
-        public com.kwwsyk.endinv.common.options.config.IConfigValue<Boolean> doConvertEmptyTag() {
-            return null;
-        }
-
-        @Override
-        public IConfigValue<SpecifiedMenuAttachingConfig> specifiedMenuAttachability() {
-            // NeoForge: default empty config
-            return SPECIFIED_ATTACHABILITY;
-        }
-    };
 }

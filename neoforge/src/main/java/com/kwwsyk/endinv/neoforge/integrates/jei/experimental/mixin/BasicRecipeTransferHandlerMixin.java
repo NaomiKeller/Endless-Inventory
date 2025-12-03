@@ -142,7 +142,7 @@ public abstract class BasicRecipeTransferHandlerMixin<C extends AbstractContaine
             if (allow != null && allow && cir.getReturnValue() != null) {
                 cir.setReturnValue(null);
             }
-            if (ModInfo.getServerConfig().transferMode().get() == ContentTransferMode.ALL) {
+            if (com.kwwsyk.endinv.common.options.ServerConfigs.ENDINV_BEHAVIOR.TransferMode.get() == ContentTransferMode.ALL) {
                 IRecipeTransferError err = cir.getReturnValue();
                 if (err != null) {
                     cir.setReturnValue(() -> IRecipeTransferError.Type.COSMETIC);

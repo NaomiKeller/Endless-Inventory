@@ -1,7 +1,6 @@
 package com.kwwsyk.endinv.common;
 
 import com.kwwsyk.endinv.common.network.IPacketDistributor;
-import com.kwwsyk.endinv.common.options.IServerConfig;
 import com.kwwsyk.endinv.common.util.SortType;
 
 import java.util.UUID;
@@ -14,22 +13,11 @@ public final class ModInfo {
 
     static boolean clientLoaded = false;
 
-    private static IServerConfig serverConfig;
-
     public static SortType.ISortHelper sortHelper = new SortType.ISortHelper() {};
 
     private static IPacketDistributor packetDistributor;
 
     public static IPlatform platformContext;
-
-    public static IServerConfig getServerConfig() {
-        return serverConfig;
-    }
-
-    public static void setServerConfig(IServerConfig serverConfig) {
-        if(ModInfo.serverConfig!=null) throw new IllegalStateException("Try to set config when config has been initialized.");
-        ModInfo.serverConfig = serverConfig;
-    }
 
     public static IPacketDistributor getPacketDistributor(){
         return packetDistributor;

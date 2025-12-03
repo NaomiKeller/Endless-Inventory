@@ -5,8 +5,6 @@ import com.kwwsyk.endinv.common.options.config.ConfigEntryImpl;
 import net.minecraftforge.common.ForgeConfigSpec;
 import org.apache.commons.lang3.tuple.Pair;
 
-import java.util.function.Supplier;
-
 public class ClientConfig {
 
     public static final ClientConfig CONFIG;
@@ -19,7 +17,7 @@ public class ClientConfig {
         });
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked"})
     private static <T, E extends Enum<E>> void recursiveBuild(ForgeConfigSpec.Builder builder, ConfigEntryImpl<T> cfg){
         switch (cfg) {
             case ConfigEntryImpl.BooleanEntry booleanEntry -> {
@@ -43,7 +41,7 @@ public class ClientConfig {
                 cfg.initialize(cv, cv::set);
             }
             case ConfigEntryImpl.ListEntry<?> listEntry -> {
-                var cv = builder.comment(listEntry.comments()).defineListAllowEmpty(listEntry.key(), listEntry.defaultValue(), (Supplier) listEntry.getNewValSupplier(), listEntry.getNewValPredicate());
+                ForgeConfigSpec.ConfigValue cv = builder.comment(listEntry.comments()).defineListAllowEmpty(listEntry.key(), listEntry.defaultValue(), listEntry.getNewValPredicate());
                 listEntry.initialize(cv, cv::set);
             }
             case ConfigEntryImpl.FloatEntry floatEntry -> {
@@ -59,6 +57,7 @@ public class ClientConfig {
                 builder.comment(complexEntry.comments());
                 builder.comment("");
                 for (ConfigEntryImpl<?> field : complexEntry.fields()) recursiveBuild(builder, field);
+                complexEntry.setInitialized();
                 builder.pop();
             }
             default -> {

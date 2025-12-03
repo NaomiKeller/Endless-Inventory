@@ -1,7 +1,7 @@
 package com.kwwsyk.endinv.common.client.gui.page;
 
 import com.kwwsyk.endinv.common.client.CachedSrcInv;
-import com.kwwsyk.endinv.common.client.gui.page.manager.PageManager;
+import com.kwwsyk.endinv.common.client.gui.ScreenFramework;
 import com.kwwsyk.endinv.common.menu.page.PageType;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
@@ -13,8 +13,8 @@ import java.util.List;
  */
 public class ItemDisplay extends ItemPage{
 
-    public ItemDisplay(PageType pageType, PageManager metaDataManager) {
-        super(pageType,metaDataManager);
+    public ItemDisplay(PageType pageType, ScreenFramework framework) {
+        super(pageType,framework);
     }
 
     public void refreshItems(){
@@ -114,7 +114,7 @@ public class ItemDisplay extends ItemPage{
                 if (ItemStack.isSameItemSameComponents(itemStack1, itemStack)) {
                     if(!isFull(itemStack1)) {
                         int additional = itemStack1.getCount();
-                        int max = meta.getMaxStackSize();
+                        int max = framework.getMaxStackSize();
                         itemStack1.setCount(Math.min(count+additional,max));
                         ret = itemStack.copyWithCount(Math.max(0,count+additional-max));
                     }
@@ -122,9 +122,9 @@ public class ItemDisplay extends ItemPage{
                     break l;
                 }
                 if (itemStack1.isEmpty()){
-                    itemStack.setCount(Math.min(itemStack.getCount(), meta.getMaxStackSize()));
+                    itemStack.setCount(Math.min(itemStack.getCount(), framework.getMaxStackSize()));
                     this.items.set(i,itemStack);
-                    ret = itemStack.copyWithCount(Math.max(0,count- meta.getMaxStackSize()));
+                    ret = itemStack.copyWithCount(Math.max(0,count- framework.getMaxStackSize()));
                     break l;
                 }
             }

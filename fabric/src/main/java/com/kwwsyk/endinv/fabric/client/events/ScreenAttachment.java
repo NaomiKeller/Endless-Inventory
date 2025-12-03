@@ -4,7 +4,6 @@ import com.kwwsyk.endinv.common.ModInfo;
 import com.kwwsyk.endinv.common.client.gui.AttachingScreen;
 import com.kwwsyk.endinv.common.client.gui.EndlessInventoryScreen;
 import com.kwwsyk.endinv.common.client.gui.IScreenEvent;
-import com.kwwsyk.endinv.common.client.option.MenuAttachabilityCache;
 import com.kwwsyk.endinv.common.network.payloads.toServer.OpenEndInvPayload;
 import com.kwwsyk.endinv.fabric.mixin.ScreenAccessor;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
@@ -19,8 +18,6 @@ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.world.entity.player.Player;
 
 import javax.annotation.Nullable;
-
-import static com.kwwsyk.endinv.common.ModRegistries.NbtAttachments.getSyncedConfig;
 
 public final class ScreenAttachment {
 
@@ -315,7 +312,7 @@ public final class ScreenAttachment {
 
     private static boolean isAttachmentActive(AttachingScreen<?> expected) {
         Screen screen = Minecraft.getInstance().screen;
-        if (!(screen instanceof AbstractContainerScreen<?>)) {
+        if (!(screen instanceof AbstractContainerScreen<?> c)) {
             attachment = null;
             return false;
         }
@@ -327,11 +324,7 @@ public final class ScreenAttachment {
         if (expected.screen != screen) {
             return false;
         }
-        if (!getSyncedConfig().getWith(player).attaching()) {
-            attachment = null;
-            return false;
-        }
-        if (!MenuAttachabilityCache.isAttachable((AbstractContainerScreen<?>) screen)) {
+        if (!AttachingScreen.isAttachable(c)) {
             attachment = null;
             return false;
         }

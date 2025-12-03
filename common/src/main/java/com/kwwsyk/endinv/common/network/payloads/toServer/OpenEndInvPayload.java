@@ -1,7 +1,6 @@
 package com.kwwsyk.endinv.common.network.payloads.toServer;
 
 import com.kwwsyk.endinv.common.AbstractModInitializer;
-import com.kwwsyk.endinv.common.ModInfo;
 import com.kwwsyk.endinv.common.ModRegistries;
 import com.kwwsyk.endinv.common.ServerLevelEndInv;
 import com.kwwsyk.endinv.common.menu.EndlessInventoryMenu;
@@ -88,7 +87,7 @@ public record OpenEndInvPayload(boolean openNew, int rows, int columns) implemen
         SyncedConfig syncedConfig = ModRegistries.NbtAttachments.getSyncedConfig().getWith(player);
         boolean nbtAttaching = syncedConfig.attaching();//presents player's client attaching config
         //boolean configAttaching = ModInfo.getServerConfig().enableAttaching().get();
-        boolean menuAttachable = ModInfo.getServerConfig().specifiedMenuAttachability().get().attachable(player);
+        boolean menuAttachable = com.kwwsyk.endinv.common.options.ServerConfigs.SPECIFIED_ATTACHABILITY.get().attachable(player);
 
         if(!nbtAttaching){
             LOGGER.warn("Player with attaching=false nbt sent openAttaching payload.");

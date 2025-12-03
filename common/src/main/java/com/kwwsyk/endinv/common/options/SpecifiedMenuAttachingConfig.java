@@ -1,6 +1,5 @@
 package com.kwwsyk.endinv.common.options;
 
-import com.kwwsyk.endinv.common.ModInfo;
 import com.kwwsyk.endinv.common.options.config.ComplexConfigEntryImpl;
 import com.kwwsyk.endinv.common.options.config.ConfigEntryImpl;
 import com.mojang.logging.LogUtils;
@@ -55,13 +54,13 @@ public class SpecifiedMenuAttachingConfig{
     }
 
     /**Check if a menu can be attached by {@link com.kwwsyk.endinv.common.client.gui.AttachingScreen}<br>
-     * It checks {@link #getMenuConfig} also checks {@link IServerConfig#enableAttaching()}<br>
+     * It checks {@link #getMenuConfig} also checks {@link ServerConfigs#DEFAULT_ATTACH}<br>
      * <p>
      *     Whether a menu can be attached depends on:
      *      <table>
      *          <thead>
      *              <tr>
-     *                  <th>{@link IServerConfig#enableAttaching()}</th>
+     *                  <th>{@link ServerConfigs#DEFAULT_ATTACH}</th>
      *                  <th>Value: True</th>
      *                  <th>Value: null</th>
      *                  <th>value: false</th>
@@ -89,7 +88,7 @@ public class SpecifiedMenuAttachingConfig{
     public boolean isMenuAttachable(@Nullable MenuType<?> type){
         if(type==null) return isInventoryAttachable();
         Boolean menuConfig = getMenuConfig(type);
-        return menuConfig!=null ? menuConfig : ModInfo.getServerConfig().enableAttaching().get();
+        return menuConfig!=null ? menuConfig : com.kwwsyk.endinv.common.options.ServerConfigs.DEFAULT_ATTACH.get();
     }
 
     public boolean isMenuAttachable(AbstractContainerMenu menu){
@@ -149,7 +148,7 @@ public class SpecifiedMenuAttachingConfig{
      * Complexity: O(n). No ConcurrentModificationException.
      */
     public void trimNonsenseValues() {//doc and self helped with gpt
-        final Boolean target = ModInfo.getServerConfig().enableAttaching().get();
+        final Boolean target = com.kwwsyk.endinv.common.options.ServerConfigs.DEFAULT_ATTACH.get();
         configs.entrySet().removeIf(e -> Objects.equals(e.getValue(), target));
     }
 
@@ -248,7 +247,7 @@ public class SpecifiedMenuAttachingConfig{
         }
 
         public static void testConfig(){
-            var a = ModInfo.getServerConfig().specifiedMenuAttachability();
+            var a = com.kwwsyk.endinv.common.options.ServerConfigs.SPECIFIED_ATTACHABILITY;
             var b = a.get();
             b.fill(true,false);
             a.set(b);
@@ -289,7 +288,7 @@ public class SpecifiedMenuAttachingConfig{
         @Override
         public void set(SpecifiedMenuAttachingConfig config) {
             menuKey2bools.set(new Parser(config).encodeConfig());
-            save();
+            //save();
         }
     }
 }

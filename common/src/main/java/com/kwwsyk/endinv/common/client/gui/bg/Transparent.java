@@ -25,8 +25,8 @@ public class Transparent extends SFBgRendererImpl {
             int startY = pageTop;
             int gridWidth = 18*columns;
             int gridHeight = 18*rows;
-            int leftWidth = 7;
-            int rightWidth = 7;
+            int leftWidth = 8;
+            int rightWidth = 8;
             int pageWidth = leftWidth+gridWidth+rightWidth;
             int topHeight = 17;
             int bottomHeight = 12;
@@ -43,18 +43,6 @@ public class Transparent extends SFBgRendererImpl {
 
     @Override
     public void renderBg(@NotNull GuiGraphics guiGraphics, float partialTicks, int mouseX, int mouseY) {
-        int pageX = pageSwitchTabParam.x();
-        int pageY = pageSwitchTabParam.y();
-        int selectedPageIndex = frameWork.getDisplayingPageIndex();
-        for (int i = ScreenFramework.firstPageIndex; i < ScreenFramework.firstPageIndex + frameWork.pageBarCount; ++i) {
-            if (i == selectedPageIndex) {
-                guiGraphics.fill(pageX,pageY,pageX+32,pageY+28,PAGE_FRAME_COLOR);
-            } else {
-                guiGraphics.fill(pageX+4,pageY,pageX+32,pageY+28,PAGE_BG_COLOR);
-            }
-            pageY+=28;
-        }
-        renderPageBarContent(guiGraphics, partialTicks, mouseX, mouseY);
     }
 
     @Override

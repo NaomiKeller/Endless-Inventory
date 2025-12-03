@@ -94,6 +94,9 @@ public class PageSwitchBarConfig extends ComplexConfigEntryImpl<PageSwitchBarCon
                 new ScreenRectangleWidgetParam(-20, -20,20,14),
                 new ScreenRectangleWidgetParam(-20,-20,20,14)
         );
+        public Param applyOffset(int leftPos, int topPos){
+            return new Param(maxBars, tabParam.applyOffset(leftPos, topPos), direction_isVertical, buttonDec.applyOffset(leftPos, topPos), buttonInc.applyOffset(leftPos, topPos));
+        }
     }
 
 

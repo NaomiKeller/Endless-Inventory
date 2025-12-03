@@ -53,7 +53,7 @@ public final class AEIRecipeTransferHandler {
             List<Slot> inventorySlots
     ) {
         SourceInventory endInv = getClientAttachedInventory(container);
-        if (endInv == null && ModInfo.getServerConfig().transferMode().get() == ContentTransferMode.ALL) {
+        if (endInv == null && com.kwwsyk.endinv.common.options.ServerConfigs.ENDINV_BEHAVIOR.TransferMode.get() == ContentTransferMode.ALL) {
             endInv = CachedSrcInv.INSTANCE;
         }
         Ingredient[] layout = buildLayoutFromRecipeSlots(recipeSlotsView, recipeSlots.size());
@@ -111,7 +111,7 @@ public final class AEIRecipeTransferHandler {
             return;
         }
         performTransfer(container, plan, player, recipeSlots, inventorySlots, endInv);
-        switch (ModInfo.getServerConfig().transferMode().get()) {
+        switch (com.kwwsyk.endinv.common.options.ServerConfigs.ENDINV_BEHAVIOR.TransferMode.get()) {
             case ALL -> ModInfo.getPacketDistributor()
                     .sendToPlayer(player, new com.kwwsyk.endinv.common.network.payloads.toClient.EndInvContent(endInv.getItemMap()));
             case PART -> ModInfo.getPacketDistributor()
@@ -458,7 +458,7 @@ public final class AEIRecipeTransferHandler {
         private static SourceInventory getAttachedInventory(AbstractContainerMenu container) {
             var attachment = ScreenAttachment.ATTACHMENT_MANAGER;
             if (attachment == null) {
-                if (ModInfo.getServerConfig().transferMode().get() == ContentTransferMode.ALL) {
+                if (com.kwwsyk.endinv.common.options.ServerConfigs.ENDINV_BEHAVIOR.TransferMode.get() == ContentTransferMode.ALL) {
                     return CachedSrcInv.INSTANCE;
                 }
                 return null;

@@ -37,7 +37,7 @@ public class CachedSrcInv extends SourceInventory {
      */
     @Override
     public int getItemSize() {
-        if(ModInfo.getServerConfig().transferMode().get()== ContentTransferMode.PART) return itemSize;
+        if(com.kwwsyk.endinv.common.options.ServerConfigs.ENDINV_BEHAVIOR.TransferMode.get()== ContentTransferMode.PART) return itemSize;
         if(this.validSize) return itemSize;
         return super.getItemSize();
     }

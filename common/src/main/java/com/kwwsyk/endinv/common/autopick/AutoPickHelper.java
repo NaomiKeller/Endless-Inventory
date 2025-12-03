@@ -8,7 +8,9 @@ import com.kwwsyk.endinv.common.autopick.events.IBlockBreakEvent;
 import com.kwwsyk.endinv.common.autopick.events.ILivingDropsEvent;
 import com.kwwsyk.endinv.common.autopick.events.ILivingExpDropsEvent;
 import com.kwwsyk.endinv.common.autopick.events.IPlayerPickupItemEvent;
+import com.kwwsyk.endinv.common.network.payloads.SyncedConfig;
 import com.kwwsyk.endinv.common.network.payloads.toClient.ItemPickedUpPayload;
+import com.kwwsyk.endinv.common.options.ServerConfigs;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.server.level.ServerLevel;
@@ -24,8 +26,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.List;
-
-import static com.kwwsyk.endinv.common.ModInfo.getServerConfig;
+import java.util.Optional;
 
 public final class AutoPickHelper {
 
@@ -35,11 +36,13 @@ public final class AutoPickHelper {
      * @return true -> proceed auto pick process
      */
     public static boolean isEnabled(Player player){
-        return isPlayerEnabledAutoPick(player) && getServerConfig().enableAutoPick().get();
+        return isPlayerEnabledAutoPick(player) && ServerConfigs.ENABLE_AUTOPICK.get();
     }
 
     private static boolean isPlayerEnabledAutoPick(Player player){
-        return ModRegistries.NbtAttachments.getSyncedConfig().getWith(player).autoPicking();
+        return Optional.ofNullable(ModRegistries.NbtAttachments.getSyncedConfig().getWith(player))
+                .orElse(new SyncedConfig(false,false))
+                .autoPicking();
     }
 
     /**

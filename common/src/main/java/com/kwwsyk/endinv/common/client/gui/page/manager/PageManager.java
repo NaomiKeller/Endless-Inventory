@@ -1,6 +1,7 @@
 package com.kwwsyk.endinv.common.client.gui.page.manager;
 
 import com.kwwsyk.endinv.common.client.CachedSrcInv;
+import com.kwwsyk.endinv.common.client.gui.ScreenFramework;
 import com.kwwsyk.endinv.common.client.gui.page.DisplayPage;
 import com.kwwsyk.endinv.common.client.gui.page.ItemPage;
 import com.kwwsyk.endinv.common.menu.page.PageType;
@@ -9,7 +10,10 @@ import com.kwwsyk.endinv.common.network.payloads.toServer.ItemPageContext;
 
 import java.util.List;
 import java.util.Objects;
-//client
+
+/**Server as a link between client and server ?... maybe so
+ * Only one Implementation: {@link com.kwwsyk.endinv.common.client.gui.ScreenFramework}
+ */
 public interface PageManager extends PageMetaDataManager {
 
     List<DisplayPage> getPages();
@@ -41,7 +45,7 @@ public interface PageManager extends PageMetaDataManager {
      * the return value of {@link #getPages()} shall be from this.
      */
     default List<DisplayPage> buildPages(List<PageType> displayingPages){
-        return displayingPages.stream().map(type -> type.buildPage(this)).toList();
+        return displayingPages.stream().map(type -> type.buildPage((ScreenFramework) this)).toList();
     }
 
     default ItemPageContext getInPageContext(){

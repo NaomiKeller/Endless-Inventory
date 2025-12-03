@@ -46,7 +46,7 @@ public final class ServerLevelEndInv {
             endlessInventory = getPlayerDefaultEndInv(player);
         }
         if(endlessInventory==null){
-            switch (ModInfo.getServerConfig().policyHandlingMissing().get()){
+            switch (com.kwwsyk.endinv.common.options.ServerConfigs.CREATION_MODE.get()){
                 case CREATE_PER_PLAYER -> {
                     endlessInventory = levelEndInvData.levelEndInvs
                             .stream()
@@ -90,7 +90,7 @@ public final class ServerLevelEndInv {
     private static EndlessInventory createForPlayer(Player player){
         EndlessInventory endlessInventory = new EndlessInventory();
         levelEndInvData.addEndInvToLevel(endlessInventory);
-        endlessInventory.setAccessibility(ModInfo.getServerConfig().defaultAccessibility().get());
+        endlessInventory.setAccessibility(com.kwwsyk.endinv.common.options.ServerConfigs.ENDINV_BEHAVIOR.Access.get());
         endlessInventory.setOwner(player.getUUID());
         ModRegistries.NbtAttachments.getEndInvUUID().setTo(player,endlessInventory.getUuid());
         return endlessInventory;

@@ -15,22 +15,22 @@ public class EIMConfig extends ComplexConfigEntryImpl<EIMConfig.Param> {
     public static final EIMConfig INSTANCE = new EIMConfig("EndlessInventoryMenuConfig", new String[]{""});
 
     public final IntEntry Rows = new IntEntry(
-            "rows", new String[]{"The default rows of page, if auto suit rows, it's the max row count."}, 6, 0, 255);
+            "rows", new String[]{"The default rows of page, if auto suit rows, it's the max row count."}, 9, 0, 255);
     public final ListEntry<String> DontDisplayPages = new ListEntry<>(
             "HidePages",
             new String[]{"The pages will not have a tab in the page switch bar to be switched to"},
-            PageTypeRegistry.getIdList()
+            List.of()
     );
     public final PageSwitchBarConfig PageSwitchBar = PageSwitchBarConfig.INSTANCE;
 
     public final ListEntry<Integer> SearchBoxParam = IRectangleParam.createRectangleConfigEntry(
-            "SearchBoxParam", new String[]{"The search box parameters"}, AttachedMenuOptions.SEARCH_BOX);
+            "SearchBoxParam", new String[]{"The search box parameters"}, Param.DEFAULT.searchBoxParam);
     public final ListEntry<Integer> SortBoxParam = IRectangleParam.createRectangleConfigEntry(
-            "SortBoxParam", new String[]{"The sort box parameters"}, AttachedMenuOptions.SORT_BOX);
+            "SortBoxParam", new String[]{"The sort box parameters"}, Param.DEFAULT.sortBoxParam);
     public final ListEntry<Integer> ReverseSortButtonParam = IRectangleParam.createRectangleConfigEntry(
-            "ReverseSortButtonParam", new String[]{"The reverse sort button parameters"}, AttachedMenuOptions.REVERSE_SORT_BUTTON);
+            "ReverseSortButtonParam", new String[]{"The reverse sort button parameters"}, Param.DEFAULT.reverseSortButtonParam);
     public final ListEntry<Integer> ConfigButtonParam = IRectangleParam.createRectangleConfigEntry(
-            "ConfigButtonParam", new String[]{"The config button parameters"}, AttachedMenuOptions.CONFIG_BUTTON);
+            "ConfigButtonParam", new String[]{"The config button parameters"}, Param.DEFAULT.configButtonParam);
 
     public EIMConfig(String key, String[] comments) {
         super(key, comments, Param.DEFAULT);
@@ -66,6 +66,7 @@ public class EIMConfig extends ComplexConfigEntryImpl<EIMConfig.Param> {
      */
     @Override
     public void set(Param param) {
+        freezeFieldSaver();
         Rows.set(param.rows());
         DontDisplayPages.set(PageTypeRegistry.dontDisplayPages(param.pages()));
         PageSwitchBar.set(param.pageSwitchBarConfig);
@@ -73,6 +74,8 @@ public class EIMConfig extends ComplexConfigEntryImpl<EIMConfig.Param> {
         SortBoxParam.set(IRectangleParam.toList(param.sortBoxParam));
         ConfigButtonParam.set(IRectangleParam.toList(param.configButtonParam));
         ReverseSortButtonParam.set(IRectangleParam.toList(param.reverseSortButtonParam));
+        unfreezeFieldSaver();
+        save();
     }
 
     @Override
@@ -97,7 +100,7 @@ public class EIMConfig extends ComplexConfigEntryImpl<EIMConfig.Param> {
                 new ScreenRectangleWidgetParam(/*this.leftPos + */89, /*this.topPos + */5, 80, 12),
                 new ScreenRectangleWidgetParam/*offset*/(8, 5, 60, 12),
                 new ScreenRectangleWidgetParam(
-                        /*this.leftPos + this.imageWidth*/-1,
+                        /*this.leftPos + this.imageWidth*/0,
                         /*Math.min(this.topPos + this.imageHeight, screen.height - 20)*/-20,
                         18, 18),
                 new ScreenRectangleWidgetParam/*offset*/(70,5,12,12)
@@ -140,42 +143,42 @@ public class EIMConfig extends ComplexConfigEntryImpl<EIMConfig.Param> {
 
         @Override
         public IRectangleParam pageParamA() {
-            return new ScreenRectangleWidgetParam(leftPos, topPos, 9*18 + 8 +8, 18*rows + 17 + 17);
+            return new ScreenRectangleWidgetParam(leftPos, topPos, 9*18 + 8 +8, 18*rows + 17 + 12);
         }
 
         @Override
         public IRectangleParam pageTabA() {
-            return pageSwitchBarConfig.tabParam().absolute(leftPos, topPos);
+            return pageSwitchBarConfig.tabParam().applyOffset(leftPos, topPos);
         }
 
         @Override
         public IRectangleParam pageTabDecA() {
-            return pageSwitchBarConfig.buttonDec().absolute(leftPos, topPos);
+            return pageSwitchBarConfig.buttonDec().applyOffset(leftPos, topPos);
         }
 
         @Override
         public IRectangleParam pageTabIncA() {
-            return pageSwitchBarConfig.buttonInc().absolute(leftPos, topPos);
+            return pageSwitchBarConfig.buttonInc().applyOffset(leftPos, topPos);
         }
 
         @Override
         public IRectangleParam sortBoxA() {
-            return sortBoxParam.absolute(leftPos, topPos);
+            return sortBoxParam.applyOffset(leftPos, topPos);
         }
 
         @Override
         public IRectangleParam configButtonA() {
-            return sortBoxParam.absolute(leftPos, topPos);
+            return configButtonParam.applyOffset(leftPos, topPos);
         }
 
         @Override
         public IRectangleParam reverseSortButtonA() {
-            return reverseSortButtonParam.absolute(leftPos, topPos);
+            return reverseSortButtonParam.applyOffset(leftPos, topPos);
         }
 
         @Override
         public IRectangleParam searchBoxA() {
-            return searchBoxParam.absolute(leftPos, topPos);
+            return searchBoxParam.applyOffset(leftPos, topPos);
         }
     }
 }

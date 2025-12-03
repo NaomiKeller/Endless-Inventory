@@ -25,9 +25,8 @@ public class PlayerEvents {
             if(tickRefresh) {
                 PacketDistributor.sendToPlayer(serverPlayer, ModRegistries.NbtAttachments.getSyncedConfig().computeIfAbsent(serverPlayer));
                 // Send effective menu attachability
-                var serverCfg = ModInfo.getServerConfig();
-                var menuCfg = serverCfg.specifiedMenuAttachability().get();
-                boolean defaultAttach = serverCfg.enableAttaching().get();
+                var menuCfg = com.kwwsyk.endinv.common.options.ServerConfigs.SPECIFIED_ATTACHABILITY.get();
+                boolean defaultAttach = com.kwwsyk.endinv.common.options.ServerConfigs.DEFAULT_ATTACH.get();
                 PacketDistributor.sendToPlayer(serverPlayer,
                         new MenuAttachabilityPayload(
                                 defaultAttach,

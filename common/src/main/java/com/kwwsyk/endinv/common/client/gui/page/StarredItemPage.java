@@ -1,6 +1,6 @@
 package com.kwwsyk.endinv.common.client.gui.page;
 
-import com.kwwsyk.endinv.common.client.gui.page.manager.PageManager;
+import com.kwwsyk.endinv.common.client.gui.ScreenFramework;
 import com.kwwsyk.endinv.common.menu.page.PageType;
 import com.kwwsyk.endinv.common.network.payloads.toServer.StarItemPayload;
 import com.kwwsyk.endinv.common.util.ItemStackLike;
@@ -20,8 +20,8 @@ public class StarredItemPage extends ItemPage{
     public ResourceLocation icon = ResourceLocation.fromNamespaceAndPath("minecraft", "book");
     private int[] countArray;
 
-    public StarredItemPage(PageType type, PageManager metaDataManager) {
-        super(type, metaDataManager);
+    public StarredItemPage(PageType type, ScreenFramework screenFramework) {
+        super(type, screenFramework);
     }
 
     public void starItem(ItemStack stack, boolean isAdding){
@@ -38,7 +38,7 @@ public class StarredItemPage extends ItemPage{
     @Override
     public void initializeContents(int startIndex, int length){
         this.startIndex = startIndex;
-        this.length = Math.min(length, meta.rows()* meta.columns());
+        this.length = Math.min(length, framework.rows()* framework.columns());
         this.items = NonNullList.withSize(length, ItemStack.EMPTY);
         this.countArray = new int[length];
         this.refreshItems();
@@ -100,13 +100,14 @@ public class StarredItemPage extends ItemPage{
         int rowIndex = 0;
         int columnIndex = 0;
         for(int i=0; i<length; ++i){
+            int itemX = leftPos + MARGIN_SIDE_WIDTH + columnIndex*18,itemY = topPos + MARGIN_TOP_HEIGHT + rowIndex*18+1;
             ItemStack stack = items.get(i);
             int count = countArray[i];
-            guiGraphics.renderItem(stack,leftPos+columnIndex*18,topPos+rowIndex*18+1,columnIndex+rowIndex*180);
+            guiGraphics.renderItem(stack,itemX,itemY,columnIndex+rowIndex*180);
             if(!isHiddenBySortBox(rowIndex,columnIndex))
-                guiGraphics.renderItemDecorations(Minecraft.getInstance().font, stack,leftPos+columnIndex*18,topPos+rowIndex*18+1, getDisplayAmount(stack.copyWithCount(count)));
+                guiGraphics.renderItemDecorations(Minecraft.getInstance().font, stack,itemX,itemY, getDisplayAmount(stack.copyWithCount(count)));
             columnIndex++;
-            if(columnIndex>= meta.columns()){
+            if(columnIndex>= framework.columns()){
                 columnIndex=0;
                 rowIndex++;
             }

@@ -45,8 +45,12 @@ import static net.minecraft.client.gui.screens.Screen.hasShiftDown;
  * @since 1.0.0
  * @author K.Z
  * */
+@SuppressWarnings("unused")
 public abstract class DisplayPage{
 
+    public static final int MARGIN_SIDE_WIDTH = 8;
+    public static final int MARGIN_TOP_HEIGHT = 17;
+    public static final int MARGIN_BOTTOM_HEIGHT = 12;
 
     protected final PageType pageType;
     //the registry name of this page type.
@@ -59,43 +63,42 @@ public abstract class DisplayPage{
     //displayed when hovering on Page switch bar.
     public Component name;
 
-    public PageManager meta;
+    public ScreenFramework framework;
 
     public final SourceInventory srcInv;
-
     protected final AbstractContainerMenu menu;
-
     protected final Minecraft mc;
 
     //leftPos and topPos are used as Renderer param
-    protected ScreenFramework framework;
-
+    /**
+     * The itemGrid start is {@code leftPos + MARGIN_SIDE_WIDTH}
+     */
     protected int leftPos;
+    /**
+     * The itemGrid start is {@code topPos + MARGIN_TOP_HEIGHT}
+     */
     protected int topPos;
-    protected int renderOffsetX;
-    protected int renderOffsetY;
-    private boolean rendererInitialized;
-    private int lastFrameworkPageX;
-    private int lastFrameworkPageY;
     //if holding on the page view shall not change temporarily.
     protected boolean holdOn = false;
 
     //constructor and initialization methods
     /**
-     * Pages are constructed when {@link PageManager#buildPages()} is invoked.
+     * Pages are constructed when {@link PageManager#buildPages} is invoked.
      *
      * @param pageType defines type that is synced, including the item-classify.
-     * @param manager
      */
-    public DisplayPage(PageType pageType, PageManager manager){
+    public DisplayPage(PageType pageType, ScreenFramework framework){
         this.mc = Minecraft.getInstance();
-        this.meta = manager;
-        this.menu = manager.getMenu();
+        this.framework = framework;
+        this.menu = framework.getMenu();
         this.srcInv = CachedSrcInv.INSTANCE;
         this.pageType = pageType;
         this.id = pageType.registerName;
         this.itemClassify = pageType.itemClassify;
         this.name = Component.translatableWithFallback("page.endinv."+pageType.registerName, pageType.registerName);
+
+        this.leftPos = framework.getPageX();
+        this.topPos = framework.getPageY();
     }
 
     //abstract methods
@@ -154,11 +157,11 @@ public abstract class DisplayPage{
     }
 
     public int calculateRowCount(){
-        return Math.max(meta.getItemSize()/ meta.columns(), CachedSrcInv.INSTANCE.getItemSize()/ meta.columns());
+        return Math.max(framework.getItemSize()/ framework.columns(), CachedSrcInv.INSTANCE.getItemSize()/ framework.columns());
     }
 
     protected float subtractInputFromScroll(float scrollOffs, double input) {
-        return Mth.clamp(scrollOffs - (float)(input / (double)meta.rows()), 0.0F, 1.0F);
+        return Mth.clamp(scrollOffs - (float)(input / (double) framework.rows()), 0.0F, 1.0F);
     }
 
     public void setChanged() {}
@@ -208,31 +211,12 @@ public abstract class DisplayPage{
         SFBgRenderer.getDefaultPageBgRenderer().ifPresent(bgRenderer -> bgRenderer.renderBg(guiGraphics, partialTick, mouseX, mouseY));
     }
 
-    public void initRenderer(ScreenFramework framework, int pageXPos, int pageYPos){
-        this.framework = framework;
-        if (!rendererInitialized) {
-            this.leftPos = pageXPos;
-            this.topPos = pageYPos;
-            this.renderOffsetX = 0;
-            this.renderOffsetY = 0;
-            this.rendererInitialized = true;
-        } else {
-            this.leftPos = pageXPos + renderOffsetX;
-            this.topPos = pageYPos + renderOffsetY;
-        }
-
-        this.lastFrameworkPageX = pageXPos;
-        this.lastFrameworkPageY = pageYPos;
-    }
-
     /**
      * Apply a relative offset so debug adjustments survive screen refreshes.
      */
-    public void move(int deltaX, int deltaY) {
-        this.renderOffsetX += deltaX;
-        this.renderOffsetY += deltaY;
-        this.leftPos = lastFrameworkPageX + renderOffsetX;
-        this.topPos = lastFrameworkPageY + renderOffsetY;
+    public void syncPos(int pageX, int pageY) {
+        this.leftPos += pageX;
+        this.topPos += pageY;
     }
 
     /**
@@ -243,7 +227,7 @@ public abstract class DisplayPage{
 
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick){
         renderPage(graphics);
-        if(framework.hoveringOnPage()){
+        if(!framework.overridePageHovering()){
             renderHovering(graphics, mouseX, mouseY, partialTick);
         }
     }

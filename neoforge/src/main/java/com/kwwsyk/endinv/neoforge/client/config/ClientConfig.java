@@ -59,6 +59,7 @@ public class ClientConfig {
                 builder.comment(complexEntry.comments());
                 builder.comment("");
                 for (ConfigEntryImpl<?> field : complexEntry.fields()) recursiveBuild(builder, field);
+                complexEntry.setInitialized();
                 builder.pop();
             }
             default -> {

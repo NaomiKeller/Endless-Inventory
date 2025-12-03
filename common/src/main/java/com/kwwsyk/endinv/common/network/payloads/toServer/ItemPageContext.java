@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Objects;
 
 import static com.kwwsyk.endinv.common.ModInfo.getPacketDistributor;
-import static com.kwwsyk.endinv.common.ModInfo.getServerConfig;
 
 /**
  * In page context used on Page operations.
@@ -107,7 +106,7 @@ public record ItemPageContext(int startIndex, int length, PageData pageData) imp
 
             //== ServerEndInv#sendEndInvContent
             EndlessInventory endInv = (EndlessInventory) manager.getSourceInventory();
-            if (getServerConfig().transferMode().get() == ContentTransferMode.PART) {
+            if (com.kwwsyk.endinv.common.options.ServerConfigs.ENDINV_BEHAVIOR.TransferMode.get() == ContentTransferMode.PART) {
                 List<ItemStack> view = endInv.getSortedAndFilteredItemView(startIndex, length,
                         manager.sortType(), manager.isSortReversed(),
                         manager.getDisplayingPageType().itemClassify, manager.searching());
@@ -118,7 +117,7 @@ public record ItemPageContext(int startIndex, int length, PageData pageData) imp
                 }
                 getPacketDistributor().sendToPlayer(serverPlayer, EndInvMetadata.getWith(endInv));
                 getPacketDistributor().sendToPlayer(serverPlayer, new SetItemDisplayContentPayload(stacks));
-            } else if (getServerConfig().transferMode().get() == ContentTransferMode.ALL) {
+            } else if (com.kwwsyk.endinv.common.options.ServerConfigs.ENDINV_BEHAVIOR.TransferMode.get() == ContentTransferMode.ALL) {
                 getPacketDistributor().sendToPlayer(serverPlayer, new EndInvContent(endInv.getItemMap()));
             }
         });

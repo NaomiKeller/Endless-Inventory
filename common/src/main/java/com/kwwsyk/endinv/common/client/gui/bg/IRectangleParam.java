@@ -19,7 +19,7 @@ public interface IRectangleParam {
         return List.of(x(),y(),width(),height());
     }
 
-    default IRectangleParam absolute(int basicX, int basicY){
+    default IRectangleParam applyOffset(int basicX, int basicY){
         return new ScreenRectangleWidgetParam(x()+basicX,y()+basicY,width(),height());
     }
 
