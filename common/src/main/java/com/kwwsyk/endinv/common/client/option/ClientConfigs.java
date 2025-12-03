@@ -34,5 +34,6 @@ public final class ClientConfigs {
     ));
     public static final ConfigEntryImpl.BooleanEntry SCREEN_DEBUG = register(new ConfigEntryImpl.BooleanEntry(
             "ScreenDebug",new String[]{"Enable screen debug mode."},false));
-
+    public static final ConfigEntryImpl.BooleanEntry AUTO_PICK = register(new ConfigEntryImpl.BooleanEntry(
+            "AutoPick",new String[]{"Enable auto pick mode."},false));
 }

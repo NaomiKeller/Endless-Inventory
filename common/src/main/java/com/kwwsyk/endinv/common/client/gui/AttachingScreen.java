@@ -1,9 +1,11 @@
 package com.kwwsyk.endinv.common.client.gui;
 
 import com.kwwsyk.endinv.common.ModInfo;
-import com.kwwsyk.endinv.common.client.option.CachedConfig;
+import com.kwwsyk.endinv.common.client.option.ClientConfigs;
+import com.kwwsyk.endinv.common.client.option.MenuAttachabilityCache;
 import com.kwwsyk.endinv.common.network.payloads.toServer.OpenEndInvPayload;
 import com.mojang.logging.LogUtils;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.renderer.Rect2i;
@@ -12,6 +14,8 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 
 import java.util.List;
+
+import static com.kwwsyk.endinv.common.ModRegistries.NbtAttachments.getSyncedConfig;
 
 
 /**The exceeded screen that controls interaction with Endless Inventory in client side.
@@ -39,14 +43,24 @@ public class AttachingScreen<T extends AbstractContainerMenu>{
         this.menu = screen.getMenu();
         INSTANCE = this;
     }
+    @SuppressWarnings("nullable")
+    public static boolean isAttachable(AbstractContainerScreen<?> screen){
+        try{
+            return ClientConfigs.DO_ATTACH.get()
+                    && getSyncedConfig().getWith(Minecraft.getInstance().player).checkForAttaching()
+                    && MenuAttachabilityCache.isAttachable(screen);
+        } catch (NullPointerException e){
+            LOGGER.error("", e);
+        }
+        return false;
+    }
 
     //invoked when an ACS is initialized
     public void init(IScreenEvent event){
         this.frameWork = ScreenFramework.getInstance()==null ? new ScreenFramework(this) : ScreenFramework.getInstance();
         frameWork.addWidgetToScreen(event::addListener);
         // Ensure server-side manager attaches for the current menu so actions like quick-move are authoritative
-        CachedConfig.readAndSyncClientConfigToServer(false);
-        ModInfo.getPacketDistributor().sendToServer(new OpenEndInvPayload(false, CachedConfig.currentLayout().rows()));
+        ModInfo.getPacketDistributor().sendToServer(new OpenEndInvPayload(false, frameWork.rows()));
     }
 
     public void renderPre(IScreenEvent event) {

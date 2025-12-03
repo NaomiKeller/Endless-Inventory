@@ -5,7 +5,9 @@ import com.kwwsyk.endinv.common.ModInfo;
 import com.kwwsyk.endinv.common.ServerLevelEndInv;
 import com.kwwsyk.endinv.common.SourceInventory;
 import com.kwwsyk.endinv.common.client.CachedSrcInv;
-import com.kwwsyk.endinv.common.client.option.CachedConfig;
+import com.kwwsyk.endinv.common.client.gui.ScreenFramework;
+import com.kwwsyk.endinv.common.client.option.ClientConfigs;
+import com.kwwsyk.endinv.common.client.option.EIMConfig;
 import com.kwwsyk.endinv.common.menu.page.PageType;
 import com.kwwsyk.endinv.common.menu.page.PageTypeRegistry;
 import com.kwwsyk.endinv.common.menu.page.pageManager.PageMetaDataManager;
@@ -89,7 +91,15 @@ public class EndlessInventoryMenu extends AbstractContainerMenu implements PageM
     //Client constructor
     //should be only invoked on client thread
     public static EndlessInventoryMenu createClient(int id, Inventory playerInv){
-        PageData layout = CachedConfig.resolveLayout(null, true);
+        EIMConfig.Param param = ClientConfigs.EIM_CONFIG.get().adjust();
+        PageData layout = new PageData(
+                ScreenFramework.displayingPageType.registerName,
+                param.rows(),
+                param.columns(),
+                ScreenFramework.sortType,
+                ScreenFramework.reverseSort,
+                ScreenFramework.searching
+        );
         var ret = new EndlessInventoryMenu(id, playerInv, null);
         ret.init(layout);
         ret.switchPageWithId(layout.pageRegKey());

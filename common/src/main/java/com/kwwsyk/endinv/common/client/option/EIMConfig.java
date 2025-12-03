@@ -1,12 +1,12 @@
 package com.kwwsyk.endinv.common.client.option;
 
-import com.kwwsyk.endinv.common.client.gui.EndlessInventoryScreen;
 import com.kwwsyk.endinv.common.client.gui.bg.IRectangleParam;
 import com.kwwsyk.endinv.common.client.gui.bg.ScreenRectangleWidgetParam;
 import com.kwwsyk.endinv.common.menu.page.PageType;
 import com.kwwsyk.endinv.common.menu.page.PageTypeRegistry;
 import com.kwwsyk.endinv.common.options.config.ComplexConfigEntryImpl;
 import com.kwwsyk.endinv.common.options.config.ConfigEntryImpl;
+import net.minecraft.client.Minecraft;
 
 import java.util.List;
 
@@ -103,17 +103,20 @@ public class EIMConfig extends ComplexConfigEntryImpl<EIMConfig.Param> {
                 new ScreenRectangleWidgetParam/*offset*/(70,5,12,12)
         );
 
-        public Param adjust(EndlessInventoryScreen screen){
+        public Param adjust(){
+            int screenHeight = Minecraft.getInstance().getWindow().getGuiScaledHeight();
+            int screenWidth = Minecraft.getInstance().getWindow().getGuiScaledWidth();
             return new Param(
                     rows,
-                    screen.getGuiLeft(), screen.getGuiTop(),
+                    (screenWidth - 176) / 2,
+                    (screenHeight - 114 - rows*18) / 2,
                     pages,
                     pageSwitchBarConfig,
                     searchBoxParam,
                     sortBoxParam,
                     new ScreenRectangleWidgetParam(
-                            configButtonParam.x() <= 0 ? screen.getXSize() + configButtonParam.x() : configButtonParam.x(),
-                            configButtonParam.y() <= 0 ? Math.min(screen.getYSize(), screen.height + configButtonParam.y() - leftPos) : configButtonParam.y(),
+                            configButtonParam.x() <= 0 ? 176 + configButtonParam.x() : configButtonParam.x(),
+                            configButtonParam.y() <= 0 ? Math.min(114 + rows * 18, screenHeight + configButtonParam.y() - leftPos) : configButtonParam.y(),
                             configButtonParam.width(),
                             configButtonParam.height()),
                     reverseSortButtonParam
@@ -138,6 +141,11 @@ public class EIMConfig extends ComplexConfigEntryImpl<EIMConfig.Param> {
         @Override
         public IRectangleParam pageParamA() {
             return new ScreenRectangleWidgetParam(leftPos, topPos, 9*18 + 8 +8, 18*rows + 17 + 17);
+        }
+
+        @Override
+        public IRectangleParam pageTabA() {
+            return pageSwitchBarConfig.tabParam().absolute(leftPos, topPos);
         }
 
         @Override

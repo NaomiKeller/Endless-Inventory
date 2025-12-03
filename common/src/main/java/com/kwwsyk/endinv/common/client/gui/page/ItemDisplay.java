@@ -2,7 +2,6 @@ package com.kwwsyk.endinv.common.client.gui.page;
 
 import com.kwwsyk.endinv.common.client.CachedSrcInv;
 import com.kwwsyk.endinv.common.client.gui.page.manager.PageManager;
-import com.kwwsyk.endinv.common.client.option.CachedConfig;
 import com.kwwsyk.endinv.common.menu.page.PageType;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
@@ -28,8 +27,8 @@ public class ItemDisplay extends ItemPage{
      */
     public void readCachedItems(){
         List<ItemStack> view = CachedSrcInv.INSTANCE.getSortedAndFilteredItemView(startIndex,length,
-                CachedConfig.sortType(), CachedConfig.reverseSort(),
-                getClassify(), CachedConfig.searching());
+                framework.sortType(), framework.isSortReversed(),
+                getClassify(), framework.searching());
         buildContentsWith(view);
     }
 

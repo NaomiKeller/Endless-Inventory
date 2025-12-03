@@ -1,9 +1,9 @@
 package com.kwwsyk.endinv.common.client;
 
 import com.kwwsyk.endinv.common.client.gui.EndlessInventoryScreen;
+import com.kwwsyk.endinv.common.client.gui.ScreenFramework;
 import com.kwwsyk.endinv.common.client.gui.page.ItemPage;
-import com.kwwsyk.endinv.common.client.option.CachedConfig;
-import com.kwwsyk.endinv.common.network.payloads.PageData;
+import com.kwwsyk.endinv.common.client.option.ClientConfigs;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -14,7 +14,6 @@ import net.minecraft.network.chat.Component;
 import java.util.Optional;
 
 import static com.kwwsyk.endinv.common.client.ClientModInfo.containerScreenHelper;
-import static com.kwwsyk.endinv.common.client.ClientModInfo.getClientConfig;
 
 public class ScreenDebug {
 
@@ -25,7 +24,7 @@ public class ScreenDebug {
     protected static Minecraft mc;
 
     public static void debugInfo(Screen screen, GuiGraphics graphics, double mouseX, double mouseY){
-        if(!ClientModInfo.getClientConfig().screenDebugging().get()) return;
+        if(!ClientConfigs.SCREEN_DEBUG.get()) return;
         int width = screen.width;
         int height = screen.height;
         int imageWidth = 0;
@@ -79,19 +78,15 @@ public class ScreenDebug {
                 graphics.drawString(mc.font, Component.literal("mouseX: " + mouseX), width - 128, 70, 0xFFFFFF00);
                 graphics.drawString(mc.font, Component.literal("mouseY: " + mouseY), width - 128, 80, 0xFFFFFF00);
 
-                if(mc.player!=null) {
-                    PageData pageData = CachedConfig.currentLayout();
+                if(ScreenFramework.getInstance() !=null) {
+                    ScreenFramework framework = ScreenFramework.getInstance();
                     graphics.drawString(mc.font, Component.literal("Page data: "), 0, 10, 0xFFFFFF00);
-                    graphics.drawString(mc.font, Component.literal("Page: "+pageData.pageRegKey()), 0, 20, 0xFFFFFF00);
-                    graphics.drawString(mc.font, Component.literal("Rows: "+pageData.rows()), 10, 30, 0xFFFFFF00);
-                    graphics.drawString(mc.font, Component.literal("Columns: "+pageData.columns()), 10, 40, 0xFFFFFF00);
-                    graphics.drawString(mc.font, Component.literal("Sort type: "+pageData.sortType()), 10, 50, 0xFFFFFF00);
-                    graphics.drawString(mc.font, Component.literal("Sort reversed: "+pageData.reverseSort()), 10, 60, 0xFFFFFF00);
-                    graphics.drawString(mc.font, Component.literal("Searching: "+pageData.search()), 10, 70, 0xFFFFFF00);
-                    graphics.drawString(mc.font, Component.literal("Configurations: "), 0, 80, 0xFFFFFF00);
-                    var config = getClientConfig();
-                    graphics.drawString(mc.font, Component.literal("Auto suit in columns: "+ config.autoSuitColumn().get()), 10, 90, 0xFFFFFF00);
-                    graphics.drawString(mc.font, Component.literal("Texture mode: "+ config.textureMode().get()), 10, 100, 0xFFFFFF00);
+                    graphics.drawString(mc.font, Component.literal("Page: "+framework.getDisplayingPageId()), 0, 20, 0xFFFFFF00);
+                    graphics.drawString(mc.font, Component.literal("Rows: "+framework.rows()), 10, 30, 0xFFFFFF00);
+                    graphics.drawString(mc.font, Component.literal("Columns: "+framework.columns()), 10, 40, 0xFFFFFF00);
+                    graphics.drawString(mc.font, Component.literal("Sort type: "+framework.sortType()), 10, 50, 0xFFFFFF00);
+                    graphics.drawString(mc.font, Component.literal("Sort reversed: "+framework.isSortReversed()), 10, 60, 0xFFFFFF00);
+                    graphics.drawString(mc.font, Component.literal("Searching: "+framework.searching()), 10, 70, 0xFFFFFF00);
                 }
             }
         }
@@ -99,7 +94,7 @@ public class ScreenDebug {
     }
 
     public static void click(int button, Screen screen){
-        if(!ClientModInfo.getClientConfig().screenDebugging().get()) return;
+        if(!ClientConfigs.SCREEN_DEBUG.get()) return;
 
         if(button == InputConstants.KEY_F3){
             phase++;

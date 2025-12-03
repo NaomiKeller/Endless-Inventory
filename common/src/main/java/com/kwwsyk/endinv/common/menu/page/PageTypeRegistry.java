@@ -1,6 +1,6 @@
 package com.kwwsyk.endinv.common.menu.page;
 
-import com.kwwsyk.endinv.common.client.ClientModInfo;
+import com.kwwsyk.endinv.common.client.option.ClientConfigs;
 import it.unimi.dsi.fastutil.Pair;
 import it.unimi.dsi.fastutil.objects.ObjectIntImmutablePair;
 
@@ -50,7 +50,7 @@ public class PageTypeRegistry {
     public static List<PageType> getDisplayPages(){
         return cache!=null? cache :
                 (cache = getSortedList().stream()
-                        .filter(str-> !ClientModInfo.getClientConfig().hidingPageIds().contains(str))
+                        .filter(str-> !ClientConfigs.EIM_CONFIG.DontDisplayPages.get().contains(str))
                         .map(PAGE_TYPES::get)
                         .toList()
                 );

@@ -1,11 +1,11 @@
 package com.kwwsyk.endinv.common.client.gui.page;
 
-import com.kwwsyk.endinv.common.client.ClientModInfo;
 import com.kwwsyk.endinv.common.client.gui.EndlessInventoryScreen;
 import com.kwwsyk.endinv.common.client.gui.bg.FromResource;
 import com.kwwsyk.endinv.common.client.gui.bg.SFBgRenderer;
 import com.kwwsyk.endinv.common.client.gui.bg.Transparent;
 import com.kwwsyk.endinv.common.client.gui.page.manager.PageManager;
+import com.kwwsyk.endinv.common.client.option.ClientConfigs;
 import com.kwwsyk.endinv.common.client.option.TextureMode;
 import com.kwwsyk.endinv.common.menu.page.PageType;
 import net.minecraft.client.Minecraft;
@@ -161,7 +161,7 @@ public class ItemEntryDisplay extends ItemDisplay{
     }
 
     protected SFBgRenderer.PageBgRender bgRender(SFBgRenderer sfBgRenderer){
-        TextureMode mode = ClientModInfo.getClientConfig().textureMode().get();
+        TextureMode mode = ClientConfigs.ATTACHED_MENU_CONFIG.TextureMode.get();
         if(sfBgRenderer instanceof FromResource fromResource){
             if(mode == TextureMode.DEDICATED_LOCATION) return fromResource.dedicatePageBgRender(FromResource.ITEM_ENTRY_DISPLAY_RESOURCE);
             return (guiGraphics, partialTicks, mouseX, mouseY) ->{// assert mode = from_resource

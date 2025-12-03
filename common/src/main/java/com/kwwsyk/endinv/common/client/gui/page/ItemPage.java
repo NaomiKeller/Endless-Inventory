@@ -4,8 +4,8 @@ import com.kwwsyk.endinv.common.ModInfo;
 import com.kwwsyk.endinv.common.client.CachedSrcInv;
 import com.kwwsyk.endinv.common.client.gui.EndlessInventoryScreen;
 import com.kwwsyk.endinv.common.client.gui.page.manager.PageManager;
-import com.kwwsyk.endinv.common.client.option.CachedConfig;
 import com.kwwsyk.endinv.common.menu.page.PageType;
+import com.kwwsyk.endinv.common.network.payloads.PageData;
 import com.kwwsyk.endinv.common.network.payloads.toServer.CreativeItemModPayload;
 import com.kwwsyk.endinv.common.network.payloads.toServer.ItemClickPayload;
 import com.kwwsyk.endinv.common.network.payloads.toServer.ItemPageContext;
@@ -106,7 +106,7 @@ public abstract class ItemPage extends DisplayPage {
      * For ItemPage and ItemDisplay: also used to request contents as sending {@link ItemPageContext} has such side effect.
      */
     public void sendChangesToServer() {
-        var layout = CachedConfig.currentLayout();
+        var layout = new PageData(this.id, meta.rows(), meta.columns(), meta.sortType(), meta.isSortReversed(), meta.searching());
         getPacketDistributor().sendToServer(new ItemPageContext(startIndex, length, layout));//send this packet will receive a content packet as callback
     }
 

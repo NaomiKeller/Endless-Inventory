@@ -2,7 +2,6 @@ package com.kwwsyk.endinv.common.client.gui.page;
 
 import com.kwwsyk.endinv.common.client.CachedSrcInv;
 import com.kwwsyk.endinv.common.client.gui.page.manager.PageManager;
-import com.kwwsyk.endinv.common.client.option.CachedConfig;
 import com.kwwsyk.endinv.common.menu.page.PageType;
 import com.mojang.logging.LogUtils;
 import net.minecraft.client.Minecraft;
@@ -55,10 +54,10 @@ public class SegClassifyItemDisplay extends ItemDisplay {
         List<ItemStack> source = CachedSrcInv.INSTANCE.getSortedAndFilteredItemView(
                 0,
                 Integer.MAX_VALUE,
-                CachedConfig.sortType(),
-                CachedConfig.reverseSort(),
+                framework.sortType(),
+                framework.isSortReversed(),
                 getClassify(),
-                CachedConfig.searching());
+                framework.searching());
         buildContentsWith(source);
     }
 

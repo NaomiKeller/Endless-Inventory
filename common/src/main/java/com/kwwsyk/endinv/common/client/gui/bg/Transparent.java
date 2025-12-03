@@ -46,7 +46,7 @@ public class Transparent extends SFBgRendererImpl {
         int pageX = pageSwitchTabParam.x();
         int pageY = pageSwitchTabParam.y();
         int selectedPageIndex = frameWork.getDisplayingPageIndex();
-        for (int i = frameWork.firstPageIndex; i < frameWork.firstPageIndex+ frameWork.pageBarCount; ++i) {
+        for (int i = ScreenFramework.firstPageIndex; i < ScreenFramework.firstPageIndex + frameWork.pageBarCount; ++i) {
             if (i == selectedPageIndex) {
                 guiGraphics.fill(pageX,pageY,pageX+32,pageY+28,PAGE_FRAME_COLOR);
             } else {

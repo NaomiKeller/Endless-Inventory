@@ -3,7 +3,6 @@ package com.kwwsyk.endinv.common.client.gui.widget;
 import com.kwwsyk.endinv.common.client.gui.ScreenFramework;
 import com.kwwsyk.endinv.common.client.gui.bg.IRectangleParam;
 import com.kwwsyk.endinv.common.client.gui.page.manager.PageManager;
-import com.kwwsyk.endinv.common.client.option.CachedConfig;
 import com.kwwsyk.endinv.common.util.SortType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -15,21 +14,21 @@ import org.jetbrains.annotations.NotNull;
 
 public class SortTypeSwitchBox extends AbstractWidget {
 
-    public ScreenFramework screen;
+    public ScreenFramework framework;
     private final PageManager pageManager;
     private final int singleBoxHeight;
     private boolean isOpen;
 
 
-    public SortTypeSwitchBox(ScreenFramework screen, PageManager pageManager, int x, int y, int width, int height){
+    public SortTypeSwitchBox(ScreenFramework framework, PageManager pageManager, int x, int y, int width, int height){
         super(x,y,width,height, Component.empty());
-        this.screen = screen;
+        this.framework = framework;
         this.pageManager = pageManager;
         this.singleBoxHeight = height;
     }
 
-    public SortTypeSwitchBox(ScreenFramework screen, PageManager pageManager, IRectangleParam sortTypeSwitchBoxParam){
-        this(screen,
+    public SortTypeSwitchBox(ScreenFramework framework, PageManager pageManager, IRectangleParam sortTypeSwitchBoxParam){
+        this(framework,
                 pageManager,
                 sortTypeSwitchBoxParam.x(),
                 sortTypeSwitchBoxParam.y(),
@@ -54,7 +53,7 @@ public class SortTypeSwitchBox extends AbstractWidget {
             int y1 = getY()+singleBoxHeight;
             for(SortType type : SortType.values()){
                 if(isHoveringOnSingleBox((int)mouseY,y1)){
-                    screen.switchSortTypeTo(type);
+                    framework.switchSortTypeTo(type);
                     return;
                 }
                 y1+= singleBoxHeight;
@@ -79,7 +78,7 @@ public class SortTypeSwitchBox extends AbstractWidget {
         guiGraphics.fill(getX()+1, getY() +1,getX()+width-1, getY() +singleBoxHeight-1,0xff000000);
         if(isHoveringOnSingleBox(mouseY, getY()))
             guiGraphics.fillGradient(RenderType.guiOverlay(),getX(), getY(),getX()+width, getY() +singleBoxHeight,0x80ffffff,0x80ffffff,0);
-        SortType sortType = CachedConfig.sortType();
+        SortType sortType = framework.sortType();
         String s = sortType.toString();
         guiGraphics.drawString(Minecraft.getInstance().font, s,getX()+2, getY() +2,0xffffffff);
         if(isOpen){

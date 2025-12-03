@@ -1,12 +1,9 @@
 package com.kwwsyk.endinv.neoforge.client.events;
 
 import com.kwwsyk.endinv.common.ModInfo;
-import com.kwwsyk.endinv.common.client.ClientModInfo;
 import com.kwwsyk.endinv.common.client.gui.AttachingScreen;
 import com.kwwsyk.endinv.common.client.gui.EndlessInventoryScreen;
 import com.kwwsyk.endinv.common.client.gui.IScreenEvent;
-import com.kwwsyk.endinv.common.client.option.CachedConfig;
-import com.kwwsyk.endinv.common.client.option.MenuAttachabilityCache;
 import com.kwwsyk.endinv.common.network.payloads.toServer.OpenEndInvPayload;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -19,32 +16,26 @@ import net.neoforged.neoforge.client.event.ScreenEvent;
 
 import javax.annotation.Nullable;
 
+import static com.kwwsyk.endinv.common.ModInfo.getPacketDistributor;
+
 @EventBusSubscriber(value = Dist.CLIENT,modid = ModInfo.MOD_ID)
 public class ScreenAttachment {
     public static AttachingScreen<?> ATTACHMENT_MANAGER;
 
     @Nullable
     private static AttachingScreen<?> checkAndGetAttached(ScreenEvent event){
-        if(event.getScreen() instanceof AbstractContainerScreen<?> screen){
-            Player player = screen.getMinecraft().player;
-            if(player==null) return null;
-            if(!ClientModInfo.getClientConfig().attaching().get()) {
-                ATTACHMENT_MANAGER = null;
-                return null;
-            }
-            if(!MenuAttachabilityCache.isAttachable(screen)){
-                ATTACHMENT_MANAGER = null;
-                return null;
-            }
+        if(event.getScreen() instanceof AbstractContainerScreen<?> screen && AttachingScreen.isAttachable(screen)){
             return ATTACHMENT_MANAGER;
         }
+        ATTACHMENT_MANAGER = null;
         return null;
     }
 
     @SubscribeEvent
     public static void opening(ScreenEvent.Opening event){
-        if(event.getScreen() instanceof AbstractContainerScreen<?>)
-            CachedConfig.readAndSyncClientConfigToServer(false);
+        if(event.getScreen() instanceof AbstractContainerScreen<?>){
+            // no-op: kept for compatibility
+        }
     }
 
     @SubscribeEvent
@@ -62,13 +53,12 @@ public class ScreenAttachment {
             Player player = screen.getMinecraft().player;
             if(player==null) return;
 
-            if(!ClientModInfo.getClientConfig().attaching().get()) return;
-            if(!MenuAttachabilityCache.isAttachable(screen)) return;
-
-            CachedConfig.readAndSyncClientConfigToServer(false);
+            if(!AttachingScreen.isAttachable(screen)) {
+                return;
+            }
 
             if(ATTACHMENT_MANAGER==null){
-                ModInfo.getPacketDistributor().sendToServer(new OpenEndInvPayload());
+                getPacketDistributor().sendToServer(new OpenEndInvPayload());
                 ATTACHMENT_MANAGER = new AttachingScreen<>(screen);
                 ATTACHMENT_MANAGER.init(new IScreenEvent() {
                     public void addListener(AbstractWidget widget){
@@ -81,7 +71,6 @@ public class ScreenAttachment {
 
     @SubscribeEvent
     public static void renderPre(ScreenEvent.Render.Pre event){
-
         if(ATTACHMENT_MANAGER!=null){
             ATTACHMENT_MANAGER.renderPre(new IScreenEvent() {});
         }

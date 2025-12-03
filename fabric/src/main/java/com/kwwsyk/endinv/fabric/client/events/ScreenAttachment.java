@@ -1,12 +1,9 @@
 package com.kwwsyk.endinv.fabric.client.events;
 
 import com.kwwsyk.endinv.common.ModInfo;
-import com.kwwsyk.endinv.common.client.ClientModInfo;
 import com.kwwsyk.endinv.common.client.gui.AttachingScreen;
 import com.kwwsyk.endinv.common.client.gui.EndlessInventoryScreen;
 import com.kwwsyk.endinv.common.client.gui.IScreenEvent;
-import com.kwwsyk.endinv.common.client.gui.ScreenFramework;
-import com.kwwsyk.endinv.common.client.option.CachedConfig;
 import com.kwwsyk.endinv.common.client.option.MenuAttachabilityCache;
 import com.kwwsyk.endinv.common.network.payloads.toServer.OpenEndInvPayload;
 import com.kwwsyk.endinv.fabric.mixin.ScreenAccessor;
@@ -42,9 +39,7 @@ public final class ScreenAttachment {
         }
 
         ScreenEvents.BEFORE_INIT.register((client, screen, width, height) -> {
-            if (screen instanceof AbstractContainerScreen<?>) {
-                CachedConfig.readAndSyncClientConfigToServer(false);
-            }
+            // sync now handled via server flags; no client-side read required here
         });
 
         ScreenEvents.AFTER_INIT.register((client, screen, width, height) -> {
@@ -58,14 +53,7 @@ public final class ScreenAttachment {
                 return;
             }
 
-            if (!ClientModInfo.getClientConfig().attaching().get()) {
-                attachment = null;
-                return;
-            }
-            if (!MenuAttachabilityCache.isAttachable(container)) {
-                attachment = null;
-                return;
-            }
+            if(!AttachingScreen.isAttachable(container)) return;
 
             //CachedConfig.readAndSyncClientConfigToServer(false);
 

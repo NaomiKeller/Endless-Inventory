@@ -1,5 +1,6 @@
 package com.kwwsyk.endinv.common.client.gui;
 
+import com.kwwsyk.endinv.common.client.option.ClientConfigs;
 import com.kwwsyk.endinv.common.options.config.IConfigValue;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.Util;
@@ -23,7 +24,6 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import static com.kwwsyk.endinv.common.client.CachedSrcInv.INSTANCE;
-import static com.kwwsyk.endinv.common.client.ClientModInfo.getClientConfig;
 public class EndInvSettingScreen extends Screen {
 
     //private static final ResourceLocation BLANK_LOCATION = new ResourceLocation("minecraft","textures/gui/demo_background.png");
@@ -75,13 +75,13 @@ public class EndInvSettingScreen extends Screen {
             addInfoEntry(Component.translatable("endinv.info.owner_uuid"),INSTANCE::getOwnerUUID);
             addInfoEntry(Component.translatable("endinv.info.white_list_size"),()->"Size :"+INSTANCE.white_list.size());
         } else {
-            addConfigEntry("endinv.setting.rows", getClientConfig().rows());
-            addConfigEntry("endinv.setting.columns", getClientConfig().columns());
-            addConfigEntry("endinv.setting.auto_suit", getClientConfig().autoSuitColumn());
-            addConfigEntry("endinv.setting.attaching", getClientConfig().attaching());
-            addConfigEntry("endinv.setting.texture", getClientConfig().textureMode());
-            addConfigEntry("endinv.setting.max_page_bar", getClientConfig().maxPageBarCount());
-            addConfigEntry(Component.literal("Screen debug"), getClientConfig().screenDebugging());
+            addConfigEntry("endinv.setting.rows", ClientConfigs.EIM_CONFIG.Rows);
+            addConfigEntry("endinv.setting.columns", ClientConfigs.ATTACHED_MENU_CONFIG.PageBasicLayout.Columns);
+            addConfigEntry("endinv.setting.auto_suit", ClientConfigs.ATTACHED_MENU_CONFIG.PageBasicLayout.autoColumns);
+            addConfigEntry("endinv.setting.attaching", ClientConfigs.DO_ATTACH);
+            addConfigEntry("endinv.setting.texture", ClientConfigs.ATTACHED_MENU_CONFIG.TextureMode);
+            addConfigEntry("endinv.setting.max_page_bar", ClientConfigs.EIM_CONFIG.PageSwitchBar.MaxBars);
+            addConfigEntry(Component.literal("Screen debug"), ClientConfigs.SCREEN_DEBUG);
         }
         scrollTo();
     }
@@ -152,7 +152,6 @@ public class EndInvSettingScreen extends Screen {
     public void onClose() {
         assert this.minecraft != null;
         this.minecraft.setScreen(this.back);
-        getClientConfig().save();
     }
 
     @Override

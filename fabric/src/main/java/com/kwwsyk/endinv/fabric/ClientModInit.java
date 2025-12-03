@@ -4,8 +4,8 @@ import com.kwwsyk.endinv.common.AbstractClientModInitializer;
 import com.kwwsyk.endinv.common.client.IContainerScreenHelper;
 import com.kwwsyk.endinv.common.client.IInputHandler;
 import com.kwwsyk.endinv.common.client.KeyMappings;
-import com.kwwsyk.endinv.common.client.option.IClientConfig;
-import com.kwwsyk.endinv.fabric.client.FabricClientConfig;
+import com.kwwsyk.endinv.common.client.option.ClientConfigs;
+import com.kwwsyk.endinv.common.options.config.json.JsonConfigurationHandler;
 import com.kwwsyk.endinv.fabric.client.events.ClientEvents;
 import com.kwwsyk.endinv.fabric.mixin.AbstractContainerScreenAccessor;
 import com.kwwsyk.endinv.fabric.network.FabricNetworking;
@@ -36,8 +36,11 @@ public class ClientModInit extends AbstractClientModInitializer implements Clien
     }
 
     @Override
-    protected IClientConfig loadClientConfig() {
-        return FabricClientConfig.INSTANCE;
+    protected void initClientConfigs() {
+        new JsonConfigurationHandler(
+                net.fabricmc.loader.api.FabricLoader.getInstance().getConfigDir().resolve("endless_inventory-client.json"),
+                ClientConfigs.getConfigs()
+        ).load();
     }
 
     @Override

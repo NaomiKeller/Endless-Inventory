@@ -13,7 +13,11 @@ import com.kwwsyk.endinv.common.client.gui.page.DisplayPage;
 import com.kwwsyk.endinv.common.client.gui.page.ItemPage;
 import com.kwwsyk.endinv.common.client.gui.page.manager.PageManager;
 import com.kwwsyk.endinv.common.client.gui.widget.SortTypeSwitchBox;
-import com.kwwsyk.endinv.common.client.option.*;
+import com.kwwsyk.endinv.common.client.option.AttachedMenuOptions;
+import com.kwwsyk.endinv.common.client.option.ClientConfigs;
+import com.kwwsyk.endinv.common.client.option.EIMConfig;
+import com.kwwsyk.endinv.common.client.option.TextureMode;
+import com.kwwsyk.endinv.common.menu.page.PageType;
 import com.kwwsyk.endinv.common.network.payloads.toServer.CreativeItemModPayload;
 import com.kwwsyk.endinv.common.network.payloads.toServer.QuickMoveToPagePayload;
 import com.kwwsyk.endinv.common.network.payloads.toServer.StarItemPayload;
@@ -51,13 +55,15 @@ public class ScreenFramework implements PageManager{
     public final AbstractContainerScreen<?> screen;
     public final AbstractContainerMenu menu;
 
-    private IRectangleParam searchBoxParam;
-    private IRectangleParam sortBoxParam,reverseSortButtonParam;
-    private IRectangleParam configButtonParam;
-    private IRectangleParam pageBarScrollUpButtonParam, pageBarScrollDownButtonParam;
+    private final IRectangleParam searchBoxParam,sortBoxParam,reverseSortButtonParam,configButtonParam,pageBarScrollUpButtonParam, pageBarScrollDownButtonParam;
     public SFBgRenderer SFBgRenderer;
     public final int pageBarCount;
+
     public static int firstPageIndex = 0;
+    public static String searching = "";
+    public static SortType sortType = SortType.DEFAULT;
+    public static boolean reverseSort = false;
+    public static PageType displayingPageType;
 
     //Always pageBarCount + firstPageIndex <= meta.getPages.size()
     public int leftPos, topPos;
@@ -74,7 +80,6 @@ public class ScreenFramework implements PageManager{
     public EditBox searchBox;
     public SortTypeSwitchBox sortTypeSwitchBox;
     private Button reverseSortButton;
-    private Button configButton;
     private final List<AbstractWidget> widgets = new ArrayList<>();
     //page meta data fields
     private int rows;
@@ -94,7 +99,7 @@ public class ScreenFramework implements PageManager{
         this.imageWidth = screen.getXSize();
         this.imageHeight = screen.getYSize();
         //row and columns affects the structure
-        EIMConfig.Param param = ClientConfigs.EIM_CONFIG.get().adjust(screen);
+        EIMConfig.Param param = ClientConfigs.EIM_CONFIG.get().adjust();
         this.rows = param.rows();//row and columns affects the structure
         this.columns = param.columns();
         //renderer may need structure and widget data --here YES: needs row/col/left/top...
@@ -122,7 +127,7 @@ public class ScreenFramework implements PageManager{
         //--base info should be all initialized--
 
         //---construct and switch displaying pages---
-        switchPageWithId(ConfigCache.currentPage.registerName);
+        switchPageWithId(displayingPageType.registerName);
         //add widgets when base info are all prepared including displayingPage
         addWidgets();
 
@@ -144,7 +149,7 @@ public class ScreenFramework implements PageManager{
         TextureMode textureMode = param.textureMode();
         this.imageWidth = textureMode==TextureMode.TRANSPARENT ? param.pageParamA().width() : 17 + columns * 18 + 17;
         this.imageHeight = screen.height;
-        //renderer may need structure and widget data --here ?
+        //renderer may need structure and widget data --here?
         this.SFBgRenderer = textureMode != TextureMode.TRANSPARENT ?//todo
                 new FromResource.LeftLayout(this, param.pageTabA()) :
                 new Transparent(this, param.pageTabA());
@@ -156,7 +161,6 @@ public class ScreenFramework implements PageManager{
         this.pageBarScrollUpButtonParam = param.pageTabIncA();
         this.pageBarScrollDownButtonParam = param.pageTabDecA();
         //other
-        int searchBoxY = this.topPos + 17 + 18 * rows + 12;
         this.searchBoxParam = param.searchBoxA();
         this.configButtonParam = param.configButtonA();
         this.sortBoxParam = param.sortBoxA();
@@ -171,7 +175,7 @@ public class ScreenFramework implements PageManager{
         //--base info should be all initialized--
 
         //---construct and switch displaying pages---
-        switchPageWithId(ConfigCache.currentPage.registerName);
+        switchPageWithId(displayingPageType.registerName);
 
         //add widgets when base info are all prepared including displayingPage
         addWidgets();
@@ -181,7 +185,7 @@ public class ScreenFramework implements PageManager{
 
 
     private void addWidgets() {
-        this.configButton = Button.builder(Component.literal("⚙"),
+        Button configButton = Button.builder(Component.literal("⚙"),
                         btn -> {
                             mc.setScreen(ClientModInfo.createConfigScreen(screen));
                         })
@@ -190,7 +194,7 @@ public class ScreenFramework implements PageManager{
                 .build();
         this.reverseSortButton = Button.builder(Component.literal("⇅"),
                         btn -> {
-                            ConfigCache.reverseSort = !ConfigCache.reverseSort;
+                            reverseSort = !reverseSort;
                             if(getDisplayingPage() instanceof ItemPage page){
                                 page.refreshItems();
                             }
@@ -285,12 +289,11 @@ public class ScreenFramework implements PageManager{
         //getDisplayingPage().syncContentToServer();
         this.searchBox.setVisible(getDisplayingPage().hasSearchbox());
         this.sortTypeSwitchBox.visible = getDisplayingPage().hasSortTypeSwitchBar();
-        CachedConfig.setDisplayingPageKey(getDisplayingPageId());
-        CachedConfig.updateLayoutWith(getPageData());
+        displayingPageType = getDisplayingPageType();
     }
 
     public void switchSortTypeTo(SortType type) {
-        CachedConfig.setSortType(type);
+        sortType = type;
         if(getDisplayingPage() instanceof ItemPage page){
             page.refreshItems();
         }
@@ -509,8 +512,7 @@ public class ScreenFramework implements PageManager{
     }
 
     public void refreshSearchResults() {
-        String searching = searchBox.getValue();
-        CachedConfig.setSearching(searching);
+        searching = searchBox.getValue();
         if(getDisplayingPage() instanceof ItemPage page){
             page.refreshItems();
         }
@@ -581,7 +583,35 @@ public class ScreenFramework implements PageManager{
         return columns;
     }
 
+    @Override
+    public SortType sortType() {
+        return sortType;
+    }
 
+    @Override
+    public void setSortType(SortType sortType1) {
+        sortType = sortType1;
+    }
+
+    @Override
+    public boolean isSortReversed() {
+        return reverseSort;
+    }
+
+    @Override
+    public void setSortReversed(boolean reversed) {
+        reverseSort = reversed;
+    }
+
+    @Override
+    public String searching() {
+        return searching;
+    }
+
+    @Override
+    public void setSearching(String searching1) {
+        searching = searching1;
+    }
 
     @Override
     public List<DisplayPage> getPages() {

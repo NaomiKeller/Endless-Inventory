@@ -2,8 +2,8 @@ package com.kwwsyk.endinv.common.client.gui.bg;
 
 import com.kwwsyk.endinv.common.AbstractModInitializer;
 import com.kwwsyk.endinv.common.ModInfo;
-import com.kwwsyk.endinv.common.client.ClientModInfo;
 import com.kwwsyk.endinv.common.client.gui.ScreenFramework;
+import com.kwwsyk.endinv.common.client.option.ClientConfigs;
 import com.kwwsyk.endinv.common.client.option.TextureMode;
 import com.kwwsyk.endinv.common.menu.EndlessInventoryMenu;
 import net.minecraft.client.gui.GuiGraphics;
@@ -32,11 +32,11 @@ public abstract class FromResource extends SFBgRendererImpl {
     public static final ResourceLocation ITEM_ENTRY_DISPLAY_RESOURCE = ResourceLocation.fromNamespaceAndPath(ModInfo.MOD_ID, "textures/gui/item_entry.png");
 
     private static ResourceLocation getContainerTexture(){
-        return ClientModInfo.getClientConfig().textureMode().get() == TextureMode.DEDICATED_LOCATION ? DEDICATED_CONTAINER_TEXTURE : CONTAINER_TEXTURE_RESOURCE;
+        return ClientConfigs.ATTACHED_MENU_CONFIG.TextureMode.get() == TextureMode.DEDICATED_LOCATION ? DEDICATED_CONTAINER_TEXTURE : CONTAINER_TEXTURE_RESOURCE;
     }
 
     private static ResourceLocation getTabsTexture(TabType type){
-        return ClientModInfo.getClientConfig().textureMode().get() == TextureMode.DEDICATED_LOCATION ? type.dedicatedLocation : type.vanillaTexture;
+        return ClientConfigs.ATTACHED_MENU_CONFIG.TextureMode.get() == TextureMode.DEDICATED_LOCATION ? type.dedicatedLocation : type.vanillaTexture;
     }
 
     public enum TabType{
