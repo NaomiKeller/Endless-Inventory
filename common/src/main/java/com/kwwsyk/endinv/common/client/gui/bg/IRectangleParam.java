@@ -5,29 +5,41 @@ import com.kwwsyk.endinv.common.options.config.ConfigEntryImpl;
 import java.util.List;
 
 public interface IRectangleParam {
-    int XPos();
+    int x();
 
-    int YPos();
+    int y();
 
-    int XSize();
+    int width();
 
-    int YSize();
+    int height();
 
     boolean hasClickedOn(int mouseX, int mouseY);
+
+    default List<Integer> toList(){
+        return List.of(x(),y(),width(),height());
+    }
+
+    default IRectangleParam absolute(int basicX, int basicY){
+        return new ScreenRectangleWidgetParam(x()+basicX,y()+basicY,width(),height());
+    }
 
     static ConfigEntryImpl.ListEntry<Integer> createRectangleConfigEntry(String key, String[] comments, IRectangleParam defaultValue){
         return new ConfigEntryImpl.ListEntry<Integer>(
                 key,
                 comments,
-                List.of(
-                        defaultValue.XPos(),
-                        defaultValue.YPos(),
-                        defaultValue.XSize(),
-                        defaultValue.YSize()
-                ),
+                toList(defaultValue),
                 ()->0,
                 n -> n instanceof Integer
         ).setRange(4,4);
+    }
+
+    static List<Integer> toList(IRectangleParam param){
+        return List.of(
+                param.x(),
+                param.y(),
+                param.width(),
+                param.height()
+        );
     }
 
     static IRectangleParam fromConfigEntry(ConfigEntryImpl.ListEntry<Integer> entry){

@@ -18,7 +18,7 @@ public interface EntryPresentable {
     static <E extends Enum<E> & EntryPresentable> String[] generateComments(Class<E> clazz, String basicComment){
         E[] values = clazz.getEnumConstants();
         String[] out = new String[values.length + 1];
-        out[0] = basicComment + "Enum values:";
+        out[0] = basicComment + " Values:";
         for(int i = 1; i < values.length + 1; i++){
             out[i] = values[i].name() + ": " + values[i].description();
         }

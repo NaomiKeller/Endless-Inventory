@@ -11,7 +11,7 @@ public class Transparent extends SFBgRendererImpl {
     private static final int PAGE_FRAME_COLOR = 0x80A0A0A0;
     private static final int PAGE_BG_COLOR = 0x30373737;
 
-    public Transparent(ScreenFramework frameWork, ScreenRectangleWidgetParam pageSwitchTabParam) {
+    public Transparent(ScreenFramework frameWork, IRectangleParam pageSwitchTabParam) {
         super(frameWork);
         this.pageSwitchTabParam = pageSwitchTabParam;
     }
@@ -43,8 +43,8 @@ public class Transparent extends SFBgRendererImpl {
 
     @Override
     public void renderBg(@NotNull GuiGraphics guiGraphics, float partialTicks, int mouseX, int mouseY) {
-        int pageX = pageSwitchTabParam.XPos();
-        int pageY = pageSwitchTabParam.YPos();
+        int pageX = pageSwitchTabParam.x();
+        int pageY = pageSwitchTabParam.y();
         int selectedPageIndex = frameWork.getDisplayingPageIndex();
         for (int i = frameWork.firstPageIndex; i < frameWork.firstPageIndex+ frameWork.pageBarCount; ++i) {
             if (i == selectedPageIndex) {

@@ -31,10 +31,10 @@ public class SortTypeSwitchBox extends AbstractWidget {
     public SortTypeSwitchBox(ScreenFramework screen, PageManager pageManager, IRectangleParam sortTypeSwitchBoxParam){
         this(screen,
                 pageManager,
-                sortTypeSwitchBoxParam.XPos(),
-                sortTypeSwitchBoxParam.YPos(),
-                sortTypeSwitchBoxParam.XSize(),
-                sortTypeSwitchBoxParam.YSize()
+                sortTypeSwitchBoxParam.x(),
+                sortTypeSwitchBoxParam.y(),
+                sortTypeSwitchBoxParam.width(),
+                sortTypeSwitchBoxParam.height()
         );
     }
 

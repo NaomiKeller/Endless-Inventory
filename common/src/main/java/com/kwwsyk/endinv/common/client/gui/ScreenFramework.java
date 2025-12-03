@@ -5,14 +5,15 @@ import com.kwwsyk.endinv.common.SourceInventory;
 import com.kwwsyk.endinv.common.client.CachedSrcInv;
 import com.kwwsyk.endinv.common.client.ClientModInfo;
 import com.kwwsyk.endinv.common.client.KeyMappings;
-import com.kwwsyk.endinv.common.client.gui.bg.*;
+import com.kwwsyk.endinv.common.client.gui.bg.FromResource;
+import com.kwwsyk.endinv.common.client.gui.bg.IRectangleParam;
+import com.kwwsyk.endinv.common.client.gui.bg.SFBgRenderer;
+import com.kwwsyk.endinv.common.client.gui.bg.Transparent;
 import com.kwwsyk.endinv.common.client.gui.page.DisplayPage;
 import com.kwwsyk.endinv.common.client.gui.page.ItemPage;
 import com.kwwsyk.endinv.common.client.gui.page.manager.PageManager;
 import com.kwwsyk.endinv.common.client.gui.widget.SortTypeSwitchBox;
-import com.kwwsyk.endinv.common.client.option.CachedConfig;
-import com.kwwsyk.endinv.common.client.option.TextureMode;
-import com.kwwsyk.endinv.common.network.payloads.PageData;
+import com.kwwsyk.endinv.common.client.option.*;
 import com.kwwsyk.endinv.common.network.payloads.toServer.CreativeItemModPayload;
 import com.kwwsyk.endinv.common.network.payloads.toServer.QuickMoveToPagePayload;
 import com.kwwsyk.endinv.common.network.payloads.toServer.StarItemPayload;
@@ -51,12 +52,12 @@ public class ScreenFramework implements PageManager{
     public final AbstractContainerMenu menu;
 
     private IRectangleParam searchBoxParam;
-    private IRectangleParam sortBoxParam;
+    private IRectangleParam sortBoxParam,reverseSortButtonParam;
     private IRectangleParam configButtonParam;
     private IRectangleParam pageBarScrollUpButtonParam, pageBarScrollDownButtonParam;
     public SFBgRenderer SFBgRenderer;
     public final int pageBarCount;
-    public int firstPageIndex = 0;
+    public static int firstPageIndex = 0;
 
     //Always pageBarCount + firstPageIndex <= meta.getPages.size()
     public int leftPos, topPos;
@@ -93,33 +94,35 @@ public class ScreenFramework implements PageManager{
         this.imageWidth = screen.getXSize();
         this.imageHeight = screen.getYSize();
         //row and columns affects the structure
-        PageData layout = CachedConfig.resolveLayout(screen, true);
-        this.columns = Math.max(1, layout.columns());
-        this.rows = Math.max(1, layout.rows());
+        EIMConfig.Param param = ClientConfigs.EIM_CONFIG.get().adjust(screen);
+        this.rows = param.rows();//row and columns affects the structure
+        this.columns = param.columns();
         //renderer may need structure and widget data --here YES: needs row/col/left/top...
-        this.SFBgRenderer = new FromResource.MenuMode(this, new ScreenRectangleWidgetParam(leftPos - 32, topPos + 1, 32, 28));
+        this.SFBgRenderer = new FromResource.MenuMode(this, param.pageSwitchBarConfig().tabParam());
 
         //------WIDGET DATA-------
-        this.pages = buildPages();//is page a widget? but init page bar count indeed needs it.
-        //page switch bar's pos < leftPos in EIS
-        this.pageBarCount = Math.min(ClientModInfo.getClientConfig().maxPageBarCount().get(), getPages().size());
-        this.pageBarScrollUpButtonParam = new ScreenRectangleWidgetParam(leftPos - 32, topPos - 16, 30, 14);
-        this.pageBarScrollDownButtonParam = new ScreenRectangleWidgetParam(leftPos - 32, topPos + 2 + 28 * pageBarCount, 30, 14);
-        //page switch bar --end--
-        this.configButtonParam = new ScreenRectangleWidgetParam(this.leftPos + this.imageWidth, Math.min(this.topPos + this.imageHeight, screen.height - 20), 18, 18);
-        this.searchBoxParam = new ScreenRectangleWidgetParam(this.leftPos + 89, this.topPos + 5, 80, 12);
-        this.sortBoxParam = new ScreenRectangleWidgetParam(this.leftPos + 8, topPos + 5, 60, 12);
+        this.pages = buildPages(param.pages());//is page a widget? but init page bar count indeed needs it.
+        //page switch bar
+        this.pageBarCount = Math.min(param.pageTabCount(), getPages().size());
+        this.pageBarScrollUpButtonParam = param.pageTabIncA();
+        this.pageBarScrollDownButtonParam = param.pageTabDecA();
+        //other
+        int searchBoxY = this.topPos + 17 + 18 * rows + 12;
+        this.searchBoxParam = param.searchBoxA();
+        this.configButtonParam = param.configButtonA();
+        this.sortBoxParam = param.sortBoxA();
+        this.reverseSortButtonParam = param.reverseSortButtonA();
 
         //------PAGES-----------
         //------prepare page data---------
-        this.pageX = leftPos + 8;
-        this.pageY = topPos + 17;
-        this.pageXSize = columns * 18;
-        this.pageYSize = rows * 18;
+        this.pageX = param.pageParamA().x();
+        this.pageY = param.pageParamA().y();
+        this.pageXSize = param.pageParamA().width();
+        this.pageYSize = param.pageParamA().height();
         //--base info should be all initialized--
 
         //---construct and switch displaying pages---
-        switchPageWithId(layout.pageRegKey());
+        switchPageWithId(ConfigCache.currentPage.registerName);
         //add widgets when base info are all prepared including displayingPage
         addWidgets();
 
@@ -133,40 +136,42 @@ public class ScreenFramework implements PageManager{
         this.menu = attachingScreen.menu;
 
         //---STRUCTURE AND RENDER DATA---
-        PageData layout = CachedConfig.resolveLayout(screen, false);
-        this.rows = layout.rows();//row and columns affects the structure
-        this.columns = layout.columns();
-        this.leftPos = 20;
-        this.topPos = Math.max((screen.height - rows * 18 - 17 - 10) / 2, 20);
-        this.imageWidth = 13 + 18 * columns;
+        AttachedMenuOptions param = ClientConfigs.ATTACHED_MENU_CONFIG.get().adjust(screen);
+        this.rows = param.rows();//row and columns affects the structure
+        this.columns = param.columns();
+        this.leftPos = param.leftPos();
+        this.topPos = param.topPos();
+        TextureMode textureMode = param.textureMode();
+        this.imageWidth = textureMode==TextureMode.TRANSPARENT ? param.pageParamA().width() : 17 + columns * 18 + 17;
         this.imageHeight = screen.height;
         //renderer may need structure and widget data --here ?
-        this.SFBgRenderer = ClientModInfo.getClientConfig().textureMode().get() != TextureMode.TRANSPARENT ?
-                new FromResource.LeftLayout(this, new ScreenRectangleWidgetParam(leftPos - 32, topPos + 20, 32, 28)) :
-                new Transparent(this, new ScreenRectangleWidgetParam(leftPos - 32, topPos + 20, 32, 28));
+        this.SFBgRenderer = textureMode != TextureMode.TRANSPARENT ?//todo
+                new FromResource.LeftLayout(this, param.pageTabA()) :
+                new Transparent(this, param.pageTabA());
 
         //---WIDGET DATA---
-        this.pages = buildPages();//is page a widget? but init page bar count indeed needs it.
+        this.pages = buildPages(param.pages());//is page a widget? but init page bar count indeed needs it.
         //page switch bar
-        this.pageBarCount = Math.min(ClientModInfo.getClientConfig().maxPageBarCount().get(), getPages().size());
-        this.pageBarScrollUpButtonParam = new ScreenRectangleWidgetParam(0, topPos, 20, 14);
-        this.pageBarScrollDownButtonParam = new ScreenRectangleWidgetParam(0, topPos + 22 + 28 * pageBarCount, 20, 14);
+        this.pageBarCount = Math.min(param.pageTabCount(), getPages().size());
+        this.pageBarScrollUpButtonParam = param.pageTabIncA();
+        this.pageBarScrollDownButtonParam = param.pageTabDecA();
         //other
         int searchBoxY = this.topPos + 17 + 18 * rows + 12;
-        this.searchBoxParam = new ScreenRectangleWidgetParam(this.leftPos + 1, searchBoxY, Math.min(200, imageWidth), Math.min(20, screen.height - searchBoxY));
-        this.configButtonParam = new ScreenRectangleWidgetParam(0, Math.min(searchBoxY, screen.height - 20), 20, 20);
-        this.sortBoxParam = new ScreenRectangleWidgetParam(this.leftPos + 6, topPos + 5, 77, 12);
+        this.searchBoxParam = param.searchBoxA();
+        this.configButtonParam = param.configButtonA();
+        this.sortBoxParam = param.sortBoxA();
+        this.reverseSortButtonParam = param.reverseSortButtonA();
 
         //------PAGES-----------
         //------prepare page data---------
-        this.pageX = leftPos + 8;
-        this.pageY = topPos + 17;
-        this.pageXSize = columns * 18;
-        this.pageYSize = rows * 18;
+        this.pageX = param.pageParamA().x();
+        this.pageY = param.pageParamA().y();
+        this.pageXSize = param.pageParamA().width();
+        this.pageYSize = param.pageParamA().height();
         //--base info should be all initialized--
 
         //---construct and switch displaying pages---
-        switchPageWithId(layout.pageRegKey());
+        switchPageWithId(ConfigCache.currentPage.registerName);
 
         //add widgets when base info are all prepared including displayingPage
         addWidgets();
@@ -180,22 +185,22 @@ public class ScreenFramework implements PageManager{
                         btn -> {
                             mc.setScreen(ClientModInfo.createConfigScreen(screen));
                         })
-                .pos(this.configButtonParam.XPos(), this.configButtonParam.YPos())
-                .size(this.configButtonParam.XSize(), this.configButtonParam.YSize())
+                .pos(this.configButtonParam.x(), this.configButtonParam.y())
+                .size(this.configButtonParam.width(), this.configButtonParam.height())
                 .build();
         this.reverseSortButton = Button.builder(Component.literal("⇅"),
                         btn -> {
-                            CachedConfig.setReverseSort(!CachedConfig.reverseSort());
+                            ConfigCache.reverseSort = !ConfigCache.reverseSort;
                             if(getDisplayingPage() instanceof ItemPage page){
                                 page.refreshItems();
                             }
                         }
                 )
-                .pos(sortBoxParam.XPos() + sortBoxParam.XSize() + 2, sortBoxParam.YPos())
-                .size(sortBoxParam.YSize(), sortBoxParam.YSize())
+                .pos(reverseSortButtonParam.x(), reverseSortButtonParam.y())
+                .size(reverseSortButtonParam.height(), reverseSortButtonParam.height())
                 .build();
         this.searchBox = new EditBox(mc.font,
-                this.searchBoxParam.XPos(), this.searchBoxParam.YPos(), this.searchBoxParam.XSize(), this.searchBoxParam.YSize(),
+                this.searchBoxParam.x(), this.searchBoxParam.y(), this.searchBoxParam.width(), this.searchBoxParam.height(),
                 Component.translatable("itemGroup.search"));
         this.sortTypeSwitchBox = new SortTypeSwitchBox(this, this, sortBoxParam);
 
@@ -205,15 +210,15 @@ public class ScreenFramework implements PageManager{
             Button up = Button.builder(Component.literal("^"), btn -> {
                         if (firstPageIndex > 0) firstPageIndex--;
                     })
-                    .pos(pageBarScrollUpButtonParam.XPos(), pageBarScrollUpButtonParam.YPos())
-                    .size(pageBarScrollUpButtonParam.XSize(), pageBarScrollUpButtonParam.YSize())
+                    .pos(pageBarScrollUpButtonParam.x(), pageBarScrollUpButtonParam.y())
+                    .size(pageBarScrollUpButtonParam.width(), pageBarScrollUpButtonParam.height())
                     .build();
             Button down = Button.builder(Component.literal("v"), btn -> {
                         if (firstPageIndex + pageBarCount < getPages().size())
                             firstPageIndex++;
                     })
-                    .pos(pageBarScrollDownButtonParam.XPos(), pageBarScrollDownButtonParam.YPos())
-                    .size(pageBarScrollDownButtonParam.XSize(), pageBarScrollDownButtonParam.YSize())
+                    .pos(pageBarScrollDownButtonParam.x(), pageBarScrollDownButtonParam.y())
+                    .size(pageBarScrollDownButtonParam.width(), pageBarScrollDownButtonParam.height())
                     .build();
             widgets.add(up);
             widgets.add(down);
@@ -267,10 +272,10 @@ public class ScreenFramework implements PageManager{
     }
 
     protected int hasClickedOnPageSwitchBar(double mouseX, double mouseY) {
-        double XOffset = mouseX - SFBgRenderer.pageSwitchBarParam().XPos();
-        double YOffset = mouseY - SFBgRenderer.pageSwitchBarParam().YPos();
-        if (XOffset < 0 || XOffset > SFBgRenderer.pageSwitchBarParam().XSize() || YOffset < 0) return -1;
-        int index = (int) YOffset / SFBgRenderer.pageSwitchBarParam().YSize();
+        double XOffset = mouseX - SFBgRenderer.pageSwitchBarParam().x();
+        double YOffset = mouseY - SFBgRenderer.pageSwitchBarParam().y();
+        if (XOffset < 0 || XOffset > SFBgRenderer.pageSwitchBarParam().width() || YOffset < 0) return -1;
+        int index = (int) YOffset / SFBgRenderer.pageSwitchBarParam().height();
         if (index < 0 || index >= pageBarCount) return -1;
         return index;
     }

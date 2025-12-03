@@ -9,6 +9,9 @@ public abstract non-sealed class ComplexConfigEntryImpl<C> extends ConfigEntryIm
     /**
      * The getter of a complex config entry may be null.
      * Let it return {@link #fields()}'s returns.
+     * <br>
+     * If C is a record, let it return a new instance of C and invoke all fields' getters.
+     *
      * @return the default value of the complex config entry.
      */
     @Override

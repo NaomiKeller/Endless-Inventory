@@ -69,6 +69,14 @@ public class PageTypeRegistry {
         return ret.stream().map(Pair::left).toList();
     }
 
+    public static List<PageType> displayingPages(Collection<String> dontDisplayPages){
+        return PAGE_TYPES.values().stream().filter(pt->!dontDisplayPages.contains(pt.registerName)).toList();
+    }
+
+    public static List<String> dontDisplayPages(Collection<PageType> pages){
+        return PAGE_TYPES.keySet().stream().filter(id->!pages.contains(byId(id))).toList();
+    }
+
     public static PageType byId(String id) {
         return PAGE_TYPES.get(id);
     }

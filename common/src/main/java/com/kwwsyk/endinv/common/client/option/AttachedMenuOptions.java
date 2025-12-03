@@ -1,9 +1,15 @@
 package com.kwwsyk.endinv.common.client.option;
 
+import com.kwwsyk.endinv.common.client.ClientModInfo;
+import com.kwwsyk.endinv.common.client.gui.EndlessInventoryScreen;
 import com.kwwsyk.endinv.common.client.gui.bg.IRectangleParam;
 import com.kwwsyk.endinv.common.client.gui.bg.ScreenRectangleWidgetParam;
 import com.kwwsyk.endinv.common.menu.page.PageType;
+import com.kwwsyk.endinv.common.menu.page.PageTypeRegistry;
 import com.kwwsyk.endinv.common.options.config.EntryPresentable;
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.util.Mth;
+import net.minecraft.world.inventory.AbstractContainerMenu;
 
 import java.util.List;
 
@@ -25,23 +31,42 @@ public class AttachedMenuOptions implements SFParamProvider{
         public String description() { return description; }
     }
 
-    private final BasicLayout basicLayout;
+    static final IRectangleParam PAGE_RECTANGLE = new ScreenRectangleWidgetParam(0,0,9*18 + 8 + 8, 17 + 15*18 + 17);
+    static final IRectangleParam SEARCH_BOX = new ScreenRectangleWidgetParam(1, 17 + 15*18 + 12, 8 + 9*18 + 8, 15);
+    static final IRectangleParam SORT_BOX = new ScreenRectangleWidgetParam(20 + 6, 20 + 5, 77, 12);
+    static final IRectangleParam REVERSE_SORT_BUTTON = new ScreenRectangleWidgetParam(20 + 6 + 77 + 2, 20 + 5, 12, 12);
+    static final IRectangleParam CONFIG_BUTTON = new ScreenRectangleWidgetParam(-20,-20,20,20);
 
-    private final PageBasicLayoutConfig.Param pageParam;
-    private final List<PageType> displayPages;
+    public static final AttachedMenuOptions DEFAULT = new AttachedMenuOptions(
+            BasicLayout.LEFT,
+            PageBasicLayoutConfig.Param.DEFAULT,
+            PageTypeRegistry.getDisplayPages(),
+            PageSwitchBarConfig.Param.DEFAULT,
+            20,20,
+            TextureMode.FROM_RESOURCE,
+            PAGE_RECTANGLE,//todo next we include the margin to page's area, it's the newer param.
+            SEARCH_BOX,
+            SORT_BOX,
+            CONFIG_BUTTON,//in the left-down corner of the screen
+            REVERSE_SORT_BUTTON
+    );
 
-    private final PageSwitchBarConfig.Param pageSwitchBarParam;
+    public final BasicLayout basicLayout;
 
-    private final int leftPos;
-    private final int topPos;
+    final PageBasicLayoutConfig.Param pageParam;
+    final List<PageType> displayPages;
 
-    private final TextureMode textureMode;
-    private final IRectangleParam pageRectangleParam;
+    final int leftPos;
+    final int topPos;
 
-    private final IRectangleParam searchBoxParam;
-    private final IRectangleParam sortBoxParam;
-    private final IRectangleParam configButtonParam;
-    private final IRectangleParam reverseSortButtonParam;
+    final TextureMode textureMode;
+    final IRectangleParam pageRectangleParam;
+    //only active in FULL_CUSTOMIZE mode
+    final PageSwitchBarConfig.Param pageSwitchBarParam;
+    final IRectangleParam searchBoxParam;
+    final IRectangleParam sortBoxParam;
+    final IRectangleParam configButtonParam;
+    final IRectangleParam reverseSortButtonParam;
 
     public AttachedMenuOptions(
             BasicLayout basicLayout,
@@ -71,35 +96,131 @@ public class AttachedMenuOptions implements SFParamProvider{
     }
 
     public static AttachedMenuOptions ofLeft(
-            int rows, int columns,
-            boolean autoRows, boolean autoColumns,
+            int topPos,
+            PageBasicLayoutConfig.Param pageParam,
             List<PageType> displayPages,
-            int maxPageBar,
-            PageSwitchBarConfig.Param pageSwitchBarParam,
-            int leftPos, int topPos,
             TextureMode textureMode,
-            IRectangleParam pageRectangleParam
+            IRectangleParam pageRect
     ){
-        int imageWidth = 13 +18*columns;
-        int searchBoxY = topPos + 17 + 18 * rows + 12;
         return new AttachedMenuOptions(
-                BasicLayout.LEFT,
-                new PageBasicLayoutConfig.Param(rows, columns, 17, 8, autoRows, autoColumns),
-                displayPages,
-                pageSwitchBarParam,
-                leftPos,topPos,
-                textureMode,
-                pageRectangleParam,
-                new ScreenRectangleWidgetParam(
-                        leftPos + 1,
-                        searchBoxY,
-                        Math.min(200, imageWidth),
-                        Math.min(20, 31 - topPos)
-                ),
-                new ScreenRectangleWidgetParam(leftPos + 6, topPos + 5, 77, 12),
-                new ScreenRectangleWidgetParam(0, Math.min(searchBoxY, 18*rows + 40), 20, 20),
-                new ScreenRectangleWidgetParam(leftPos + 85, topPos + 5, 12, 12)
+                BasicLayout.LEFT, pageParam, displayPages, PageSwitchBarConfig.Param.DEFAULT, 20, topPos, textureMode, pageRect,
+                SEARCH_BOX, SORT_BOX, CONFIG_BUTTON, REVERSE_SORT_BUTTON
         );
+    }
+
+    /**
+     * @param adjustedLeftPos if not adjusted, -1
+     */
+    public static AttachedMenuOptions ofRight(
+            int adjustedLeftPos, int topPos,
+            PageBasicLayoutConfig.Param pageParam,
+            List<PageType> displayPages,
+            TextureMode textureMode,
+            IRectangleParam pageRect
+    ){
+        return new AttachedMenuOptions(
+                BasicLayout.RIGHT, pageParam, displayPages, PageSwitchBarConfig.Param.DEFAULT, adjustedLeftPos, topPos, textureMode, pageRect,
+                SEARCH_BOX, SORT_BOX, CONFIG_BUTTON, REVERSE_SORT_BUTTON
+        );
+    }
+
+    public AttachedMenuOptions adjust(AbstractContainerScreen<?> screen){
+        if(screen instanceof EndlessInventoryScreen){
+            throw new IllegalArgumentException("EIS should not use AS's options.");
+        }
+        AbstractContainerMenu menu = screen.getMenu();
+        int menuLeft = ClientModInfo.containerScreenHelper.getGuiLeft(screen);
+        int menuTop = ClientModInfo.containerScreenHelper.getGuiTop(screen);
+        int menuRight = menuLeft + ClientModInfo.containerScreenHelper.getGuiXSize(screen);
+        switch (basicLayout){
+            case LEFT : {
+                int rows = calculateRows(screen.height - topPos - 15);
+                int columns = calculateColumns(menuLeft - leftPos - /*Reversed widget space*/30);
+                return new AttachedMenuOptions(
+                        BasicLayout.LEFT,
+                        new PageBasicLayoutConfig.Param(rows, columns, false,false),
+                        displayPages, pageSwitchBarParam, leftPos, topPos, textureMode,
+                        new ScreenRectangleWidgetParam(
+                                leftPos, topPos,
+                                textureMode==TextureMode.TRANSPARENT ? pageRectangleParam.width() : columns * 18 + 8 + 8,
+                                textureMode==TextureMode.TRANSPARENT ? pageRectangleParam.height() : rows * 18 + 17 + 17
+                        ),
+                        adjustSearchBox(screen, textureMode == TextureMode.TRANSPARENT ? pageRectangleParam.height() : rows * 18 +17+17),
+                        sortBoxParam,
+                        adjustConfigButton(textureMode == TextureMode.TRANSPARENT ? pageRectangleParam.height() : rows * 18 +17+17),
+                        reverseSortButtonParam
+                );
+            }
+            case MERGE_JEI : {//todo JEI integrate
+            }
+            case RIGHT : {
+                int rows = calculateRows(screen.height - topPos - 15);
+                int columns = calculateColumns(screen.width - menuRight);
+                int sfW = (pageSwitchBarParam.direction_isVertical() ? pageSwitchBarParam.tabParam().width() : 0)
+                        + (textureMode == TextureMode.TRANSPARENT ? pageRectangleParam.width() : pageParam.columns() * 18 + 8 + 8);
+                return new AttachedMenuOptions(
+                        BasicLayout.RIGHT,
+                        new PageBasicLayoutConfig.Param(rows, columns, false, false),
+                        displayPages,
+                        pageSwitchBarParam,
+                        screen.width - sfW, topPos,
+                        textureMode,
+                        new ScreenRectangleWidgetParam(
+                                leftPos, topPos,
+                                textureMode==TextureMode.TRANSPARENT ? pageRectangleParam.width() : columns * 18 + 8 + 8,
+                                textureMode==TextureMode.TRANSPARENT ? pageRectangleParam.height() : rows * 18 + 17 + 17
+                        ),
+                        adjustSearchBox(screen, textureMode == TextureMode.TRANSPARENT ? pageRectangleParam.height() : rows * 18 +17+17),
+                        sortBoxParam,
+                        adjustConfigButton(textureMode == TextureMode.TRANSPARENT ? pageRectangleParam.height() : rows * 18 +17+17),
+                        reverseSortButtonParam
+                );
+            }
+            case FULL_CUSTOMIZE : {
+                return this;
+            }
+            default : throw new IllegalStateException("Unexpected value: " + basicLayout);
+        }
+    }
+
+    private int calculateRows(int givenPageY){
+        if(textureMode == TextureMode.TRANSPARENT){
+            int pageH = pageRectangleParam.height() > 0 ? pageRectangleParam.height() : givenPageY;
+            if(pageParam.autoRows()){
+                pageH = Math.min(givenPageY, pageRectangleParam.height());
+            }
+            return Math.floorDiv(pageH, 18);// marginH = pageH % 18 / 2
+        }
+        // marginH = 17
+        int rows = pageParam.rows();
+        if (pageParam.autoRows()) {
+            rows = Math.floorDiv(givenPageY - 17 - 17, 18);
+        }
+        return Math.min(rows, pageParam.rows());
+    }
+
+    private int calculateColumns(int givenPageX){
+        if(textureMode == TextureMode.TRANSPARENT){
+            int pageW = pageRectangleParam.width() > 0 ? pageRectangleParam.width() : givenPageX;
+            if(pageParam.autoColumns()){
+                pageW = Math.min(givenPageX, pageRectangleParam.width());
+            }
+            return Math.floorDiv(pageW, 18);// marginW = pageW % 18 / 2
+        }
+        //marginW = 8
+        int columns = pageParam.columns();
+        if (pageParam.autoColumns()) {
+            columns = Math.floorDiv(givenPageX - 8 - 8, 18);
+        }
+        return Math.min(columns, pageParam.columns());
+    }
+
+    private IRectangleParam adjustSearchBox(AbstractContainerScreen<?> screen,int givenPageY){
+        return new ScreenRectangleWidgetParam(searchBoxParam.x(), givenPageY, searchBoxParam.width(), Mth.clamp(searchBoxParam.height(), 10, screen.height - topPos - givenPageY));
+    }
+
+    private IRectangleParam adjustConfigButton(int givenPageY){
+        return new ScreenRectangleWidgetParam(configButtonParam.x(), givenPageY, configButtonParam.width(), configButtonParam.height());
     }
 
     @Override
@@ -138,37 +259,52 @@ public class AttachedMenuOptions implements SFParamProvider{
     }
 
     @Override
-    public IRectangleParam pageParam() {
-        return pageRectangleParam;
+    public IRectangleParam pageParamA() {
+        return pageRectangleParam.absolute(leftPos, topPos);
     }
 
     @Override
-    public IRectangleParam pageTabDec() {
-        return pageSwitchBarParam.buttonDec();
+    public IRectangleParam pageTabA() {
+        return pageSwitchBarParam.tabParam().absolute(leftPos, topPos);
     }
 
     @Override
-    public IRectangleParam pageTabInc() {
-        return pageSwitchBarParam.buttonInc();
+    public IRectangleParam pageTabDecA() {
+        return pageSwitchBarParam.buttonDec().absolute(leftPos, topPos);
     }
 
     @Override
-    public IRectangleParam sortBox() {
-        return sortBoxParam;
+    public IRectangleParam pageTabIncA() {
+        return pageSwitchBarParam.buttonInc().absolute(leftPos, topPos);
     }
 
     @Override
-    public IRectangleParam configButton() {
-        return configButtonParam;
+    public IRectangleParam sortBoxA() {
+        return sortBoxParam.absolute(leftPos, topPos);
     }
 
     @Override
-    public IRectangleParam reverseSortButton() {
-        return reverseSortButtonParam;
+    public IRectangleParam configButtonA() {
+        return configButtonParam.absolute(leftPos, topPos);
     }
 
     @Override
-    public IRectangleParam searchBox() {
-        return searchBoxParam;
+    public IRectangleParam reverseSortButtonA() {
+        return reverseSortButtonParam.absolute(leftPos, topPos);
+    }
+
+    @Override
+    public IRectangleParam searchBoxA() {
+        return searchBoxParam.absolute(leftPos, topPos);
+    }
+
+    @Override
+    public AttachedMenuOptions clone(){
+        try{
+            super.clone();
+        }catch (CloneNotSupportedException e){
+            throw new RuntimeException("An exception that should not happen: "+e);
+        }
+        return new AttachedMenuOptions(basicLayout, pageParam, displayPages, pageSwitchBarParam, leftPos, topPos, textureMode, pageRectangleParam, searchBoxParam, sortBoxParam, configButtonParam, reverseSortButtonParam);
     }
 }

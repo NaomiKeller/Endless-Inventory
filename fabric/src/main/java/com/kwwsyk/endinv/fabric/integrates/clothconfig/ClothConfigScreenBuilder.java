@@ -11,7 +11,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
 import java.util.List;
-
+//TODO NEEDS REBUILD
 final class ClothConfigScreenBuilder {
 
     private static final boolean DEFAULT_ATTACHING = true;

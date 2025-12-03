@@ -5,7 +5,6 @@ import com.kwwsyk.endinv.common.client.gui.page.DisplayPage;
 import com.kwwsyk.endinv.common.client.gui.page.ItemPage;
 import com.kwwsyk.endinv.common.client.option.CachedConfig;
 import com.kwwsyk.endinv.common.menu.page.PageType;
-import com.kwwsyk.endinv.common.menu.page.PageTypeRegistry;
 import com.kwwsyk.endinv.common.menu.page.pageManager.PageMetaDataManager;
 import com.kwwsyk.endinv.common.network.payloads.toServer.ItemPageContext;
 import com.kwwsyk.endinv.common.util.SortType;
@@ -43,8 +42,8 @@ public interface PageManager extends PageMetaDataManager {
     /**
      * the return value of {@link #getPages()} shall be from this.
      */
-    default List<DisplayPage> buildPages(){
-        return PageTypeRegistry.getDisplayPages().stream().map(type -> type.buildPage(this)).toList();
+    default List<DisplayPage> buildPages(List<PageType> displayingPages){
+        return displayingPages.stream().map(type -> type.buildPage(this)).toList();
     }
 
     default ItemPageContext getInPageContext(){

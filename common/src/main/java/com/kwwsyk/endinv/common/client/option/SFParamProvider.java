@@ -16,13 +16,14 @@ public interface SFParamProvider {
 
     List<PageType> pages();
     int pageTabCount();
-    IRectangleParam pageParam();
+    IRectangleParam pageParamA();
 
-    IRectangleParam pageTabDec();
-    IRectangleParam pageTabInc();
+    IRectangleParam pageTabA();
+    IRectangleParam pageTabDecA();
+    IRectangleParam pageTabIncA();
 
-    IRectangleParam sortBox();
-    IRectangleParam configButton();
-    IRectangleParam reverseSortButton();
-    IRectangleParam searchBox();
+    IRectangleParam sortBoxA();
+    IRectangleParam configButtonA();
+    IRectangleParam reverseSortButtonA();
+    IRectangleParam searchBoxA();
 }

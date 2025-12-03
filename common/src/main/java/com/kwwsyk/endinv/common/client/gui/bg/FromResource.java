@@ -60,7 +60,7 @@ public abstract class FromResource extends SFBgRendererImpl {
 
     public static class MenuMode extends FromResource{
 
-        public MenuMode(ScreenFramework frameWork, ScreenRectangleWidgetParam pageSwitchTabParam) {
+        public MenuMode(ScreenFramework frameWork, IRectangleParam pageSwitchTabParam) {
             super(frameWork);
             this.pageSwitchTabParam = pageSwitchTabParam;
         }
@@ -83,7 +83,7 @@ public abstract class FromResource extends SFBgRendererImpl {
 
     public static class LeftLayout extends FromResource{
 
-        public LeftLayout(ScreenFramework frameWork, ScreenRectangleWidgetParam pageSwitchTabParam){
+        public LeftLayout(ScreenFramework frameWork, IRectangleParam pageSwitchTabParam){
             super(frameWork);
             this.pageSwitchTabParam = pageSwitchTabParam;
         }
@@ -193,8 +193,8 @@ public abstract class FromResource extends SFBgRendererImpl {
 
     @Override
     public void renderBg(@NotNull GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {
-        int pageX = pageSwitchTabParam.XPos();
-        int pageY = pageSwitchTabParam.YPos();
+        int pageX = pageSwitchTabParam.x();
+        int pageY = pageSwitchTabParam.y();
         int selectedPageIndex = frameWork.getDisplayingPageIndex();
         for (int i = frameWork.firstPageIndex; i < frameWork.firstPageIndex + frameWork.pageBarCount; ++i) {
             if (i == selectedPageIndex) {

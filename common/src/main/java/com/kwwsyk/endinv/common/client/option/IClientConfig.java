@@ -5,7 +5,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 
 import java.util.Set;
-
+@Deprecated
 public interface IClientConfig {
 
     IConfigValue<Boolean> attaching();
@@ -14,7 +14,9 @@ public interface IClientConfig {
 
     IConfigValue<Integer> columns();
 
-    IConfigValue<Boolean> autoSuitColumn();
+    default IConfigValue<Boolean> autoSuitColumn(){
+        return ClientConfigs.ATTACHED_MENU_CONFIG.PageBasicLayout.autoColumns;
+    }
 
     IConfigValue<TextureMode> textureMode();
 

@@ -15,7 +15,7 @@ public abstract class SFBgRendererImpl implements SFBgRenderer {
     protected final int pageLeft;
     protected final int pageTop;
     protected final AbstractContainerScreen<?> screen;
-    public ScreenRectangleWidgetParam pageSwitchTabParam;
+    public IRectangleParam pageSwitchTabParam;
     protected final int imageWidth;
 
     protected final int rows;
@@ -34,8 +34,8 @@ public abstract class SFBgRendererImpl implements SFBgRenderer {
     }
 
     protected void renderPageBarContent(GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY){
-        int pageX = pageSwitchTabParam.XPos();
-        int pageY = pageSwitchTabParam.YPos();
+        int pageX = pageSwitchTabParam.x();
+        int pageY = pageSwitchTabParam.y();
         int selectedPageIndex = frameWork.getDisplayingPageIndex();
         for (int i = frameWork.firstPageIndex; i < frameWork.firstPageIndex+ frameWork.pageBarCount; ++i) {
             frameWork.getPages().get(i).renderPageIcon(guiGraphics, pageX + 15, pageY + 5, partialTick);
@@ -50,7 +50,7 @@ public abstract class SFBgRendererImpl implements SFBgRenderer {
     }
 
     @Override
-    public ScreenRectangleWidgetParam pageSwitchBarParam() {
+    public IRectangleParam pageSwitchBarParam() {
         return pageSwitchTabParam;
     }
 

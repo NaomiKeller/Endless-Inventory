@@ -12,7 +12,7 @@ public interface SFBgRenderer {
 
     void renderBg(@NotNull GuiGraphics guiGraphics, float partialTicks, int mouseX, int mouseY);
 
-    ScreenRectangleWidgetParam pageSwitchBarParam();
+    IRectangleParam pageSwitchBarParam();
 
     default Optional<PageBgRender> getDefaultPageBgRenderer(){
         return Optional.empty();

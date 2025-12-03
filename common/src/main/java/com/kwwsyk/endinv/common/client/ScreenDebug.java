@@ -72,8 +72,8 @@ public class ScreenDebug {
 
                 graphics.drawString(mc.font, Component.literal("Width: " + width), width - 128, 10, 0xFFFFFF00);
                 graphics.drawString(mc.font, Component.literal("Height: " + height), width - 128, 20, 0xFFFFFF00);
-                graphics.drawString(mc.font, Component.literal("ImageWidth/XSize: " + imageWidth), width - 128, 30, 0xFFFFFF00);
-                graphics.drawString(mc.font, Component.literal("ImageHeight/YSize: " + imageHeight), width - 128, 40, 0xFFFFFF00);
+                graphics.drawString(mc.font, Component.literal("ImageWidth/width: " + imageWidth), width - 128, 30, 0xFFFFFF00);
+                graphics.drawString(mc.font, Component.literal("ImageHeight/height: " + imageHeight), width - 128, 40, 0xFFFFFF00);
                 graphics.drawString(mc.font, Component.literal("GUILeft: " + guiLeft), width - 128, 50, 0xFFFFFF00);
                 graphics.drawString(mc.font, Component.literal("GUITop: " + guiTop), width - 128, 60, 0xFFFFFF00);
                 graphics.drawString(mc.font, Component.literal("mouseX: " + mouseX), width - 128, 70, 0xFFFFFF00);

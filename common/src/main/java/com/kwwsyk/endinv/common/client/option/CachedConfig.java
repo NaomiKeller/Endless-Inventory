@@ -11,12 +11,7 @@ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.player.LocalPlayer;
 import org.jetbrains.annotations.Nullable;
 
-/**Caches that keep pages' options, including:<br>
- * <ul>
- *     <li>options toggled in page (sort, search...)</li>
- *     <li>data synced from server (attaching)</li>
- * </ul>
- */
+@Deprecated
 public final class CachedConfig {
 
     private static String pageRegKey = PageType.DEFAULT_KEY;

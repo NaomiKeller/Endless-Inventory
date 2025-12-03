@@ -20,16 +20,6 @@ public class PageBasicLayoutConfig extends ComplexConfigEntryImpl<PageBasicLayou
             new String[]{"The default columns of page, if auto suit columns, it's the max column count."},
             9,0,255
     );
-    public final ConfigEntryImpl<Integer> yOffset = new ConfigEntryImpl.IntEntry(
-            "yOffset",
-            new String[]{"The vertical offset of page to original position of Attached Menu."},
-            0,Integer.MIN_VALUE,Integer.MAX_VALUE
-    );
-    public final ConfigEntryImpl<Integer> xOffset = new ConfigEntryImpl.IntEntry(
-            "xOffset",
-            new String[]{"The horizontal offset of page to original position of Attached Menu."},
-            0,Integer.MIN_VALUE,Integer.MAX_VALUE
-    );
     public final ConfigEntryImpl<Boolean> autoRows = new ConfigEntryImpl.BooleanEntry(
             "auto suit row count",
             new String[]{"Auto suit row count based on the GuiSize in case the page exceeded the gui screen."},
@@ -53,7 +43,7 @@ public class PageBasicLayoutConfig extends ComplexConfigEntryImpl<PageBasicLayou
      */
     @Override
     public Param get() {
-        return new Param(Rows.get(), Columns.get(), yOffset.get(), xOffset.get(), autoRows.get(), autoColumns.get());
+        return new Param(Rows.get(), Columns.get(), autoRows.get(), autoColumns.get());
     }
 
     /**
@@ -66,8 +56,6 @@ public class PageBasicLayoutConfig extends ComplexConfigEntryImpl<PageBasicLayou
     public void set(Param param) {
         Rows.set(param.rows());
         Columns.set(param.columns());
-        yOffset.set(param.yOffset());
-        xOffset.set(param.xOffset());
         autoRows.set(param.autoRows());
         autoColumns.set(param.autoColumns());
         save();
@@ -76,11 +64,15 @@ public class PageBasicLayoutConfig extends ComplexConfigEntryImpl<PageBasicLayou
     @Override
     public ConfigEntryImpl<?>[] fields() {
         return new ConfigEntryImpl[]{
-                Rows, Columns, yOffset, xOffset, autoRows, autoColumns
+                Rows, Columns, autoRows, autoColumns
         };
     }
 
-    public record Param(int rows, int columns, int yOffset, int xOffset, boolean autoRows, boolean autoColumns){
-        public static final Param DEFAULT = new Param(15,9,0,0,true,true);
+    /** Page's parameters. Both used to present config value or provide as ScreenFrameWork's parameters.
+     * @param autoRows when true, the rows will be set to the max row count that can fit the screen. When provided as ScreenFramework's param, it should be false as the row count is decided.
+     * @param autoColumns when true, the columns will be set to the max column count that can fit the screen. When provided as ScreenFramework's param, it should be false as the column count is decided.
+     */
+    public record Param(int rows, int columns, boolean autoRows, boolean autoColumns){
+        public static final Param DEFAULT = new Param(15,9,true,true);
     }
 }
