@@ -123,7 +123,7 @@ public class SegClassifyItemDisplay extends ItemDisplay {
 
     @Override
     public ItemStack takeItem(int index, int count) {
-        int viewIndex = startIndex + index;
+        int viewIndex = getStartIndex() + index;
         if (viewIndex < 0 || viewIndex >= segmentedView.size()) {
             return ItemStack.EMPTY;
         }
@@ -230,7 +230,7 @@ public class SegClassifyItemDisplay extends ItemDisplay {
 
     private void updateDisplayedSlice() {
         int columns = Math.max(1, framework.columns());
-        int fromIndex = Math.min(startIndex, segmentedView.size());
+        int fromIndex = Math.min(getStartIndex(), segmentedView.size());
         int toIndex = Math.min(fromIndex + length, segmentedView.size());
         List<ItemStack> slice = segmentedView.subList(fromIndex, toIndex);
         buildContentDirectly(slice);

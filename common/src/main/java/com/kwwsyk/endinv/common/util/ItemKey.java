@@ -1,5 +1,9 @@
 package com.kwwsyk.endinv.common.util;
 
+import com.kwwsyk.endinv.common.data.EndInvCodecStrategy;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponentPatch;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -24,6 +28,17 @@ public record ItemKey(Item item,@NotNull DataComponentPatch components) {
             ItemKey::new
     );
 
+    public static final Codec<ItemKey> CODEC = RecordCodecBuilder.create(
+            instance -> instance.group(
+                    Item.CODEC.fieldOf(EndInvCodecStrategy.ITEM_ID_KEY).forGetter(ItemKey::itemHolder),
+                    DataComponentPatch.CODEC.optionalFieldOf(EndInvCodecStrategy.COMPONENTS_KEY, DataComponentPatch.EMPTY).forGetter(ItemKey::components)
+            ).apply(instance ,ItemKey::new)
+    );
+
+    public ItemKey(Holder<Item> itemHolder, DataComponentPatch components){
+        this(itemHolder.value(),components);
+    }
+
     public ItemKey(Item item, @Nullable DataComponentPatch components){
         this.item = item;
         this.components = components==null? DataComponentPatch.EMPTY : components;
@@ -31,6 +46,10 @@ public record ItemKey(Item item,@NotNull DataComponentPatch components) {
 
     public ItemStack toStack(int count){
         return new ItemStack(BuiltInRegistries.ITEM.wrapAsHolder(item),count,components);
+    }
+
+    private Holder<Item> itemHolder(){
+        return item.builtInRegistryHolder();
     }
 
     public static ItemKey asKey(ItemStack stack){

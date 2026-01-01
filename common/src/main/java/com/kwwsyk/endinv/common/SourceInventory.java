@@ -8,6 +8,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import org.slf4j.Logger;
 
+import javax.annotation.Nonnegative;
 import javax.annotation.Nullable;
 import java.util.*;
 import java.util.concurrent.locks.Lock;
@@ -21,6 +22,7 @@ import java.util.stream.Stream;
 public abstract class SourceInventory {
 
     private static final Logger LOGGER = LogUtils.getLogger();
+    public final EndInvAffinities affinities;
 
     //item container
     protected final Map<ItemKey, ItemState> itemMap;
@@ -42,15 +44,31 @@ public abstract class SourceInventory {
     private final Lock writeLock = lock.writeLock();
     private volatile boolean itemsDirty = true;
 
-    public SourceInventory(UUID uuid){
+    protected SourceInventory(UUID uuid, EndInvAffinities affinities){
         this.items = new ArrayList<>();
         this.itemMap = new Object2ObjectLinkedOpenHashMap<>();
         this.uuid = uuid;
         this.maxStackSize = com.kwwsyk.endinv.common.options.ServerConfigs.ENDINV_BEHAVIOR.MaxStackSize.get();
         this.infinityMode = com.kwwsyk.endinv.common.options.ServerConfigs.ENDINV_BEHAVIOR.EnableInfinity.get();
         this.accessibility = com.kwwsyk.endinv.common.options.ServerConfigs.ENDINV_BEHAVIOR.Access.get();
+        this.affinities = affinities;
     }
 
+
+    public List<ItemStackLike> getStarredItems(@Nonnegative int startIndex, @Nonnegative int length){
+        var items = affinities.getStarredItems(startIndex,length);
+        return items.stream().map(this::getStackWithZeroCount).toList();
+    }
+
+    public List<ItemStackLike> getStarredItems(){
+        return getStarredItems(0,affinities.starredItems.size());
+    }
+
+    public ItemStackLike getStackWithZeroCount(ItemKey stack){
+        var state = itemMap.get(stack);
+        if(state==null) return ItemStackLike.asKey(stack);
+        return ItemStackLike.asKey(stack,state.count());
+    }
 
     public void setChanged(){
         markCacheDirty();
@@ -67,7 +85,7 @@ public abstract class SourceInventory {
     }
 
     public Map<ItemKey,ItemState> getItemMap(){
-        return itemMap;
+        return new Object2ObjectLinkedOpenHashMap<>(itemMap);
     }
 
     public List<ItemStack> getItemsAsList(){

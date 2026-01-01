@@ -9,6 +9,7 @@ import com.kwwsyk.endinv.common.client.gui.bg.SFBgRenderer;
 import com.kwwsyk.endinv.common.client.gui.page.manager.PageManager;
 import com.kwwsyk.endinv.common.menu.page.PageType;
 import com.mojang.blaze3d.platform.InputConstants;
+import net.minecraft.ChatFormatting;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -233,6 +234,33 @@ public abstract class DisplayPage{
     }
 
     public abstract void renderPage(GuiGraphics graphics);
+
+    protected String getDisplayAmount(ItemStack stack){
+        int count = stack.getCount();
+        double value;
+        String suffix;
+
+        if(count == this.framework.getMaxStackSize() && framework.enableInfinity()){
+            return "∞";
+        }
+
+        if (count >= 1_000_000_000) {
+            value = count / 1_000_000_000.0;
+            suffix = "b";
+        } else if (count >= 1_000_000) {
+            value = count / 1_000_000.0;
+            suffix = "m";
+        } else if (count >= 1_000) {
+            value = count / 1_000.0;
+            suffix = "k";
+        }else if(count==0){
+            return ChatFormatting.RED + "0";
+        }else {
+            return String.valueOf(count);
+        }
+
+        return String.format("%.1f%s", value, suffix);
+    }
 
     public void renderHovering(GuiGraphics graphics, int mouseX, int mouseY, float partialTick){}
 

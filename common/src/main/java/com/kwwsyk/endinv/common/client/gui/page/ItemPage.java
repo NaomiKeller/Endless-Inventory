@@ -1,8 +1,6 @@
 package com.kwwsyk.endinv.common.client.gui.page;
 
 import com.kwwsyk.endinv.common.ModInfo;
-import com.kwwsyk.endinv.common.client.CachedSrcInv;
-import com.kwwsyk.endinv.common.client.gui.EndlessInventoryScreen;
 import com.kwwsyk.endinv.common.client.gui.ScreenFramework;
 import com.kwwsyk.endinv.common.menu.page.PageType;
 import com.kwwsyk.endinv.common.network.payloads.PageData;
@@ -11,13 +9,9 @@ import com.kwwsyk.endinv.common.network.payloads.toServer.ItemClickPayload;
 import com.kwwsyk.endinv.common.network.payloads.toServer.ItemPageContext;
 import com.kwwsyk.endinv.common.network.payloads.toServer.StarItemPayload;
 import com.mojang.logging.LogUtils;
-import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen;
-import net.minecraft.client.renderer.Rect2i;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.core.NonNullList;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -25,7 +19,6 @@ import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 
 import java.util.List;
@@ -35,21 +28,16 @@ import static com.kwwsyk.endinv.common.ModInfo.getPacketDistributor;
 /**Page that holds ItemStack list. It's the main type of pages.
  *
  */
-public abstract class ItemPage extends DisplayPage {
+public abstract class ItemPage extends GridPage {
 
     private static final Logger LOGGER = LogUtils.getLogger();
 
     protected NonNullList<ItemStack> items;
 
-    protected int startIndex = 0;
-
-    protected int length;
-
     protected List<ItemStack> inQueueStacks = null;
 
     public ItemPage(PageType pageType, ScreenFramework framework) {
         super(pageType, framework);
-        this.length = this.framework.rows()* this.framework.columns();
     }
 
     /**
@@ -59,29 +47,20 @@ public abstract class ItemPage extends DisplayPage {
     public void resize(int rows) {
         int targetRows = Math.max(1, rows);
         this.length = targetRows * framework.columns();
-        initializeContents(this.startIndex, this.length);
+        setVisibleRange(this.startIndex, this.length);
     }
 
-    @Override
-    public void scrollTo(float pos) {
-        int startIndex = getRowIndexForScroll(pos)* framework.columns();
-        this.initializeContents(startIndex,this.length);
-    }
-
-    /**Build or reload item page's content by SourceInv {@link CachedSrcInv}
-     *  and it will set back to unscrolled status.
+    /**Configure the visible window and reload items.
+     * <p>
+     * Updates the page's starting index and slot count, ensures the internal
+     * {@link #items} list matches the requested size, clears transient state via {@link #release()},
+     * then calls {@link #refreshItems()} to populate the visible entries.
+     * </p>
+     * @param startIndex the source-inventory index of the first visible item
+     * @param length the number of slots to display (typically rows * columns)
      */
     @Override
-    public void initializeContents() {
-        initializeContents(0, framework.rows()* framework.columns());
-    }
-
-    /**The <em>init</em> method of ItemPage, it will change the startIndex and length of page and init a new {@link #items} list.
-     * Then it invokes {@link #refreshItems()} to build showing items
-     * @param startIndex the index of the item first displayed in EndInv(SrcInv)
-     * @param length the count of the item should be displayed, should equal to rows*columns
-     */
-    protected void initializeContents(int startIndex, int length) {
+    protected void setVisibleRange(int startIndex, int length) {
         this.startIndex = startIndex;
         this.length = Math.min(length, framework.rows()* framework.columns());
         // ensure internal invariants
@@ -107,11 +86,7 @@ public abstract class ItemPage extends DisplayPage {
      */
     public void sendChangesToServer() {
         var layout = new PageData(this.id, framework.rows(), framework.columns(), framework.sortType(), framework.isSortReversed(), framework.searching());
-        getPacketDistributor().sendToServer(new ItemPageContext(startIndex, length, layout));//send this packet will receive a content packet as callback
-    }
-
-    public int getStartIndex(){
-        return this.startIndex;
+        getPacketDistributor().sendToServer(new ItemPageContext(getStartIndex(), length, layout));//send this packet will receive a content packet as callback
     }
 
     public boolean isEmpty() {
@@ -120,39 +95,7 @@ public abstract class ItemPage extends DisplayPage {
 
     @Override
     public boolean canScroll() {
-        return startIndex>0 ||(startIndex+length <= srcInv.getItemSize());
-    }
-
-    public int getSlotByMouseOffset(double XOffset, double YOffset){
-        XOffset = XOffset - MARGIN_SIDE_WIDTH; YOffset = YOffset - MARGIN_TOP_HEIGHT;
-        if(XOffset<0||YOffset<0||XOffset>18* framework.columns()||YOffset>18* framework.rows()) return -1;
-        return (int)XOffset/18 + framework.columns()*((int)YOffset/18);
-    }
-
-    /**
-     * Get an area of one independent interactable area, mainly one item slot.
-     * Can be used to mark one clickable area with other mods, such as Jei's register {@code getClickableIngredientUnderMouse}
-     * @param XOffset mouseX-pageX
-     * @param YOffset mouseY-pageY
-     * @return one interactable area
-     */
-    @Override
-    public Rect2i getOneInteractableArea(double XOffset, double YOffset){
-        return getSlotArea(getSlotByMouseOffset(XOffset, YOffset));
-    }
-
-    /**
-     * Get area of one slot by the index of slot
-     * @param slot index of slot/item, often use {@link #getSlotByMouseOffset(double, double)} to get
-     * @return one slot area
-     */
-    @Nullable
-    public Rect2i getSlotArea(int slot){
-        if(slot<0) return null;
-        final int slotSize = 18;
-        final int rowAt = slot / framework.columns();
-        final int columnAt = slot % framework.columns();
-        return new Rect2i(leftPos+slotSize*columnAt, topPos+slotSize*rowAt, slotSize, slotSize);
+        return getStartIndex() >0 ||(getStartIndex() +length <= srcInv.getItemSize());
     }
 
     /**Get mouse hovered or clicked item by mouse offset.
@@ -196,103 +139,18 @@ public abstract class ItemPage extends DisplayPage {
         guiGraphics.pose().popPose();
     }
 
-    protected void renderEmpty(GuiGraphics guiGraphics,int x,int y,ItemStack itemStack){
-        ItemStack toRender = itemStack.copyWithCount(1);
-        guiGraphics.renderItem(toRender,x,y,0);
-        guiGraphics.renderItemDecorations(Minecraft.getInstance().font,toRender,x,y,ChatFormatting.RED+"0");
-    }
-
-    protected boolean isHiddenBySortBox(int rowIndex, int columnIndex){
-        return rowIndex<=2 && columnIndex<=3 && Minecraft.getInstance().screen instanceof AbstractContainerScreen<?> screen
-                && (
-                screen instanceof EndlessInventoryScreen EIS && EIS.getFrameWork().sortTypeSwitchBox.isOpen() && columnIndex <=2
-                        || framework.sortTypeSwitchBox.isOpen()
-                );
-    }
-
-    protected String getDisplayAmount(ItemStack stack){
-        int count = stack.getCount();
-        double value;
-        String suffix;
-
-        if(count == this.framework.getMaxStackSize() && framework.enableInfinity()){
-            return "∞";
-        }
-
-        if (count >= 1_000_000_000) {
-            value = count / 1_000_000_000.0;
-            suffix = "b";
-        } else if (count >= 1_000_000) {
-            value = count / 1_000_000.0;
-            suffix = "m";
-        } else if (count >= 1_000) {
-            value = count / 1_000.0;
-            suffix = "k";
-        }else if(count==0){
-            return ChatFormatting.RED + "0";
-        }else {
-            return String.valueOf(count);
-        }
-
-        return String.format("%.1f%s", value, suffix);
-    }
-
-    public void renderHovering(GuiGraphics graphics, int mouseX, int mouseY, float partialTick){
-        renderSlotHighlight(graphics, mouseX, mouseY, partialTick);
-        ItemStack hovering = getHoveredOrClickedItem(mouseX, mouseY);
-        if(hovering.isEmpty()) return;
-
-        graphics.pose().pushPose();
-        graphics.pose().translate(0, 0, 550.0F);
-        {
-            graphics.renderTooltip(Minecraft.getInstance().font,
-                    AbstractContainerScreen.getTooltipFromItem(Minecraft.getInstance(), hovering),
-                    hovering.getTooltipImage(),
-                    mouseX, mouseY);
-        }
-        graphics.pose().popPose();
-    }
-    protected void renderSlotHighlight(GuiGraphics graphics, int mouseX, int mouseY, float partialTick){
-        for(int u = 0; u< framework.columns(); ++u){
-            for(int v = 0; v< framework.rows(); ++v){
-                int x1 = leftPos+MARGIN_SIDE_WIDTH+18*u;
-                int x2 = leftPos+MARGIN_SIDE_WIDTH+18*u+17;
-                int y1 = topPos+MARGIN_TOP_HEIGHT+18*v+1;
-                int y2 = topPos+MARGIN_TOP_HEIGHT+18*v+18;
-                if(mouseX>x1 && mouseX<x2 && mouseY>y1 && mouseY<y2){
-                    if(!framework.getMenu().getCarried().isEmpty()) return;
-                    graphics.fillGradient(RenderType.guiOverlay(),x1,y1,x2,y2,0x80ffffff,0x80ffffff,0);
-                }
-            }
-        }
-    }
-
-    @Override
-    public boolean doubleClickedOnOne(double XOffset, double YOffset, double lastX, double lastY, long clickInterval) {
-        return clickedInOneSlot(XOffset, YOffset,lastX,lastY) && clickInterval<=250;
-    }
-
-    protected boolean clickedInOneSlot(double XOffset, double YOffset, double lastX, double lastY) {
-        return (int)XOffset/18==(int)lastX/18 && (int)YOffset/18 == (int)lastY/18;
-    }
-
     @Override
     public void pageClicked(double XOffset, double YOffset, int button, ClickType clickType) {
         int slot = getSlotByMouseOffset(XOffset,YOffset);
         if(slot>=0 && slot<items.size()) {
             ItemStack clicked = items.get(slot).copy();
-            if (clickType == ClickType.PICKUP) {
-                handlePickup(clicked, button);
-            } else if (clickType == ClickType.QUICK_MOVE) {
-                handleQuickMove(clicked);
-            } else if (clickType == ClickType.SWAP) {
-                handleSwap(clicked, button);
-            } else if (clickType == ClickType.THROW) {
-                handleThrow(clicked);
-            } else if (clickType == ClickType.PICKUP_ALL) {
-                handlePickupAll(clicked);
-            } else if (clickType == ClickType.CLONE) {
-                handleClone(clicked);
+            switch (clickType){
+                case PICKUP -> handlePickup(clicked, button);
+                case QUICK_MOVE -> handleQuickMove(clicked);
+                case SWAP -> handleSwap(clicked, slot);
+                case THROW -> handleThrow(clicked);
+                case CLONE -> handleClone(clicked);
+                case PICKUP_ALL -> handlePickupAll(clicked);
             }
             LOGGER.info("EI:sending:ItemClickPayload: player={} clickType={} button={} stack={}"
                     , framework.getPlayer(),clickType,button, clicked);

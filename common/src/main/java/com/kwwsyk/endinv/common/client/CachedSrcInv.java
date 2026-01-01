@@ -18,12 +18,13 @@ import java.util.Map;
 public class CachedSrcInv extends SourceInventory {
 
     public static final CachedSrcInv INSTANCE = new CachedSrcInv();
+
     private int itemSize;
     //controls whether itemSize data is valid when transfermode==all.
     private boolean validSize;
 
     private CachedSrcInv(){
-        super(ModInfo.DEFAULT_UUID);
+        super(ModInfo.DEFAULT_UUID, null);
     }
 
     public void initializeContents(Map<ItemKey, ItemState> itemMap){

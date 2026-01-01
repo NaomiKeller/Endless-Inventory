@@ -2,10 +2,13 @@ package com.kwwsyk.endinv.common.data;
 
 import com.kwwsyk.endinv.common.EndlessInventory;
 import com.kwwsyk.endinv.common.ServerLevelEndInv;
+import com.mojang.datafixers.util.Pair;
 import com.mojang.logging.LogUtils;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.NbtOps;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.datafix.DataFixTypes;
 import net.minecraft.world.level.Level;
@@ -21,8 +24,6 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -31,15 +32,15 @@ import static com.kwwsyk.endinv.common.data.EndInvCodecStrategy.END_INV_LIST_KEY
 public class EndlessInventoryData extends SavedData {
 
     private static final Logger LOGGER = LogUtils.getLogger();
-    public final List<EndlessInventory> levelEndInvs;
 
-    public static EndInvCodecStrategy LoadStrategy = new FullCodecStrategy();
-    public static EndInvCodecStrategy SaveStrategy = new FullCodecStrategy();
+    private static ServerLevel serverLevelSnapshot;
+
+    public final NonNullList<EndlessInventory> levelEndInvs;
 
     public record BackupResult(boolean success, @Nullable String message) {}
 
     private EndlessInventoryData(){
-        this.levelEndInvs = new ArrayList<>();
+        this.levelEndInvs = NonNullList.create();
     }
 
     public static void init(ServerLevel level){
@@ -47,6 +48,8 @@ public class EndlessInventoryData extends SavedData {
             //LOGGER.warn("Skipped EndlessInventoryData initialization in dimension: {}", level.dimension().location());
             return; // 仅在主世界执行
         }
+
+        serverLevelSnapshot = level;
 
         SavedData.Factory<EndlessInventoryData> factory = new SavedData.Factory<>(EndlessInventoryData::create, EndlessInventoryData::load, DataFixTypes.CHUNK);
         ServerLevelEndInv.levelEndInvData = level.getDataStorage().computeIfAbsent(factory, END_INV_LIST_KEY);
@@ -121,24 +124,21 @@ public class EndlessInventoryData extends SavedData {
     public static EndlessInventoryData load(final CompoundTag tag, HolderLookup.Provider provider){
         EndlessInventoryData data = create();
         //Get EndInv[]
-        ListTag listTag = tag.getList(END_INV_LIST_KEY,10) ;
+        ListTag listTag = tag.getList(END_INV_LIST_KEY,10);
 
-        CompoundTag head = listTag.getCompound(0);
-        checkStrategy(head);
+        listTag.forEach(t-> {
+            EndlessInventory endinv = EndlessInventory.CODEC.decode(NbtOps.INSTANCE,t).mapOrElse(
+                    Pair::getFirst,
+                    errorResult -> {
+                        LOGGER.error("Failed to load EndInv: {}", errorResult.message());
+                        backup(serverLevelSnapshot);
+                        return null;
+                    }
+            );
+            if(endinv!=null) data.levelEndInvs.add(endinv);
+        });
 
-        //{}EndInv -> EndInvs -> levelEndInvs
-        listTag.iterator().forEachRemaining(
-                (t)->   data.levelEndInvs.add(LoadStrategy.deserializeEndInv((CompoundTag) t, provider))
-        );
         return data;
-    }
-
-    static void checkStrategy(final CompoundTag tag){
-        boolean flag = LoadStrategy.canHandle(tag);
-        if(!flag) {
-            LoadStrategy = new SortedSaveStrategy();
-            LOGGER.debug("EndInv load strategy changed to default as current strategy cannot handle.");
-        }
     }
 
     @Override
@@ -148,13 +148,12 @@ public class EndlessInventoryData extends SavedData {
         ListTag nbtTagList = new ListTag();
 
         for (EndlessInventory endlessInventory : levelEndInvs) {
-            CompoundTag invTag = SaveStrategy.serializeEndInv(endlessInventory, provider);
+            CompoundTag invTag = (CompoundTag) EndlessInventory.CODEC
+                    .encode(endlessInventory, NbtOps.INSTANCE, compoundTag)
+                    .getOrThrow();
             nbtTagList.add(invTag);
         }
-
-        CompoundTag saveTag = new CompoundTag();
-        //{HEAD}: endless_inventories: []
-        saveTag.put(END_INV_LIST_KEY,nbtTagList);
-        return saveTag;
+        compoundTag.put(END_INV_LIST_KEY,nbtTagList);
+        return compoundTag;
     }
 }

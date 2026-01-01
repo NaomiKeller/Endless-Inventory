@@ -4,6 +4,7 @@ import com.kwwsyk.endinv.common.data.EndlessInventoryData;
 import com.kwwsyk.endinv.common.menu.EndlessInventoryMenu;
 import com.kwwsyk.endinv.common.menu.page.pageManager.AttachingMonitor;
 import com.kwwsyk.endinv.common.menu.page.pageManager.PageMetaDataManager;
+import com.kwwsyk.endinv.common.options.ServerConfigs;
 import com.kwwsyk.endinv.common.util.Accessibility;
 import com.mojang.logging.LogUtils;
 import net.minecraft.server.level.ServerPlayer;
@@ -46,7 +47,7 @@ public final class ServerLevelEndInv {
             endlessInventory = getPlayerDefaultEndInv(player);
         }
         if(endlessInventory==null){
-            switch (com.kwwsyk.endinv.common.options.ServerConfigs.CREATION_MODE.get()){
+            switch (ServerConfigs.CREATION_MODE.get()){
                 case CREATE_PER_PLAYER -> {
                     endlessInventory = levelEndInvData.levelEndInvs
                             .stream()

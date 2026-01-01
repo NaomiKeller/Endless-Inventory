@@ -1,30 +1,79 @@
 package com.kwwsyk.endinv.common;
 
 
+import com.kwwsyk.endinv.common.util.Accessibility;
 import com.kwwsyk.endinv.common.util.ItemKey;
-import com.kwwsyk.endinv.common.util.ItemStackLike;
+import com.kwwsyk.endinv.common.util.ItemState;
 import com.kwwsyk.endinv.common.util.SortType;
 import com.mojang.logging.LogUtils;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
+import net.minecraft.core.UUIDUtil;
+import net.minecraft.core.component.DataComponentPatch;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import org.slf4j.Logger;
 
-import javax.annotation.Nonnegative;
 import javax.annotation.Nullable;
 import java.util.*;
+
+import static com.kwwsyk.endinv.common.data.EndInvCodecStrategy.*;
 
 /**An item container may have endless storage.*/
 public class EndlessInventory extends SourceInventory {//todo add content transfer mode as a field
 
     private static final Logger LOGGER = LogUtils.getLogger();
+    @SuppressWarnings("deprecation")
+    public static final Codec<Map<ItemKey, ItemState>> ITEM_MAP_CODEC = Codec.list(
+            RecordCodecBuilder.<Map.Entry<ItemKey,ItemState>>create(instance -> instance.group(
+                    Item.CODEC.fieldOf(ITEM_ID_KEY).forGetter(e->e.getKey().item().builtInRegistryHolder()),
+                    DataComponentPatch.CODEC.optionalFieldOf(COMPONENTS_KEY, DataComponentPatch.EMPTY).forGetter(e -> e.getKey().components()),
+                    Codec.INT.fieldOf(ITEM_COUNT_KEY).forGetter(e -> e.getValue().count()),
+                    Codec.LONG.fieldOf(LAST_MOD_TIME_LONG_KEY).forGetter(e -> e.getValue().lastModTime())
+            ).apply(instance, (item, com, c, mod) -> Map.entry(new ItemKey(item, com), new ItemState(c, mod))))
+    ).xmap(
+            lst -> {
+                Map<ItemKey, ItemState> map = new Object2ObjectLinkedOpenHashMap<>(lst.size());
+                for(var e : lst) map.put(e.getKey(),e.getValue());
+                return map;
+            },
+            map -> {
+                var list = new ArrayList<Map.Entry<ItemKey, ItemState>>(map.size());
+                map.forEach((k,v)->list.add(Map.entry(k,v)));
+                return list;
+            }
+    );
+
+    public static final Codec<EndlessInventory> CODEC = RecordCodecBuilder.create(
+            instance -> instance.group(
+                    ITEM_MAP_CODEC.fieldOf(ITEM_LIST_KEY).forGetter(EndlessInventory::getItemMap),
+                    EndInvAffinities.CODEC.fieldOf(AFFINITY_KEY).forGetter(endinv->endinv.affinities),
+                    UUIDUtil.CODEC.fieldOf(UUID_KEY).forGetter(EndlessInventory::getUuid),
+                    UUIDUtil.CODEC.fieldOf(OWNER_UUID_KEY).forGetter(endinv -> endinv.owner),
+                    Codec.list(UUIDUtil.CODEC).fieldOf(WHITE_LIST_KEY).forGetter(ei -> ei.white_list),
+                    Codec.STRING.xmap(Accessibility::valueOf, Accessibility::name).fieldOf(ACCESSIBILITY_KEY).forGetter(EndlessInventory::getAccessibility),
+                    Codec.INT.fieldOf(MAX_STACK_SIZE_INT_KEY).forGetter(EndlessInventory::getMaxItemStackSize),
+                    Codec.BOOL.fieldOf(INFINITY_BOOL_KEY).forGetter(EndlessInventory::isInfinityMode)
+                        ).apply(instance, (itemMap, aff,uuid, ownerUuid, wLstUid, acc, maxSize, infBool) -> {
+                            EndlessInventory endInv = new EndlessInventory(uuid, aff);
+                               endInv.itemMap.putAll(itemMap);
+                               endInv.owner = ownerUuid;
+                               endInv.white_list.addAll(wLstUid);
+                               endInv.setAccessibility(acc);
+                               endInv.setMaxItemStackSize(maxSize);
+                               endInv.setInfinityMode(infBool);
+                               return endInv;
+                    }
+            )
+    );
 
     @SuppressWarnings("unchecked")
     private final List<ItemStack>[] sortedViews = new List[SortType.values().length];
 
     private final long[] lastSortedTimes = new long[SortType.values().length];
-
-    public final EndInvAffinities affinities;
 
     public List<ServerPlayer> viewers = new ArrayList<>();
 
@@ -33,8 +82,11 @@ public class EndlessInventory extends SourceInventory {//todo add content transf
     }
 
     public EndlessInventory(UUID uuid){
-        super(uuid);
-        this.affinities = new EndInvAffinities(this);
+        this(uuid, new EndInvAffinities());
+    }
+
+    private EndlessInventory(UUID uuid, EndInvAffinities affinities){
+        super(uuid, affinities);
     }
 
     protected List<ItemStack> getSortedView(SortType type, boolean reverse) {
@@ -51,21 +103,6 @@ public class EndlessInventory extends SourceInventory {//todo add content transf
         }
         if(reverse) Collections.reverse(result);
         return result;
-    }
-
-    public List<ItemStackLike> getStarredItems(@Nonnegative int startIndex, @Nonnegative int length){
-        var items = affinities.getStarredItems(startIndex,length);
-        return items.stream().map(this::getStackWithZeroCount).toList();
-    }
-
-    public List<ItemStackLike> getStarredItems(){
-        return getStarredItems(0,affinities.starredItems.size());
-    }
-
-    public ItemStackLike getStackWithZeroCount(ItemStack stack){
-        var state = itemMap.get(ItemKey.asKey(stack));
-        if(state==null) return ItemStackLike.asKey(stack);
-        return ItemStackLike.asKey(stack,state.count());
     }
 
     @Nullable

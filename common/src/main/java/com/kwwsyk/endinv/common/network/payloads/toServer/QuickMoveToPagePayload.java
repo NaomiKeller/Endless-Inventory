@@ -7,6 +7,7 @@ import com.kwwsyk.endinv.common.menu.page.pageManager.PageMetaDataManager;
 import com.kwwsyk.endinv.common.network.payloads.ModPacketContext;
 import com.kwwsyk.endinv.common.network.payloads.ModPacketPayload;
 import com.mojang.logging.LogUtils;
+import it.unimi.dsi.fastutil.ints.IntList;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
@@ -19,16 +20,20 @@ import org.slf4j.Logger;
 
 import java.util.Optional;
 
-public record QuickMoveToPagePayload(int slotId) implements ModPacketPayload {
+public record QuickMoveToPagePayload(IntList slots) implements ModPacketPayload {
 
     private static final Logger LOGGER = LogUtils.getLogger();
 
+    public QuickMoveToPagePayload(int slotId) {
+        this(IntList.of(slotId));
+    }
+
     public static void encode(QuickMoveToPagePayload payload, FriendlyByteBuf o){
-        o.writeInt(payload.slotId);
+        o.writeIntIdList(payload.slots);
     }
 
     public static QuickMoveToPagePayload decode(FriendlyByteBuf o){
-        return new QuickMoveToPagePayload(o.readInt());
+        return new QuickMoveToPagePayload(o.readIntIdList());
     }
 
     public static final StreamCodec<RegistryFriendlyByteBuf, QuickMoveToPagePayload> STREAM_CODEC =
@@ -52,21 +57,23 @@ public record QuickMoveToPagePayload(int slotId) implements ModPacketPayload {
         Optional<EndlessInventory> oendinv = ServerLevelEndInv.getEndInvForPlayer(player);
         {
             Optional<PageMetaDataManager> optional = ServerLevelEndInv.checkAndGetManagerForPlayer(player);
-            LOGGER.info("Test: Optional AttachingManager Status: {}", optional);
+            LOGGER.debug("Test: Optional AttachingManager Status: {}", optional);
         }
         if(oendinv.isEmpty()){
             LOGGER.warn("{}: Player who has not an EndInv quick-moved item to EndInv's page.", id()+" payload");
         }else {
             EndlessInventory endinv = oendinv.get();
             AbstractContainerMenu menu = player.containerMenu;
-            if (slotId >= 0 && slotId < menu.slots.size()) {
-                Slot slot = menu.getSlot(slotId);
-                ItemStack itemStack = slot.getItem();
-                ItemStack remain = endinv.addItem(itemStack);
-                slot.setByPlayer(remain);
-                slot.onTake(player, itemStack);
-            } else {
-                LOGGER.warn("{}: SlotId in payload exceeded menu's slots.", id()+" payload");
+            for(int slotId : slots) {
+                if (slotId >= 0 && slotId < menu.slots.size()) {
+                    Slot slot = menu.getSlot(slotId);
+                    ItemStack itemStack = slot.getItem();
+                    ItemStack remain = endinv.addItem(itemStack);
+                    slot.setByPlayer(remain);
+                    slot.onTake(player, itemStack);
+                } else {
+                    LOGGER.warn("{}: SlotId in payload exceeded menu's slots.", id()+" payload");
+                }
             }
         }
     }

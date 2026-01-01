@@ -39,11 +39,11 @@ public class ItemEntryDisplay extends ItemDisplay{
     @Override
     public void scrollTo(float pos) {
         int startIndex = getRowIndexForScroll(pos);
-        this.initializeContents(startIndex,this.length);
+        this.setVisibleRange(startIndex,this.length);
     }
 
     @Override
-    public void initializeContents(int startIndex, int length) {
+    protected void setVisibleRange(int startIndex, int length) {
         this.startIndex = startIndex;
         this.length = Math.min(length, framework.rows());
         if(items==null || length!=this.items.size()){
