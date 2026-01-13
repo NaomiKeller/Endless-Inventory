@@ -8,14 +8,20 @@ import com.kwwsyk.endinv.neoforge.network.payloads.JeiAttachedTransferPayload;
 import com.kwwsyk.endinv.neoforge.network.payloads.JeiTransferRecipePayload;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.client.network.event.RegisterClientPayloadHandlersEvent;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
-import net.neoforged.neoforge.network.handling.DirectionalPayloadHandler;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 
 @EventBusSubscriber(modid = ModInfo.MOD_ID)
 public class PayloadReg {
 
-
+    @SubscribeEvent
+    public static void regClient(final RegisterClientPayloadHandlersEvent event) {
+        event.register(
+                SyncedConfig.TYPE,
+                (pl, cxt) -> pl.handle(cxt::player)
+        );
+    }
 
     @SubscribeEvent
     public static void registerPayload(final RegisterPayloadHandlersEvent event){
@@ -23,10 +29,7 @@ public class PayloadReg {
         registrar.playBidirectional(
                 SyncedConfig.TYPE,
                 SyncedConfig.STREAM_CODEC,
-                new DirectionalPayloadHandler<>(
-                        (pl,cxt)->pl.handle(cxt::player),
-                        (pl,cxt)->pl.handle(cxt::player)
-                )
+                (pl, cxt) -> pl.handle(cxt::player)
         );
         registrar.playToServer(
                 ItemPageContext.TYPE,

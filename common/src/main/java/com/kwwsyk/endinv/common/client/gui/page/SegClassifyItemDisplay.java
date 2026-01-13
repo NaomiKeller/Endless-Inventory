@@ -87,8 +87,6 @@ public class SegClassifyItemDisplay extends ItemDisplay {
 
     @Override
     public void renderPage(GuiGraphics guiGraphics) {
-        guiGraphics.pose().pushPose();
-        guiGraphics.pose().translate(0.0F, 0.0F, 100.0F);
         int rowIndex = 0;
         int columnIndex = 0;
         int columns = framework.columns();
@@ -110,7 +108,6 @@ public class SegClassifyItemDisplay extends ItemDisplay {
                 rowIndex++;
             }
         }
-        guiGraphics.pose().popPose();
     }
 
     @Override

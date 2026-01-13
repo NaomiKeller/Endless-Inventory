@@ -2,17 +2,15 @@ package com.kwwsyk.endinv.common.data;
 
 import com.kwwsyk.endinv.common.EndlessInventory;
 import com.kwwsyk.endinv.common.ServerLevelEndInv;
-import com.mojang.datafixers.util.Pair;
 import com.mojang.logging.LogUtils;
-import net.minecraft.core.HolderLookup;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.NonNullList;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.NbtOps;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.datafix.DataFixTypes;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.saveddata.SavedData;
+import net.minecraft.world.level.saveddata.SavedDataType;
 import net.minecraft.world.level.storage.LevelResource;
 import org.slf4j.Logger;
 
@@ -33,7 +31,24 @@ public class EndlessInventoryData extends SavedData {
 
     private static final Logger LOGGER = LogUtils.getLogger();
 
-    private static ServerLevel serverLevelSnapshot;
+    public static final SavedDataType<EndlessInventoryData> DATA_TYPE = new SavedDataType<>(
+            // The identifier of the saved data
+            // Used as the path within the level's `data` folder
+            END_INV_LIST_KEY,
+            // The initial constructor
+            EndlessInventoryData::new,
+            // The codec used to serialize the data
+            RecordCodecBuilder.create(instance -> instance.group(
+                    Codec.list(EndlessInventory.CODEC).fieldOf(END_INV_LIST_KEY).forGetter(EID -> EID.levelEndInvs)
+            ).apply(instance, lst -> {
+                var EID = new EndlessInventoryData();
+                for(var endinv : lst){
+                    EID.addEndInvToLevel(endinv);
+                }
+                return EID;
+            })),
+            DataFixTypes.SAVED_DATA_MAP_DATA
+    );
 
     public final NonNullList<EndlessInventory> levelEndInvs;
 
@@ -49,10 +64,7 @@ public class EndlessInventoryData extends SavedData {
             return; // 仅在主世界执行
         }
 
-        serverLevelSnapshot = level;
-
-        SavedData.Factory<EndlessInventoryData> factory = new SavedData.Factory<>(EndlessInventoryData::create, EndlessInventoryData::load, DataFixTypes.CHUNK);
-        ServerLevelEndInv.levelEndInvData = level.getDataStorage().computeIfAbsent(factory, END_INV_LIST_KEY);
+        ServerLevelEndInv.levelEndInvData = level.getDataStorage().computeIfAbsent(DATA_TYPE);
 
         LOGGER.info("Initialized EndlessInventoryData in {} with {} inventories", level.dimension().location(), ServerLevelEndInv.levelEndInvData.levelEndInvs.size());
     }
@@ -119,41 +131,5 @@ public class EndlessInventoryData extends SavedData {
             index++;
         }
         return -1;
-    }
-
-    public static EndlessInventoryData load(final CompoundTag tag, HolderLookup.Provider provider){
-        EndlessInventoryData data = create();
-        //Get EndInv[]
-        ListTag listTag = tag.getList(END_INV_LIST_KEY,10);
-
-        listTag.forEach(t-> {
-            EndlessInventory endinv = EndlessInventory.CODEC.decode(NbtOps.INSTANCE,t).mapOrElse(
-                    Pair::getFirst,
-                    errorResult -> {
-                        LOGGER.error("Failed to load EndInv: {}", errorResult.message());
-                        backup(serverLevelSnapshot);
-                        return null;
-                    }
-            );
-            if(endinv!=null) data.levelEndInvs.add(endinv);
-        });
-
-        return data;
-    }
-
-    @Override
-    public CompoundTag save(CompoundTag compoundTag, HolderLookup.Provider provider) {
-
-        // []:List of {}EndInv
-        ListTag nbtTagList = new ListTag();
-
-        for (EndlessInventory endlessInventory : levelEndInvs) {
-            CompoundTag invTag = (CompoundTag) EndlessInventory.CODEC
-                    .encode(endlessInventory, NbtOps.INSTANCE, compoundTag)
-                    .getOrThrow();
-            nbtTagList.add(invTag);
-        }
-        compoundTag.put(END_INV_LIST_KEY,nbtTagList);
-        return compoundTag;
     }
 }

@@ -9,7 +9,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
@@ -103,13 +102,22 @@ public class PageSwitchBar extends AbstractWidget {
             for (int i = ScreenFramework.firstPageIndex; i < ScreenFramework.firstPageIndex + framework.pageBarCount; ++i) {
                 if (i == selectedPageIndex) {
                     if (i == 0) {
-                        guiGraphics.blitSprite(RenderType::guiTextured, getTabsTexture(TabType.TOP),tabX,tabY,tabWidth,tabHeight);
-                    } else if (i == ScreenFramework.firstPageIndex + framework.pageBarCount-1) {
-                        guiGraphics.blitSprite(RenderType::guiTextured, getTabsTexture(TabType.BOTTOM),tabX,tabY,tabWidth,tabHeight);
-                    } else
-                        guiGraphics.blitSprite(RenderType::guiTextured, getTabsTexture(TabType.MIDDLE),tabX,tabY,tabWidth,tabHeight);
+                        var tex = getTabsTexture(TabType.TOP);
+                        if (tex.equals(TabType.TOP.vanillaTexture)) tex = TabType.TOP.dedicatedLocation;
+                        guiGraphics.blit(tex, tabX, tabY, 0, 0, tabWidth, tabHeight, tabWidth, tabHeight);
+                    } else if (i == ScreenFramework.firstPageIndex + framework.pageBarCount - 1) {
+                        var tex = getTabsTexture(TabType.BOTTOM);
+                        if (tex.equals(TabType.BOTTOM.vanillaTexture)) tex = TabType.BOTTOM.dedicatedLocation;
+                        guiGraphics.blit(tex, tabX, tabY, 0, 0, tabWidth, tabHeight, tabWidth, tabHeight);
+                    } else {
+                        var tex = getTabsTexture(TabType.MIDDLE);
+                        if (tex.equals(TabType.MIDDLE.vanillaTexture)) tex = TabType.MIDDLE.dedicatedLocation;
+                        guiGraphics.blit(tex, tabX, tabY, 0, 0, tabWidth, tabHeight, tabWidth, tabHeight);
+                    }
                 } else {
-                    guiGraphics.blitSprite(RenderType::guiTextured, getTabsTexture(TabType.UNSELECTED),tabX+4,tabY,tabWidth,tabHeight);
+                    var tex = getTabsTexture(TabType.UNSELECTED);
+                    if (tex.equals(TabType.UNSELECTED.vanillaTexture)) tex = TabType.UNSELECTED.dedicatedLocation;
+                    guiGraphics.blit(tex, tabX + 4, tabY, 0, 0, tabWidth, tabHeight, tabWidth, tabHeight);
                 }
                 if(direction_isVertical) tabY+=tabHeight; else tabX+=tabWidth;
             }
@@ -119,10 +127,18 @@ public class PageSwitchBar extends AbstractWidget {
         for (int i = ScreenFramework.firstPageIndex; i < ScreenFramework.firstPageIndex + framework.pageBarCount; ++i) {
             framework.getPages().get(i).renderPageIcon(guiGraphics, tabX + 15, tabY + 5, partialTick);
             if (mouseX > tabX && mouseX < tabX + tabWidth && mouseY > tabY && mouseY < tabY + tabHeight) {
-                guiGraphics.pose().pushPose();
-                guiGraphics.pose().translate(0, 0, 550.0f);
-                guiGraphics.renderTooltip(Minecraft.getInstance().font, framework.getPages().get(i).name, mouseX, mouseY);
-                guiGraphics.pose().popPose();
+                guiGraphics.renderTooltip(
+                        Minecraft.getInstance().font,
+                        java.util.List.of(
+                                net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent.create(
+                                        framework.getPages().get(i).name.getVisualOrderText()
+                                )
+                        ),
+                        mouseX,
+                        mouseY,
+                        net.minecraft.client.gui.screens.inventory.tooltip.DefaultTooltipPositioner.INSTANCE,
+                        null
+                );
             }
             if(direction_isVertical) tabY+=tabHeight; else tabX+=tabWidth;
         }

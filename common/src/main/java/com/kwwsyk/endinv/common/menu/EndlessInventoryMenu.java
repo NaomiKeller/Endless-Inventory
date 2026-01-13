@@ -720,7 +720,7 @@ public class EndlessInventoryMenu extends AbstractContainerMenu implements PageM
             }
         }
         CraftingInput input = CraftingInput.of(w, h, items);
-        Optional<RecipeHolder<CraftingRecipe>> optional = serverPlayer.server.getRecipeManager().getRecipeFor(RecipeType.CRAFTING, input, level);
+        Optional<RecipeHolder<CraftingRecipe>> optional = serverPlayer.getServer().getRecipeManager().getRecipeFor(RecipeType.CRAFTING, input, level);
         if (optional.isPresent()) {
             RecipeHolder<CraftingRecipe> holder = optional.get();
             CraftingRecipe recipe = holder.value();

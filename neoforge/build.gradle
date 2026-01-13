@@ -1,9 +1,8 @@
 plugins {
-    id 'java'
     id 'java-library'
     id 'maven-publish'
-    id 'net.neoforged.moddev' version '2.0.80'
     id 'idea'
+    id 'net.neoforged.moddev' version '2.0.137'
 }
 
 base {
@@ -36,8 +35,8 @@ dependencies {
      // add full JEI to compileOnly so mixins to JEI internals can compile
      compileOnly("mezz.jei:jei-${minecraft_version}-neoforge:${jei_version}")
      runtimeOnly("mezz.jei:jei-${minecraft_version}-neoforge:${jei_version}")
-     runtimeOnly("top.theillusivec4.curios:curios-neoforge:${curio_version}")
-     compileOnly("top.theillusivec4.curios:curios-neoforge:${curio_version}:api")
+     //runtimeOnly("top.theillusivec4.curios:curios-neoforge:${curio_version}")
+     //compileOnly("top.theillusivec4.curios:curios-neoforge:${curio_version}:api")
 }
 
 project.evaluationDependsOn(":common")

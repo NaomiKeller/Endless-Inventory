@@ -128,7 +128,7 @@ public class PageType {
 
     private static boolean isWeapon(ItemStack itemStack){
         Item item = itemStack.getItem();
-        return item instanceof SwordItem ||
+        return
                 item instanceof  AxeItem ||
                 item instanceof  TridentItem ||
                 item instanceof ProjectileWeaponItem ||
@@ -137,7 +137,7 @@ public class PageType {
 
     private static boolean isTool(ItemStack itemStack){
         Item item = itemStack.getItem();
-        return item instanceof PickaxeItem ||
+        return
                 item instanceof AxeItem ||
                 item instanceof ShearsItem ||
                 item instanceof ShovelItem ||
@@ -148,7 +148,7 @@ public class PageType {
 
     private static boolean isDefenceEquipment(ItemStack itemStack){
         Item item = itemStack.getItem();
-        return item instanceof ArmorItem ||
+        return
                 item instanceof ShieldItem ||
                 item == Items.ELYTRA ||
                 EQUIPPABLE_TAGS.stream().anyMatch(itemStack::is);

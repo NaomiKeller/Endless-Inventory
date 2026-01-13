@@ -31,6 +31,8 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen;
+import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
+import net.minecraft.client.gui.screens.inventory.tooltip.DefaultTooltipPositioner;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -42,8 +44,8 @@ import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 import static com.kwwsyk.endinv.common.client.ClientModInfo.containerScreenHelper;
 import static com.kwwsyk.endinv.common.client.ClientModInfo.inputHandler;
@@ -211,7 +213,7 @@ public class ScreenFramework implements PageManager{
         this.searchBox = new EditBox(mc.font,
                 this.searchBoxParam.x(), this.searchBoxParam.y(), this.searchBoxParam.width(), this.searchBoxParam.height(),
                 Component.translatable("itemGroup.search"));
-        this.sortTypeSwitchBox = new SortTypeSwitchBox(this, this, sortBoxParam);
+        this.sortTypeSwitchBox = new SortTypeSwitchBox(this,  sortBoxParam);
 
         this.searchBox.setValue(searching());
 
@@ -261,14 +263,28 @@ public class ScreenFramework implements PageManager{
 
         getDisplayingPage().render(guiGraphics, mouseX, mouseY, partialTick);
 
-        if (searchBox.isHovered() && !searchBox.isFocused()) guiGraphics.renderTooltip(mc.font, List.of(
-                Component.translatable("search.endinv.prefix.sharp"),
-                Component.translatable("search.endinv.prefix.at"),
-                Component.translatable("search.endinv.prefix.xor"),
-                Component.translatable("search.endinv.prefix.star")
-        ), Optional.empty(), mouseX, mouseY);
+        if (searchBox.isHovered() && !searchBox.isFocused()) guiGraphics.renderTooltip(
+                mc.font,
+                Stream.of(
+                    Component.translatable("search.endinv.prefix.sharp"),
+                    Component.translatable("search.endinv.prefix.at"),
+                    Component.translatable("search.endinv.prefix.xor"),
+                    Component.translatable("search.endinv.prefix.star")
+                ).map(component -> ClientTooltipComponent.create(component.getVisualOrderText())).toList(),
+                mouseX,
+                mouseY,
+                DefaultTooltipPositioner.INSTANCE,
+                null
+        );
         if (reverseSortButton.isHovered())
-            guiGraphics.renderTooltip(mc.font, Component.translatable("button.endinv.reverse"), mouseX, mouseY);
+            guiGraphics.renderTooltip(
+                    mc.font,
+                    List.of(ClientTooltipComponent.create(Component.translatable("button.endinv.reverse").getVisualOrderText())),
+                    mouseX,
+                    mouseY,
+                    DefaultTooltipPositioner.INSTANCE,
+                    null
+            );
 
     }
 

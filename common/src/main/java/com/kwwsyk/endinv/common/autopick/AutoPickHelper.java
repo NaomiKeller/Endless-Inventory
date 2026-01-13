@@ -15,6 +15,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.tags.ItemTags;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.item.ItemEntity;
@@ -159,17 +160,17 @@ public final class AutoPickHelper {
 
     /**Items satisfied with several conditions will stay in the player inventory.
      * 1. Player has mergeable items in the inventory.
-     * 2. Player has unstackable some class items in inventory or worn, e.g. {@link SwordItem},{@link ArmorItem}...
+     * 2. Player has unstackable some class items in inventory or worn.
      */
     private static boolean shouldMoveTo(Player player, ItemStack stack){
         if(stack.isEmpty()) return false;
         Item item = stack.getItem();
-        if(item instanceof SwordItem swordItem){
-            return hasSuch(player,swordItem);
+        if(item.builtInRegistryHolder().is(ItemTags.SWORDS)){
+            return hasSuch(player,item);
         }else if(item instanceof AxeItem axeItem){
             return hasSuch(player,axeItem);
-        }else if(item instanceof PickaxeItem such){
-            return hasSuch(player,such);
+        }else if(item.builtInRegistryHolder().is(ItemTags.PICKAXES)){
+            return hasSuch(player,item);
         }else if(item instanceof ShovelItem such){
             return hasSuch(player,such);
         }else if(item instanceof HoeItem such){
@@ -188,8 +189,8 @@ public final class AutoPickHelper {
             return hasSuch(player,such);
         }else if(item instanceof CrossbowItem such){
             return hasSuch(player,such);
-        }else if(item instanceof ArmorItem armorItem){
-            return hasOrSwearing(player,armorItem);
+        }else if(item.components().has(DataComponents.EQUIPPABLE)){
+            return hasOrSwearing(player,item);
         }else{
             return !canMerge(player,stack);
         }
@@ -203,7 +204,7 @@ public final class AutoPickHelper {
         return player.inventoryMenu.slots.stream().anyMatch(slot->slot.getItem().getItem().getClass()==item.getClass());
     }
 
-    private static boolean hasOrSwearing(Player player,ArmorItem armor){
+    private static boolean hasOrSwearing(Player player,Item armor){
         EquipmentSlot slot = armorSlot(armor);
         if(slot == null) return true;
         ItemStack equipped = player.getItemBySlot(slot);

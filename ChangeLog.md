@@ -4,6 +4,9 @@ __branch 1.21.4__
 
 Removed integrates/jei payloads/jei. Remember to bring it back in later versions. Copy them from the 1.21.1 branch.
 
+## Up to 2026.1.1
+Config System Upgrades
+
 ## 2025-11-26 1.1.0.3 -> 1.1.1
 
 Better config, on code and performance.

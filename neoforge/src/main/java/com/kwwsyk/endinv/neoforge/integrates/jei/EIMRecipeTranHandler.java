@@ -182,7 +182,11 @@ public class EIMRecipeTranHandler implements IRecipeTransferHandler<EndlessInven
     private static TransferPlan createTransferPlan(EndlessInventoryMenu container, RecipeHolder<CraftingRecipe> recipe, boolean maxTransfer) {
         Ingredient[] layout = buildRecipeLayout(recipe.value());
         // Build availability from the real player inventory items to avoid stale slot mirroring on client
-        List<ItemStack> playerInvItems = container.player.getInventory().items;
+        List<ItemStack> playerInvItems = new java.util.ArrayList<>();
+        var inv = container.player.getInventory();
+        for (int i = 0; i < inv.getContainerSize(); i++) {
+            playerInvItems.add(inv.getItem(i));
+        }
         List<ItemStack> pageItems = container.getSourceInventory().getItemsAsList();
 
         ItemAvailability availability = ItemAvailability.buildFromItems(playerInvItems, pageItems);

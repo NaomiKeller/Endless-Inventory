@@ -38,9 +38,6 @@ public class ScreenDebug {
             guiLeft = containerScreenHelper.getGuiLeft(ACS);
             guiTop = containerScreenHelper.getGuiTop(ACS);
         }
-        var pose = graphics.pose();
-        pose.pushPose();
-        pose.translate(0,0,1000.0);
         {
             int color = 0xFFFFFFFF; //Nontransparent white
             if (phase == 1) {//16
@@ -90,7 +87,6 @@ public class ScreenDebug {
                 }
             }
         }
-        pose.popPose();
     }
 
     public static void click(int button, Screen screen){

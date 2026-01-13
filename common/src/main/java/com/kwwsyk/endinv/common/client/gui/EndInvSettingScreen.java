@@ -141,10 +141,8 @@ public class EndInvSettingScreen extends Screen {//todo improve it for updated c
 
     @Override
     public void renderBackground(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        guiGraphics.pose().pushPose();
-        guiGraphics.pose().translate(0,0,-100);
         guiGraphics.fill(leftPos,topPos,leftPos+imageWidth,topPos+imageHeight,0x88888888);
-        guiGraphics.pose().popPose();
+        
         //guiGraphics.blit(BLANK_LOCATION,leftPos,topPos,0,0,imageWidth,imageHeight);
     }
 

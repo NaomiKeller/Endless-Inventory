@@ -13,7 +13,6 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.renderer.Rect2i;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.core.NonNullList;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
@@ -86,9 +85,6 @@ public class ItemEntryDisplay extends ItemDisplay{
 
     @Override
     public void renderPage(GuiGraphics guiGraphics) {
-
-        guiGraphics.pose().pushPose();
-        guiGraphics.pose().translate(0.0F, 0.0F, 100.0F);
         int rowIndex = 0;
         int columnIndex = 0;
         for(ItemStack stack : items){
@@ -100,7 +96,6 @@ public class ItemEntryDisplay extends ItemDisplay{
             rowIndex++;
             if(rowIndex>= framework.rows()) break;
         }
-        guiGraphics.pose().popPose();
     }
 
     private void renderItemEntry(ItemStack item, int x, int y, GuiGraphics graphics){
@@ -132,13 +127,11 @@ public class ItemEntryDisplay extends ItemDisplay{
         if(hoveringSlot>=0&&hoveringSlot<items.size()){
             ItemStack hovering = items.get(hoveringSlot);
             if(hovering.isEmpty()) return;
-            graphics.pose().pushPose();
-            graphics.pose().translate(0,0,550.0F);
-            graphics.renderTooltip(Minecraft.getInstance().font,
+            graphics.setTooltipForNextFrame(
+                    Minecraft.getInstance().font,
                     AbstractContainerScreen.getTooltipFromItem(Minecraft.getInstance(),hovering),
                     hovering.getTooltipImage(),
                     mouseX, mouseY);
-            graphics.pose().popPose();
         }
     }
 
@@ -150,7 +143,7 @@ public class ItemEntryDisplay extends ItemDisplay{
             int y2 = topPos + MARGIN_TOP_HEIGHT + 18*v+18;
             if(mouseX>x1 && mouseX<x2 && mouseY>y1 && mouseY<y2){
                 if(!framework.getMenu().getCarried().isEmpty()) return;
-                graphics.fillGradient(RenderType.guiOverlay(),x1,y1,x2,y2,0x80ffffff,0x80ffffff,0);
+                graphics.fillGradient(x1, y1, x2, y2, 0x80ffffff, 0x80ffffff);
             }
         }
     }

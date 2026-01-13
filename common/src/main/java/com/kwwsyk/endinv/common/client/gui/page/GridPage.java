@@ -9,7 +9,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.renderer.Rect2i;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.Nullable;
 
@@ -85,7 +84,7 @@ public abstract class GridPage extends DisplayPage {
                 int y2 = topPos+MARGIN_TOP_HEIGHT+18*v+18;
                 if(mouseX>x1 && mouseX<x2 && mouseY>y1 && mouseY<y2){
                     if(!framework.getMenu().getCarried().isEmpty()) return;
-                    graphics.fillGradient(RenderType.guiOverlay(),x1,y1,x2,y2,0x80ffffff,0x80ffffff,0);
+                    graphics.fillGradient(x1, y1, x2, y2, 0x80ffffff, 0x80ffffff);
                 }
             }
         }
@@ -119,14 +118,13 @@ public abstract class GridPage extends DisplayPage {
         ItemStack hovering = getHoveredOrClickedItem(mouseX, mouseY);
         if(hovering.isEmpty()) return;
 
-        graphics.pose().pushPose();
-        graphics.pose().translate(0, 0, 550.0F);
         {
-            graphics.renderTooltip(Minecraft.getInstance().font,
+            graphics.setTooltipForNextFrame(
+                    Minecraft.getInstance().font,
                     AbstractContainerScreen.getTooltipFromItem(Minecraft.getInstance(), hovering),
                     hovering.getTooltipImage(),
-                    mouseX, mouseY);
-        }
-        graphics.pose().popPose();
+                    mouseX, mouseY
+            );
+        };
     }
 }

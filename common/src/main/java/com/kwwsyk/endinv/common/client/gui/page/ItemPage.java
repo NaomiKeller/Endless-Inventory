@@ -120,8 +120,6 @@ public abstract class ItemPage extends GridPage {
     }
 
     public void renderPage(GuiGraphics guiGraphics){
-        guiGraphics.pose().pushPose();
-        guiGraphics.pose().translate(0.0F, 0.0F, 100.0F);
         int rowIndex = 0;
         int columnIndex = 0;
         for(ItemStack stack : items){
@@ -136,7 +134,6 @@ public abstract class ItemPage extends GridPage {
                 rowIndex++;
             }
         }
-        guiGraphics.pose().popPose();
     }
 
     @Override

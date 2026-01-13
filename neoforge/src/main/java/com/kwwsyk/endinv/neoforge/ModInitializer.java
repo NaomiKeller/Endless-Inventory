@@ -11,6 +11,7 @@ import com.kwwsyk.endinv.common.network.payloads.SyncedConfig;
 import com.kwwsyk.endinv.neoforge.client.config.ClientConfig;
 import com.kwwsyk.endinv.neoforge.options.ServerConfig;
 import com.kwwsyk.endinv.neoforge.options.StartupConfig;
+import net.minecraft.client.Minecraft;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.server.level.ServerPlayer;
@@ -31,9 +32,9 @@ import net.neoforged.neoforge.attachment.AttachmentType;
 import net.neoforged.neoforge.client.gui.ConfigurationScreen;
 import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
 import net.neoforged.neoforge.common.CommonHooks;
-import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.neoforged.neoforge.registries.NeoForgeRegistries;
+import net.neoforged.neoforge.server.ServerLifecycleHooks;
 
 import javax.annotation.Nullable;
 import java.util.UUID;
@@ -85,17 +86,27 @@ public class ModInitializer extends AbstractModInitializer {
 
             @Override
             public void sendToServer(ModPacketPayload payload) {
-                PacketDistributor.sendToServer(payload);
+                if (net.neoforged.fml.loading.FMLEnvironment.dist.isClient()) {
+                    var mc = Minecraft.getInstance();
+                    if (mc.getConnection() != null) {
+                        mc.getConnection().send(payload);
+                    }
+                }
             }
 
             @Override
             public void sendToPlayer(ServerPlayer player, ModPacketPayload payload) {
-                PacketDistributor.sendToPlayer(player, payload);
+                player.connection.send(payload);
             }
 
             @Override
             public void sendToAllPlayer(ModPacketPayload payload) {
-                PacketDistributor.sendToAllPlayers(payload);
+                var server = ServerLifecycleHooks.getCurrentServer();
+                if (server != null) {
+                    for (ServerPlayer sp : server.getPlayerList().getPlayers()) {
+                        sp.connection.send(payload);
+                    }
+                }
             }
         };
     }
@@ -135,7 +146,7 @@ public class ModInitializer extends AbstractModInitializer {
                 "endinv_uuid",
                 ()->AttachmentType
                         .builder(()-> ModInfo.DEFAULT_UUID)
-                        .serialize(UUIDUtil.CODEC)
+                        .serialize(UUIDUtil.CODEC.fieldOf("endinv_uuid"))
                         .copyOnDeath()
                         .build()
         );
@@ -164,7 +175,7 @@ public class ModInitializer extends AbstractModInitializer {
         Supplier<AttachmentType<SyncedConfig>> SYNCED_CONFIG = ATTACHMENT_TYPES.register("endinv_settings",
                 ()-> AttachmentType
                         .builder(()-> SyncedConfig.DEFAULT)
-                        .serialize(SyncedConfig.CODEC)
+                        .serialize(SyncedConfig.CODEC.fieldOf("endinv_settings"))
                         .copyOnDeath()
                         .build()
         );

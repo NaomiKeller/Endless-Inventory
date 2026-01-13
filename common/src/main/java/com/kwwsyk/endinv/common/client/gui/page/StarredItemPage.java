@@ -95,8 +95,6 @@ public class StarredItemPage extends ItemPage{
 
     @Override
     public void renderPage(GuiGraphics guiGraphics){
-        guiGraphics.pose().pushPose();
-        guiGraphics.pose().translate(0.0F, 0.0F, 100.0F);
         int rowIndex = 0;
         int columnIndex = 0;
         for(int i=0; i<length; ++i){
@@ -112,7 +110,6 @@ public class StarredItemPage extends ItemPage{
                 rowIndex++;
             }
         }
-        guiGraphics.pose().popPose();
     }
 
     @Override
