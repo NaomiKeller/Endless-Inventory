@@ -1,5 +1,9 @@
 # Change Log
 
+__branch 1.21.8__
+
+Added shift+double-click to quick move items.
+
 __branch 1.21.4__
 
 Removed integrates/jei payloads/jei. Remember to bring it back in later versions. Copy them from the 1.21.1 branch.

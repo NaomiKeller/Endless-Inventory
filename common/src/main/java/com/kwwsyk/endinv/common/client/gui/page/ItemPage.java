@@ -3,6 +3,7 @@ package com.kwwsyk.endinv.common.client.gui.page;
 import com.kwwsyk.endinv.common.ModInfo;
 import com.kwwsyk.endinv.common.client.gui.ScreenFramework;
 import com.kwwsyk.endinv.common.menu.page.PageType;
+import com.kwwsyk.endinv.common.menu.page.pageManager.PageQuickMoveHandler;
 import com.kwwsyk.endinv.common.network.payloads.PageData;
 import com.kwwsyk.endinv.common.network.payloads.toServer.CreativeItemModPayload;
 import com.kwwsyk.endinv.common.network.payloads.toServer.ItemClickPayload;
@@ -11,6 +12,7 @@ import com.kwwsyk.endinv.common.network.payloads.toServer.StarItemPayload;
 import com.mojang.logging.LogUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen;
 import net.minecraft.core.NonNullList;
 import net.minecraft.world.entity.player.Inventory;
@@ -151,6 +153,7 @@ public abstract class ItemPage extends GridPage {
             }
             LOGGER.info("EI:sending:ItemClickPayload: player={} clickType={} button={} stack={}"
                     , framework.getPlayer(),clickType,button, clicked);
+            if(clickType == ClickType.PICKUP_ALL && Screen.hasShiftDown()) return;
             ModInfo.getPacketDistributor().sendToServer(new ItemClickPayload(
                     clicked.getCount() > 64 ? clicked.copyWithCount(64) : clicked.copy(),
                     button,clickType));
@@ -252,6 +255,27 @@ public abstract class ItemPage extends GridPage {
         setChanged();
     }
     protected void handlePickupAll(ItemStack clicked){
+        // Shift + Double Click: bulk quick-move from Endless Inventory page into the open container
+        if (Screen.hasShiftDown()) {
+
+            ModInfo.getPacketDistributor().sendToServer(
+                    new com.kwwsyk.endinv.common.network.payloads.toServer.BulkQuickMoveFromPagePayload(clicked.copyWithCount(1))
+            );
+            int iterations = 0;
+            while (iterations++ < 32768) {
+                ItemStack taken = srcInv.takeItem(clicked.copyWithCount(1));
+                if (taken.isEmpty()) break;
+                var mover = new PageQuickMoveHandler(framework);
+                ItemStack remain = mover.quickMoveFromPage(taken);
+
+                if (!remain.isEmpty()) {
+                    // Could not insert fully; put the remainder back and stop.
+                    srcInv.addItem(remain);
+                    break;
+                }
+            }
+            return;
+        }
         Player player = framework.getPlayer();
         ItemStack carried = framework.getMenu().getCarried();
         int startIndex = framework.getMenu().slots.size() - 1; //changed: reversed button==0 condition

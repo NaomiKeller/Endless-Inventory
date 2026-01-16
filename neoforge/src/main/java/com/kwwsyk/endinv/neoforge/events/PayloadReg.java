@@ -81,6 +81,11 @@ public class PayloadReg {
                 QuickMoveToPagePayload.STREAM_CODEC,
                 (pl,cxt)->pl.handle(cxt::player)
         );
+        registrar.playToServer(
+                BulkQuickMoveFromPagePayload.TYPE,
+                BulkQuickMoveFromPagePayload.STREAM_CODEC,
+                (pl,cxt)->pl.handle(cxt::player)
+        );
         registrar.playToClient(
                 SetStarredPagePayload.TYPE,
                 SetStarredPagePayload.STREAM_CODEC,
