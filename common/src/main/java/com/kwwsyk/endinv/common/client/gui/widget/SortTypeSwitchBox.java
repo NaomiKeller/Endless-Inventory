@@ -60,7 +60,15 @@ public class SortTypeSwitchBox extends AbstractWidget {
             setOpen(false);
         }
     }
-
+    /**
+     * Called when a mouse button is clicked within the GUI element.
+     * <p>
+     * @return {@code true} if the event is consumed, {@code false} otherwise.
+     *
+     * @param mouseX the X coordinate of the mouse.
+     * @param mouseY the Y coordinate of the mouse.
+     * @param button the button that was clicked.
+     */
     public boolean mouseClicked(double mouseX, double mouseY, int button){
         if(!super.mouseClicked(mouseX,mouseY,button) && isOpen){
             setOpen(false);
@@ -71,6 +79,7 @@ public class SortTypeSwitchBox extends AbstractWidget {
 
     @Override
     protected void renderWidget(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+        guiGraphics.pose().pushMatrix();
         guiGraphics.fill(getX(), getY(), getX() + width, getY() + singleBoxHeight, 0xff888888);
         guiGraphics.fill(getX() + 1, getY() + 1, getX() + width - 1, getY() + singleBoxHeight - 1, 0xff000000);
         if (isHoveringOnSingleBox(mouseY, getY()))
@@ -103,7 +112,7 @@ public class SortTypeSwitchBox extends AbstractWidget {
                 y1+=singleBoxHeight;
             }
         }
-        
+        guiGraphics.pose().popMatrix();
     }
     private boolean isHoveringOnSingleBox(int mouseY,int minY){
         return mouseY>=minY && mouseY<=minY+singleBoxHeight && isHovered;

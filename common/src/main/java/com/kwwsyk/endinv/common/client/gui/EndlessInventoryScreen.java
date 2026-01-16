@@ -7,6 +7,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.CycleButton;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
@@ -15,7 +16,6 @@ import net.minecraft.world.inventory.Slot;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-@SuppressWarnings("removal")
 public class EndlessInventoryScreen extends AbstractContainerScreen<EndlessInventoryMenu> {
     private static final ResourceLocation CRAFTING_TEXTURE = ResourceLocation.fromNamespaceAndPath("minecraft", "textures/gui/container/crafting_table.png");
     private ScreenFramework frameWork;
@@ -103,12 +103,12 @@ public class EndlessInventoryScreen extends AbstractContainerScreen<EndlessInven
     private void drawCraftingBackground(GuiGraphics guiGraphics) {
         int craftX = this.leftPos;
         int craftY = this.topPos + 18 * menu.getVisibleRows() + 18;
-        guiGraphics.blit(CRAFTING_TEXTURE, craftX, craftY, 0, 12, 176, 58, 256, 256);
+        guiGraphics.blit(RenderPipelines.GUI_TEXTURED, CRAFTING_TEXTURE, craftX, craftY, 0, 12, 176, 58, 256, 256);
     }
 
     public void render(@NotNull GuiGraphics gui, int mouseX, int mouseY, float partialTick){
         this.renderBackground(gui, mouseX, mouseY, partialTick);
-        frameWork.renderPre(gui,mouseX,mouseY,partialTick);
+        frameWork.renderBg(gui,mouseX,mouseY,partialTick);
 
         super.render(gui,mouseX,mouseY,partialTick);
 

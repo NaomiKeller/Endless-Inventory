@@ -9,6 +9,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
@@ -104,20 +105,20 @@ public class PageSwitchBar extends AbstractWidget {
                     if (i == 0) {
                         var tex = getTabsTexture(TabType.TOP);
                         if (tex.equals(TabType.TOP.vanillaTexture)) tex = TabType.TOP.dedicatedLocation;
-                        guiGraphics.blit(tex, tabX, tabY, 0, 0, tabWidth, tabHeight, tabWidth, tabHeight);
+                        guiGraphics.blit(RenderPipelines.GUI_TEXTURED, tex, tabX, tabY, 0.0F, 0.0F, tabWidth, tabHeight, tabWidth, tabHeight);
                     } else if (i == ScreenFramework.firstPageIndex + framework.pageBarCount - 1) {
                         var tex = getTabsTexture(TabType.BOTTOM);
                         if (tex.equals(TabType.BOTTOM.vanillaTexture)) tex = TabType.BOTTOM.dedicatedLocation;
-                        guiGraphics.blit(tex, tabX, tabY, 0, 0, tabWidth, tabHeight, tabWidth, tabHeight);
+                        guiGraphics.blit(RenderPipelines.GUI_TEXTURED, tex, tabX, tabY, 0.0F, 0.0F, tabWidth, tabHeight, tabWidth, tabHeight);
                     } else {
                         var tex = getTabsTexture(TabType.MIDDLE);
                         if (tex.equals(TabType.MIDDLE.vanillaTexture)) tex = TabType.MIDDLE.dedicatedLocation;
-                        guiGraphics.blit(tex, tabX, tabY, 0, 0, tabWidth, tabHeight, tabWidth, tabHeight);
+                        guiGraphics.blit(RenderPipelines.GUI_TEXTURED, tex, tabX, tabY, 0.0F, 0.0F, tabWidth, tabHeight, tabWidth, tabHeight);
                     }
                 } else {
                     var tex = getTabsTexture(TabType.UNSELECTED);
                     if (tex.equals(TabType.UNSELECTED.vanillaTexture)) tex = TabType.UNSELECTED.dedicatedLocation;
-                    guiGraphics.blit(tex, tabX + 4, tabY, 0, 0, tabWidth, tabHeight, tabWidth, tabHeight);
+                    guiGraphics.blit(RenderPipelines.GUI_TEXTURED, tex, tabX + 8, tabY, 4.0F, 0.0F, tabWidth - 4, tabHeight, tabWidth, tabHeight);
                 }
                 if(direction_isVertical) tabY+=tabHeight; else tabX+=tabWidth;
             }

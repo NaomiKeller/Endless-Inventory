@@ -149,8 +149,8 @@ public class ItemEntryDisplay extends ItemDisplay{
     }
 
     @Override
-    public void renderBg(SFBgRenderer SFBgRenderer, GuiGraphics guiGraphics, float partialTicks, int mouseX, int mouseY) {
-        if (this.renderer == null) renderer = bgRender(SFBgRenderer);
+    public void renderBg(GuiGraphics guiGraphics, float partialTicks, int mouseX, int mouseY) {
+        if (this.renderer == null) renderer = bgRender(framework.SFBgRenderer);
         renderer.renderBg(guiGraphics, partialTicks, mouseX, mouseY);
     }
 

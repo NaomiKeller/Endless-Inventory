@@ -130,8 +130,9 @@ public class EndInvSettingScreen extends Screen {//todo improve it for updated c
 
     @Override
     public void render(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        super.render(guiGraphics, mouseX, mouseY, partialTick);
+        // Render background first to respect 1.21.8 element ordering
         this.renderBackground(guiGraphics, mouseX, mouseY, partialTick);
+        super.render(guiGraphics, mouseX, mouseY, partialTick);
         for(var entry : renderingEntries){
             if(entry!=null) {
                 entry.render(guiGraphics, partialTick, mouseX, mouseY);

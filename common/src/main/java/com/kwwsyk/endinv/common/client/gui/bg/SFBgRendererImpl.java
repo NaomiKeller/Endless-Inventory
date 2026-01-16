@@ -22,7 +22,10 @@ public abstract class SFBgRendererImpl implements SFBgRenderer {
     public SFBgRendererImpl(ScreenFramework frameWork){
         this.frameWork = frameWork;
         this.screen = frameWork.screen;
-        this.imageWidth = 256;
+        // Use the actual page/container width computed by the ScreenFramework
+        // instead of the source texture sheet size (256). The width here
+        // represents how wide the UI area should be drawn on screen.
+        this.imageWidth = frameWork.imageWidth;
         this.rows = this.frameWork.rows();
         this.columns = this.frameWork.columns();
         this.menuLeft = ClientModInfo.containerScreenHelper.getGuiLeft(screen);

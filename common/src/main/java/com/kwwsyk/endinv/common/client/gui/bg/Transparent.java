@@ -21,15 +21,17 @@ public class Transparent extends SFBgRendererImpl {
 
         @Override
         public void renderBg(@NotNull GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {
-            int startX = pageLeft;
-            int startY = pageTop;
-            int gridWidth = 18*columns;
-            int gridHeight = 18*rows;
-            int leftWidth = 8;
-            int rightWidth = 8;
+            int startX = frameWork.getPageX();
+            int startY = frameWork.getPageY();
+            int columns = frameWork.columns();
+            int rows = frameWork.rows();
+            int gridWidth = 18 * columns;
+            int gridHeight = 18 * rows;
+            int leftWidth = 7;
+            int rightWidth = 7;
             int pageWidth = leftWidth+gridWidth+rightWidth;
             int topHeight = 17;
-            int bottomHeight = 12;
+            int bottomHeight = 7;
             int pageHeight = topHeight+gridHeight+bottomHeight;
 
             guiGraphics.fill(startX,startY,startX+pageWidth,startY+topHeight,PAGE_FRAME_COLOR);

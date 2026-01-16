@@ -65,6 +65,13 @@ public class AttachingScreen<T extends AbstractContainerMenu>{
     }
 
     public void renderPre(IScreenEvent event) {
+        int mouseX = (int) event.getMouseX();
+        int mouseY = (int) event.getMouseY();
+        GuiGraphics guiGraphics = event.getGuiGraphics();
+        float partialTick = event.getPartialTick();
+
+        frameWork.renderBg(guiGraphics, mouseX, mouseY, partialTick);
+        frameWork.render(guiGraphics,mouseX,mouseY,partialTick);
     }
 
     public void render(IScreenEvent event) {
@@ -73,8 +80,8 @@ public class AttachingScreen<T extends AbstractContainerMenu>{
         GuiGraphics guiGraphics = event.getGuiGraphics();
         float partialTick = event.getPartialTick();
 
-        frameWork.renderBg(guiGraphics,mouseX,mouseY,partialTick);
-        frameWork.render(guiGraphics,mouseX,mouseY,partialTick);
+        //frameWork.renderBg(guiGraphics,mouseX,mouseY,partialTick);
+        //frameWork.render(guiGraphics,mouseX,mouseY,partialTick);
     }
 
 

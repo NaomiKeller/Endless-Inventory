@@ -31,8 +31,6 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen;
-import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
-import net.minecraft.client.gui.screens.inventory.tooltip.DefaultTooltipPositioner;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -45,7 +43,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
-import java.util.stream.Stream;
 
 import static com.kwwsyk.endinv.common.client.ClientModInfo.containerScreenHelper;
 import static com.kwwsyk.endinv.common.client.ClientModInfo.inputHandler;
@@ -152,7 +149,9 @@ public class ScreenFramework implements PageManager{
         this.leftPos = param.leftPos();
         this.topPos = param.topPos();
         TextureMode textureMode = param.textureMode();
-        this.imageWidth = textureMode==TextureMode.TRANSPARENT ? param.pageParamA().width() : 17 + columns * 18 + 17;
+        // For resource-based (vanilla-like) backgrounds, the 9-slice widths are 7 (left) + 18*columns + 7 (right)
+        // Transparent mode uses the provided page width directly.
+        this.imageWidth = textureMode==TextureMode.TRANSPARENT ? param.pageParamA().width() : 7 + columns * 18 + 7;
         this.imageHeight = screen.height;
         //renderer may need structure and widget data --here?
         this.SFBgRenderer = textureMode != TextureMode.TRANSPARENT ?//todo
@@ -239,18 +238,16 @@ public class ScreenFramework implements PageManager{
         widgets.add(configButton);
         widgets.add(reverseSortButton);
         widgets.add(searchBox);
-        widgets.add(sortTypeSwitchBox);
+        //widgets.add(sortTypeSwitchBox);
     }
 
     public void addWidgetToScreen(Consumer<AbstractWidget> installer) {
         widgets.forEach(installer);
     }
-    @SuppressWarnings("unused")
-    public void renderPre(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {}
 
-    public void renderBg(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+    public void renderBg(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         SFBgRenderer.renderBg(guiGraphics, partialTick, mouseX, mouseY);
-        getDisplayingPage().renderBg(SFBgRenderer, guiGraphics, partialTick, mouseX, mouseY);
+        getDisplayingPage().renderBg(guiGraphics, partialTick, mouseX, mouseY);
     }
 
     private boolean isHoveringOnPage;
@@ -263,29 +260,28 @@ public class ScreenFramework implements PageManager{
 
         getDisplayingPage().render(guiGraphics, mouseX, mouseY, partialTick);
 
-        if (searchBox.isHovered() && !searchBox.isFocused()) guiGraphics.renderTooltip(
-                mc.font,
-                Stream.of(
-                    Component.translatable("search.endinv.prefix.sharp"),
-                    Component.translatable("search.endinv.prefix.at"),
-                    Component.translatable("search.endinv.prefix.xor"),
-                    Component.translatable("search.endinv.prefix.star")
-                ).map(component -> ClientTooltipComponent.create(component.getVisualOrderText())).toList(),
-                mouseX,
-                mouseY,
-                DefaultTooltipPositioner.INSTANCE,
-                null
-        );
-        if (reverseSortButton.isHovered())
-            guiGraphics.renderTooltip(
+        if (searchBox.isHovered() && !searchBox.isFocused())
+            guiGraphics.setTooltipForNextFrame(
                     mc.font,
-                    List.of(ClientTooltipComponent.create(Component.translatable("button.endinv.reverse").getVisualOrderText())),
+                    List.of(
+                            Component.translatable("search.endinv.prefix.sharp"),
+                            Component.translatable("search.endinv.prefix.at"),
+                            Component.translatable("search.endinv.prefix.xor"),
+                            Component.translatable("search.endinv.prefix.star")
+                    ),
+                    java.util.Optional.empty(),
                     mouseX,
-                    mouseY,
-                    DefaultTooltipPositioner.INSTANCE,
-                    null
+                    mouseY
             );
-
+        if (reverseSortButton.isHovered())
+            guiGraphics.setTooltipForNextFrame(
+                    mc.font,
+                    List.of(Component.translatable("button.endinv.reverse")),
+                    java.util.Optional.empty(),
+                    mouseX,
+                    mouseY
+            );
+        this.sortTypeSwitchBox.render(guiGraphics, mouseX, mouseY, partialTick);
     }
 
     protected boolean hasClickedOnPage(double mouseX, double mouseY) {
@@ -382,6 +378,10 @@ public class ScreenFramework implements PageManager{
     }
 
     public boolean mouseClicked(double mouseX, double mouseY, int keyCode) {
+        if(this.sortTypeSwitchBox.mouseClicked(mouseX, mouseY, keyCode)){
+            return true;
+        }
+
         if (!searchBoxParam.hasClickedOn((int) mouseX, (int) mouseY)) {
             searchBox.setFocused(false);
         } else {

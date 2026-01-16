@@ -5,7 +5,6 @@ import com.kwwsyk.endinv.common.SourceInventory;
 import com.kwwsyk.endinv.common.client.CachedSrcInv;
 import com.kwwsyk.endinv.common.client.KeyMappings;
 import com.kwwsyk.endinv.common.client.gui.ScreenFramework;
-import com.kwwsyk.endinv.common.client.gui.bg.SFBgRenderer;
 import com.kwwsyk.endinv.common.client.gui.page.manager.PageManager;
 import com.kwwsyk.endinv.common.menu.page.PageType;
 import com.mojang.blaze3d.platform.InputConstants;
@@ -14,6 +13,7 @@ import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.Rect2i;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -48,9 +48,10 @@ import static net.minecraft.client.gui.screens.Screen.hasShiftDown;
 @SuppressWarnings("unused")
 public abstract class DisplayPage{
 
-    public static final int MARGIN_SIDE_WIDTH = 8;
+    // Match vanilla generic container margins: 7px sides, 17px top, 7px bottom
+    public static final int MARGIN_SIDE_WIDTH = 7;
     public static final int MARGIN_TOP_HEIGHT = 17;
-    public static final int MARGIN_BOTTOM_HEIGHT = 12;
+    public static final int MARGIN_BOTTOM_HEIGHT = 7;
 
     protected final PageType pageType;
     //the registry name of this page type.
@@ -207,8 +208,8 @@ public abstract class DisplayPage{
 
 
     //page renderer
-    public void renderBg(SFBgRenderer SFBgRenderer, GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {
-        SFBgRenderer.getDefaultPageBgRenderer().ifPresent(bgRenderer -> bgRenderer.renderBg(guiGraphics, partialTick, mouseX, mouseY));
+    public void renderBg(GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {
+        framework.SFBgRenderer.getDefaultPageBgRenderer().ifPresent(bgRenderer -> bgRenderer.renderBg(guiGraphics, partialTick, mouseX, mouseY));
     }
 
     /**
@@ -277,7 +278,7 @@ public abstract class DisplayPage{
             return;
         }
         try {
-            graphics.blit(getIcon(), x, y, 0, 0, 16, 16, 16, 16);
+            graphics.blit(RenderPipelines.GUI_TEXTURED ,getIcon(), x, y, 0, 0, 16, 16, 16, 16);
         } catch (Exception ignored) {}
     }
 
@@ -380,7 +381,7 @@ public abstract class DisplayPage{
         this.lastClickedButton = keyCode;
         this.lastCLickedX = XOffset;
         this.lastClickedY = YOffset;
-        return true;
+        return false;
     }
 
 

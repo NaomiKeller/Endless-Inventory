@@ -70,9 +70,29 @@ public class ScreenAttachment {
     }
 
     @SubscribeEvent
-    public static void renderPre(ScreenEvent.Render.Pre event){
+    public static void renderPre(ScreenEvent.Render.Background event){
         if(ATTACHMENT_MANAGER!=null){
-            ATTACHMENT_MANAGER.renderPre(new IScreenEvent() {});
+            ATTACHMENT_MANAGER.renderPre(new IScreenEvent() {
+                @Override
+                public double getMouseX() {
+                    return event.getMouseX();
+                }
+
+                @Override
+                public double getMouseY() {
+                    return event.getMouseY();
+                }
+
+                @Override
+                public float getPartialTick() {
+                    return event.getPartialTick();
+                }
+
+                @Override
+                public GuiGraphics getGuiGraphics() {
+                    return event.getGuiGraphics();
+                }
+            });
         }
     }
 
