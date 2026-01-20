@@ -5,10 +5,7 @@ import com.kwwsyk.endinv.common.client.gui.ScreenFramework;
 import com.kwwsyk.endinv.common.menu.page.PageType;
 import com.kwwsyk.endinv.common.menu.page.pageManager.PageQuickMoveHandler;
 import com.kwwsyk.endinv.common.network.payloads.PageData;
-import com.kwwsyk.endinv.common.network.payloads.toServer.CreativeItemModPayload;
-import com.kwwsyk.endinv.common.network.payloads.toServer.ItemClickPayload;
-import com.kwwsyk.endinv.common.network.payloads.toServer.ItemPageContext;
-import com.kwwsyk.endinv.common.network.payloads.toServer.StarItemPayload;
+import com.kwwsyk.endinv.common.network.payloads.toServer.*;
 import com.mojang.logging.LogUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -257,23 +254,23 @@ public abstract class ItemPage extends GridPage {
     protected void handlePickupAll(ItemStack clicked){
         // Shift + Double Click: bulk quick-move from Endless Inventory page into the open container
         if (Screen.hasShiftDown()) {
-
-            ModInfo.getPacketDistributor().sendToServer(
-                    new com.kwwsyk.endinv.common.network.payloads.toServer.BulkQuickMoveFromPagePayload(clicked.copyWithCount(1))
-            );
+            ModInfo.getPacketDistributor().sendToServer(new BulkQuickMoveFromPagePayload(clicked.copyWithCount(1)));
             int iterations = 0;
+            var mover = new PageQuickMoveHandler(framework);
             while (iterations++ < 32768) {
-                ItemStack taken = srcInv.takeItem(clicked.copyWithCount(1));
+                ItemStack taken = takeItem(clicked.copyWithCount(1));
                 if (taken.isEmpty()) break;
-                var mover = new PageQuickMoveHandler(framework);
                 ItemStack remain = mover.quickMoveFromPage(taken);
-
                 if (!remain.isEmpty()) {
                     // Could not insert fully; put the remainder back and stop.
-                    srcInv.addItem(remain);
+                    addItem(remain);
                     break;
                 }
             }
+            setChanged();
+            release();
+            // Ensure the view updates immediately so no temporary empty slot remains
+            this.refreshItems();
             return;
         }
         Player player = framework.getPlayer();

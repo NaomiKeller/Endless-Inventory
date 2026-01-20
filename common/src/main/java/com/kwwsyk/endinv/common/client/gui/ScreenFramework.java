@@ -19,6 +19,7 @@ import com.kwwsyk.endinv.common.client.option.ClientConfigs;
 import com.kwwsyk.endinv.common.client.option.EIMConfig;
 import com.kwwsyk.endinv.common.client.option.TextureMode;
 import com.kwwsyk.endinv.common.menu.page.PageType;
+import com.kwwsyk.endinv.common.mixin.ScreenMixin;
 import com.kwwsyk.endinv.common.network.payloads.toServer.CreativeItemModPayload;
 import com.kwwsyk.endinv.common.network.payloads.toServer.QuickMoveToPagePayload;
 import com.kwwsyk.endinv.common.network.payloads.toServer.StarItemPayload;
@@ -235,7 +236,7 @@ public class ScreenFramework implements PageManager{
         }
 
         widgets.add(pageSwitchBar);
-        widgets.add(configButton);
+        if(screen instanceof EndlessInventoryScreen) widgets.add(configButton);
         widgets.add(reverseSortButton);
         widgets.add(searchBox);
         //widgets.add(sortTypeSwitchBox);
@@ -513,6 +514,9 @@ public class ScreenFramework implements PageManager{
 
     public void onClose() {
         INSTANCE = null;
+        for(var widget:widgets){
+            ((ScreenMixin)screen).endinv$invokeRemoveWidget(widget);
+        }
     }
 
     public void refreshSearchResults() {

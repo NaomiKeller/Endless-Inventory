@@ -4,6 +4,8 @@ import com.kwwsyk.endinv.common.ModInfo;
 import com.kwwsyk.endinv.common.client.gui.AttachingScreen;
 import com.kwwsyk.endinv.common.client.gui.EndlessInventoryScreen;
 import com.kwwsyk.endinv.common.client.gui.IScreenEvent;
+import com.kwwsyk.endinv.common.client.gui.bg.IRectangleParam;
+import com.kwwsyk.endinv.common.client.option.ClientConfigs;
 import com.kwwsyk.endinv.common.network.payloads.toServer.OpenEndInvPayload;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -20,42 +22,65 @@ import static com.kwwsyk.endinv.common.ModInfo.getPacketDistributor;
 
 @EventBusSubscriber(value = Dist.CLIENT,modid = ModInfo.MOD_ID)
 public class ScreenAttachment {
+    @Nullable
     public static AttachingScreen<?> ATTACHMENT_MANAGER;
 
     @Nullable
     private static AttachingScreen<?> checkAndGetAttached(ScreenEvent event){
-        if(event.getScreen() instanceof AbstractContainerScreen<?> screen && AttachingScreen.isAttachable(screen)){
-            return ATTACHMENT_MANAGER;
+        if(
+                !(
+                        event.getScreen() instanceof AbstractContainerScreen<?> screen
+                                && !(screen instanceof EndlessInventoryScreen)
+                                && AttachingScreen.isAttachable(screen)
+                )
+        ){
+            ATTACHMENT_MANAGER = null;
         }
-        ATTACHMENT_MANAGER = null;
-        return null;
+        return ATTACHMENT_MANAGER;
     }
 
-    @SubscribeEvent
-    public static void opening(ScreenEvent.Opening event){
-        if(event.getScreen() instanceof AbstractContainerScreen<?>){
-            // no-op: kept for compatibility
-        }
-    }
+//    @SubscribeEvent
+//    public static void opening(ScreenEvent.Opening event){
+//        if(event.getScreen() instanceof AbstractContainerScreen<?>){
+//            // no-op: kept for compatibility
+//        }
+//    }
 
     @SubscribeEvent
     public static void closing(ScreenEvent.Closing event){
-        var attached = checkAndGetAttached(event);
-        if(attached!=null){
-            ATTACHMENT_MANAGER.closed(new IScreenEvent() {});
+        if(ATTACHMENT_MANAGER!=null){
+            ATTACHMENT_MANAGER.closed(new IScreenEvent(){});
             ATTACHMENT_MANAGER = null;
         }
     }
 
     @SubscribeEvent
     public static void init(ScreenEvent.Init.Post event){
-        if(event.getScreen() instanceof AbstractContainerScreen<?> screen && !(screen instanceof EndlessInventoryScreen)){
+        if(!(event.getScreen() instanceof AbstractContainerScreen<?> screen) || screen instanceof EndlessInventoryScreen) return;
+        IRectangleParam btnParam = ClientConfigs.ATTACHED_MENU_CONFIG.get().adjust(screen).configButtonA();
+        event.addListener(AttachingScreen.configButton(
+                event.getScreen(), btnParam,
+                () -> {
+                    if(ATTACHMENT_MANAGER==null){
+                        getPacketDistributor().sendToServer(new OpenEndInvPayload());
+                        ATTACHMENT_MANAGER = new AttachingScreen<>(screen);
+                        ATTACHMENT_MANAGER.init(new IScreenEvent() {
+                            public void addListener(AbstractWidget widget){
+                                event.addListener(widget);
+                            }
+                        });
+                    }
+                },
+                () -> {
+                    if(ATTACHMENT_MANAGER!=null){
+                        ATTACHMENT_MANAGER.closed(new IScreenEvent(){});
+                        ATTACHMENT_MANAGER = null;
+                    }
+                }
+        ));
+        if(AttachingScreen.isAttachable(screen)){
             Player player = screen.getMinecraft().player;
             if(player==null) return;
-
-            if(!AttachingScreen.isAttachable(screen)) {
-                return;
-            }
 
             if(ATTACHMENT_MANAGER==null){
                 getPacketDistributor().sendToServer(new OpenEndInvPayload());

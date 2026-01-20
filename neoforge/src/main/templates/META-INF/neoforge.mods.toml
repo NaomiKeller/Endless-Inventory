@@ -50,6 +50,9 @@ description='''${mod_description}'''
 config="endless_inventory.mixins.json"
 
 [[mixins]]
+config="endless_inventory.common.mixins.json"
+
+[[mixins]]
 config="endless_inventory.experimental.mixins.json"
 
 # The [[accessTransformers]] block allows you to declare where your AT file is.

@@ -1,14 +1,20 @@
 package com.kwwsyk.endinv.common.client.gui;
 
 import com.kwwsyk.endinv.common.ModInfo;
+import com.kwwsyk.endinv.common.client.ClientModInfo;
+import com.kwwsyk.endinv.common.client.gui.bg.IRectangleParam;
 import com.kwwsyk.endinv.common.client.option.ClientConfigs;
 import com.kwwsyk.endinv.common.client.option.MenuAttachabilityCache;
 import com.kwwsyk.endinv.common.network.payloads.toServer.OpenEndInvPayload;
 import com.mojang.logging.LogUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.Tooltip;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.renderer.Rect2i;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -54,6 +60,31 @@ public class AttachingScreen<T extends AbstractContainerMenu>{
             LOGGER.error("", e);
         }
         return false;
+    }
+
+    public static net.minecraft.client.gui.components.Button configButton(Screen screen, IRectangleParam configButtonParam,
+                                                                          Runnable open, Runnable close) {
+        Minecraft mc = Minecraft.getInstance();
+        return Button.builder(
+                Component.literal("⚙"),
+                        btn -> {
+                        if(Screen.hasShiftDown()){
+                            mc.setScreen(ClientModInfo.createConfigScreen(screen));
+                        } else {
+                            boolean currentA = ClientConfigs.DO_ATTACH.get();
+                            currentA = !currentA;
+                            ClientConfigs.DO_ATTACH.set(currentA);
+                            if(currentA){
+                                open.run();
+                            }else {
+                                close.run();
+                            }
+                        }
+                })
+                .pos(configButtonParam.x(), configButtonParam.y())
+                .size(configButtonParam.width(), configButtonParam.height())
+                .tooltip(Tooltip.create(Component.translatableWithFallback("endinv.configbutton", "Toggle endinv attached menu, shift for settings.")))
+                .build();
     }
 
     //invoked when an ACS is initialized

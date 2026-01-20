@@ -4,7 +4,6 @@ plugins {
 }
 
 neoForge {
-
     parchment{
         // The Minecraft version for which the Parchment mappings were created.
         // This does not necessarily need to match the Minecraft version your mod targets
@@ -55,7 +54,7 @@ dependencies {
 
     implementation 'org.jetbrains:annotations:24.0.1'
 
-    //implementation "org.spongepowered:mixin:0.8.7" DUPLICATE ERROR
+    implementation "org.spongepowered:mixin:0.8.7"
     annotationProcessor "org.spongepowered:mixin:0.8.7:processor"
 }
 
