@@ -7,6 +7,7 @@ import com.kwwsyk.endinv.common.menu.page.PageType;
 import com.kwwsyk.endinv.common.network.IPacketDistributor;
 import com.kwwsyk.endinv.common.network.payloads.SyncedConfig;
 import net.minecraft.core.Registry;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.inventory.MenuType;
@@ -41,8 +42,10 @@ public abstract class AbstractModInitializer {
     }
 
     private void registerItems(RegistryCallback<Item> method){
-        ModRegistries.Items.testEndInv = method.register("endinv_accessor",()->new TestEndInv(new Item.Properties()));
-        ModRegistries.Items.screenDebugger = method.register("screen_debugger",()->new ScreenDebugger(new Item.Properties()));
+        ModRegistries.Items.testEndInv = method.register("endinv_accessor",
+                ()->new TestEndInv(new Item.Properties().setId(ResourceKey.create(Registries.ITEM, withModLocation("endinv_accessor")))));
+        ModRegistries.Items.screenDebugger = method.register("screen_debugger",
+                ()->new ScreenDebugger(new Item.Properties().setId(ResourceKey.create(Registries.ITEM, withModLocation("screen_debugger")))));
     }
 
     private void registerMenuType(RegistryCallback<MenuType<?>> method){

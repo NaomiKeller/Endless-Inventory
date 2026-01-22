@@ -2,6 +2,7 @@ package com.kwwsyk.endinv.common.client.gui.bg;
 
 import com.kwwsyk.endinv.common.options.config.ConfigEntryImpl;
 
+import java.util.Arrays;
 import java.util.List;
 
 public interface IRectangleParam {
@@ -26,12 +27,23 @@ public interface IRectangleParam {
     static ConfigEntryImpl.ListEntry<Integer> createRectangleConfigEntry(String key, String[] comments, IRectangleParam defaultValue){
         return new ConfigEntryImpl.ListEntry<Integer>(
                 key,
-                comments,
+                arrayAppend(comments,PARAM_EXPLAIN),
                 toList(defaultValue),
                 ()->0,
                 n -> n instanceof Integer
         ).setRange(4,4);
     }
+
+    private static String[] arrayAppend(String[] array, String[] app){
+        var ret = Arrays.copyOf(array,array.length+app.length);
+        System.arraycopy(app,0,ret,array.length,app.length);
+        return ret;
+    }
+
+    String[] PARAM_EXPLAIN = new String[]{
+            "Takes 4 integers in index 0,1,2,3",
+            "corresponding to x,y,width,height of rectangle"
+    };
 
     static List<Integer> toList(IRectangleParam param){
         return List.of(

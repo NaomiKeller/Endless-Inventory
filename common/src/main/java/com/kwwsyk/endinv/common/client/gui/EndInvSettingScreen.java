@@ -24,7 +24,11 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import static com.kwwsyk.endinv.common.client.CachedSrcInv.INSTANCE;
-public class EndInvSettingScreen extends Screen {//todo improve it for updated config system
+
+/** A simple configuration screen for EndInv.
+ *
+ */
+public abstract class EndInvSettingScreen extends Screen {
 
     //private static final ResourceLocation BLANK_LOCATION = new ResourceLocation("minecraft","textures/gui/demo_background.png");
     private static final int CONFIG_ENTRY_Y_OFFSET = 17;
@@ -52,6 +56,35 @@ public class EndInvSettingScreen extends Screen {//todo improve it for updated c
         this.back = lastScreen;
     }
 
+    public static class Attachment extends EndInvSettingScreen{
+
+        public Attachment(Screen lastScreen) {
+            super(lastScreen);
+        }
+
+        protected void addConfigEntries(){
+            addConfigEntry("endinv.setting.rows", ClientConfigs.ATTACHED_MENU_CONFIG.PageBasicLayout.Rows);
+            addConfigEntry("endinv.setting.columns", ClientConfigs.ATTACHED_MENU_CONFIG.PageBasicLayout.Columns);
+            addConfigEntry("endinv.setting.auto_suit", ClientConfigs.ATTACHED_MENU_CONFIG.PageBasicLayout.autoColumns);
+            addConfigEntry("endinv.setting.attaching", ClientConfigs.DO_ATTACH);
+            addConfigEntry("endinv.setting.texture", ClientConfigs.ATTACHED_MENU_CONFIG.TextureMode);
+            addConfigEntry("endinv.setting.max_page_bar", ClientConfigs.ATTACHED_MENU_CONFIG.PageSwitchBar.MaxBars);
+            addConfigEntry(Component.literal("Screen debug"), ClientConfigs.SCREEN_DEBUG);
+        }
+    }
+
+    public static class Menu extends EndInvSettingScreen{
+        public Menu(Screen lastScreen) {
+            super(lastScreen);
+        }
+
+        protected void addConfigEntries(){
+            addConfigEntry("endinv.setting.rows", ClientConfigs.EIM_CONFIG.Rows);
+            addConfigEntry("endinv.setting.max_page_bar", ClientConfigs.EIM_CONFIG.PageSwitchBar.MaxBars);
+            addConfigEntry(Component.literal("Screen debug"), ClientConfigs.SCREEN_DEBUG);
+        }
+    }
+
     @Override
     protected void init() {
         super.init();
@@ -75,16 +108,12 @@ public class EndInvSettingScreen extends Screen {//todo improve it for updated c
             addInfoEntry(Component.translatable("endinv.info.owner_uuid"),INSTANCE::getOwnerUUID);
             addInfoEntry(Component.translatable("endinv.info.white_list_size"),()->"Size :"+INSTANCE.white_list.size());
         } else {
-            addConfigEntry("endinv.setting.rows", ClientConfigs.ATTACHED_MENU_CONFIG.PageBasicLayout.Rows);
-            addConfigEntry("endinv.setting.columns", ClientConfigs.ATTACHED_MENU_CONFIG.PageBasicLayout.Columns);
-            addConfigEntry("endinv.setting.auto_suit", ClientConfigs.ATTACHED_MENU_CONFIG.PageBasicLayout.autoColumns);
-            addConfigEntry("endinv.setting.attaching", ClientConfigs.DO_ATTACH);
-            addConfigEntry("endinv.setting.texture", ClientConfigs.ATTACHED_MENU_CONFIG.TextureMode);
-            addConfigEntry("endinv.setting.max_page_bar", ClientConfigs.EIM_CONFIG.PageSwitchBar.MaxBars);
-            addConfigEntry(Component.literal("Screen debug"), ClientConfigs.SCREEN_DEBUG);
+            addConfigEntries();
         }
         scrollTo();
     }
+
+    protected abstract void addConfigEntries();
 
     private void scrollTo(){
         for(int i = 0; i<Math.min(MAX_ENTRY_COUNT,entries.size()); ++i){
@@ -103,15 +132,15 @@ public class EndInvSettingScreen extends Screen {//todo improve it for updated c
         switchPage();
     }
 
-    private <T> void addConfigEntry(String key, IConfigValue<T> configValue){
+    protected  <T> void addConfigEntry(String key, IConfigValue<T> configValue){
         addConfigEntry(Component.translatable(key),configValue);
     }
 
-    private <T> void addConfigEntry(Component tip, IConfigValue<T> configValue){
+    protected  <T> void addConfigEntry(Component tip, IConfigValue<T> configValue){
         entries.add(new ConfigEntry<>(entries.size(),tip,configValue.get(),configValue));
     }
 
-    private void addInfoEntry(Component tip, Supplier<Object> info){
+    protected void addInfoEntry(Component tip, Supplier<Object> info){
         entries.add(new InfoEntry(entries.size(),tip,info));
     }
 

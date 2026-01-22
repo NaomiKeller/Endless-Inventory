@@ -4,6 +4,8 @@ import com.kwwsyk.endinv.common.ModInfo;
 import com.kwwsyk.endinv.common.client.gui.AttachingScreen;
 import com.kwwsyk.endinv.common.client.gui.EndlessInventoryScreen;
 import com.kwwsyk.endinv.common.client.gui.IScreenEvent;
+import com.kwwsyk.endinv.common.client.gui.bg.IRectangleParam;
+import com.kwwsyk.endinv.common.client.option.ClientConfigs;
 import com.kwwsyk.endinv.common.network.payloads.toServer.OpenEndInvPayload;
 import com.kwwsyk.endinv.fabric.mixin.ScreenAccessor;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
@@ -44,36 +46,60 @@ public final class ScreenAttachment {
                 return;
             }
 
+            // Add independent config/toggle button (Shift opens settings)
+            IRectangleParam btnParam = ClientConfigs.ATTACHED_MENU_CONFIG.get().adjust(container).configButtonA();
+            ((ScreenAccessor) screen).endinv$invokeAddRenderableWidget(
+                    AttachingScreen.configButton(
+                            screen,
+                            btnParam,
+                            () -> {
+                                if (attachment == null) {
+                                    ModInfo.getPacketDistributor().sendToServer(new OpenEndInvPayload());
+                                    attachment = new AttachingScreen<>(container);
+                                    attachment.init(new IScreenEvent() {
+                                        @Override
+                                        public void addListener(AbstractWidget widget) {
+                                            ((ScreenAccessor) screen).endinv$invokeAddRenderableWidget(widget);
+                                        }
+                                    });
+                                }
+                            },
+                            () -> {
+                                if (attachment != null) {
+                                    attachment.closed(new IScreenEvent() {});
+                                    attachment = null;
+                                }
+                            }
+                    )
+            );
+
             Player player = client.player;
             if (player == null) {
                 attachment = null;
                 return;
             }
 
-            if(!AttachingScreen.isAttachable(container)) return;
-
-            //CachedConfig.readAndSyncClientConfigToServer(false);
-
-            if (attachment == null) {
-                ModInfo.getPacketDistributor().sendToServer(new OpenEndInvPayload());
-                attachment = new AttachingScreen<>(container);
+            if (AttachingScreen.isAttachable(container)) {
+                if (attachment == null) {
+                    ModInfo.getPacketDistributor().sendToServer(new OpenEndInvPayload());
+                    attachment = new AttachingScreen<>(container);
+                    attachment.init(new IScreenEvent() {
+                        @Override
+                        public void addListener(AbstractWidget widget) {
+                            ((ScreenAccessor) screen).endinv$invokeAddRenderableWidget(widget);
+                        }
+                    });
+                }
             }
 
-            attachment.init(new IScreenEvent() {
-                @Override
-                public void addListener(AbstractWidget widget) {
-                    ((ScreenAccessor) screen).endinv$invokeAddRenderableWidget(widget);
-                }
-            });
-
             ScreenEvents.remove(screen).register(s -> {
-                if(attachment!=null){
+                if (attachment != null) {
                     attachment.closed(new IScreenEvent() {});
                     attachment = null;
                 }
             });
 
-            ScreenEvents.beforeRender(screen).register((s, graphics, mouseX, mouseY, delta) -> preRender(attachment));
+            ScreenEvents.beforeRender(screen).register((s, graphics, mouseX, mouseY, delta) -> preRender(attachment, graphics, mouseX, mouseY, delta));
             ScreenEvents.afterRender(screen).register((s, graphics, mouseX, mouseY, delta) -> render(attachment, graphics, mouseX, mouseY, delta));
 
             ScreenMouseEvents.allowMouseClick(screen).register((s, mouseX, mouseY, button) -> allowMouseClick(attachment, mouseX, mouseY, button));
@@ -87,12 +113,35 @@ public final class ScreenAttachment {
         });
     }
 
-    private static void preRender(AttachingScreen<?> expected) {
-        expected.renderPre(new IScreenEvent() {});
+    private static void preRender(AttachingScreen<?> expected, GuiGraphics graphics, double mouseX, double mouseY, float delta) {
+        if (expected == null || attachment != expected) {
+            return;
+        }
+        expected.renderPre(new IScreenEvent() {
+            @Override
+            public double getMouseX() {
+                return mouseX;
+            }
+
+            @Override
+            public double getMouseY() {
+                return mouseY;
+            }
+
+            @Override
+            public float getPartialTick() {
+                return delta;
+            }
+
+            @Override
+            public GuiGraphics getGuiGraphics() {
+                return graphics;
+            }
+        });
     }
 
     private static void render(AttachingScreen<?> expected, GuiGraphics graphics, double mouseX, double mouseY, float delta) {
-        if (attachment != expected) {
+        if (expected == null || attachment != expected) {
             return;
         }
         expected.render(new IScreenEvent() {
@@ -119,7 +168,7 @@ public final class ScreenAttachment {
     }
 
     private static boolean allowMouseClick(AttachingScreen<?> expected, double mouseX, double mouseY, int button) {
-        if (attachment != expected || !isAttachmentActive(expected)) {
+        if (expected == null || attachment != expected || !isAttachmentActive(expected)) {
             return true;
         }
         boolean[] canceled = {false};
@@ -148,7 +197,7 @@ public final class ScreenAttachment {
     }
 
     private static boolean allowMouseRelease(AttachingScreen<?> expected, double mouseX, double mouseY, int button) {
-        if (attachment != expected || !isAttachmentActive(expected)) {
+        if (expected == null || attachment != expected || !isAttachmentActive(expected)) {
             return true;
         }
         boolean[] canceled = {false};
@@ -177,7 +226,7 @@ public final class ScreenAttachment {
     }
 
     private static boolean allowMouseScroll(AttachingScreen<?> expected, double mouseX, double mouseY, double horizontal, double vertical) {
-        if (attachment != expected || !isAttachmentActive(expected)) {
+        if (expected == null || attachment != expected || !isAttachmentActive(expected)) {
             return true;
         }
         boolean[] canceled = new boolean[]{false};
@@ -211,7 +260,7 @@ public final class ScreenAttachment {
     }
 
     private static boolean allowKeyPress(AttachingScreen<?> expected, int keyCode, int scanCode, int modifiers) {
-        if (attachment != expected || !isAttachmentActive(expected)) {
+        if (expected == null || attachment != expected || !isAttachmentActive(expected)) {
             return true;
         }
         boolean[] canceled = {false};

@@ -29,26 +29,6 @@ public abstract class ExperienceOrbAwardMixin {
 
     // Use a unique name to avoid clashing with ExperienceOrb's own methods.
     private static int eiRepairPlayerItems(ServerPlayer player, int value) {
-        java.util.Optional<net.minecraft.world.item.enchantment.EnchantedItemInUse> optional =
-                net.minecraft.world.item.enchantment.EnchantmentHelper.getRandomItemWith(
-                        net.minecraft.world.item.enchantment.EnchantmentEffectComponents.REPAIR_WITH_XP,
-                        player,
-                        net.minecraft.world.item.ItemStack::isDamaged
-                );
-        if (optional.isPresent()) {
-            var itemstack = optional.get().itemStack();
-            int i = net.minecraft.world.item.enchantment.EnchantmentHelper.modifyDurabilityToRepairFromXp(player.serverLevel(), itemstack, value);
-            int j = Math.min(i, itemstack.getDamageValue());
-            itemstack.setDamageValue(itemstack.getDamageValue() - j);
-            if (j > 0) {
-                int k = value - j * value / i;
-                if (k > 0) {
-                    return eiRepairPlayerItems(player, k);
-                }
-            }
-            return 0;
-        } else {
-            return value;
-        }
+        return value;
     }
 }

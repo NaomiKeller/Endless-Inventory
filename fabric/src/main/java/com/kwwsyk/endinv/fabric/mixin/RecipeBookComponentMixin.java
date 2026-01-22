@@ -2,28 +2,35 @@ package com.kwwsyk.endinv.fabric.mixin;
 
 import com.kwwsyk.endinv.common.client.CachedSrcInv;
 import com.kwwsyk.endinv.common.util.recipeTransferHelper.RecipeItemProvider;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.recipebook.RecipeBookComponent;
-import net.minecraft.world.entity.player.StackedContents;
+import net.minecraft.world.entity.player.StackedItemContents;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.ModifyArg;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(RecipeBookComponent.class)
 public class RecipeBookComponentMixin {
 
+    @Final
+    @Shadow
+    private StackedItemContents stackedContents;
+    @Shadow
+    protected Minecraft minecraft;
     @Unique
-    private CachedSrcInv srcInv = CachedSrcInv.INSTANCE;
+    private final CachedSrcInv srcInv = CachedSrcInv.INSTANCE;
 
-    @ModifyArg(method = "initVisuals", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/inventory/RecipeBookMenu;fillCraftSlotsStackedContents(Lnet/minecraft/world/entity/player/StackedContents;)V"), index = 0)
-    private StackedContents endinv$fillEndInvStackedContents(StackedContents original) {
-        RecipeItemProvider.fillStackedContents(srcInv.getItemsAsList(), original);
-        return original;
+    @Inject(method = "initVisuals", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/inventory/RecipeBookMenu;fillCraftSlotsStackedContents(Lnet/minecraft/world/entity/player/StackedItemContents;)V"))
+    private void fillEndInvStackedContents(CallbackInfo ci) {
+        RecipeItemProvider.fillStackedItemContents(srcInv.getItemsAsList(), stackedContents);
     }
 
-    @ModifyArg(method = "updateStackedContents", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/inventory/RecipeBookMenu;fillCraftSlotsStackedContents(Lnet/minecraft/world/entity/player/StackedContents;)V"), index = 0)
-    private StackedContents endinv$updateStackedContentsOfEndInv(StackedContents original){
-        RecipeItemProvider.fillStackedContents(srcInv.getItemsAsList(), original);
-        return original;
+    @Inject(method = "updateStackedContents", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/inventory/RecipeBookMenu;fillCraftSlotsStackedContents(Lnet/minecraft/world/entity/player/StackedItemContents;)V"))
+    private void updateStackedContentsOfEndInv(CallbackInfo ci) {
+        RecipeItemProvider.fillStackedItemContents(srcInv.getItemsAsList(), stackedContents);
     }
 }

@@ -2,6 +2,7 @@ package com.kwwsyk.endinv.common.client;
 
 import com.kwwsyk.endinv.common.ModInfo;
 import com.kwwsyk.endinv.common.client.gui.EndInvSettingScreen;
+import com.kwwsyk.endinv.common.client.gui.EndlessInventoryScreen;
 import com.kwwsyk.endinv.common.client.option.ClientConfigs;
 import com.kwwsyk.endinv.common.network.payloads.toServer.OpenEndInvPayload;
 import net.minecraft.client.Minecraft;
@@ -40,6 +41,6 @@ public class ClientModInfo {
                 return screen;
             }
         }
-        return new EndInvSettingScreen(parent);
+        return parent instanceof EndlessInventoryScreen ? new EndInvSettingScreen.Menu(parent) : new EndInvSettingScreen.Attachment(parent);
     }
 }

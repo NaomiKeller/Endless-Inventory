@@ -7,7 +7,7 @@
     "BlockDropMixin",
     "ExperienceOrbAwardMixin",
     "ItemEntityPickupMixin",
-    "LivingEntityDropMixin",
+    
     "PlayerPersistentDataMixin"
   ],
   "client": [
@@ -15,7 +15,8 @@
     "AbstractContainerScreenMixin",
     "GuiEventListenerCharTypedMixin",
     "RecipeBookComponentMixin",
-    "ScreenAccessor"
+    "ScreenAccessor",
+    "ScreenMixin"
   ],
   "injectors": {
     "defaultRequire": 1

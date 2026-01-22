@@ -53,8 +53,8 @@ repositories {
 dependencies {
 
     implementation 'org.jetbrains:annotations:24.0.1'
-
-    implementation "org.spongepowered:mixin:0.8.7"
+    // Provide Mixin annotations at compile-time only; runtime comes from the loader.
+    compileOnly "org.spongepowered:mixin:0.8.7"
     annotationProcessor "org.spongepowered:mixin:0.8.7:processor"
 }
 

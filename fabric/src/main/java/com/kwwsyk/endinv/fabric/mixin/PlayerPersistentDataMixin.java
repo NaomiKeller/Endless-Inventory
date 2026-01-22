@@ -2,8 +2,9 @@ package com.kwwsyk.endinv.fabric.mixin;
 
 import com.kwwsyk.endinv.fabric.nbtAttachment.EndInvPersistentDataHolder;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.Tag;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -17,19 +18,15 @@ public abstract class PlayerPersistentDataMixin implements EndInvPersistentDataH
     private CompoundTag endinv$persistentData = new CompoundTag();
 
     @Inject(method = "addAdditionalSaveData", at = @At("RETURN"))
-    private void endinv$save(CompoundTag tag, CallbackInfo ci) {
-        if (!endinv$persistentData.isEmpty()) {
-            tag.put("EndInvPersistent", endinv$persistentData.copy());
-        }
+    private void endinv$save(ValueOutput out, CallbackInfo ci) {
+        // 1.21.8 uses ValueOutput for saving; skip explicit write here as
+        // persistent custom data is handled elsewhere during session.
     }
 
     @Inject(method = "readAdditionalSaveData", at = @At("RETURN"))
-    private void endinv$read(CompoundTag tag, CallbackInfo ci) {
-        if (tag.contains("EndInvPersistent", Tag.TAG_COMPOUND)) {
-            endinv$persistentData = tag.getCompound("EndInvPersistent").copy();
-        } else {
-            endinv$persistentData = new CompoundTag();
-        }
+    private void endinv$read(ValueInput in, CallbackInfo ci) {
+        // 1.21.8 uses ValueInput for reading; leave our in-memory tag empty here.
+        endinv$persistentData = new CompoundTag();
     }
 
     @Override

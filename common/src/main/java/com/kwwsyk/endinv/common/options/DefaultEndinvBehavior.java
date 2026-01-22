@@ -13,7 +13,7 @@ public class DefaultEndinvBehavior extends ComplexConfigEntryImpl<DefaultEndinvB
 
     private static final String COMMENT_INFINITY = "when item count reaches max stack count, this item will be served as infinity";
     private static final String[] COMMENT_TRANSFERMODE = new String[]{"Controls how server Endless Inventory transfer contents to client",
-            "Receive: "+ ContentTransferMode.ALL.name()+", "+ContentTransferMode.PART.name()};//todo better present enum values
+            "Receive: "+ ContentTransferMode.ALL.name()+", "+ContentTransferMode.PART.name()};
     private static final String[] COMMENT_ACCESS = new String[]{"Controls how players can access Endless Inventory, options:",
             "PUBLIC : all players can access",
             "RESTRICTED : only owner and allowed can access",

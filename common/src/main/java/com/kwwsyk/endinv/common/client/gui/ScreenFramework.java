@@ -155,7 +155,7 @@ public class ScreenFramework implements PageManager{
         this.imageWidth = textureMode==TextureMode.TRANSPARENT ? param.pageParamA().width() : 7 + columns * 18 + 7;
         this.imageHeight = screen.height;
         //renderer may need structure and widget data --here?
-        this.SFBgRenderer = textureMode != TextureMode.TRANSPARENT ?//todo
+        this.SFBgRenderer = textureMode != TextureMode.TRANSPARENT ?
                 new FromResource.LeftLayout(this, param.pageTabA()) :
                 new Transparent(this, param.pageTabA());
 
