@@ -8,6 +8,7 @@ import com.kwwsyk.endinv.common.network.payloads.toClient.EndInvContent;
 import com.kwwsyk.endinv.common.network.payloads.toClient.EndInvMetadata;
 import com.kwwsyk.endinv.common.options.ContentTransferMode;
 import com.kwwsyk.endinv.common.options.ServerConfigs;
+import com.kwwsyk.endinv.fabric.nbtAttachment.PlayerAttachmentIO;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
@@ -28,7 +29,11 @@ public final class PlayerEvents {
 
     public static void register() {
         ServerTickEvents.END_SERVER_TICK.register(PlayerEvents::flushSync);
-        ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> scheduleSync(handler.player));
+        ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
+            PlayerAttachmentIO.loadFor(handler.player);
+            scheduleSync(handler.player);
+        });
+        ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> PlayerAttachmentIO.saveFor(handler.player));
         ServerPlayerEvents.COPY_FROM.register(PlayerEvents::copyFromOldPlayer);
     }
 

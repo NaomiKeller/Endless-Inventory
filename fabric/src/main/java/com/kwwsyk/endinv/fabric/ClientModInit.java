@@ -11,6 +11,7 @@ import com.kwwsyk.endinv.fabric.mixin.AbstractContainerScreenAccessor;
 import com.kwwsyk.endinv.fabric.network.FabricNetworking;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
@@ -24,6 +25,7 @@ import java.util.Map;
 public class ClientModInit extends AbstractClientModInitializer implements ClientModInitializer {
 
     private static final Map<KeyMappings.EndInvKey, KeyMapping> REGISTERED_KEYS = new HashMap<>();
+    private static JsonConfigurationHandler CLIENT_CONFIGS;
 
     @Override
     public void onInitializeClient() {
@@ -33,14 +35,18 @@ public class ClientModInit extends AbstractClientModInitializer implements Clien
         // No separate encoder init needed on typed API
         FabricNetworking.initClient();
         ClientEvents.register();
+        ClientLifecycleEvents.CLIENT_STOPPING.register(client -> {
+            if (CLIENT_CONFIGS != null) CLIENT_CONFIGS.save();
+        });
     }
 
     @Override
     protected void initClientConfigs() {
-        new JsonConfigurationHandler(
+        CLIENT_CONFIGS = new JsonConfigurationHandler(
                 net.fabricmc.loader.api.FabricLoader.getInstance().getConfigDir().resolve("endless_inventory-client.json"),
                 ClientConfigs.getConfigs()
-        ).load();
+        );
+        CLIENT_CONFIGS.load();
     }
 
     @Override

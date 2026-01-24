@@ -99,8 +99,7 @@ public final class ScreenAttachment {
                 }
             });
 
-            ScreenEvents.beforeRender(screen).register((s, graphics, mouseX, mouseY, delta) -> preRender(attachment, graphics, mouseX, mouseY, delta));
-            ScreenEvents.afterRender(screen).register((s, graphics, mouseX, mouseY, delta) -> render(attachment, graphics, mouseX, mouseY, delta));
+            // Rendering is handled via mixin injection to align phase with NeoForge (after renderBg).
 
             ScreenMouseEvents.allowMouseClick(screen).register((s, mouseX, mouseY, button) -> allowMouseClick(attachment, mouseX, mouseY, button));
             ScreenMouseEvents.allowMouseRelease(screen).register((s, mouseX, mouseY, button) -> allowMouseRelease(attachment, mouseX, mouseY, button));
@@ -223,6 +222,48 @@ public final class ScreenAttachment {
             }
         });
         return !canceled[0];
+    }
+
+    // Called from mixin after AbstractContainerScreen#renderBg
+    public static void onRenderAfterBackground(AbstractContainerScreen<?> screen, GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        AttachingScreen<?> current = attachment;
+        if (current == null || current.getScreen() != screen || !isAttachmentActive(current)) {
+            return;
+        }
+        current.renderPre(new IScreenEvent() {
+            @Override
+            public double getMouseX() { return mouseX; }
+
+            @Override
+            public double getMouseY() { return mouseY; }
+
+            @Override
+            public float getPartialTick() { return partialTick; }
+
+            @Override
+            public GuiGraphics getGuiGraphics() { return graphics; }
+        });
+    }
+
+    // Reserved for potential overlay rendering parity (currently no-op in common)
+    public static void onRenderPost(AbstractContainerScreen<?> screen, GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        AttachingScreen<?> current = attachment;
+        if (current == null || current.getScreen() != screen || !isAttachmentActive(current)) {
+            return;
+        }
+        current.render(new IScreenEvent() {
+            @Override
+            public double getMouseX() { return mouseX; }
+
+            @Override
+            public double getMouseY() { return mouseY; }
+
+            @Override
+            public float getPartialTick() { return partialTick; }
+
+            @Override
+            public GuiGraphics getGuiGraphics() { return graphics; }
+        });
     }
 
     private static boolean allowMouseScroll(AttachingScreen<?> expected, double mouseX, double mouseY, double horizontal, double vertical) {

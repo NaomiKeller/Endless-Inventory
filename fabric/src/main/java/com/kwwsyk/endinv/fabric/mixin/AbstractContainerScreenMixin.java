@@ -16,4 +16,6 @@ public abstract class AbstractContainerScreenMixin {
             cir.setReturnValue(true);
         }
     }
+
+    // No render injection; rendering is performed by a render-only widget for correct ordering.
 }

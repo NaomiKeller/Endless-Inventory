@@ -29,9 +29,9 @@ loom {
     }
 }
 sourceSets {
-//    main {
-//        resources.srcDir project(':common').file('src/main/resources')
-//    }
+    main {
+        resources.srcDir project(':common').file('src/main/resources')
+    }
 }
 
 repositories {
