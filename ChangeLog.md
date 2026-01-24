@@ -2,6 +2,10 @@
 
 __branch 1.21.8__
 
+## 1.1.2 change:
+Added shift+double-click to quick move items.
+Let the config button of attaching screen be able to both toggle close attached screen or open setting screen(shift-click).
+
 ## 2026-1-16
 Added shift+double-click to quick move items.
 
