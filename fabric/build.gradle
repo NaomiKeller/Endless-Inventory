@@ -106,6 +106,7 @@ java {
 }
 
 jar {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     from(project(':common').sourceSets.main.output)
     from("LICENSE") {
         rename { "${it}_${project.archivesBaseName}"}

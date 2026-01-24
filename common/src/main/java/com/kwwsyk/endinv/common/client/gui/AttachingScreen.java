@@ -90,15 +90,19 @@ public class AttachingScreen<T extends AbstractContainerMenu>{
     //invoked when an ACS is initialized
     public void init(IScreenEvent event){
         this.frameWork = ScreenFramework.getInstance()==null ? new ScreenFramework(this) : ScreenFramework.getInstance();
-        // Render page content as a widget so it appears below tooltips but above vanilla bg
-        event.addListener(new PageContentWidget());
         frameWork.addWidgetToScreen(event::addListener);
         // Ensure server-side manager attaches for the current menu so actions like quick-move are authoritative
         ModInfo.getPacketDistributor().sendToServer(new OpenEndInvPayload(false, frameWork.rows()));
     }
 
     public void renderPre(IScreenEvent event) {
-        // No-op: background and content are rendered during widget pass for correct z-ordering
+        int mouseX = (int) event.getMouseX();
+        int mouseY = (int) event.getMouseY();
+        GuiGraphics guiGraphics = event.getGuiGraphics();
+        float partialTick = event.getPartialTick();
+
+        frameWork.renderBg(guiGraphics, mouseX, mouseY, partialTick);
+        frameWork.render(guiGraphics,mouseX,mouseY,partialTick);
     }
 
     public void render(IScreenEvent event) {
@@ -111,24 +115,6 @@ public class AttachingScreen<T extends AbstractContainerMenu>{
         //frameWork.render(guiGraphics,mouseX,mouseY,partialTick);
     }
 
-    private class PageContentWidget extends net.minecraft.client.gui.components.AbstractWidget {
-        private PageContentWidget(){
-            super(0, 0, 0, 0, Component.empty());
-        }
-
-        @Override
-        protected void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-            if(frameWork!=null){
-                frameWork.renderBg(guiGraphics, mouseX, mouseY, partialTick);
-                frameWork.render(guiGraphics, mouseX, mouseY, partialTick);
-            }
-        }
-
-        @Override
-        protected void updateWidgetNarration(net.minecraft.client.gui.narration.NarrationElementOutput narrationElementOutput) {
-            // no-op
-        }
-    }
 
     public void mouseClicked(IScreenEvent event) {
         double mouseX = event.getMouseX();
