@@ -6,12 +6,12 @@ __branch 1.21.8__
 Added shift+double-click to quick move items.
 Let the config button of attaching screen be able to both toggle close attached screen or open setting screen(shift-click).
 
+## 2026-1-19
+Optimized the performance of shift+double-click.
+Let the config button of attaching screen be able to both toggle close attached screen or open setting screen.
+
 ## 2026-1-16
 Added shift+double-click to quick move items.
-
-## 2026-1-19
-Optimized the performance of shift+double-click. 
-Let the config button of attaching screen be able to both toggle close attached screen or open setting screen.
 
 __branch 1.21.4__
 
@@ -197,7 +197,7 @@ Forge:
 Fabric:
 - Fixed several bugs
 - Added config screen, cloth config api is a selectable dependency now
-\
+
 # 10.17 Fabric autopick & metadata
 - Fabric: removed reflection-based loot registration; use mixins and Fabric API where applicable to restore autopick.
 - Fabric: block break drops are absorbed via Block.popResource/popExperience mixins; no entities when fully absorbed; XP repairs Mending gear then grants remainder.
