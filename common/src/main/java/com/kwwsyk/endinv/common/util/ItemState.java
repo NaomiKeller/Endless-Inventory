@@ -1,6 +1,7 @@
 package com.kwwsyk.endinv.common.util;
 
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.world.item.ItemStack;
 
 public record ItemState(int count, long lastModTime) {
 
@@ -12,5 +13,9 @@ public record ItemState(int count, long lastModTime) {
 
     public static ItemState decode(FriendlyByteBuf o){
         return new ItemState(o.readInt(),o.readLong());
+    }
+
+    public ItemStack toStack(ItemKey key) {
+        return new ItemStack(key.item().builtInRegistryHolder(), count, key.components());
     }
 }

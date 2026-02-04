@@ -1,22 +1,28 @@
 package com.kwwsyk.endinv.common.network.payloads.toClient;
 
 import com.kwwsyk.endinv.common.AbstractModInitializer;
+import com.kwwsyk.endinv.common.client.CachedSrcInv;
 import com.kwwsyk.endinv.common.client.gui.page.ItemDisplay;
+import com.kwwsyk.endinv.common.client.gui.page.ItemPage;
 import com.kwwsyk.endinv.common.network.payloads.ModPacketContext;
 import com.kwwsyk.endinv.common.network.payloads.ModPacketPayload;
+import com.kwwsyk.endinv.common.util.ItemKey;
+import com.kwwsyk.endinv.common.util.ItemState;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.world.item.ItemStack;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**Packet that contains required {@link ItemDisplay}'s content view
  *  when {@code TransferMode==PART}
  * @param stacks
  */
-public record SetItemDisplayContentPayload(List<ItemStack> stacks) implements ModPacketPayload {
+public record SetItemDisplayContentPayload(List<ItemStack> stacks) implements ModPacketPayload {//todo now miss lastModInfo
 
     public static final StreamCodec<RegistryFriendlyByteBuf, SetItemDisplayContentPayload> STREAM_CODEC =
             StreamCodec.of((buf, value) -> encodeRegistry(value, buf), SetItemDisplayContentPayload::decodeRegistry);
@@ -60,9 +66,13 @@ public record SetItemDisplayContentPayload(List<ItemStack> stacks) implements Mo
     }
 
     public void handle(ModPacketContext context) {//todo handle such cache
+        var stackStream = stacks.stream();
+        Map<ItemKey, ItemState> partlyMap = new HashMap<>();
+        stacks.forEach(stack -> partlyMap.put(ItemKey.asKey(stack), new ItemState(stack.getCount(), -1)));
+        CachedSrcInv.INSTANCE.getItemMap().putAll(partlyMap);
         ModPacketPayload.getClientPageMeta().ifPresent(mng->{
             if(mng.getDisplayingPage() instanceof ItemDisplay itemDisplay){
-                itemDisplay.buildContentsWith(stacks);
+                itemDisplay.buildContentsWith(stackStream.map(ItemKey::asKey).map(ItemPage.ItemPointer::new).toList());
             }
         });
     }

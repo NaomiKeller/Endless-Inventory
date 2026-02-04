@@ -20,6 +20,7 @@ public final class FabricServerNetworking {
         ServerPlayNetworking.registerGlobalReceiver(StarItemPayload.TYPE, (payload, ctx) -> ctx.server().execute(() -> payload.handle(context(ctx.player()))));
         ServerPlayNetworking.registerGlobalReceiver(ToggleCraftingPayload.TYPE, (payload, ctx) -> ctx.server().execute(() -> payload.handle(context(ctx.player()))));
         ServerPlayNetworking.registerGlobalReceiver(SyncedConfig.TYPE, (payload, ctx) -> ctx.server().execute(() -> payload.handle(context(ctx.player()))));
+        ServerPlayNetworking.registerGlobalReceiver(BulkQuickMoveFromPagePayload.TYPE, (payload, ctx) -> ctx.server().execute(() -> payload.handle(context(ctx.player()))));
         if (FabricLoader.getInstance().isModLoaded("jei")) {
             ServerPlayNetworking.registerGlobalReceiver(com.kwwsyk.endinv.fabric.network.payloads.JeiTransferRecipePayload.TYPE,
                     (payload, ctx) -> ctx.server().execute(() -> payload.handle(context(ctx.player()))));

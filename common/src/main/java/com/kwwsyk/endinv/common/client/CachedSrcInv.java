@@ -2,15 +2,21 @@ package com.kwwsyk.endinv.common.client;
 
 import com.kwwsyk.endinv.common.ModInfo;
 import com.kwwsyk.endinv.common.SourceInventory;
+import com.kwwsyk.endinv.common.client.gui.page.ItemPage;
 import com.kwwsyk.endinv.common.network.payloads.toClient.EndInvMetadata;
 import com.kwwsyk.endinv.common.options.ContentTransferMode;
 import com.kwwsyk.endinv.common.util.ItemKey;
 import com.kwwsyk.endinv.common.util.ItemState;
+import com.kwwsyk.endinv.common.util.SearchUtil;
+import com.kwwsyk.endinv.common.util.SortType;
 import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
 import net.minecraft.Util;
 import net.minecraft.world.item.ItemStack;
 
+import javax.annotation.Nullable;
+import java.util.List;
 import java.util.Map;
+import java.util.function.Predicate;
 
 /**Client only {@link SourceInventory}
  * Served as data cache of EndlessInventory.
@@ -30,6 +36,23 @@ public class CachedSrcInv extends SourceInventory {
         overwriteItems(new Object2ObjectLinkedOpenHashMap<>(itemMap));
         this.itemSize = getItemSize();//here assert transfermode==all //parallelable
         this.validSize = true;
+    }
+
+    public List<ItemPage.ItemPointer> getItemView(int startIndex,
+                                                  int length,
+                                                  SortType sortType,
+                                                  boolean reverse,
+                                                  @Nullable Predicate<ItemStack> classify,
+                                                  String search){
+        var ret = getSortedKeyReference(sortType)
+                .filter(key -> {
+                    ItemStack stack = key.toStack(itemMap.get(key).count());
+                    return (classify == null || classify.test(stack)) && SearchUtil.matchesSearch(stack, search);
+                })
+                .map(ItemPage.ItemPointer::new)
+                .toList();
+        ret = ret.subList(Math.max(startIndex, 0), Math.min(startIndex + length, ret.size()));
+        return reverse ? ret.reversed() : ret;
     }
 
     /**
