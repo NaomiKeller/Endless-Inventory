@@ -14,7 +14,7 @@ public record ItemState(int count, long lastModTime) {
     public static ItemState decode(FriendlyByteBuf o){
         return new ItemState(o.readInt(),o.readLong());
     }
-
+    @SuppressWarnings("deprecation")
     public ItemStack toStack(ItemKey key) {
         return new ItemStack(key.item().builtInRegistryHolder(), count, key.components());
     }

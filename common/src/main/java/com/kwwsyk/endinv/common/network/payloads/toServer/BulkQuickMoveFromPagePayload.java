@@ -44,6 +44,7 @@ public record BulkQuickMoveFromPagePayload(ItemKey prototype) implements ModPack
     @Override
     public void handle(ModPacketContext context) {
         Player player = context.player();
+        assert player != null;
         Optional<EndlessInventory> opt = ServerLevelEndInv.getEndInvForPlayer(player);
         if (opt.isEmpty()) {
             LOGGER.warn("BulkQuickMoveFromPage: no EndInv for player={}", player.getName().getString());

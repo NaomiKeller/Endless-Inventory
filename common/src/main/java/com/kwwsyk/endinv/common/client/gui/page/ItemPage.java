@@ -354,7 +354,7 @@ public abstract class ItemPage extends DisplayPage {
     protected void handlePickupAll(ItemPointer clicked){
         // Shift + Double Click: bulk quick-move from Endless Inventory page into the open container
         if (Screen.hasShiftDown()) {
-            ModInfo.getPacketDistributor().sendToServer(new BulkQuickMoveFromPagePayload(clicked));
+            ModInfo.getPacketDistributor().sendToServer(new BulkQuickMoveFromPagePayload(clicked.key));
             int iterations = 0;
             var mover = new PageQuickMoveHandler(framework);
             while (iterations++ < 32768) {
@@ -442,10 +442,6 @@ public abstract class ItemPage extends DisplayPage {
         var remain = addItem(stack);
         initializeContents();
         return remain;
-    }
-    @Override
-    public ItemStack tryExtractItem(ItemStack stack,int count){
-        return srcInv.takeItem(stack,count);
     }
 
     public static class ItemPointer implements ResourcePointer<ItemStack> {
