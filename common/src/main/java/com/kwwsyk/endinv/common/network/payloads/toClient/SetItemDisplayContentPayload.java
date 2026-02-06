@@ -69,7 +69,7 @@ public record SetItemDisplayContentPayload(List<ItemStack> stacks) implements Mo
         var stackStream = stacks.stream();
         Map<ItemKey, ItemState> partlyMap = new HashMap<>();
         stacks.forEach(stack -> partlyMap.put(ItemKey.asKey(stack), new ItemState(stack.getCount(), -1)));
-        CachedSrcInv.INSTANCE.getItemMap().putAll(partlyMap);
+        CachedSrcInv.INSTANCE.snapshotItemMap().putAll(partlyMap);
         ModPacketPayload.getClientPageMeta().ifPresent(mng->{
             if(mng.getDisplayingPage() instanceof ItemDisplay itemDisplay){
                 itemDisplay.buildContentsWith(stackStream.map(ItemKey::asKey).map(ItemPage.ItemPointer::new).toList());

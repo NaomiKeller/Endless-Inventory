@@ -70,8 +70,12 @@ public abstract class SourceInventory {
         return uuid;
     }
 
-    public Map<ItemKey,ItemState> getItemMap(){
+    public Map<ItemKey,ItemState> snapshotItemMap(){
         return new Object2ObjectLinkedOpenHashMap<>(itemMap);
+    }
+
+    public Map<ItemKey,ItemState> getItemMap(){
+        return itemMap;
     }
 
     public List<ItemStack> getItemsAsList(){
@@ -287,21 +291,21 @@ public abstract class SourceInventory {
 
     public Stream<ItemKey> getSortedKeyReference(SortType sortType){
         return switch (sortType){
-            case ID -> this.getItemMap().keySet()
+            case ID -> this.snapshotItemMap().keySet()
                     .stream()
                     .sorted(Comparator.comparingInt(key -> BuiltInRegistries.ITEM.getId(key.item())));
-            case DEFAULT -> this.getItemMap().keySet()
+            case DEFAULT -> this.snapshotItemMap().keySet()
                     .stream();
-            case COUNT -> this.getItemMap()
+            case COUNT -> this.snapshotItemMap()
                     .entrySet()
                     .stream()
                     .sorted(Comparator.comparingInt(e -> e.getValue().count()))
                     .map(Map.Entry::getKey);
-            case SPACE_AND_NAME -> this.getItemMap()
+            case SPACE_AND_NAME -> this.snapshotItemMap()
                     .keySet()
                     .stream()
                     .sorted(Comparator.comparing(key -> BuiltInRegistries.ITEM.getKey(key.item()).toString()));
-            case LAST_MODIFIED -> this.getItemMap()
+            case LAST_MODIFIED -> this.snapshotItemMap()
                     .entrySet()
                     .stream()
                     .sorted(Comparator.comparing(e -> e.getValue().lastModTime()))

@@ -468,7 +468,7 @@ public abstract class ItemPage extends DisplayPage {
 
         @Override
         public ItemStack get() {
-            var state = srcInv.getItemMap().get(key);
+            var state = srcInv.snapshotItemMap().get(key);
             if(state == null) return ItemStack.EMPTY;
             return state.toStack(key);
         }
@@ -479,7 +479,7 @@ public abstract class ItemPage extends DisplayPage {
         @Nullable
         public ItemState state(){
             if(key == null) return null;
-            return srcInv.getItemMap().get(key);
+            return srcInv.snapshotItemMap().get(key);
         }
         public boolean isEmpty(){
             return key == null || key.isEmpty() || get() == ItemStack.EMPTY;

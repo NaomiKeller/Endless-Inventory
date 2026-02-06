@@ -34,7 +34,7 @@ public class FullCodecStrategy implements EndInvCodecStrategy{
 
     public CompoundTag serializeItems(EndlessInventory endlessInventory, HolderLookup.Provider provider) {
         ListTag nbtTagList = new ListTag();
-        Map<ItemKey, ItemState> itemMap = endlessInventory.getItemMap();
+        Map<ItemKey, ItemState> itemMap = endlessInventory.snapshotItemMap();
         for (var entry : itemMap.entrySet()) {
             ItemStack itemStack = entry.getKey().toStack(entry.getValue().count());
             if (!itemStack.isEmpty()) {

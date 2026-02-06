@@ -136,7 +136,7 @@ public final class AEIRecipeTransferHandler {
             var mode = com.kwwsyk.endinv.common.ModInfo.getServerConfig().transferMode().get();
             switch (mode) {
                 case ALL -> com.kwwsyk.endinv.common.ModInfo.getPacketDistributor()
-                        .sendToPlayer(player, new com.kwwsyk.endinv.common.network.payloads.toClient.EndInvContent(endInv.getItemMap()));
+                        .sendToPlayer(player, new com.kwwsyk.endinv.common.network.payloads.toClient.EndInvContent(endInv.snapshotItemMap()));
                 case PART -> com.kwwsyk.endinv.common.ModInfo.getPacketDistributor()
                         .sendToPlayer(player, com.kwwsyk.endinv.common.network.payloads.toClient.EndInvMetadata.getWith((com.kwwsyk.endinv.common.EndlessInventory) endInv));
             }

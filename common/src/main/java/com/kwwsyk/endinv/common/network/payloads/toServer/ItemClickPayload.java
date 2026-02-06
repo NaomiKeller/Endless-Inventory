@@ -68,7 +68,7 @@ public record ItemClickPayload(ItemKey key, int button, ClickType clickType) imp
             return;
         }
         EndlessInventory endInv = opt.get();
-        ItemState state = endInv.getItemMap().get(key);
+        ItemState state = endInv.snapshotItemMap().get(key);
         int count = state != null ? state.count() : 0;
         ItemStack snapStack = key.toStack(count);//should be deleted at the method return.
 

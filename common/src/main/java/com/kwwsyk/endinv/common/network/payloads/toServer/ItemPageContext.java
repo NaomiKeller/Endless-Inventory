@@ -119,7 +119,7 @@ public record ItemPageContext(int startIndex, int length, PageData pageData) imp
                 getPacketDistributor().sendToPlayer(serverPlayer, EndInvMetadata.getWith(endInv));
                 getPacketDistributor().sendToPlayer(serverPlayer, new SetItemDisplayContentPayload(stacks));
             } else if (getServerConfig().transferMode().get() == ContentTransferMode.ALL) {
-                getPacketDistributor().sendToPlayer(serverPlayer, new EndInvContent(endInv.getItemMap()));
+                getPacketDistributor().sendToPlayer(serverPlayer, new EndInvContent(endInv.snapshotItemMap()));
             }
         });
     }
