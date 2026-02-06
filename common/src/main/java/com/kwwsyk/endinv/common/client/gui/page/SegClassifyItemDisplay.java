@@ -2,6 +2,7 @@ package com.kwwsyk.endinv.common.client.gui.page;
 
 import com.kwwsyk.endinv.common.client.CachedSrcInv;
 import com.kwwsyk.endinv.common.client.gui.page.manager.PageManager;
+import com.kwwsyk.endinv.common.client.gui.page.manager.ResourcePointer;
 import com.kwwsyk.endinv.common.client.option.CachedConfig;
 import com.kwwsyk.endinv.common.menu.page.PageType;
 import com.mojang.logging.LogUtils;
@@ -30,7 +31,7 @@ public class SegClassifyItemDisplay extends ItemDisplay {
     private final boolean includeRemainItems;
     private final boolean keepClassifiedItemInNextSeg;
 
-    private final List<ItemStack> segmentedView = new ArrayList<>();
+    private final List<ItemPointer> segmentedView = new ArrayList<>();
     /**
      * Slot indexes inside {@link #segmentedView} that represent the first column of each segment.
      * This list preserves insertion order so we can translate them into row numbers for the
@@ -52,7 +53,7 @@ public class SegClassifyItemDisplay extends ItemDisplay {
     }
 
     public void readCachedItems() {
-        List<ItemStack> source = CachedSrcInv.INSTANCE.getSortedAndFilteredItemView(
+        List<ItemPointer> source = CachedSrcInv.INSTANCE.getItemView(
                 0,
                 Integer.MAX_VALUE,
                 CachedConfig.sortType(),
@@ -68,7 +69,7 @@ public class SegClassifyItemDisplay extends ItemDisplay {
      * @param stacks itemstack list to fill the view
      */
     @Override
-    public void buildContentsWith(@NotNull List<ItemStack> stacks) {
+    public void buildContentsWith(@NotNull List<ItemPointer> stacks) {
         if(holdOn){
             inQueueStacks = stacks;
             return;
@@ -76,12 +77,12 @@ public class SegClassifyItemDisplay extends ItemDisplay {
         rebuildSegments(stacks);
     }
 
-    private void buildContentDirectly(List<ItemStack> stacks){
+    private void buildContentDirectly(List<ItemPointer> stacks){
         for(int i=0; i<this.length; ++i){
             if(i<stacks.size() && stacks.get(i) != null) {
-                this.items.set(i, stacks.get(i).copy());
+                this.items.set(i, stacks.get(i));
             }else {
-                this.items.set(i,ItemStack.EMPTY);
+                this.items.set(i,ItemPointer.EMPTY);
             }
         }
     }
@@ -93,7 +94,8 @@ public class SegClassifyItemDisplay extends ItemDisplay {
         int rowIndex = 0;
         int columnIndex = 0;
         int columns = meta.columns();
-        for (ItemStack item : items) {//debug: items not seg-ged
+        for (ResourcePointer<ItemStack> pointer : items) {//debug: items not seg-ged
+            ItemStack item = pointer.get();
             if (columnIndex == 0 && pageSeparatorRows.contains(rowIndex)) {
                 int y = topPos + rowIndex * 18;
                 guiGraphics.fill(leftPos, y, leftPos + columns * 18 - 2, y + 1, 0xFF5A5A5A);
@@ -116,9 +118,9 @@ public class SegClassifyItemDisplay extends ItemDisplay {
     }
 
     @Override
-    public ItemStack takeItem(ItemStack itemStack, int count) {
+    public ItemStack takeItem(ItemPointer pointer, int count) {
         setChanged();
-        ItemStack result = this.srcInv.takeItem(itemStack, count);
+        ItemStack result = this.srcInv.takeItem(pointer.key(), count);
         readCachedItems();
         return result;
     }
@@ -129,12 +131,12 @@ public class SegClassifyItemDisplay extends ItemDisplay {
         if (viewIndex < 0 || viewIndex >= segmentedView.size()) {
             return ItemStack.EMPTY;
         }
-        ItemStack itemStack = segmentedView.get(viewIndex);
+        ItemPointer itemStack = segmentedView.get(viewIndex);
         if (itemStack.isEmpty()) {
             return ItemStack.EMPTY;
         }
         setChanged();
-        ItemStack result = srcInv.takeItem(itemStack, count);
+        ItemStack result = srcInv.takeItem(itemStack.key(), count);
         readCachedItems();
         return result;
     }
@@ -150,16 +152,16 @@ public class SegClassifyItemDisplay extends ItemDisplay {
         return remain;
     }
 
-    private void rebuildSegments(List<ItemStack> source) {
+    private void rebuildSegments(List<ItemPointer> source) {
         segmentedView.clear();
         segmentStartSlots.clear();
         pageSeparatorRows.clear();
-        List<ItemStack> filtered = new ArrayList<>();
-        for (ItemStack stack : source) {
+        List<ItemPointer> filtered = new ArrayList<>();
+        for (ItemPointer stack : source) {
             if (stack == null || stack.isEmpty()) {
                 continue;
             }
-            filtered.add(stack.copy());
+            filtered.add(stack);
         }
         if (filtered.isEmpty()) {
             buildContentDirectly(List.of());
@@ -173,14 +175,14 @@ public class SegClassifyItemDisplay extends ItemDisplay {
                 continue;
             }
             int start = segmentedView.size();
-            List<ItemStack> segment = new ArrayList<>();
+            List<ItemPointer> segment = new ArrayList<>();
             for (int i = 0; i < filtered.size(); ++i) {
                 if (!keepClassifiedItemInNextSeg && consumed[i]) {
                     continue;
                 }
-                ItemStack stack = filtered.get(i);
-                if (classifier.test(stack)) {
-                    segment.add(stack.copy());
+                ItemPointer stack = filtered.get(i);
+                if (classifier.test(stack.get())) {
+                    segment.add(stack);
                     matchedAtLeastOnce[i] = true;
                     if (!keepClassifiedItemInNextSeg) {
                         consumed[i] = true;
@@ -194,12 +196,12 @@ public class SegClassifyItemDisplay extends ItemDisplay {
         }
 
         if (includeRemainItems) {
-            List<ItemStack> remain = new ArrayList<>();
+            List<ItemPointer> remain = new ArrayList<>();
             for (int i = 0; i < filtered.size(); ++i) {
                 boolean matched = matchedAtLeastOnce[i];
                 boolean consumedFlag = keepClassifiedItemInNextSeg ? matched : consumed[i];
                 if (!consumedFlag) {
-                    remain.add(filtered.get(i).copy());
+                    remain.add(filtered.get(i));
                 }
             }
             if (!remain.isEmpty()) {
@@ -211,7 +213,7 @@ public class SegClassifyItemDisplay extends ItemDisplay {
         updateDisplayedSlice();
     }
 
-    private void appendSegment(List<ItemStack> target, List<ItemStack> segment) {
+    private void appendSegment(List<ItemPointer> target, List<ItemPointer> segment) {
         if (segment.isEmpty()) {
             return;
         }
@@ -226,7 +228,7 @@ public class SegClassifyItemDisplay extends ItemDisplay {
         }
         int filler = columns - remainder;
         for (int i = 0; i < filler; ++i) {
-            target.add(ItemStack.EMPTY);
+            target.add(ItemPointer.EMPTY);
         }
     }
 
@@ -234,7 +236,7 @@ public class SegClassifyItemDisplay extends ItemDisplay {
         int columns = Math.max(1, meta.columns());
         int fromIndex = Math.min(startIndex, segmentedView.size());
         int toIndex = Math.min(fromIndex + length, segmentedView.size());
-        List<ItemStack> slice = segmentedView.subList(fromIndex, toIndex);
+        List<ItemPointer> slice = segmentedView.subList(fromIndex, toIndex);
         buildContentDirectly(slice);
         pageSeparatorRows.clear();
         if (!segmentStartSlots.isEmpty()) {

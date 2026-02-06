@@ -1,19 +1,22 @@
 package com.kwwsyk.endinv.common.client.gui.page;
 
 import com.kwwsyk.endinv.common.ModInfo;
+import com.kwwsyk.endinv.common.SourceInventory;
 import com.kwwsyk.endinv.common.client.CachedSrcInv;
 import com.kwwsyk.endinv.common.client.gui.EndlessInventoryScreen;
 import com.kwwsyk.endinv.common.client.gui.page.manager.PageManager;
+import com.kwwsyk.endinv.common.client.gui.page.manager.ResourcePointer;
 import com.kwwsyk.endinv.common.client.option.CachedConfig;
 import com.kwwsyk.endinv.common.menu.page.PageType;
-import com.kwwsyk.endinv.common.network.payloads.toServer.CreativeItemModPayload;
-import com.kwwsyk.endinv.common.network.payloads.toServer.ItemClickPayload;
-import com.kwwsyk.endinv.common.network.payloads.toServer.ItemPageContext;
-import com.kwwsyk.endinv.common.network.payloads.toServer.StarItemPayload;
+import com.kwwsyk.endinv.common.menu.page.pageManager.PageQuickMoveHandler;
+import com.kwwsyk.endinv.common.network.payloads.toServer.*;
+import com.kwwsyk.endinv.common.util.ItemKey;
+import com.kwwsyk.endinv.common.util.ItemState;
 import com.mojang.logging.LogUtils;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen;
 import net.minecraft.client.renderer.Rect2i;
@@ -39,13 +42,13 @@ public abstract class ItemPage extends DisplayPage {
 
     private static final Logger LOGGER = LogUtils.getLogger();
 
-    protected NonNullList<ItemStack> items;
+    protected NonNullList<ResourcePointer<ItemStack>> items;
 
     protected int startIndex = 0;
 
     protected int length;
 
-    protected List<ItemStack> inQueueStacks = null;
+    protected List<ItemPointer> inQueueStacks = null;
 
     public ItemPage(PageType pageType, PageManager manager) {
         super(pageType, manager);
@@ -85,9 +88,9 @@ public abstract class ItemPage extends DisplayPage {
         this.startIndex = startIndex;
         this.length = Math.min(length, meta.rows()* meta.columns());
         // ensure internal invariants
-        if(this.items==null || this.items.size()!=this.length) this.items = NonNullList.withSize(this.length, ItemStack.EMPTY);
+        if(this.items==null || this.items.size()!=this.length) this.items = NonNullList.withSize(this.length, ItemPointer.EMPTY);
         if(length != this.items.size()){
-            this.items = NonNullList.withSize(length,ItemStack.EMPTY);
+            this.items = NonNullList.withSize(length,ItemPointer.EMPTY);
         }
         release();
         this.refreshItems();
@@ -115,7 +118,7 @@ public abstract class ItemPage extends DisplayPage {
     }
 
     public boolean isEmpty() {
-        return items.stream().allMatch(ItemStack::isEmpty);
+        return items.stream().allMatch(p -> p.get().isEmpty());
     }
 
     @Override
@@ -163,7 +166,7 @@ public abstract class ItemPage extends DisplayPage {
     public ItemStack getItemByMouseOffset(double XOffset, double YOffset){
         int slot = getSlotByMouseOffset(XOffset,YOffset);
         if(slot>=0 && slot<items.size()) {
-            return items.get(slot);
+            return items.get(slot).get();
         }
         return ItemStack.EMPTY;
     }
@@ -180,7 +183,8 @@ public abstract class ItemPage extends DisplayPage {
         guiGraphics.pose().translate(0.0F, 0.0F, 100.0F);
         int rowIndex = 0;
         int columnIndex = 0;
-        for(ItemStack stack : items){
+        for(ResourcePointer<ItemStack> pointer : items){
+            ItemStack stack = pointer.get();
             if(stack.isEmpty() && !stack.is(Items.AIR)) renderEmpty(guiGraphics,leftPos+columnIndex*18,topPos+rowIndex*18+1,stack);
             guiGraphics.renderItem(stack,leftPos+columnIndex*18,topPos+rowIndex*18+1,columnIndex+rowIndex*180);
             if(!isHiddenBySortBox(rowIndex,columnIndex))
@@ -277,8 +281,9 @@ public abstract class ItemPage extends DisplayPage {
     @Override
     public void pageClicked(double XOffset, double YOffset, int button, ClickType clickType) {
         int slot = getSlotByMouseOffset(XOffset,YOffset);
-        if(slot>=0&&slot<items.size()) {
-            ItemStack clicked = items.get(slot).copy();
+        if(slot>=0 && slot<items.size()) {
+            ItemPointer clicked = (ItemPointer) items.get(slot);
+            //if(!Objects.equals(clicked, items.get(slot).get())) throw new IllegalStateException("Itemstack changed on copy.");
             switch (clickType) {
                 case PICKUP -> handlePickup(clicked, button);
                 case QUICK_MOVE -> handleQuickMove(clicked);
@@ -292,58 +297,13 @@ public abstract class ItemPage extends DisplayPage {
             LOGGER.info("EI:sending:ItemClickPayload: player={} clickType={} button={} stack={}"
                     ,meta.getPlayer(),clickType,button, clicked);
             ModInfo.getPacketDistributor().sendToServer(new ItemClickPayload(
-                    clicked.getCount() > 64 ? clicked.copyWithCount(64) : clicked.copy(),
+                    clicked.key(),
                     button,clickType));
             this.refreshItems();
         }
     }
 
-    public ItemStack takeItem(ItemStack itemStack){
-        return takeItem(itemStack,itemStack.getMaxStackSize());
-    }
-
-    public ItemStack takeItem(ItemStack itemStack,int count){
-        setChanged();
-        return this.srcInv.takeItem(itemStack,count);
-    }
-
-    public ItemStack takeItem(int index, int count){
-        ItemStack itemStack = this.items.get(index);
-        setChanged();
-        return srcInv.takeItem(itemStack,count);
-    }
-
-    public ItemStack addItem(ItemStack itemStack){
-        setChanged();
-        return srcInv.addItem(itemStack.copy());
-    }
-
-    public boolean isFull(ItemStack itemStack){
-        return itemStack.getCount() >= meta.getMaxStackSize();
-    }
-
-    public boolean isInfinite(ItemStack itemStack){
-        return  isFull(itemStack) && meta.enableInfinity();
-    }
-
-    protected void handleQuickMove(ItemStack clicked){
-        ItemStack taken = takeItem(clicked);
-        ItemStack remain = meta.quickMoveFromPage(taken);
-        addItem(remain);
-        setChanged();
-    }
-    @Override
-    public ItemStack tryInsertItem(ItemStack stack) {
-        var remain = addItem(stack);
-        initializeContents();
-        return remain;
-    }
-    @Override
-    public ItemStack tryExtractItem(ItemStack stack,int count){
-        return takeItem(stack,count);
-    }
-
-    protected void handlePickup(ItemStack clicked, int keyCode){
+    protected void handlePickup(ItemPointer clicked, int keyCode){
         ItemStack carried = meta.getMenu().getCarried();
         if(!carried.isEmpty()){
             ItemStack remain = addItem(carried.copy());
@@ -353,19 +313,19 @@ public abstract class ItemPage extends DisplayPage {
             meta.getMenu().setCarried(remain);
             setChanged();
         }else{
-            int count = Math.min(clicked.getCount(),clicked.getMaxStackSize());
+            int count = Math.min(clicked.get().getCount(),clicked.get().getMaxStackSize());
             int takenCount = keyCode==0 ? count : (count + 1) / 2;
             meta.getMenu().setCarried(takeItem(clicked,takenCount));
             if(!meta.getMenu().getCarried().isEmpty()) setChanged();
         }
     }
 
-    protected void handleSwap(ItemStack clicked, int inventorySlotId){
+    protected void handleSwap(ItemPointer clicked, int inventorySlotId){
         Player player = meta.getPlayer();
         Inventory inventory = player.getInventory();
         ItemStack inventoryItem = inventory.getItem(inventorySlotId);
         boolean a = !inventoryItem.isEmpty();
-        boolean b = !clicked.isEmpty();
+        boolean b = !clicked.get().isEmpty();
         if( a && !b ){
             ItemStack remain = addItem(inventoryItem);
             inventory.setItem(inventorySlotId, remain);
@@ -385,13 +345,34 @@ public abstract class ItemPage extends DisplayPage {
         }
         setChanged();
     }
-    protected void handleThrow(ItemStack clicked){
+    protected void handleThrow(ItemPointer clicked){
         Player player = meta.getPlayer();
         ItemStack thrown = takeItem(clicked);
         player.drop(thrown,true);
         setChanged();
     }
-    protected void handlePickupAll(ItemStack clicked){
+    protected void handlePickupAll(ItemPointer clicked){
+        // Shift + Double Click: bulk quick-move from Endless Inventory page into the open container
+        if (Screen.hasShiftDown()) {
+            ModInfo.getPacketDistributor().sendToServer(new BulkQuickMoveFromPagePayload(clicked.key));
+            int iterations = 0;
+            var mover = new PageQuickMoveHandler(framework);
+            while (iterations++ < 32768) {
+                ItemStack taken = takeItem(clicked);
+                if (taken.isEmpty()) break;
+                ItemStack remain = mover.quickMoveFromPage(taken);
+                if (!remain.isEmpty()) {
+                    // Could not insert fully; put the remainder back and stop.
+                    addItem(remain);
+                    break;
+                }
+            }
+            setChanged();
+            release();
+            // Ensure the view updates immediately so no temporary empty slot remains
+            this.refreshItems();
+            return;
+        }
         Player player = meta.getPlayer();
         ItemStack carried = meta.getMenu().getCarried();
         int startIndex = meta.getMenu().slots.size() - 1; //changed: reversed button==0 condition
@@ -407,12 +388,102 @@ public abstract class ItemPage extends DisplayPage {
             }
         }
     }
-    protected void handleClone(ItemStack clicked){
+    protected void handleClone(ItemPointer clicked){
         Player player = meta.getPlayer();
         if(player.getAbilities().instabuild && meta.getMenu().getCarried().isEmpty()){
-            meta.getMenu().setCarried(clicked.copyWithCount(clicked.getMaxStackSize()));
+            meta.getMenu().setCarried(clicked.get().copyWithCount(clicked.get().getMaxStackSize()));
+        }
+    }
+
+
+    public ItemStack takeItem(ItemPointer pointer){
+        return takeItem(pointer, pointer.get().getMaxStackSize());
+    }
+
+    public ItemStack takeItem(ItemPointer pointer, int count){
+        if(pointer.isEmpty()) return ItemStack.EMPTY;
+        setChanged();
+        return this.srcInv.takeItem(pointer.key(),count);
+    }
+
+    public ItemStack takeItem(int index, int count){
+        ItemPointer pointer = (ItemPointer) this.items.get(index);
+        if(pointer.isEmpty()) return ItemStack.EMPTY;
+        setChanged();
+        return srcInv.takeItem(pointer.key(), count);
+    }
+
+    public ItemStack addItem(ItemPointer pointer){
+        setChanged();
+        return srcInv.addItem(pointer.key, pointer.get().getCount());
+    }
+
+    public ItemStack addItem(ItemStack stack){
+        setChanged();
+        return srcInv.addItem(stack);
+    }
+
+    public boolean isFull(ItemStack itemStack){
+        return itemStack.getCount() >= meta.getMaxStackSize();
+    }
+
+    public boolean isInfinite(ItemStack itemStack){
+        return  isFull(itemStack) && meta.enableInfinity();
+    }
+
+    protected void handleQuickMove(ItemPointer clicked){
+        ItemStack taken = takeItem(clicked);
+        ItemStack remain = meta.quickMoveFromPage(taken);
+        addItem(remain);
+        setChanged();
+    }
+    @Override
+    public ItemStack tryInsertItem(ItemStack stack) {
+        var remain = addItem(stack);
+        initializeContents();
+        return remain;
+    }
+
+    public static class ItemPointer implements ResourcePointer<ItemStack> {
+
+        public static final ItemPointer EMPTY = new ItemPointer(ItemKey.EMPTY){
+            public ItemStack get(){
+                return ItemStack.EMPTY;
+            }
+
+            @Override
+            public boolean isEmpty() {
+                return true;
+            }
+        };
+
+        private final SourceInventory srcInv;
+        private final ItemKey key;
+        // a field [int index] will be added to adjust newer data construct of srcInv
+
+        public ItemPointer(ItemKey key){
+            this.srcInv = CachedSrcInv.INSTANCE;
+            this.key = key;
+        }
+
+        @Override
+        public ItemStack get() {
+            var state = srcInv.getItemMap().get(key);
+            if(state == null) return ItemStack.EMPTY;
+            return state.toStack(key);
+        }
+
+        public ItemKey key(){
+            return key;
+        }
+        @Nullable
+        public ItemState state(){
+            if(key == null) return null;
+            return srcInv.getItemMap().get(key);
+        }
+        public boolean isEmpty(){
+            return key == null || key.isEmpty() || get() == ItemStack.EMPTY;
         }
     }
 }
-
 

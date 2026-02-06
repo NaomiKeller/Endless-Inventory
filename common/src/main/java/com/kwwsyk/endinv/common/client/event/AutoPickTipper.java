@@ -88,7 +88,9 @@ public class AutoPickTipper {
                 return 0x88ffffff;
             }
             default -> {
-                return 0xff000000 | rarity.color.getColor();
+                var color = rarity.color;
+                Integer rgb = color.getColor();
+                return rgb != null ? (0xff000000 | rgb) : 0x88ffffff;
             }
         }
     }

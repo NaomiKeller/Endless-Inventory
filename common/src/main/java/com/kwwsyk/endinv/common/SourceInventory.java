@@ -4,6 +4,7 @@ import com.kwwsyk.endinv.common.util.*;
 import com.mojang.logging.LogUtils;
 import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
 import net.minecraft.Util;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -70,7 +71,7 @@ public abstract class SourceInventory {
     }
 
     public Map<ItemKey,ItemState> getItemMap(){
-        return itemMap;
+        return new Object2ObjectLinkedOpenHashMap<>(itemMap);
     }
 
     public List<ItemStack> getItemsAsList(){
@@ -161,37 +162,40 @@ public abstract class SourceInventory {
      */
     public ItemStack takeItem(ItemStack stack, int count){
         if(stack.isEmpty()) return ItemStack.EMPTY;
+        return takeItem(ItemKey.asKey(stack), count);
+    }
+
+    public ItemStack takeItem(ItemKey key, int count){
         writeLock.lock();
         try {
-            ItemKey key = ItemKey.asKey(stack);
-            LOGGER.debug("EI:takeItem:stack->itemKay, stack={},itemKay = {}",stack,key);
             ItemState state = itemMap.get(key);
             if (state == null) {
                 LOGGER.warn("EI:takeItem: no state for {}", key);
                 LOGGER.debug("EI:Current Source Inventory: Class:{},UUID:{},Items:{}",this.getClass(),uuid,buildSnapshotLocked());
-                if(getServerConfig().doConvertEmptyTag().get() && stack.getTag()!=null){
-                    key = new ItemKey(key.item(),null);
+                if(getServerConfig().doConvertEmptyTag().get()){
+                    if(key.tag() == null) key = new ItemKey(key.item(), new CompoundTag());
+                    else if(key.tag().isEmpty()) key = new ItemKey(key.item(), null);
                     if((state=itemMap.get(key))!=null){
-                        LOGGER.info("EI:takeItem: converted ItemKey with empty tag {} to null tag",ItemKey.asKey(stack));
+                        LOGGER.info("EI:takeItem: converted ItemKey with empty tag {} to null tag",key);
                     }else return ItemStack.EMPTY;
                 }else return ItemStack.EMPTY;
             }
-            LOGGER.info("EI:takeItem: key={} availableCount={} requestedCount={}", key, state.count(), count);
+            LOGGER.debug("EI:takeItem: key={} availableCount={} requestedCount={}", key, state.count(), count);
             if(state.count() >= maxStackSize && infinityMode){
                 LOGGER.info("EI:takeItem: infinity mode for {} returning {}", key, count);
                 setChanged();
-                return stack.copyWithCount(count);
+                return key.toStack(state.count());
             }
 
             int taken = Math.min(count, state.count());
-            ItemStack result = stack.copyWithCount(taken);
+            ItemStack result = key.toStack(taken);
             if (taken == state.count()) {
                 itemMap.remove(key);
                 updateLastModTime();
-                LOGGER.info("EI:takeItem: removed all of {} (taken={})", key, taken);
+                LOGGER.debug("EI:takeItem: removed all of {} (taken={})", key, taken);
             } else {
                 itemMap.put(key, new ItemState(state.count() - taken, updateLastModTime()));
-                LOGGER.info("EI:takeItem: taken={} remaining={} for {}", taken, state.count()-taken, key);
+                LOGGER.debug("EI:takeItem: taken={} remaining={} for {}", taken, state.count() - taken, key);
             }
             setChanged();
             return result;
@@ -209,14 +213,13 @@ public abstract class SourceInventory {
      */
     public ItemStack addItem(ItemStack itemStack){
         if(itemStack.isEmpty()) return ItemStack.EMPTY;
+        return addItem(ItemKey.asKey(itemStack), itemStack.getCount());
+    }
+
+    public ItemStack addItem(ItemKey key, int count){
         writeLock.lock();
         try {
-            ItemKey key = ItemKey.asKey(itemStack);
-            if(getServerConfig().doConvertEmptyTag().get() && itemStack.getTag()!=null && Objects.equals(itemStack.getTag(),new CompoundTag())){
-                key = new ItemKey(itemStack.getItem(),null);
-            }
             ItemState state = itemMap.get(key);
-            int count = itemStack.getCount();
             int original = 0;
 
             if (state != null) {
@@ -231,13 +234,13 @@ public abstract class SourceInventory {
                     remain = ItemStack.EMPTY;
                 }else {
                     itemMap.put(key, new ItemState(maxStackSize, updateLastModTime()));
-                    remain = itemStack.copyWithCount(increased-maxStackSize);
+                    remain = key.toStack(increased-maxStackSize);
                 }
             }else if(infinityMode){
                 itemMap.put(key, new ItemState(original, updateLastModTime()));
                 remain = ItemStack.EMPTY;
             }else {
-                return itemStack.copy();
+                return key.toStack(count);
             }
             setChanged();
             return remain;
@@ -266,7 +269,13 @@ public abstract class SourceInventory {
         return ret;
     }
 
-    public List<ItemStack> getSortedAndFilteredItemView(int startIndex, int length, SortType sortType, boolean reverse, @Nullable Predicate<ItemStack> classify, String search){
+    public List<ItemStack> getSortedAndFilteredItemView(int startIndex,
+                                                        int length,
+                                                        SortType sortType,
+                                                        boolean reverse,
+                                                        @Nullable Predicate<ItemStack> classify,
+                                                        String search
+    ){
         Stream<ItemStack> base = getSortedView(sortType,reverse).stream();
         return base
                 .filter(classify!=null?classify:is->true)
@@ -274,6 +283,30 @@ public abstract class SourceInventory {
                 .skip(startIndex)
                 .limit(Math.max(length, 0))
                 .collect(Collectors.toCollection(ArrayList::new));
+    }
+
+    public Stream<ItemKey> getSortedKeyReference(SortType sortType){
+        return switch (sortType){
+            case ID -> this.getItemMap().keySet()
+                    .stream()
+                    .sorted(Comparator.comparingInt(key -> BuiltInRegistries.ITEM.getId(key.item())));
+            case DEFAULT -> this.getItemMap().keySet()
+                    .stream();
+            case COUNT -> this.getItemMap()
+                    .entrySet()
+                    .stream()
+                    .sorted(Comparator.comparingInt(e -> e.getValue().count()))
+                    .map(Map.Entry::getKey);
+            case SPACE_AND_NAME -> this.getItemMap()
+                    .keySet()
+                    .stream()
+                    .sorted(Comparator.comparing(key -> BuiltInRegistries.ITEM.getKey(key.item()).toString()));
+            case LAST_MODIFIED -> this.getItemMap()
+                    .entrySet()
+                    .stream()
+                    .sorted(Comparator.comparing(e -> e.getValue().lastModTime()))
+                    .map(Map.Entry::getKey);
+        };
     }
 
     //item handler: map-list sync methods
