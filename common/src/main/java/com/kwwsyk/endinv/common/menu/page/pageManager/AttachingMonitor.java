@@ -165,7 +165,7 @@ public class AttachingMonitor implements PageMetaDataManager{
         var cfg = ModInfo.getServerConfig();
         distributor.sendToPlayer(player, EndInvMetadata.getWith(endinv));
         switch (cfg.transferMode().get()) {
-            case ALL -> distributor.sendToPlayer(player, new com.kwwsyk.endinv.common.network.payloads.toClient.EndInvContent(endinv.getItemMap()));
+            case ALL -> distributor.sendToPlayer(player, new com.kwwsyk.endinv.common.network.payloads.toClient.EndInvContent(endinv.snapshotItemMap()));
             case PART -> {
                 int length = rows * columns;
                 var view = endinv.getSortedAndFilteredItemView(0, length, sortType, reverseSort, getDisplayingPageType().itemClassify, searching);

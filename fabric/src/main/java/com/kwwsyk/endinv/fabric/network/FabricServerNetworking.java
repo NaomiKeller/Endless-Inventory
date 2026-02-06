@@ -27,6 +27,7 @@ public final class FabricServerNetworking {
         register(StarItemPayload.class, StarItemPayload::encode, StarItemPayload::decode, "star_item");
         register(ToggleCraftingPayload.class, ToggleCraftingPayload::encode, ToggleCraftingPayload::decode, "toggle_crafting");
         register(SyncedConfig.class, SyncedConfig::encode, SyncedConfig::decode, SyncedConfig.DEFAULT.id());
+        register(BulkQuickMoveFromPagePayload.class, BulkQuickMoveFromPagePayload::encode, BulkQuickMoveFromPagePayload::decode, "bulk_quick_move");
         if (FabricLoader.getInstance().isModLoaded("jei")) {
             register(com.kwwsyk.endinv.fabric.network.payloads.JeiTransferRecipePayload.class,
                     com.kwwsyk.endinv.fabric.network.payloads.JeiTransferRecipePayload::encode,

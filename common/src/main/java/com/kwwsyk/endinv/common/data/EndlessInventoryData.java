@@ -9,7 +9,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.saveddata.SavedData;
 import net.minecraft.world.level.storage.LevelResource;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 
 import javax.annotation.Nullable;
@@ -140,9 +139,10 @@ public class EndlessInventoryData extends SavedData {
     }
 
     @Override
-    public @NotNull CompoundTag save(@NotNull CompoundTag compoundTag) {
+    public CompoundTag save(CompoundTag compoundTag) {
 
         // []:List of {}EndInv
+        LOGGER.info("Saving endinv.");
         ListTag nbtTagList = new ListTag();
 
         for (EndlessInventory endlessInventory : levelEndInvs) {

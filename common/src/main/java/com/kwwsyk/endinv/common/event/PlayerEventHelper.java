@@ -28,7 +28,7 @@ public class PlayerEventHelper {
                 ));
         if(getServerConfig().transferMode().get()== ContentTransferMode.ALL){
             ServerLevelEndInv.getEndInvForPlayer(serverPlayer).ifPresent(endInv -> {
-                getPacketDistributor().sendToAllPlayer(new EndInvContent(endInv.getItemMap()));
+                getPacketDistributor().sendToAllPlayer(new EndInvContent(endInv.snapshotItemMap()));
                 getPacketDistributor().sendToAllPlayer(EndInvMetadata.getWith(endInv));
             });
         }
