@@ -11,6 +11,7 @@ import com.kwwsyk.endinv.common.util.SearchUtil;
 import com.kwwsyk.endinv.common.util.SortType;
 import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
 import net.minecraft.Util;
+import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
 
 import javax.annotation.Nullable;
@@ -51,7 +52,11 @@ public class CachedSrcInv extends SourceInventory {
                 })
                 .map(ItemPage.ItemPointer::new)
                 .toList();
-        ret = ret.subList(Math.max(startIndex, 0), Math.min(startIndex + length, ret.size()));
+        int size = ret.size();
+        //update startIndex
+        if(size <= length) startIndex = 0;
+        startIndex = Mth.clamp(startIndex, 0, size - length);
+        ret = ret.subList(Mth.clamp(startIndex, 0, size), Math.min(startIndex + length, size));
         return reverse ? ret.reversed() : ret;
     }
 
