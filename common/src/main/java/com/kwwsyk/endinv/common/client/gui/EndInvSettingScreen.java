@@ -45,6 +45,7 @@ public abstract class EndInvSettingScreen extends Screen {
     private int pageIndex = 0;
     private int entryOffset = 0;
     private double scrollOffset = 0;
+    private final java.util.List<AbstractWidget> entryWidgets = new java.util.ArrayList<>();
 
     public final List<EntryBuilder> entries = new ArrayList<>();
     public final EntryBuilder[] renderingEntries = new EntryBuilder[7];
@@ -64,6 +65,8 @@ public abstract class EndInvSettingScreen extends Screen {
 
         protected void addConfigEntries(){
             addConfigEntry("endinv.setting.rows", ClientConfigs.ATTACHED_MENU_CONFIG.PageBasicLayout.Rows);
+            // add auto rows toggle before auto columns
+            addConfigEntry(Component.translatable("endinv.setting.auto_rows"), ClientConfigs.ATTACHED_MENU_CONFIG.PageBasicLayout.autoRows);
             addConfigEntry("endinv.setting.columns", ClientConfigs.ATTACHED_MENU_CONFIG.PageBasicLayout.Columns);
             addConfigEntry("endinv.setting.auto_suit", ClientConfigs.ATTACHED_MENU_CONFIG.PageBasicLayout.autoColumns);
             addConfigEntry("endinv.setting.attaching", ClientConfigs.DO_ATTACH);
@@ -110,18 +113,33 @@ public abstract class EndInvSettingScreen extends Screen {
         } else {
             addConfigEntries();
         }
+        // reset scroll when switching pages
+        this.entryOffset = 0;
+        this.scrollOffset = 0;
         scrollTo();
     }
 
     protected abstract void addConfigEntries();
 
     private void scrollTo(){
-        for(int i = 0; i<Math.min(MAX_ENTRY_COUNT,entries.size()); ++i){
-            assert entryOffset<entries.size()-i;
-            renderingEntries[i] = entries.get(i + entryOffset);
+        // Remove previously created entry widgets to avoid duplication and stale positions
+        if(!entryWidgets.isEmpty()){
+            for (AbstractWidget w : entryWidgets) {
+                this.removeWidget(w);
+            }
+            entryWidgets.clear();
         }
-        for (var entry : renderingEntries){
+        int visible = Math.min(MAX_ENTRY_COUNT, entries.size());
+        int maxStart = Math.max(0, entries.size() - visible);
+        entryOffset = Mth.clamp(entryOffset, 0, maxStart);
+        for(int i = 0; i<MAX_ENTRY_COUNT; ++i){
+            int idx = i + entryOffset;
+            renderingEntries[i] = (idx >= 0 && idx < entries.size()) ? entries.get(idx) : null;
+        }
+        for (int i = 0; i < MAX_ENTRY_COUNT; i++){
+            var entry = renderingEntries[i];
             if(entry==null) continue;
+            entry.placeAtSlot(i);
             entry.build();
             entry.syncConfig();
         }
@@ -228,13 +246,14 @@ public abstract class EndInvSettingScreen extends Screen {
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
         if(entries.size()>MAX_ENTRY_COUNT){
-            if (scrollOffset < 1 && scrollY < 0) {
-                scrollOffset = Mth.clamp(scrollOffset+scrollY,0.0,1.0);
-            }
-            if (scrollOffset > 0 && scrollY > 0) {
-                scrollOffset = Mth.clamp(scrollOffset-scrollY,0.0,1.0);
-            }
-            entryOffset = (int) Math.floor(scrollOffset*(entries.size()-MAX_ENTRY_COUNT));
+            // normalize wheel direction: negative scrollY means scrolling down
+            double delta = scrollY;
+            // map to step-based offset change
+            int maxStart = Math.max(0, entries.size()-MAX_ENTRY_COUNT);
+            if (delta < 0) entryOffset = Math.min(entryOffset+1, maxStart);
+            if (delta > 0) entryOffset = Math.max(entryOffset-1, 0);
+            // also maintain a proportional indicator for potential future scrollbar
+            this.scrollOffset = maxStart == 0 ? 0 : (double)entryOffset / (double)maxStart;
             scrollTo();
         }
         return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
@@ -289,6 +308,9 @@ public abstract class EndInvSettingScreen extends Screen {
         default Optional<EditBox> getEditBox(){
             return Optional.empty();
         }
+
+        // Position the entry’s widget(s) at the visible slot index [0..MAX_ENTRY_COUNT)
+        default void placeAtSlot(int slot){ }
     }
 
     public class InfoEntry implements EntryBuilder{
@@ -325,6 +347,12 @@ public abstract class EndInvSettingScreen extends Screen {
         @Override
         public void applyChanges() {
         }
+
+        @Override
+        public void placeAtSlot(int slot) {
+            widgetMidX = leftPos+WIDGET_X_OFFSET+WIDGET_X_SIZE/2 - 40;
+            widgetY = topPos+CONFIG_ENTRY_Y_OFFSET+slot*ENTRY_HEIGHT+1;
+        }
     }
 
     public abstract class AttributeEntry<T> implements EntryBuilder{
@@ -350,6 +378,7 @@ public abstract class EndInvSettingScreen extends Screen {
             EditBox editBox = new EditBox(EndInvSettingScreen.this.font,widgetX,widgetY,WIDGET_X_SIZE,WIDGET_Y_SIZE,Component.empty());
             EndInvSettingScreen.this.addRenderableWidget(editBox);
             this.editBox = editBox;
+            entryWidgets.add(editBox);
         }
 
         @Override
@@ -376,6 +405,16 @@ public abstract class EndInvSettingScreen extends Screen {
 
         public Optional<EditBox> getEditBox(){
             return Optional.of(editBox);
+        }
+
+        @Override
+        public void placeAtSlot(int slot) {
+            this.widgetX = leftPos+WIDGET_X_OFFSET;
+            this.widgetY = topPos+CONFIG_ENTRY_Y_OFFSET+slot*ENTRY_HEIGHT+1;
+            if(this.editBox!=null){
+                this.editBox.setX(widgetX);
+                this.editBox.setY(widgetY);
+            }
         }
     }
 
@@ -456,11 +495,12 @@ public abstract class EndInvSettingScreen extends Screen {
                                     (btn, value) -> booleanValue.set(value));
                     this.configWidget = button;
                     EndInvSettingScreen.this.addRenderableWidget(button);
+                    entryWidgets.add(button);
 
                 }
                 case Enum<?> anEnum -> {
                     IConfigValue<Enum<?>> enumValue = (IConfigValue<Enum<?>>) configValue;
-                    var button = new CycleButton.Builder<Enum<?>>(
+                    var button = new CycleButton.Builder<Enum<?>>( 
                             e -> Component.translatable("endinv.setting.entry." + e.name()))
                             .withValues((Enum<?>[]) initialValue.getClass().getEnumConstants())
                             .withInitialValue(anEnum)
@@ -469,12 +509,14 @@ public abstract class EndInvSettingScreen extends Screen {
                                     (btn, value) -> enumValue.set(value));
                     this.configWidget = button;
                     EndInvSettingScreen.this.addRenderableWidget(button);
+                    entryWidgets.add(button);
 
                 }
                 case Integer integer -> {
                     EditBox editBox = new EditBox(EndInvSettingScreen.this.font, widgetX, widgetY, WIDGET_X_SIZE, WIDGET_Y_SIZE, tip);
                     this.configWidget = editBox;
                     EndInvSettingScreen.this.addRenderableWidget(editBox);
+                    entryWidgets.add(editBox);
                 }
                 case null, default -> {
                     EndInvSettingScreen self = EndInvSettingScreen.this;
@@ -527,6 +569,16 @@ public abstract class EndInvSettingScreen extends Screen {
 
         public IConfigValue<?> getConfigValue() {
             return configValue;
+        }
+
+        @Override
+        public void placeAtSlot(int slot) {
+            this.widgetX = leftPos+WIDGET_X_OFFSET;
+            this.widgetY = topPos+CONFIG_ENTRY_Y_OFFSET+slot*ENTRY_HEIGHT+1;
+            if(this.configWidget!=null){
+                this.configWidget.setX(widgetX);
+                this.configWidget.setY(widgetY);
+            }
         }
     }
 }

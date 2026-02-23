@@ -151,7 +151,7 @@ public class AttachedMenuOptions implements SFParamProvider{
                         reverseSortButtonParam
                 );
             }
-            case MERGE_JEI : {//todo JEI integrate
+            case MERGE_JEI : {//JEI integrate coming soon
             }
             case RIGHT : {
                 int rows = calculateRows(screen.height - topPos - 15);
@@ -184,35 +184,40 @@ public class AttachedMenuOptions implements SFParamProvider{
     }
 
     private int calculateRows(int givenPageY){
+        boolean treatAsAuto = pageParam.autoRows() || pageParam.rows() <= 0; // rows==0 means auto
         if(textureMode == TextureMode.TRANSPARENT){
             int pageH = pageRectangleParam.height() > 0 ? pageRectangleParam.height() : givenPageY;
-            if(pageParam.autoRows()){
+            if(treatAsAuto){
                 pageH = Math.min(givenPageY, pageRectangleParam.height());
             }
-            return Math.floorDiv(pageH, 18);// marginH = pageH % 18 / 2
+            int rows = Math.floorDiv(pageH, 18);// marginH = pageH % 18 / 2
+            return Math.max(1, rows);
         }
         // marginH = 17
-        int rows = pageParam.rows();
-        if (pageParam.autoRows()) {
-            rows = Math.floorDiv(givenPageY - 17 - 12, 18);
+        int rows = treatAsAuto ? Math.floorDiv(givenPageY - 17 - 12, 18) : pageParam.rows();
+        // When not auto, ensure rows does not exceed configured maximum; when auto, just clamp minimum
+        if (!treatAsAuto) {
+            rows = Math.min(rows, pageParam.rows());
         }
-        return Math.min(rows, pageParam.rows());
+        return Math.max(1, rows);
     }
 
     private int calculateColumns(int givenPageX){
+        boolean treatAsAuto = pageParam.autoColumns() || pageParam.columns() <= 0; // columns==0 means auto
         if(textureMode == TextureMode.TRANSPARENT){
             int pageW = pageRectangleParam.width() > 0 ? pageRectangleParam.width() : givenPageX;
-            if(pageParam.autoColumns()){
+            if(treatAsAuto){
                 pageW = Math.min(givenPageX, pageRectangleParam.width());
             }
-            return Math.floorDiv(pageW, 18);// marginW = pageW % 18 / 2
+            int columns = Math.floorDiv(pageW, 18);// marginW = pageW % 18 / 2
+            return Math.max(1, columns);
         }
         //marginW = 8
-        int columns = pageParam.columns();
-        if (pageParam.autoColumns()) {
-            columns = Math.floorDiv(givenPageX - 8 - 8, 18);
+        int columns = treatAsAuto ? Math.floorDiv(givenPageX - 8 - 8, 18) : pageParam.columns();
+        if (!treatAsAuto) {
+            columns = Math.min(columns, pageParam.columns());
         }
-        return Math.min(columns, pageParam.columns());
+        return Math.max(1, columns);
     }
 
     private IRectangleParam adjustSearchBox(AbstractContainerScreen<?> screen,int givenPageY){

@@ -21,12 +21,12 @@ public class PageBasicLayoutConfig extends ComplexConfigEntryImpl<PageBasicLayou
             9,0,255
     );
     public final ConfigEntryImpl<Boolean> autoRows = new ConfigEntryImpl.BooleanEntry(
-            "auto suit row count",
+            "auto_rows",
             new String[]{"Auto suit row count based on the GuiSize in case the page exceeded the gui screen."},
             true
     );
     public final ConfigEntryImpl<Boolean> autoColumns = new ConfigEntryImpl.BooleanEntry(
-            "auto suit column count",
+            "auto_columns",
             new String[]{"Auto suit column count based on the GuiSize in case the page covered the menu or exceeded the gui screen."},
             true
     );

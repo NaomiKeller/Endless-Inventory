@@ -20,7 +20,7 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
  *
  * @param attaching presents player's client attaching config.
  */
-public record SyncedConfig(boolean attaching, boolean autoPicking) implements ModPacketPayload {//TODO Illegal state exists in game of [false,true] but in fact [true,false], this shall be deprecated.
+public record SyncedConfig(boolean attaching, boolean autoPicking) implements ModPacketPayload {
 
     public static final StreamCodec<RegistryFriendlyByteBuf, SyncedConfig> STREAM_CODEC =
             StreamCodec.of((buf, value) -> encode(value, buf), SyncedConfig::decode);

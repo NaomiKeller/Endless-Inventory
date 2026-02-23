@@ -40,6 +40,7 @@
   "search.endinv.prefix.star": "*->search by item id/location",
 
   "endinv.setting.rows": "Rows, 0 for auto",
+  "endinv.setting.auto_rows": "Auto suit in rows",
   "endinv.setting.columns": "Columns, 0 for auto",
   "endinv.setting.auto_suit": "Auto suit in columns",
   "endinv.setting.attaching": "Attaching menu screen",
