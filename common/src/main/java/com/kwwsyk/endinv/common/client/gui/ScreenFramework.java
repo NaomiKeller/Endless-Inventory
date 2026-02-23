@@ -145,7 +145,7 @@ public class ScreenFramework implements PageManager{
 
         //---STRUCTURE AND RENDER DATA---
         AttachedMenuOptions param = ClientConfigs.ATTACHED_MENU_CONFIG.get().adjust(screen);
-        this.rows = param.rows();//row and columns affects the structure
+        this.rows = param.rows();//rows and columns affect the structure
         this.columns = param.columns();
         this.leftPos = param.leftPos();
         this.topPos = param.topPos();

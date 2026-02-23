@@ -217,8 +217,8 @@ public abstract class EndInvSettingScreen extends Screen {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if(this.getFocused()!=null || button==1){
-            this.getFocused().setFocused(false);
+        if(button==1){
+            if(this.getFocused() != null) this.getFocused().setFocused(false);
             this.setFocused(null);
             //return true;
         }
@@ -264,9 +264,9 @@ public abstract class EndInvSettingScreen extends Screen {
         if (i > k) {
             int l = i - k;
             double d0 = (double) Util.getMillis() / (double)1000.0F;
-            double d1 = Math.max((double)l * (double)0.5F, (double)3.0F);
+            double d1 = Math.max((double)l * (double)0.5F, 3.0F);
             double d2 = Math.sin((Math.PI / 2D) * Math.cos((Math.PI * 2D) * d0 / d1)) / (double)2.0F + (double)0.5F;
-            double d3 = Mth.lerp(d2, (double)0.0F, (double)l);
+            double d3 = Mth.lerp(d2, 0.0F, l);
             guiGraphics.enableScissor(minX, minY, maxX, maxY);
             guiGraphics.drawString(font, text, minX - (int)d3, j, color);
             guiGraphics.disableScissor();
@@ -447,36 +447,40 @@ public abstract class EndInvSettingScreen extends Screen {
 
         @SuppressWarnings("unchecked")
         public void build() {
-            if (initialValue instanceof Boolean) {
-                IConfigValue<Boolean> booleanValue = (IConfigValue<Boolean>) configValue;
-                var button = CycleButton.onOffBuilder((Boolean) initialValue)
-                        .displayOnlyValue()
-                        .create(widgetX, widgetY, WIDGET_X_SIZE, WIDGET_Y_SIZE, Component.empty(),
-                                (btn, value) -> booleanValue.set(value));
-                this.configWidget = button;
-                EndInvSettingScreen.this.addRenderableWidget(button);
+            switch (initialValue) {
+                case Boolean b -> {
+                    IConfigValue<Boolean> booleanValue = (IConfigValue<Boolean>) configValue;
+                    var button = CycleButton.onOffBuilder(b)
+                            .displayOnlyValue()
+                            .create(widgetX, widgetY, WIDGET_X_SIZE, WIDGET_Y_SIZE, Component.empty(),
+                                    (btn, value) -> booleanValue.set(value));
+                    this.configWidget = button;
+                    EndInvSettingScreen.this.addRenderableWidget(button);
 
-            } else if (initialValue instanceof Enum<?>) {
-                IConfigValue<Enum<?>> enumValue = (IConfigValue<Enum<?>>) configValue;
-                var button = new CycleButton.Builder<Enum<?>>(
-                        e -> Component.translatable("endinv.setting.entry." + e.name()))
-                        .withValues((Enum<?>[]) initialValue.getClass().getEnumConstants())
-                        .withInitialValue((Enum<?>) initialValue)
-                        .displayOnlyValue()
-                        .create(widgetX, widgetY, WIDGET_X_SIZE, WIDGET_Y_SIZE, Component.empty(),
-                                (btn, value) -> enumValue.set(value));
-                this.configWidget = button;
-                EndInvSettingScreen.this.addRenderableWidget(button);
+                }
+                case Enum<?> anEnum -> {
+                    IConfigValue<Enum<?>> enumValue = (IConfigValue<Enum<?>>) configValue;
+                    var button = new CycleButton.Builder<Enum<?>>(
+                            e -> Component.translatable("endinv.setting.entry." + e.name()))
+                            .withValues((Enum<?>[]) initialValue.getClass().getEnumConstants())
+                            .withInitialValue(anEnum)
+                            .displayOnlyValue()
+                            .create(widgetX, widgetY, WIDGET_X_SIZE, WIDGET_Y_SIZE, Component.empty(),
+                                    (btn, value) -> enumValue.set(value));
+                    this.configWidget = button;
+                    EndInvSettingScreen.this.addRenderableWidget(button);
 
-            } else if (initialValue instanceof Integer) {
-                EditBox editBox = new EditBox(EndInvSettingScreen.this.font, widgetX, widgetY, WIDGET_X_SIZE, WIDGET_Y_SIZE, tip);
-                this.configWidget = editBox;
-                EndInvSettingScreen.this.addRenderableWidget(editBox);
-
-            } else {
-                EndInvSettingScreen self = EndInvSettingScreen.this;
-                self.addRenderableOnly((guiGraphics, i, i1, v) ->
-                        guiGraphics.drawString(self.font, "Error", widgetX, widgetY, 0xFFFF3737));
+                }
+                case Integer integer -> {
+                    EditBox editBox = new EditBox(EndInvSettingScreen.this.font, widgetX, widgetY, WIDGET_X_SIZE, WIDGET_Y_SIZE, tip);
+                    this.configWidget = editBox;
+                    EndInvSettingScreen.this.addRenderableWidget(editBox);
+                }
+                case null, default -> {
+                    EndInvSettingScreen self = EndInvSettingScreen.this;
+                    self.addRenderableOnly((guiGraphics, i, i1, v) ->
+                            guiGraphics.drawString(self.font, "Error", widgetX, widgetY, 0xFFFF3737));
+                }
             }
         }
 

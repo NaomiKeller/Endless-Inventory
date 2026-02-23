@@ -6,6 +6,7 @@ import com.kwwsyk.endinv.common.ServerLevelEndInv;
 import com.kwwsyk.endinv.common.menu.page.pageManager.PageQuickMoveHandler;
 import com.kwwsyk.endinv.common.network.payloads.ModPacketContext;
 import com.kwwsyk.endinv.common.network.payloads.ModPacketPayload;
+import com.kwwsyk.endinv.common.util.ItemKey;
 import com.mojang.logging.LogUtils;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
@@ -23,7 +24,7 @@ import java.util.Optional;
  * Moves as many stacks of the same item as possible until either the container
  * can no longer accept or the source has none left.
  */
-public record BulkQuickMoveFromPagePayload(ItemStack prototype) implements ModPacketPayload {
+public record BulkQuickMoveFromPagePayload(ItemKey prototype) implements ModPacketPayload {
 
     private static final Logger LOGGER = LogUtils.getLogger();
 
@@ -34,11 +35,11 @@ public record BulkQuickMoveFromPagePayload(ItemStack prototype) implements ModPa
             new CustomPacketPayload.Type<>(AbstractModInitializer.withModLocation("bulk_quick_move_from_page"));
 
     public static BulkQuickMoveFromPagePayload decode(RegistryFriendlyByteBuf buf) {
-        return new BulkQuickMoveFromPagePayload(ItemStack.OPTIONAL_STREAM_CODEC.decode(buf));
+        return new BulkQuickMoveFromPagePayload(ItemKey.STREAM_CODEC.decode(buf));
     }
 
     public static void encode(BulkQuickMoveFromPagePayload payload, RegistryFriendlyByteBuf buf) {
-        ItemStack.OPTIONAL_STREAM_CODEC.encode(buf, payload.prototype);
+        ItemKey.STREAM_CODEC.encode(buf, payload.prototype);
     }
 
     @Override
@@ -57,7 +58,7 @@ public record BulkQuickMoveFromPagePayload(ItemStack prototype) implements ModPa
         int iterations = 0;
         int movedTotal = 0;
         while (iterations++ < 32768) {
-            ItemStack taken = endInv.takeItem(prototype);
+            ItemStack taken = endInv.takeItem(prototype.toStack(prototype.item().getDefaultMaxStackSize()));
             if (taken.isEmpty()) break;
 
             ItemStack remain = mover.quickMoveFromPage(taken);
@@ -71,7 +72,7 @@ public record BulkQuickMoveFromPagePayload(ItemStack prototype) implements ModPa
             }
         }
         if (movedTotal > 0) endInv.setChanged();
-        LOGGER.debug("BulkQuickMoveFromPage: moved {} of {} for player {}", movedTotal, prototype.getItem(), player.getName().getString());
+        LOGGER.debug("BulkQuickMoveFromPage: moved {} of {} for player {}", movedTotal, prototype.item(), player.getName().getString());
     }
 
     @Override

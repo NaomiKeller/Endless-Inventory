@@ -2,15 +2,23 @@ package com.kwwsyk.endinv.common.client;
 
 import com.kwwsyk.endinv.common.ModInfo;
 import com.kwwsyk.endinv.common.SourceInventory;
+import com.kwwsyk.endinv.common.client.gui.page.ItemPage;
 import com.kwwsyk.endinv.common.network.payloads.toClient.EndInvMetadata;
 import com.kwwsyk.endinv.common.options.ContentTransferMode;
+import com.kwwsyk.endinv.common.options.ServerConfigs;
 import com.kwwsyk.endinv.common.util.ItemKey;
 import com.kwwsyk.endinv.common.util.ItemState;
+import com.kwwsyk.endinv.common.util.SearchUtil;
+import com.kwwsyk.endinv.common.util.SortType;
 import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
 import net.minecraft.Util;
+import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
 
+import javax.annotation.Nullable;
+import java.util.List;
 import java.util.Map;
+import java.util.function.Predicate;
 
 /**Client only {@link SourceInventory}
  * Served as data cache of EndlessInventory.
@@ -33,12 +41,33 @@ public class CachedSrcInv extends SourceInventory {
         this.validSize = true;
     }
 
+    public List<ItemPage.ItemPointer> getItemView(int startIndex,
+                                                  int length,
+                                                  SortType sortType,
+                                                  boolean reverse,
+                                                  @Nullable Predicate<ItemStack> classify,
+                                                  String search){
+        var ret = getSortedKeyReference(sortType)
+                .filter(key -> {
+                    ItemStack stack = key.toStack(itemMap.get(key).count());
+                    return (classify == null || classify.test(stack)) && SearchUtil.matchesSearch(stack, search);
+                })
+                .map(ItemPage.ItemPointer::new)
+                .toList();
+        int size = ret.size();
+        //update startIndex
+        if(size <= length) startIndex = 0;
+        //startIndex = Mth.clamp(startIndex, 0, size - length);
+        ret = ret.subList(Mth.clamp(startIndex, 0, size), Math.min(startIndex + length, size));
+        return reverse ? ret.reversed() : ret;
+    }
+
     /**
      * @return Size of Endless Inventory.
      */
     @Override
     public int getItemSize() {
-        if(com.kwwsyk.endinv.common.options.ServerConfigs.ENDINV_BEHAVIOR.TransferMode.get()== ContentTransferMode.PART) return itemSize;
+        if(ServerConfigs.ENDINV_BEHAVIOR.TransferMode.get()== ContentTransferMode.PART) return itemSize;
         if(this.validSize) return itemSize;
         return super.getItemSize();
     }
@@ -104,6 +133,11 @@ public class CachedSrcInv extends SourceInventory {
     public void setChanged() {
         super.setChanged();
         validSize = false;
+    }
+
+    @Override
+    public Map<ItemKey, ItemState> getItemMap() {
+        return itemMap;
     }
 
     public long updateLastModTime(){

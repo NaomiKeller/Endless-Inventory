@@ -5,6 +5,7 @@ import com.kwwsyk.endinv.common.client.gui.ScreenFramework;
 import com.kwwsyk.endinv.common.client.gui.bg.FromResource;
 import com.kwwsyk.endinv.common.client.gui.bg.SFBgRenderer;
 import com.kwwsyk.endinv.common.client.gui.bg.Transparent;
+import com.kwwsyk.endinv.common.client.gui.page.manager.ResourcePointer;
 import com.kwwsyk.endinv.common.client.option.ClientConfigs;
 import com.kwwsyk.endinv.common.client.option.TextureMode;
 import com.kwwsyk.endinv.common.menu.page.PageType;
@@ -46,7 +47,7 @@ public class ItemEntryDisplay extends ItemDisplay{
         this.startIndex = startIndex;
         this.length = Math.min(length, framework.rows());
         if(items==null || length!=this.items.size()){
-            this.items = NonNullList.withSize(length,ItemStack.EMPTY);
+            this.items = NonNullList.withSize(length, ItemPage.ItemPointer.EMPTY);
         }
         release();
         requestRemoteContents();
@@ -87,7 +88,8 @@ public class ItemEntryDisplay extends ItemDisplay{
     public void renderPage(GuiGraphics guiGraphics) {
         int rowIndex = 0;
         int columnIndex = 0;
-        for(ItemStack stack : items){
+        for(ResourcePointer<ItemStack> pointer : items){
+            ItemStack stack = pointer.get();
             guiGraphics.renderItem(stack,leftPos,topPos+rowIndex*18+1,columnIndex+rowIndex<<8);
             if(!stack.isEmpty())
                 renderItemEntry(stack,leftPos+18,topPos+rowIndex*18+5,guiGraphics);
@@ -125,7 +127,7 @@ public class ItemEntryDisplay extends ItemDisplay{
         renderSlotHighlight(graphics, mouseX, mouseY, partialTick);
         int hoveringSlot = getSlotByMouseOffset(mouseX-leftPos,mouseY-topPos);
         if(hoveringSlot>=0&&hoveringSlot<items.size()){
-            ItemStack hovering = items.get(hoveringSlot);
+            ItemStack hovering = items.get(hoveringSlot).get();
             if(hovering.isEmpty()) return;
             graphics.setTooltipForNextFrame(
                     Minecraft.getInstance().font,

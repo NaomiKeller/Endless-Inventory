@@ -2,10 +2,12 @@ package com.kwwsyk.endinv.common.client.gui.page;
 
 import com.kwwsyk.endinv.common.ModInfo;
 import com.kwwsyk.endinv.common.client.gui.ScreenFramework;
+import com.kwwsyk.endinv.common.client.gui.page.manager.ResourcePointer;
 import com.kwwsyk.endinv.common.menu.page.PageType;
 import com.kwwsyk.endinv.common.menu.page.pageManager.PageQuickMoveHandler;
 import com.kwwsyk.endinv.common.network.payloads.PageData;
 import com.kwwsyk.endinv.common.network.payloads.toServer.*;
+import com.kwwsyk.endinv.common.util.ItemKey;
 import com.mojang.logging.LogUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -31,9 +33,9 @@ public abstract class ItemPage extends GridPage {
 
     private static final Logger LOGGER = LogUtils.getLogger();
 
-    protected NonNullList<ItemStack> items;
+    protected NonNullList<ResourcePointer<ItemStack>> items;
 
-    protected List<ItemStack> inQueueStacks = null;
+    protected List<ItemPointer> inQueueStacks = null;
 
     public ItemPage(PageType pageType, ScreenFramework framework) {
         super(pageType, framework);
@@ -63,9 +65,9 @@ public abstract class ItemPage extends GridPage {
         this.startIndex = startIndex;
         this.length = Math.min(length, framework.rows()* framework.columns());
         // ensure internal invariants
-        if(this.items==null || this.items.size()!=this.length) this.items = NonNullList.withSize(this.length, ItemStack.EMPTY);
+        if(this.items==null || this.items.size()!=this.length) this.items = NonNullList.withSize(this.length, ItemPointer.EMPTY);
         if(length != this.items.size()){
-            this.items = NonNullList.withSize(length,ItemStack.EMPTY);
+            this.items = NonNullList.withSize(length,ItemPointer.EMPTY);
         }
         release();
         this.refreshItems();
@@ -89,7 +91,7 @@ public abstract class ItemPage extends GridPage {
     }
 
     public boolean isEmpty() {
-        return items.stream().allMatch(ItemStack::isEmpty);
+        return items.stream().allMatch(p -> p == null || p.get().isEmpty());
     }
 
     @Override
@@ -106,7 +108,8 @@ public abstract class ItemPage extends GridPage {
     public ItemStack getItemByMouseOffset(double XOffset, double YOffset){
         int slot = getSlotByMouseOffset(XOffset,YOffset);
         if(slot>=0 && slot<items.size()) {
-            return items.get(slot);
+            ResourcePointer<ItemStack> p = items.get(slot);
+            return p == null ? ItemStack.EMPTY : p.get();
         }
         return ItemStack.EMPTY;
     }
@@ -121,7 +124,8 @@ public abstract class ItemPage extends GridPage {
     public void renderPage(GuiGraphics guiGraphics){
         int rowIndex = 0;
         int columnIndex = 0;
-        for(ItemStack stack : items){
+        for(ResourcePointer<ItemStack> pointer : items){
+            ItemStack stack = pointer.get();
             int itemX = leftPos + MARGIN_SIDE_WIDTH + columnIndex*18,itemY = topPos + MARGIN_TOP_HEIGHT + rowIndex*18+1;
             if(stack.isEmpty() && !stack.is(Items.AIR)) renderEmpty(guiGraphics,itemX,itemY,stack);
             guiGraphics.renderItem(stack,itemX,itemY,columnIndex+rowIndex*180);
@@ -139,7 +143,7 @@ public abstract class ItemPage extends GridPage {
     public void pageClicked(double XOffset, double YOffset, int button, ClickType clickType) {
         int slot = getSlotByMouseOffset(XOffset,YOffset);
         if(slot>=0 && slot<items.size()) {
-            ItemStack clicked = items.get(slot).copy();
+            ItemStack clicked = getItemByMouseOffset(XOffset, YOffset).copy();
             switch (clickType){
                 case PICKUP -> handlePickup(clicked, button);
                 case QUICK_MOVE -> handleQuickMove(clicked);
@@ -152,7 +156,7 @@ public abstract class ItemPage extends GridPage {
                     , framework.getPlayer(),clickType,button, clicked);
             if(clickType == ClickType.PICKUP_ALL && Screen.hasShiftDown()) return;
             ModInfo.getPacketDistributor().sendToServer(new ItemClickPayload(
-                    clicked.getCount() > 64 ? clicked.copyWithCount(64) : clicked.copy(),
+                    ItemKey.asKey(clicked),
                     button,clickType));
             this.refreshItems();
         }
@@ -168,7 +172,8 @@ public abstract class ItemPage extends GridPage {
     }
 
     public ItemStack takeItem(int index, int count){
-        ItemStack itemStack = this.items.get(index);
+        ResourcePointer<ItemStack> p = this.items.get(index);
+        ItemStack itemStack = p == null ? ItemStack.EMPTY : p.get();
         setChanged();
         return srcInv.takeItem(itemStack,count);
     }
@@ -254,7 +259,7 @@ public abstract class ItemPage extends GridPage {
     protected void handlePickupAll(ItemStack clicked){
         // Shift + Double Click: bulk quick-move from Endless Inventory page into the open container
         if (Screen.hasShiftDown()) {
-            ModInfo.getPacketDistributor().sendToServer(new BulkQuickMoveFromPagePayload(clicked.copyWithCount(1)));
+            ModInfo.getPacketDistributor().sendToServer(new BulkQuickMoveFromPagePayload(ItemKey.asKey(clicked.copyWithCount(1))));
             int iterations = 0;
             var mover = new PageQuickMoveHandler(framework);
             while (iterations++ < 32768) {
@@ -292,6 +297,44 @@ public abstract class ItemPage extends GridPage {
         Player player = framework.getPlayer();
         if(player.getAbilities().instabuild && framework.getMenu().getCarried().isEmpty()){
             framework.getMenu().setCarried(clicked.copyWithCount(clicked.getMaxStackSize()));
+        }
+    }
+
+    public static class ItemPointer implements ResourcePointer<ItemStack> {
+
+        public static final ItemPointer EMPTY = new ItemPointer(null){
+            public ItemStack get(){
+                return ItemStack.EMPTY;
+            }
+
+            @Override
+            public boolean isEmpty() {
+                return true;
+            }
+        };
+
+        private final com.kwwsyk.endinv.common.SourceInventory srcInv;
+        private final ItemKey key;
+
+        public ItemPointer(ItemKey key){
+            this.srcInv = com.kwwsyk.endinv.common.client.CachedSrcInv.INSTANCE;
+            this.key = key;
+        }
+
+        @Override
+        public ItemStack get() {
+            if(key == null) return ItemStack.EMPTY;
+            var state = srcInv.getItemMap().get(key);
+            if(state == null) return ItemStack.EMPTY;
+            return key.toStack(state.count());
+        }
+
+        public ItemKey key(){
+            return key;
+        }
+
+        public boolean isEmpty(){
+            return key == null;
         }
     }
 }

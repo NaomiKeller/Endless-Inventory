@@ -3,6 +3,7 @@ package com.kwwsyk.endinv.common.client.gui.page;
 import com.kwwsyk.endinv.common.client.gui.ScreenFramework;
 import com.kwwsyk.endinv.common.menu.page.PageType;
 import com.kwwsyk.endinv.common.network.payloads.toServer.StarItemPayload;
+import com.kwwsyk.endinv.common.util.ItemKey;
 import com.kwwsyk.endinv.common.util.ItemStackLike;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -39,7 +40,7 @@ public class StarredItemPage extends ItemPage{
     protected void setVisibleRange(int startIndex, int length){
         this.startIndex = startIndex;
         this.length = Math.min(length, framework.rows()* framework.columns());
-        this.items = NonNullList.withSize(length, ItemStack.EMPTY);
+        this.items = NonNullList.withSize(length, ItemPage.ItemPointer.EMPTY);
         this.countArray = new int[length];
         this.refreshItems();
     }
@@ -53,17 +54,18 @@ public class StarredItemPage extends ItemPage{
         requestRemoteContents();
     }
 
-    public void initializeContents(@NotNull List<ItemStack> stacks){
+    public void initializeContents(@NotNull List<ItemPage.ItemPointer> stacks){
         if(holdOn){
             inQueueStacks = stacks;
             return;
         }
         for(int i=0; i<items.size(); ++i){
             if(i<stacks.size() && stacks.get(i)!=null){
-                items.set(i,stacks.get(i).copyWithCount(1));
-                countArray[i]=stacks.get(i).getCount();
+                ItemStack s = stacks.get(i).get();
+                items.set(i, stacks.get(i));
+                countArray[i]= s.getCount();
             }else {
-                items.set(i,ItemStack.EMPTY);
+                items.set(i,ItemPage.ItemPointer.EMPTY);
             }
         }
     }
@@ -71,10 +73,11 @@ public class StarredItemPage extends ItemPage{
     public void initializeAsMap(@NotNull List<ItemStackLike> stacks){
         for(int i=0; i<items.size(); ++i){
             if(i<stacks.size() && stacks.get(i)!=null){
-                items.set(i,stacks.get(i).toKey());
-                countArray[i]=stacks.get(i).count();
+                ItemStackLike like = stacks.get(i);
+                items.set(i,new ItemPage.ItemPointer(new ItemKey(like.item(), like.components())));
+                countArray[i]=like.count();
             }else {
-                items.set(i,ItemStack.EMPTY);
+                items.set(i,ItemPage.ItemPointer.EMPTY);
             }
         }
     }
@@ -99,7 +102,7 @@ public class StarredItemPage extends ItemPage{
         int columnIndex = 0;
         for(int i=0; i<length; ++i){
             int itemX = leftPos + MARGIN_SIDE_WIDTH + columnIndex*18,itemY = topPos + MARGIN_TOP_HEIGHT + rowIndex*18+1;
-            ItemStack stack = items.get(i);
+            ItemStack stack = items.get(i).get();
             int count = countArray[i];
             guiGraphics.renderItem(stack,itemX,itemY,columnIndex+rowIndex*180);
             if(!isHiddenBySortBox(rowIndex,columnIndex))
@@ -116,7 +119,7 @@ public class StarredItemPage extends ItemPage{
     public void handleStarItem(double XOffset, double YOffset) {
         int slot = getSlotByMouseOffset(XOffset,YOffset);
         if(slot>=0&&slot<items.size()) {
-            ItemStack clicked = items.get(slot);
+            ItemStack clicked = items.get(slot).get();
             starItem(clicked,false);
         }
     }
