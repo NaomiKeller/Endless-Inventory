@@ -55,7 +55,7 @@ public class CachedSrcInv extends SourceInventory {
         int size = ret.size();
         //update startIndex
         if(size <= length) startIndex = 0;
-        startIndex = Mth.clamp(startIndex, 0, size - length);
+        //startIndex = Mth.clamp(startIndex, 0, size - length);
         ret = ret.subList(Mth.clamp(startIndex, 0, size), Math.min(startIndex + length, size));
         return reverse ? ret.reversed() : ret;
     }
