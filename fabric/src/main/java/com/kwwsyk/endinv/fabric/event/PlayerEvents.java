@@ -3,6 +3,7 @@ package com.kwwsyk.endinv.fabric.event;
 import com.kwwsyk.endinv.common.ModInfo;
 import com.kwwsyk.endinv.common.ModRegistries;
 import com.kwwsyk.endinv.common.ServerLevelEndInv;
+import com.kwwsyk.endinv.common.data.EndInvPlayerMappingData;
 import com.kwwsyk.endinv.common.network.payloads.SyncedConfig;
 import com.kwwsyk.endinv.common.network.payloads.toClient.EndInvContent;
 import com.kwwsyk.endinv.common.network.payloads.toClient.EndInvMetadata;
@@ -30,7 +31,12 @@ public final class PlayerEvents {
     public static void register() {
         ServerTickEvents.END_SERVER_TICK.register(PlayerEvents::flushSync);
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
-            PlayerAttachmentIO.loadFor(handler.player);
+            // Restore EndInv UUID from level mapping if available
+            var mapping = EndInvPlayerMappingData.get(server.overworld());
+            var mapped = mapping.get(handler.player.getUUID());
+            if (mapped != null) {
+                com.kwwsyk.endinv.common.ModRegistries.NbtAttachments.getEndInvUUID().setTo(handler.player, mapped);
+            }
             scheduleSync(handler.player);
         });
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> PlayerAttachmentIO.saveFor(handler.player));
@@ -39,6 +45,8 @@ public final class PlayerEvents {
 
     public static void markPlayersForSync(MinecraftServer server) {
         for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+            // Ensure attachments are loaded before scheduling initial sync
+            com.kwwsyk.endinv.fabric.nbtAttachment.PlayerAttachmentIO.loadFor(player);
             scheduleSync(player);
         }
     }
@@ -75,6 +83,8 @@ public final class PlayerEvents {
     }
 
     private static void sendInitialData(ServerPlayer player) {
+        // Safety: load persisted attachments if default
+        com.kwwsyk.endinv.fabric.nbtAttachment.PlayerAttachmentIO.loadFor(player);
         var configAttachment = ModRegistries.NbtAttachments.getSyncedConfig();
         SyncedConfig syncedConfig = configAttachment.getWith(player);
         ModInfo.getPacketDistributor().sendToPlayer(player, syncedConfig);
@@ -93,6 +103,8 @@ public final class PlayerEvents {
             ServerLevelEndInv.getEndInvForPlayer(player).ifPresent(endInv -> {
                 ModInfo.getPacketDistributor().sendToPlayer(player, new EndInvContent(endInv.getItemMap()));
                 ModInfo.getPacketDistributor().sendToPlayer(player, EndInvMetadata.getWith(endInv));
+                // Update level mapping to ensure stable association across restarts
+                EndInvPlayerMappingData.get(player.level()).put(player.getUUID(), endInv.getUuid());
             });
         }
     }

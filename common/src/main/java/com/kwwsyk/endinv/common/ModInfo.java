@@ -9,7 +9,7 @@ public final class ModInfo {
 
     public static final String MOD_ID = "endless_inventory";
 
-    public static final UUID DEFAULT_UUID = UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479");
+    public static final UUID DEFAULT_UUID = new UUID(0L, 0L);
 
     static boolean clientLoaded = false;
 

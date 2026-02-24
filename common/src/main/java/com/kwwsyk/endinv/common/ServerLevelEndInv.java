@@ -11,10 +11,8 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import org.slf4j.Logger;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import javax.annotation.Nullable;
+import java.util.*;
 
 public final class ServerLevelEndInv {
 
@@ -104,13 +102,13 @@ public final class ServerLevelEndInv {
      */
     public static boolean hasEndInvUuid(Player player){
         UUID optional = ModRegistries.NbtAttachments.getEndInvUUID().getWith(player);
-        if (optional == ModInfo.DEFAULT_UUID) {
+        if (Objects.equals(optional, ModInfo.DEFAULT_UUID)) {
             LOGGER.warn("Player {} has default endless inventory UUID.", player.getName().getString());
             return false;
         }
         return true;
     }
-
+    @Nullable
     private static EndlessInventory getPlayerDefaultEndInv(Player player){
         return levelEndInvData.fromUUID(ModRegistries.NbtAttachments.getEndInvUUID().getWith(player));
     }

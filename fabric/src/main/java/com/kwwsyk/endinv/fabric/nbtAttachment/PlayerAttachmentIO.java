@@ -16,7 +16,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.UUID;
 
 /**
  * Simple world-scoped persistence for player attachments on Fabric.
@@ -25,27 +24,19 @@ import java.util.UUID;
 public final class PlayerAttachmentIO {
 
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
-    private static final String KEY_UUID = "endinv_uuid";
+    private static final String KEY_UUID = "endinv_uuid"; // deprecated: do not persist UUID here
     private static final String KEY_SETTINGS = "endinv_settings";
 
     private PlayerAttachmentIO() {}
 
     public static void loadFor(ServerPlayer player) {
-        Path path = ((net.minecraft.server.level.ServerLevel) player.level()).getServer().getWorldPath(LevelResource.ROOT)
+        Path path = player.level().getServer().getWorldPath(LevelResource.ROOT)
                 .resolve("data").resolve("endinv_playerdata")
-                .resolve(player.getUUID().toString() + ".json");
+                .resolve(player.getUUID() + ".json");
         if (!Files.exists(path)) return;
         try (BufferedReader reader = Files.newBufferedReader(path, StandardCharsets.UTF_8)) {
             JsonObject root = GsonHelper.parse(reader);
-            if (root.has(KEY_UUID)) {
-                String uuidStr = GsonHelper.getAsString(root, KEY_UUID, null);
-                if (uuidStr != null && !uuidStr.isEmpty()) {
-                    try {
-                        UUID uuid = UUID.fromString(uuidStr);
-                        ModRegistries.NbtAttachments.getEndInvUUID().setTo(player, uuid);
-                    } catch (IllegalArgumentException ignored) {}
-                }
-            }
+            // Do not load UUID from JSON anymore; mapping is kept in level SavedData
             if (root.has(KEY_SETTINGS) && root.get(KEY_SETTINGS).isJsonObject()) {
                 JsonElement elem = root.get(KEY_SETTINGS);
                 SyncedConfig cfg = SyncedConfig.CODEC.parse(com.mojang.serialization.JsonOps.INSTANCE, elem)
@@ -62,8 +53,7 @@ public final class PlayerAttachmentIO {
         try {
             Files.createDirectories(dir);
             JsonObject root = new JsonObject();
-            UUID uuid = ModRegistries.NbtAttachments.getEndInvUUID().getWith(player);
-            root.addProperty(KEY_UUID, uuid != null ? uuid.toString() : "");
+            // No longer persist UUID here; keep only settings
             SyncedConfig cfg = ModRegistries.NbtAttachments.getSyncedConfig().getWith(player);
             JsonElement elem = SyncedConfig.CODEC.encodeStart(com.mojang.serialization.JsonOps.INSTANCE, cfg).result().orElseGet(JsonObject::new);
             root.add(KEY_SETTINGS, elem);

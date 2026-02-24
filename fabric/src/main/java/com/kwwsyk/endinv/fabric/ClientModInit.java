@@ -8,7 +8,7 @@ import com.kwwsyk.endinv.common.client.option.ClientConfigs;
 import com.kwwsyk.endinv.common.options.config.json.JsonConfigurationHandler;
 import com.kwwsyk.endinv.fabric.client.events.ClientEvents;
 import com.kwwsyk.endinv.fabric.mixin.AbstractContainerScreenAccessor;
-import com.kwwsyk.endinv.fabric.network.FabricNetworking;
+import com.kwwsyk.endinv.fabric.network.FabricClientNetworking;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
@@ -33,7 +33,7 @@ public class ClientModInit extends AbstractClientModInitializer implements Clien
         registerEmptyKey(KeyMappings.QUICK_MOVE);
         registerEmptyKey(KeyMappings.STAR_ITEM);
         // No separate encoder init needed on typed API
-        FabricNetworking.initClient();
+        FabricClientNetworking.init();
         ClientEvents.register();
         ClientLifecycleEvents.CLIENT_STOPPING.register(client -> {
             if (CLIENT_CONFIGS != null) CLIENT_CONFIGS.save();

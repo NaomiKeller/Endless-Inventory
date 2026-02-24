@@ -1,6 +1,7 @@
 package com.kwwsyk.endinv.common.data;
 
 import com.kwwsyk.endinv.common.EndlessInventory;
+import com.kwwsyk.endinv.common.ModInfo;
 import com.kwwsyk.endinv.common.ServerLevelEndInv;
 import com.mojang.logging.LogUtils;
 import com.mojang.serialization.Codec;
@@ -110,8 +111,9 @@ public class EndlessInventoryData extends SavedData {
         if(index<0 || index>= levelEndInvs.size()) return;
         levelEndInvs.remove(index);
     }
-
+    @Nullable
     public EndlessInventory fromUUID(UUID uuid){
+        if(Objects.equals(uuid, ModInfo.DEFAULT_UUID)) return null;
         for(EndlessInventory endlessInventory : levelEndInvs){
             if (Objects.equals(endlessInventory.getUuid(),uuid)) return endlessInventory;
         }
