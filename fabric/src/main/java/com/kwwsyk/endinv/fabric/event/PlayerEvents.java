@@ -64,18 +64,20 @@ public final class PlayerEvents {
 
         var uuidAttachment = ModRegistries.NbtAttachments.getEndInvUUID();
         UUID uuid = uuidAttachment.getWith(oldPlayer);
-        uuidAttachment.setTo(newPlayer, uuid);
+        if(uuid!=null) uuidAttachment.setTo(newPlayer, uuid);
 
         SyncedConfig config = ModRegistries.NbtAttachments.getSyncedConfig().getWith(oldPlayer);
-        ModRegistries.NbtAttachments.getSyncedConfig().setTo(newPlayer, config);
-        ModInfo.getPacketDistributor().sendToPlayer(newPlayer, config);
+        if (config != null) {
+            ModRegistries.NbtAttachments.getSyncedConfig().setTo(newPlayer, config);
+            ModInfo.getPacketDistributor().sendToPlayer(newPlayer, config);
+        }
         scheduleSync(newPlayer);
     }
 
     private static void sendInitialData(ServerPlayer player) {
         // Safety: load persisted attachments if default
         var configAttachment = ModRegistries.NbtAttachments.getSyncedConfig();
-        SyncedConfig syncedConfig = configAttachment.getWith(player);
+        SyncedConfig syncedConfig = configAttachment.computeIfAbsent(player);
         ModInfo.getPacketDistributor().sendToPlayer(player, syncedConfig);
 
         // Broadcast effective menu attachability on join

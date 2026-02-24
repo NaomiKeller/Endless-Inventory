@@ -112,8 +112,8 @@ public class EndlessInventoryData extends SavedData {
         levelEndInvs.remove(index);
     }
     @Nullable
-    public EndlessInventory fromUUID(UUID uuid){
-        if(Objects.equals(uuid, ModInfo.DEFAULT_UUID)) return null;
+    public EndlessInventory fromUUID(@Nullable UUID uuid){
+        if(uuid == null || Objects.equals(uuid, ModInfo.DEFAULT_UUID)) return null;
         for(EndlessInventory endlessInventory : levelEndInvs){
             if (Objects.equals(endlessInventory.getUuid(),uuid)) return endlessInventory;
         }

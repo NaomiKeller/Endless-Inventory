@@ -23,7 +23,7 @@ public class PlayerEvents {
     public static void tick(TickEvent.PlayerTickEvent event){
         if(event.phase == TickEvent.Phase.END && event.player instanceof ServerPlayer serverPlayer){
             if(tickRefresh) {
-                ModInfo.getPacketDistributor().sendToPlayer(serverPlayer, ModRegistries.NbtAttachments.getSyncedConfig().getWith(serverPlayer));
+                ModInfo.getPacketDistributor().sendToPlayer(serverPlayer, ModRegistries.NbtAttachments.getSyncedConfig().computeIfAbsent(serverPlayer));
                 // Send effective menu attachability
                 var menuCfg = com.kwwsyk.endinv.common.options.ServerConfigs.SPECIFIED_ATTACHABILITY.get();
                 boolean defaultAttach = com.kwwsyk.endinv.common.options.ServerConfigs.DEFAULT_ATTACH.get();

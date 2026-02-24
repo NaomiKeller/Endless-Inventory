@@ -145,7 +145,7 @@ public class ModInitializer extends AbstractModInitializer {
         Supplier<AttachmentType<UUID>> ENDINV_UUID = ATTACHMENT_TYPES.register(
                 "endinv_uuid",
                 ()->AttachmentType
-                        .builder(()-> ModInfo.DEFAULT_UUID)
+                        .builder(UUID::randomUUID)
                         .serialize(UUIDUtil.CODEC.fieldOf("endinv_uuid"))
                         .copyOnDeath()
                         .build()

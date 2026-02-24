@@ -84,7 +84,7 @@ public record OpenEndInvPayload(boolean openNew, int rows, int columns) implemen
     /**
      */
     private boolean checkAttachingStatus(ServerPlayer player){
-        SyncedConfig syncedConfig = ModRegistries.NbtAttachments.getSyncedConfig().getWith(player);
+        SyncedConfig syncedConfig = ModRegistries.NbtAttachments.getSyncedConfig().computeIfAbsent(player);
         boolean nbtAttaching = syncedConfig.attaching();//presents player's client attaching config
         //boolean configAttaching = ModInfo.getServerConfig().enableAttaching().get();
         boolean menuAttachable = com.kwwsyk.endinv.common.options.ServerConfigs.SPECIFIED_ATTACHABILITY.get().attachable(player);

@@ -52,8 +52,6 @@ public final class ServerLevelEndInv {
                             .filter(endinv->endinv.owner!=null && endinv.owner.equals(player.getUUID()))
                             .findFirst()
                             .orElseGet(() -> createForPlayer(player));
-                    //To prevent an invalid state that an EndInv that its owner is this player but player shall create a new EndInv
-                    // happens often when player lost EndInvUUID when death
                     ModRegistries.NbtAttachments.getEndInvUUID().setTo(player,endlessInventory.getUuid());
                 }
                 case USE_GLOBAL_SHARED -> {
@@ -87,7 +85,7 @@ public final class ServerLevelEndInv {
     }
 
     private static EndlessInventory createForPlayer(Player player){
-        EndlessInventory endlessInventory = new EndlessInventory();
+        EndlessInventory endlessInventory = new EndlessInventory(ModRegistries.NbtAttachments.getEndInvUUID().computeIfAbsent(player));
         levelEndInvData.addEndInvToLevel(endlessInventory);
         endlessInventory.setAccessibility(com.kwwsyk.endinv.common.options.ServerConfigs.ENDINV_BEHAVIOR.Access.get());
         endlessInventory.setOwner(player.getUUID());
@@ -102,6 +100,7 @@ public final class ServerLevelEndInv {
      */
     public static boolean hasEndInvUuid(Player player){
         UUID optional = ModRegistries.NbtAttachments.getEndInvUUID().getWith(player);
+        if(optional == null) return false;
         if (Objects.equals(optional, ModInfo.DEFAULT_UUID)) {
             LOGGER.warn("Player {} has default endless inventory UUID.", player.getName().getString());
             return false;

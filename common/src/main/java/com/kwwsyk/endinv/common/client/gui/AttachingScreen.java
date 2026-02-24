@@ -53,7 +53,7 @@ public class AttachingScreen<T extends AbstractContainerMenu>{
     public static boolean isAttachable(AbstractContainerScreen<?> screen){
         try{
             return ClientConfigs.DO_ATTACH.get()
-                    && getSyncedConfig().getWith(Minecraft.getInstance().player).checkForAttaching()
+                    && getSyncedConfig().computeIfAbsent(Minecraft.getInstance().player).checkForAttaching()
                     && ClientConfigs.SPECIFIED_ATTACHABILITY.get().isMenuAttachable(screen.getMenu())
                     && MenuAttachabilityCache.isAttachable(screen);
         } catch (RuntimeException e){

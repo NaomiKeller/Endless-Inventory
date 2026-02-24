@@ -49,7 +49,7 @@ public abstract class ItemEntityPickupMixin {
     }
 
     private static boolean isPlayerEnabledAutoPick(Player player) {
-        return ModRegistries.NbtAttachments.getSyncedConfig().getWith(player).autoPicking();
+        return ModRegistries.NbtAttachments.getSyncedConfig().computeIfAbsent(player).autoPicking();
     }
 
     private static boolean canMerge(Player player, ItemStack stack) {

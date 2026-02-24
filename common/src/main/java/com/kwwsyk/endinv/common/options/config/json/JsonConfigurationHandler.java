@@ -66,6 +66,11 @@ public class JsonConfigurationHandler {
         for (ConfigEntryImpl<?> entry : configEntries) {
             recursiveBind(root, entry);
         }
+
+        // Persist defaults on first load or when new keys are introduced
+        if (dirty) {
+            save();
+        }
     }
 
     private void recursiveBind(JsonObject json, ConfigEntryImpl<?> entry)
@@ -446,13 +451,47 @@ public class JsonConfigurationHandler {
     private static Enum<?> parseEnum(Class enumClass, String name, Enum<?> def)
     {
         if (name == null) return def;
-        try {
-            return Enum.valueOf(enumClass, name);
-        } catch (IllegalArgumentException e) {
-            // try uppercase fallback
-            try { return Enum.valueOf(enumClass, name.toUpperCase()); } catch (Exception ignored) {}
-            return def;
+
+        // 1) Fast paths: exact match and simple case-only mismatch
+        try { return Enum.valueOf(enumClass, name); } catch (Exception ignored) {}
+        try { return Enum.valueOf(enumClass, name.trim()); } catch (Exception ignored) {}
+        try { return Enum.valueOf(enumClass, name.toUpperCase()); } catch (Exception ignored) {}
+
+        // 2) Normalize common user/input variants: trim, replace spaces/hyphens with underscores,
+        //    collapse multiple underscores, and try UPPER_SNAKE_CASE.
+        String normalized = name.trim()
+                .replace(' ', '_')
+                .replace('-', '_')
+                .replace('\t', '_');
+        while (normalized.contains("__")) normalized = normalized.replace("__", "_");
+        String upperSnake = normalized.toUpperCase();
+        try { return Enum.valueOf(enumClass, upperSnake); } catch (Exception ignored) {}
+
+        // 3) Try converting camel/pascal case into snake and match
+        String camelToSnake = name.replaceAll("([a-z])([A-Z])", "$1_$2").toUpperCase();
+        try { return Enum.valueOf(enumClass, camelToSnake); } catch (Exception ignored) {}
+
+        // 4) Iterate constants for tolerant comparisons (ignore underscores and case)
+        Object[] constants = enumClass.getEnumConstants();
+        if (constants != null) {
+            String compact = upperSnake.replace("_", "");
+            for (Object c : constants) {
+                if (c instanceof Enum<?> e) {
+                    String en = e.name();
+                    if (en.equalsIgnoreCase(name) || en.equalsIgnoreCase(upperSnake)) return e;
+                    if (en.replace("_", "").equalsIgnoreCase(compact)) return e;
+                }
+            }
+
+            // 5) Numeric ordinal support: allow users to specify index as string
+            try {
+                int idx = Integer.parseInt(name.trim());
+                if (idx >= 0 && idx < constants.length && constants[idx] instanceof Enum<?> e) return e;
+            } catch (Exception ignored) {}
         }
+
+        // 6) Fallback to default
+        return def;
     }
 
     private static int clamp(int v, int min, int max)
