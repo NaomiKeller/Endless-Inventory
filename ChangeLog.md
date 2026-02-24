@@ -2,6 +2,15 @@
 
 __branch 1.21.8__
 
+## 2026-2-24
+282bed5  1.21.8 refactored attachment APIs, improved enum parsing, and fixed NBT data initialization issues.
+5fba6e0  1.21.8 fabric new data persistence
+31456ef  1.21.8 fabric bug fix
+
+## 2026-2-23
+17868df  1.1.3 introduced pointer-based item handling for improved inventory operations and caching.
+99f9e4a  1.1.3 introduced pointer-based item handling for improved inventory operations and caching.
+
 ## 1.1.2 change:
 Added shift+double-click to quick move items.
 Let the config button of attaching screen be able to both toggle close attached screen or open setting screen(shift-click).
