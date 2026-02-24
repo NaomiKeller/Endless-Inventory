@@ -6,9 +6,7 @@
   "mixins": [
     "BlockDropMixin",
     "ExperienceOrbAwardMixin",
-    "ItemEntityPickupMixin",
-    
-    "PlayerPersistentDataMixin"
+    "ItemEntityPickupMixin"
   ],
   "client": [
     "AbstractContainerScreenAccessor",
