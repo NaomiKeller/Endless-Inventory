@@ -7,7 +7,7 @@ import com.kwwsyk.endinv.common.client.option.TextureMode;
 import com.kwwsyk.endinv.common.menu.EndlessInventoryMenu;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.RenderPipelines;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;
@@ -15,14 +15,14 @@ import java.util.Optional;
 public abstract class FromResource extends SFBgRendererImpl {
 
 
-    public static final ResourceLocation CONTAINER_TEXTURE_RESOURCE = ResourceLocation.withDefaultNamespace("textures/gui/container/generic_54.png");
-    //1.20.1:public static final ResourceLocation TABS_RESOURCE = ResourceLocation.withDefaultNamespace("textures/gui/advancements/tabs.png");
+    public static final Identifier CONTAINER_TEXTURE_RESOURCE = Identifier.withDefaultNamespace("textures/gui/container/generic_54.png");
+    //1.20.1:public static final Identifier TABS_RESOURCE = Identifier.withDefaultNamespace("textures/gui/advancements/tabs.png");
 
-    public static final ResourceLocation DEDICATED_CONTAINER_TEXTURE = ResourceLocation.fromNamespaceAndPath(ModInfo.MOD_ID, "textures/gui/item_grid.png");
-    //1.20.1:public static final ResourceLocation DEDICATED_TABS = ResourceLocation.fromNamespaceAndPath(ModInfo.MOD_ID, "textures/gui/tabs.png");/*_old*/
-    public static final ResourceLocation ITEM_ENTRY_DISPLAY_RESOURCE = ResourceLocation.fromNamespaceAndPath(ModInfo.MOD_ID, "textures/gui/item_entry.png");
+    public static final Identifier DEDICATED_CONTAINER_TEXTURE = Identifier.fromNamespaceAndPath(ModInfo.MOD_ID, "textures/gui/item_grid.png");
+    //1.20.1:public static final Identifier DEDICATED_TABS = Identifier.fromNamespaceAndPath(ModInfo.MOD_ID, "textures/gui/tabs.png");/*_old*/
+    public static final Identifier ITEM_ENTRY_DISPLAY_RESOURCE = Identifier.fromNamespaceAndPath(ModInfo.MOD_ID, "textures/gui/item_entry.png");
 
-    private static ResourceLocation getContainerTexture(){
+    private static Identifier getContainerTexture(){
         return ClientConfigs.ATTACHED_MENU_CONFIG.TextureMode.get() == TextureMode.DEDICATED_LOCATION ? DEDICATED_CONTAINER_TEXTURE : CONTAINER_TEXTURE_RESOURCE;
     }
 
@@ -63,7 +63,7 @@ public abstract class FromResource extends SFBgRendererImpl {
 
     public abstract class PagePainter implements PageBgRender {
 
-        public abstract ResourceLocation texture();
+        public abstract Identifier texture();
 
         @Override
         public void renderBg(@NotNull GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {
@@ -151,16 +151,16 @@ public abstract class FromResource extends SFBgRendererImpl {
         return Optional.of(new PagePainter(){
 
             @Override
-            public ResourceLocation texture() {
+            public Identifier texture() {
                 return getContainerTexture();
             }
         });
     }
 
-    public PagePainter dedicatePageBgRender(ResourceLocation texture){
+    public PagePainter dedicatePageBgRender(Identifier texture){
         return new PagePainter() {
             @Override
-            public ResourceLocation texture() {
+            public Identifier texture() {
                 return texture;
             }
         };

@@ -112,7 +112,7 @@ public class EIMRecipeTranHandler implements IRecipeTransferHandler<EndlessInven
                 return null;
             }
 
-            net.minecraft.resources.ResourceLocation id = tryResolveRecipeId(recipe);
+            net.minecraft.resources.Identifier id = tryResolveRecipeId(recipe);
             if (id == null) {
                 return transferHelper.createInternalError();
             }
@@ -451,16 +451,16 @@ public class EIMRecipeTranHandler implements IRecipeTransferHandler<EndlessInven
     }
 
     @org.jetbrains.annotations.Nullable
-    private static net.minecraft.resources.ResourceLocation tryResolveRecipeId(Object recipeObj) {
+    private static net.minecraft.resources.Identifier tryResolveRecipeId(Object recipeObj) {
         try {
             var m = recipeObj.getClass().getMethod("getId");
             Object v = m.invoke(recipeObj);
-            if (v instanceof net.minecraft.resources.ResourceLocation rl) return rl;
+            if (v instanceof net.minecraft.resources.Identifier rl) return rl;
         } catch (Throwable ignored) {}
         try {
             var m = recipeObj.getClass().getMethod("id");
             Object v = m.invoke(recipeObj);
-            if (v instanceof net.minecraft.resources.ResourceLocation rl) return rl;
+            if (v instanceof net.minecraft.resources.Identifier rl) return rl;
         } catch (Throwable ignored) {}
         try {
             var m = recipeObj.getClass().getMethod("value");

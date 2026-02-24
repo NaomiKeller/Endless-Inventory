@@ -8,7 +8,7 @@ import com.kwwsyk.endinv.common.menu.page.PageType;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.material.Fluid;
 import net.neoforged.neoforge.fluids.FluidStack;
@@ -34,7 +34,7 @@ public class FluidPage extends CommonFluidPage<FluidStack> {
 
     private FluidStack convert(FluidData data){
         try {
-            Holder<Fluid> fluidHolder = BuiltInRegistries.FLUID.getValue(ResourceLocation.parse(data.id())).builtInRegistryHolder();
+            Holder<Fluid> fluidHolder = BuiltInRegistries.FLUID.getValue(Identifier.parse(data.id())).builtInRegistryHolder();
             return new FluidStack(fluidHolder, (int)data.amountMB(), data.component());
         } catch (Exception e) {
             return FluidStack.EMPTY;

@@ -8,7 +8,7 @@ import com.kwwsyk.endinv.common.util.ItemStackLike;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.core.NonNullList;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
@@ -18,7 +18,7 @@ import static com.kwwsyk.endinv.common.ModInfo.getPacketDistributor;
 
 public class StarredItemPage extends ItemPage{
 
-    public ResourceLocation icon = ResourceLocation.fromNamespaceAndPath("minecraft", "book");
+    public Identifier icon = Identifier.fromNamespaceAndPath("minecraft", "book");
     private int[] countArray;
 
     public StarredItemPage(PageType type, ScreenFramework screenFramework) {
@@ -32,7 +32,7 @@ public class StarredItemPage extends ItemPage{
     }
 
     @Override
-    public ResourceLocation getIcon(){
+    public Identifier getIcon(){
         return icon;
     }
 

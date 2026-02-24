@@ -14,7 +14,7 @@ import mezz.jei.api.gui.ingredient.IRecipeSlotsView;
 import mezz.jei.api.recipe.RecipeIngredientRole;
 import mezz.jei.api.recipe.transfer.IRecipeTransferInfo;
 import net.minecraft.client.Minecraft;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -35,7 +35,7 @@ public final class AEIRecipeTransferHandler {
 
     public record TransferContext(
             int containerId,
-            ResourceLocation recipeId,
+            Identifier recipeId,
             boolean maxTransfer,
             boolean requireCompleteSets,
             List<Integer> craftingSlotIndexes,
@@ -68,9 +68,9 @@ public final class AEIRecipeTransferHandler {
                 return Optional.empty();
             }
         }
-        ResourceLocation recipeId = tryResolveRecipeId(recipe);
+        Identifier recipeId = tryResolveRecipeId(recipe);
         if (recipeId == null) {
-            recipeId = ResourceLocation.fromNamespaceAndPath("endless_inventory", "jei/unknown/" + container.containerId);
+            recipeId = Identifier.fromNamespaceAndPath("endless_inventory", "jei/unknown/" + container.containerId);
         }
         boolean requireCompleteSets = transferInfo.requireCompleteSets(container, recipe);
         List<Integer> craftingIndexes = recipeSlots.stream().map(slot -> slot.index).toList();
@@ -332,16 +332,16 @@ public final class AEIRecipeTransferHandler {
     }
 
     @Nullable
-    private static ResourceLocation tryResolveRecipeId(Object recipeObj) {
+    private static Identifier tryResolveRecipeId(Object recipeObj) {
         try {
             var m = recipeObj.getClass().getMethod("getId");
             Object v = m.invoke(recipeObj);
-            if (v instanceof ResourceLocation rl) return rl;
+            if (v instanceof Identifier rl) return rl;
         } catch (Throwable ignored) {}
         try {
             var m = recipeObj.getClass().getMethod("id");
             Object v = m.invoke(recipeObj);
-            if (v instanceof ResourceLocation rl) return rl;
+            if (v instanceof Identifier rl) return rl;
         } catch (Throwable ignored) {}
         try {
             var m = recipeObj.getClass().getMethod("value");

@@ -11,7 +11,7 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.inventory.MenuType;
 
 import java.util.HashMap;
@@ -55,9 +55,9 @@ public record MenuAttachabilityPayload(
         buf.writeBoolean(payload.inventoryAttach);
         buf.writeVarInt(payload.perMenu.size());
         for (var e : payload.perMenu.entrySet()) {
-            ResourceLocation id = BuiltInRegistries.MENU.getKey(e.getKey());
+            Identifier id = BuiltInRegistries.MENU.getKey(e.getKey());
             if (id == null) continue;
-            buf.writeResourceLocation(id);
+            buf.writeIdentifier(id);
             buf.writeBoolean(Boolean.TRUE.equals(e.getValue()));
         }
     }
@@ -68,7 +68,7 @@ public record MenuAttachabilityPayload(
         int size = buf.readVarInt();
         Map<MenuType<?>, Boolean> map = new HashMap<>();
         for (int i = 0; i < size; i++) {
-            ResourceLocation id = buf.readResourceLocation();
+            Identifier id = buf.readIdentifier();
             boolean val = buf.readBoolean();
             BuiltInRegistries.MENU.get(id).map(Holder::value).ifPresent(type -> map.put(type, val));
         }

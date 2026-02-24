@@ -11,26 +11,26 @@ import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.NotNull;
 
 public class PageSwitchBar extends AbstractWidget {
 
-    //public static final ResourceLocation TABS_RESOURCE = ResourceLocation.withDefaultNamespace("textures/gui/advancements/tabs.png");
-    private static final ResourceLocation TAB_LEFT_MIDDLE_SPRITE = ResourceLocation.withDefaultNamespace("advancements/tab_left_middle");
-    private static final ResourceLocation TAB_LEFT_TOP_SELECTED = ResourceLocation.withDefaultNamespace("advancements/tab_left_top_selected");
-    private static final ResourceLocation TAB_LEFT_MIDDLE_SELECTED = ResourceLocation.withDefaultNamespace("advancements/tab_left_middle_selected");
-    private static final ResourceLocation TAB_LEFT_BOTTOM_SELECTED = ResourceLocation.withDefaultNamespace("advancements/tab_left_bottom_selected");
+    //public static final Identifier TABS_RESOURCE = Identifier.withDefaultNamespace("textures/gui/advancements/tabs.png");
+    private static final Identifier TAB_LEFT_MIDDLE_SPRITE = Identifier.withDefaultNamespace("advancements/tab_left_middle");
+    private static final Identifier TAB_LEFT_TOP_SELECTED = Identifier.withDefaultNamespace("advancements/tab_left_top_selected");
+    private static final Identifier TAB_LEFT_MIDDLE_SELECTED = Identifier.withDefaultNamespace("advancements/tab_left_middle_selected");
+    private static final Identifier TAB_LEFT_BOTTOM_SELECTED = Identifier.withDefaultNamespace("advancements/tab_left_bottom_selected");
 
-    private static final ResourceLocation TAB_UNSELECTED = AbstractModInitializer.withModLocation("textures/gui/tab_left_middle.png");
-    private static final ResourceLocation TAB_TOP = AbstractModInitializer.withModLocation("textures/gui/tab_left_top_selected.png");
-    private static final ResourceLocation TAB_MIDDLE = AbstractModInitializer.withModLocation("textures/gui/tab_left_middle_selected.png");
-    private static final ResourceLocation TAB_BOTTOM = AbstractModInitializer.withModLocation("textures/gui/tab_left_bottom_selected.png");
+    private static final Identifier TAB_UNSELECTED = AbstractModInitializer.withModLocation("textures/gui/tab_left_middle.png");
+    private static final Identifier TAB_TOP = AbstractModInitializer.withModLocation("textures/gui/tab_left_top_selected.png");
+    private static final Identifier TAB_MIDDLE = AbstractModInitializer.withModLocation("textures/gui/tab_left_middle_selected.png");
+    private static final Identifier TAB_BOTTOM = AbstractModInitializer.withModLocation("textures/gui/tab_left_bottom_selected.png");
 
     private static final int PAGE_FRAME_COLOR = 0x80A0A0A0;
     private static final int PAGE_BG_COLOR = 0x30373737;
 
-    private static ResourceLocation getTabsTexture(TabType type){
+    private static Identifier getTabsTexture(TabType type){
         return ClientConfigs.ATTACHED_MENU_CONFIG.TextureMode.get() == TextureMode.DEDICATED_LOCATION ? type.dedicatedLocation : type.vanillaTexture;
     }
 
@@ -40,10 +40,10 @@ public class PageSwitchBar extends AbstractWidget {
         MIDDLE(TAB_LEFT_MIDDLE_SELECTED, TAB_MIDDLE),
         BOTTOM(TAB_LEFT_BOTTOM_SELECTED, TAB_BOTTOM);
 
-        final ResourceLocation vanillaTexture;
-        final ResourceLocation dedicatedLocation;
+        final Identifier vanillaTexture;
+        final Identifier dedicatedLocation;
 
-        TabType(ResourceLocation vanillaTexture, ResourceLocation dedicatedLocation){
+        TabType(Identifier vanillaTexture, Identifier dedicatedLocation){
             this.vanillaTexture = vanillaTexture;
             this.dedicatedLocation = dedicatedLocation;
         }

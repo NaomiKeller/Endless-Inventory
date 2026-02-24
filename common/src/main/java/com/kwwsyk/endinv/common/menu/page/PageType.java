@@ -3,7 +3,7 @@ package com.kwwsyk.endinv.common.menu.page;
 import com.kwwsyk.endinv.common.client.gui.ScreenFramework;
 import com.kwwsyk.endinv.common.client.gui.page.*;
 import net.minecraft.core.component.DataComponents;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.*;
@@ -46,17 +46,17 @@ public class PageType {
     public static final PageType TOOLS = createClassifiedPage("tools",PageType::isTool,"iron_pickaxe");
     public static final PageType EQUIPMENTS = new PageType(
             (type,manager)->new SegClassifyItemDisplay(type, manager,equipmentSubclassifications,false,true),
-            "equipments",PageType::isDefenceEquipment,ResourceLocation.withDefaultNamespace("iron_chestplate")
+            "equipments",PageType::isDefenceEquipment,Identifier.withDefaultNamespace("iron_chestplate")
     );
     public static final PageType CONSUMABLE = createClassifiedPage("consumable",PageType::isFoodOrPotion,"bread");
     //updatable entry: Let items who have::: .components().has(DataComponents.STORED_ENCHANTMENTS
     public static final PageType ENCHANTED_BOOKS = createItemEntry("enchanted_books",stack->stack.getItem() == Items.ENCHANTED_BOOK,"enchanted_book");
-    public static final PageType BOOKMARK = new PageType(StarredItemPage::new,"bookmark",null,ResourceLocation.withDefaultNamespace("book"));
+    public static final PageType BOOKMARK = new PageType(StarredItemPage::new,"bookmark",null,Identifier.withDefaultNamespace("book"));
 
     private final PageConstructor constructor;
     @Nullable
     public final Predicate<ItemStack> itemClassify;
-    public ResourceLocation icon = null;
+    public Identifier icon = null;
     public final String registerName;
 
     @FunctionalInterface
@@ -86,7 +86,7 @@ public class PageType {
         this.registerName = registerName;
     }
 
-    public PageType(PageConstructor constructor, String registerName,@Nullable Predicate<ItemStack> itemClassify,@Nullable ResourceLocation icon){
+    public PageType(PageConstructor constructor, String registerName,@Nullable Predicate<ItemStack> itemClassify,@Nullable Identifier icon){
         this.constructor = constructor;
         this.itemClassify = itemClassify;
         this.icon = icon;
@@ -94,11 +94,11 @@ public class PageType {
     }
 
     public static PageType createClassifiedPage(String registerName, Predicate<ItemStack> itemClassify, String icon){
-        return new PageType(ItemDisplay::new,registerName,itemClassify,ResourceLocation.withDefaultNamespace(icon));
+        return new PageType(ItemDisplay::new,registerName,itemClassify,Identifier.withDefaultNamespace(icon));
     }
 
     public static PageType createItemEntry(String registerName, Predicate<ItemStack> itemClassify, String icon){
-        return new PageType(ItemEntryDisplay::new,registerName,itemClassify, ResourceLocation.withDefaultNamespace(icon));
+        return new PageType(ItemEntryDisplay::new,registerName,itemClassify, Identifier.withDefaultNamespace(icon));
     }
 
     /**

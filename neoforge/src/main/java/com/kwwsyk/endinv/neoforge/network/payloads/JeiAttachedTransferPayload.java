@@ -9,7 +9,7 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.Slot;
@@ -29,7 +29,7 @@ public record JeiAttachedTransferPayload(TransferContext context) implements Mod
 
     public static void encode(JeiAttachedTransferPayload payload, FriendlyByteBuf buffer) {
         buffer.writeVarInt(payload.context.containerId());
-        buffer.writeResourceLocation(payload.context.recipeId());
+        buffer.writeIdentifier(payload.context.recipeId());
         buffer.writeBoolean(payload.context.maxTransfer());
         buffer.writeBoolean(payload.context.requireCompleteSets());
         buffer.writeVarInt(payload.context.craftingSlotIndexes().size());
@@ -40,7 +40,7 @@ public record JeiAttachedTransferPayload(TransferContext context) implements Mod
 
     public static JeiAttachedTransferPayload decode(FriendlyByteBuf buffer) {
         int containerId = buffer.readVarInt();
-        ResourceLocation recipeId = buffer.readResourceLocation();
+        Identifier recipeId = buffer.readIdentifier();
         boolean maxTransfer = buffer.readBoolean();
         boolean requireCompleteSets = buffer.readBoolean();
         int craftingSize = buffer.readVarInt();

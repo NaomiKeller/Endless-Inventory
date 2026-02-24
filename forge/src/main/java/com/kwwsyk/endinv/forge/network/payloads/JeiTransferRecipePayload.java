@@ -10,14 +10,14 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.crafting.CraftingRecipe;
 
 import java.util.Optional;
 
-public record JeiTransferRecipePayload(int containerId, ResourceLocation recipeId, boolean maxTransfer) implements ModPacketPayload {
+public record JeiTransferRecipePayload(int containerId, Identifier recipeId, boolean maxTransfer) implements ModPacketPayload {
 
     public static final StreamCodec<RegistryFriendlyByteBuf, JeiTransferRecipePayload> STREAM_CODEC =
             StreamCodec.of((buf, value) -> encode(value, buf), JeiTransferRecipePayload::decode);
@@ -27,13 +27,13 @@ public record JeiTransferRecipePayload(int containerId, ResourceLocation recipeI
 
     public static void encode(JeiTransferRecipePayload payload, FriendlyByteBuf buffer) {
         buffer.writeVarInt(payload.containerId);
-        buffer.writeResourceLocation(payload.recipeId);
+        buffer.writeIdentifier(payload.recipeId);
         buffer.writeBoolean(payload.maxTransfer);
     }
 
     public static JeiTransferRecipePayload decode(FriendlyByteBuf buffer) {
         int containerId = buffer.readVarInt();
-        ResourceLocation recipeId = buffer.readResourceLocation();
+        Identifier recipeId = buffer.readIdentifier();
         boolean maxTransfer = buffer.readBoolean();
         return new JeiTransferRecipePayload(containerId, recipeId, maxTransfer);
     }

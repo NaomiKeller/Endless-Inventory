@@ -10,7 +10,7 @@ import com.kwwsyk.endinv.forge.ModInitializer;
 import com.kwwsyk.endinv.forge.network.payloads.JeiAttachedTransferPayload;
 import com.kwwsyk.endinv.forge.network.payloads.JeiTransferRecipePayload;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.event.network.CustomPayloadEvent;
@@ -27,7 +27,7 @@ import java.util.function.BiConsumer;
 @Mod.EventBusSubscriber(modid = ModInfo.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class ModPayloadHandler {
 
-    private static final ResourceLocation id = ModInitializer.withModLocation("channel");
+    private static final Identifier id = ModInitializer.withModLocation("channel");
 
     private static Channel<CustomPacketPayload> channel;
 

@@ -9,7 +9,7 @@ import mezz.jei.api.recipe.transfer.IRecipeTransferHandlerHelper;
 import mezz.jei.api.registration.IGuiHandlerRegistration;
 import mezz.jei.api.registration.IRecipeTransferRegistration;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 @JeiPlugin
 public class JeiCompat implements IModPlugin{
@@ -17,8 +17,8 @@ public class JeiCompat implements IModPlugin{
     public JeiCompat(){}
 
     @Override
-    public ResourceLocation getPluginUid() {
-        return ResourceLocation.fromNamespaceAndPath(ModInfo.MOD_ID, "compatibility");
+    public Identifier getPluginUid() {
+        return Identifier.fromNamespaceAndPath(ModInfo.MOD_ID, "compatibility");
     }
 
     @Override

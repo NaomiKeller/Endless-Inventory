@@ -8,10 +8,11 @@ import com.kwwsyk.endinv.common.network.IPacketDistributor;
 import com.kwwsyk.endinv.common.network.payloads.SyncedConfig;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.Item;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.UUID;
 import java.util.function.Supplier;
@@ -19,15 +20,15 @@ import java.util.function.Supplier;
 
 public abstract class AbstractModInitializer {
 
-    public static final ResourceKey<Registry<PageType>> PAGE_REG_KEY = ResourceKey.createRegistryKey(withModLocation("display_page"));
+    public static final ResourceKey<@NotNull Registry<@NotNull PageType>> PAGE_REG_KEY = ResourceKey.createRegistryKey(withModLocation("display_page"));
 
     @FunctionalInterface
     public interface RegistryCallback<T> {
         <R extends T> Supplier<R> register(String id, Supplier<R> supplier);
     }
 
-    public static ResourceLocation withModLocation(String id){
-        return ResourceLocation.fromNamespaceAndPath(ModInfo.MOD_ID, id);
+    public static Identifier withModLocation(String id){
+        return Identifier.fromNamespaceAndPath(ModInfo.MOD_ID, id);
     }
 
     protected AbstractModInitializer(){}

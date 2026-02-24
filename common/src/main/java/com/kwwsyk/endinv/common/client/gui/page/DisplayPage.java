@@ -9,15 +9,15 @@ import com.kwwsyk.endinv.common.client.gui.page.manager.PageManager;
 import com.kwwsyk.endinv.common.menu.page.PageType;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.ChatFormatting;
-import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
+import net.minecraft.util.Util;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.item.Item;
@@ -60,7 +60,7 @@ public abstract class DisplayPage{
     @Nullable
     protected final Predicate<ItemStack> itemClassify;
 
-    public ResourceLocation icon = null;
+    public Identifier icon = null;
     //displayed when hovering on Page switch bar.
     public Component name;
 
@@ -128,7 +128,7 @@ public abstract class DisplayPage{
     /**Render page icon with page's {@link #icon}
      * icon can be an item location or sprite location with 16*16 size.
      */
-    public ResourceLocation getIcon(){
+    public Identifier getIcon(){
         return icon;
     }
 

@@ -19,7 +19,7 @@ import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.flag.FeatureFlags;
 import net.minecraft.world.inventory.MenuType;
@@ -92,7 +92,7 @@ public class ModInit extends AbstractModInitializer implements ModInitializer {
         return new RegistryCallback<>() {
             @Override
             public <R extends Item> Supplier<R> register(String id, Supplier<R> supplier) {
-                ResourceLocation location = withModLocation(id);
+                Identifier location = withModLocation(id);
                 R item = supplier.get();
                 R registered = net.minecraft.core.Registry.register(BuiltInRegistries.ITEM, location, item);
                 return () -> registered;
@@ -105,7 +105,7 @@ public class ModInit extends AbstractModInitializer implements ModInitializer {
         return new RegistryCallback<>() {
             @Override
             public <R extends MenuType<?>> Supplier<R> register(String id, Supplier<R> supplier) {
-                ResourceLocation location = withModLocation(id);
+                Identifier location = withModLocation(id);
                 R type = supplier.get();
                 R registered = net.minecraft.core.Registry.register(BuiltInRegistries.MENU, location, type);
                 return () -> registered;

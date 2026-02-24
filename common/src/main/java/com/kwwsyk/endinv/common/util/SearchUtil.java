@@ -1,7 +1,7 @@
 package com.kwwsyk.endinv.common.util;
 
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.Locale;
@@ -42,7 +42,7 @@ public class SearchUtil {
     }
 
     private static boolean matchesId(ItemStack stack, String idSearch) {
-        ResourceLocation id = BuiltInRegistries.ITEM.getKey(stack.getItem());
+        Identifier id = BuiltInRegistries.ITEM.getKey(stack.getItem());
         return id.toString().toLowerCase(Locale.ROOT).contains(idSearch);
     }
 
@@ -55,12 +55,12 @@ public class SearchUtil {
         if (stack.getHoverName().getString().toLowerCase(Locale.ROOT).contains(nameSearch)) {
             return true;
         }
-        ResourceLocation id = BuiltInRegistries.ITEM.getKey(stack.getItem());
+        Identifier id = BuiltInRegistries.ITEM.getKey(stack.getItem());
         return id.getPath().toLowerCase(Locale.ROOT).contains(nameSearch);
     }
 
     private static boolean matchesNamespace(ItemStack stack, String nsSearch) {
-        ResourceLocation id = BuiltInRegistries.ITEM.getKey(stack.getItem());
+        Identifier id = BuiltInRegistries.ITEM.getKey(stack.getItem());
         return id.getNamespace().toLowerCase(Locale.ROOT).contains(nsSearch);
     }
 }

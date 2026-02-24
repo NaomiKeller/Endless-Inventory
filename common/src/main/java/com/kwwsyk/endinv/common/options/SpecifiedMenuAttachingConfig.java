@@ -8,7 +8,7 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.InventoryMenu;
@@ -195,7 +195,7 @@ public class SpecifiedMenuAttachingConfig{
         public static List<String> fromMap(Map<MenuType<?>, Boolean> map) {
             List<String> out = new ArrayList<>(map.size());
             for (var e : map.entrySet()) {
-                ResourceLocation id = BuiltInRegistries.MENU.getKey(e.getKey());
+                Identifier id = BuiltInRegistries.MENU.getKey(e.getKey());
                 if (id != null && e.getValue() != null) out.add(id + ":" + e.getValue());
             }
             out.sort(Comparator.naturalOrder());
@@ -220,7 +220,7 @@ public class SpecifiedMenuAttachingConfig{
                 String namespaceTxt = configEntry.substring(0,LCIndex).trim();
 
                 boolean value = parseBoolean(boolTxt);
-                ResourceLocation rl = ResourceLocation.parse(namespaceTxt);
+                Identifier rl = Identifier.parse(namespaceTxt);
 
                 if(rl.getPath().equals("inventory") || rl.getPath().equals("inventory_menu")){
                     return new ParseStringResult(true, null, value);

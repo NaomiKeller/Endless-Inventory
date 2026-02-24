@@ -491,17 +491,17 @@ public class EIMRecipeTranHandler implements IRecipeTransferHandler<EndlessInven
     }
 
     @Nullable
-    private static net.minecraft.resources.ResourceLocation tryResolveRecipeId(Object recipeObj) {
+    private static net.minecraft.resources.Identifier tryResolveRecipeId(Object recipeObj) {
         try {
             var m = recipeObj.getClass().getMethod("getId");
             Object v = m.invoke(recipeObj);
-            if (v instanceof net.minecraft.resources.ResourceLocation rl) return rl;
+            if (v instanceof net.minecraft.resources.Identifier rl) return rl;
         } catch (Throwable ignored) {
         }
         try {
             var m = recipeObj.getClass().getMethod("id");
             Object v = m.invoke(recipeObj);
-            if (v instanceof net.minecraft.resources.ResourceLocation rl) return rl;
+            if (v instanceof net.minecraft.resources.Identifier rl) return rl;
         } catch (Throwable ignored) {
         }
         try {
