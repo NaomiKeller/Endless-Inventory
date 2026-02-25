@@ -9,6 +9,7 @@ import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
 import net.minecraft.client.gui.screens.inventory.tooltip.DefaultTooltipPositioner;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 
@@ -62,15 +63,13 @@ public class SortTypeSwitchBox extends AbstractWidget {
     }
     /**
      * Called when a mouse button is clicked within the GUI element.
-     * <p>
      * @return {@code true} if the event is consumed, {@code false} otherwise.
-     *
-     * @param mouseX the X coordinate of the mouse.
-     * @param mouseY the Y coordinate of the mouse.
-     * @param button the button that was clicked.
      */
-    public boolean mouseClicked(double mouseX, double mouseY, int button){
-        if(!super.mouseClicked(mouseX,mouseY,button) && isOpen){
+    public boolean mouseClicked(MouseButtonEvent event, boolean pre){
+        double mouseX = event.x();
+        double mouseY = event.y();
+        boolean inside = mouseX >= getX() && mouseX <= getX()+getWidth() && mouseY >= getY() && mouseY <= getY()+getHeight();
+        if(!inside && isOpen){
             setOpen(false);
             return true;
         }

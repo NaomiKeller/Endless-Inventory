@@ -67,7 +67,7 @@ public class EndlessInventoryData extends SavedData {
 
         ServerLevelEndInv.levelEndInvData = level.getDataStorage().computeIfAbsent(DATA_TYPE);
 
-        LOGGER.info("Initialized EndlessInventoryData in {} with {} inventories", level.dimension().location(), ServerLevelEndInv.levelEndInvData.levelEndInvs.size());
+        LOGGER.info("Initialized EndlessInventoryData in {} with {} inventories", String.valueOf(level.dimension()), ServerLevelEndInv.levelEndInvData.levelEndInvs.size());
     }
 
     public static BackupResult backup(ServerLevel level) {

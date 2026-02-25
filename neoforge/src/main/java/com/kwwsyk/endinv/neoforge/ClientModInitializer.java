@@ -40,13 +40,13 @@ public class ClientModInitializer extends AbstractClientModInitializer {
                     KeyModifier.NONE,
                     STAR_ITEM.type(),
                     302, // F13 (Insert on some keyboards)
-                    KeyMappings.CATEGORY
+                    KeyMapping.Category.INVENTORY
             ));
             event.register(STAR_ITEM_KEY.get());
         }
     }
 
-    private static Lazy<KeyMapping> regKey(KeyMappings.EndInvKey key) {
+    private static Lazy<KeyMapping> regKey(KeyParam key) {
         return Lazy.of(
                     ()-> new KeyMapping(
                             key.key(),
@@ -56,8 +56,8 @@ public class ClientModInitializer extends AbstractClientModInitializer {
                             },
                             key.modifier() == KeyMappings.Modifier.CTRL ? KeyModifier.CONTROL : KeyModifier.NONE,
                             key.type(),
-                            key.keyCode(),
-                            KeyMappings.CATEGORY
+                    key.keyCode(),
+                    key.category()
                             )
             );
     }
@@ -76,15 +76,15 @@ public class ClientModInitializer extends AbstractClientModInitializer {
             }
 
             @Override
-            public boolean isActiveAndMatches(EndInvKey endInvKey, InputConstants.Key key) {
-                if (endInvKey.equals(OPEN_MENU)) {
+            public boolean isActiveAndMatches(KeyParam keyParam, InputConstants.Key key) {
+                if (keyParam.equals(OPEN_MENU)) {
                     return OPEN_MENU_KEY.get().isActiveAndMatches(key);
-                } else if (endInvKey.equals(QUICK_MOVE)) {
+                } else if (keyParam.equals(QUICK_MOVE)) {
                     return QUICK_MOVE_KEY.get().isActiveAndMatches(key);
-                } else if (endInvKey.equals(STAR_ITEM)) {
+                } else if (keyParam.equals(STAR_ITEM)) {
                     return STAR_ITEM_KEY.get().isActiveAndMatches(key);
                 } else {
-                    return regKey(endInvKey).get().isActiveAndMatches(key);
+                    return regKey(keyParam).get().isActiveAndMatches(key);
                 }
             }
         };

@@ -10,6 +10,7 @@ import com.kwwsyk.endinv.common.network.payloads.toServer.OpenEndInvPayload;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -172,6 +173,11 @@ public class ScreenAttachment {
                 public int getButton() {
                     return event.getButton();
                 }
+
+                @Override
+                public MouseButtonEvent getMouseButtonEvent(){
+                    return event.getMouseButtonEvent();
+                }
             });
         }
     }
@@ -300,7 +306,7 @@ public class ScreenAttachment {
             attached.charTyped(new IScreenEvent() {
                 @Override
                 public char getCodePoint() {
-                    return event.getCodePoint();
+                    return (char) event.getCodePoint();
                 }
 
                 @Override

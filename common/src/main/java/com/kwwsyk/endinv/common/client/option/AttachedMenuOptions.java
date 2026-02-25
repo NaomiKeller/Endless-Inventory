@@ -147,7 +147,7 @@ public class AttachedMenuOptions implements SFParamProvider{
                         ),
                         adjustSearchBox(screen, textureMode == TextureMode.TRANSPARENT ? pageRectangleParam.height() : rows * 18 +17+12),
                         sortBoxParam,
-                        adjustConfigButton(textureMode == TextureMode.TRANSPARENT ? pageRectangleParam.height() : rows * 18 +17+12),
+                        adjustConfigButton(Math.max(textureMode == TextureMode.TRANSPARENT ? pageRectangleParam.height() : rows * 18 +17+12, pageSwitchBarParam.maxBars())),
                         reverseSortButtonParam
                 );
             }

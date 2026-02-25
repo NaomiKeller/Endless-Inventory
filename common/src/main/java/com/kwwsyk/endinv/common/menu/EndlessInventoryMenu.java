@@ -239,7 +239,7 @@ public class EndlessInventoryMenu extends AbstractContainerMenu implements PageM
     }
 
     private void returnCraftingToPlayer() {
-        if (player.level().isClientSide) {
+        if (player.level().isClientSide()) {
             return;
         }
         Inventory inventory = player.getInventory();
@@ -720,7 +720,7 @@ public class EndlessInventoryMenu extends AbstractContainerMenu implements PageM
             }
         }
         CraftingInput input = CraftingInput.of(w, h, items);
-        Optional<RecipeHolder<CraftingRecipe>> optional = serverPlayer.getServer().getRecipeManager().getRecipeFor(RecipeType.CRAFTING, input, level);
+        Optional<RecipeHolder<CraftingRecipe>> optional = ((net.minecraft.server.level.ServerLevel)level).getServer().getRecipeManager().getRecipeFor(RecipeType.CRAFTING, input, level);
         if (optional.isPresent()) {
             RecipeHolder<CraftingRecipe> holder = optional.get();
             CraftingRecipe recipe = holder.value();

@@ -27,7 +27,6 @@ import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
-import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.neoforge.attachment.AttachmentType;
 import net.neoforged.neoforge.client.gui.ConfigurationScreen;
 import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
@@ -63,7 +62,7 @@ public class ModInitializer extends AbstractModInitializer {
         container.registerConfig(ModConfig.Type.SERVER, ServerConfig.CONFIG_SPEC);
         container.registerConfig(ModConfig.Type.STARTUP, StartupConfig.CONFIG_SPEC);
 
-        if(FMLEnvironment.dist.isClient()) {
+        if(isClientDist()) {
             var client = new ClientModInitializer();
             ClientModInitializer.init(modEventBus);
             container.registerExtensionPoint(IConfigScreenFactory.class, ConfigurationScreen::new);
@@ -86,7 +85,7 @@ public class ModInitializer extends AbstractModInitializer {
 
             @Override
             public void sendToServer(ModPacketPayload payload) {
-                if (net.neoforged.fml.loading.FMLEnvironment.dist.isClient()) {
+                if (isClientDist()) {
                     var mc = Minecraft.getInstance();
                     if (mc.getConnection() != null) {
                         mc.getConnection().send(payload);
@@ -109,6 +108,15 @@ public class ModInitializer extends AbstractModInitializer {
                 }
             }
         };
+    }
+
+    private static boolean isClientDist() {
+        try {
+            Class.forName("net.minecraft.client.Minecraft");
+            return true;
+        } catch (Throwable ignored) {
+            return false;
+        }
     }
 
     @Override

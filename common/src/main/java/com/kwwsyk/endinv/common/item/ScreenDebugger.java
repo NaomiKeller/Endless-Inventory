@@ -22,7 +22,7 @@ public class ScreenDebugger extends Item {
 
     @Override
     public @NotNull InteractionResult use(Level level, @NotNull Player player, @NotNull InteractionHand usedHand) {
-        if(level.isClientSide) phase++;
+        if(level.isClientSide()) phase++;
         if(phase>2) phase=0;
         return InteractionResult.SUCCESS;
     }

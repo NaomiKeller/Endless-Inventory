@@ -11,6 +11,7 @@ import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -28,7 +29,6 @@ import java.util.Optional;
 import java.util.function.Predicate;
 
 import static com.kwwsyk.endinv.common.client.ClientModInfo.inputHandler;
-import static net.minecraft.client.gui.screens.Screen.hasShiftDown;
 
 /**<p>A widget of {@link ScreenFramework} , serving render and input events.</p>
  * <p>
@@ -339,7 +339,10 @@ public abstract class DisplayPage{
     private long lastClickedTime;
     private boolean skipNextRelease;
 
-    public boolean mouseClicked(double XOffset, double YOffset, int keyCode){
+    public boolean mouseClicked(MouseButtonEvent clickEvent, boolean pre){
+        double XOffset = clickEvent.x();
+        double YOffset = clickEvent.y();
+        int keyCode = clickEvent.button();
         InputConstants.Key mouseKey = InputConstants.Type.MOUSE.getOrCreate(keyCode);
         boolean isKeyPicking = inputHandler.isActiveAndMatches(mc.options.keyPickItem,mouseKey);//is mouse middle button and enabled for pickup or clone
         long clickTime = Util.getMillis();
@@ -348,13 +351,13 @@ public abstract class DisplayPage{
         if(keyCode!=0&&keyCode!=1&&!isKeyPicking){
             checkHotBarClicked:
             if (this.menu.getCarried().isEmpty()) {
-                if (this.mc.options.keySwapOffhand.matchesMouse(keyCode)) {
+                if (inputHandler.isActiveAndMatches(this.mc.options.keySwapOffhand, InputConstants.Type.MOUSE.getOrCreate(keyCode))) {
                     pageClicked(XOffset,YOffset,40, ClickType.SWAP);
                     break checkHotBarClicked;
                 }
 
                 for (int i = 0; i < 9; i++) {
-                    if (this.mc.options.keyHotbarSlots[i].matchesMouse(keyCode)) {
+                    if (inputHandler.isActiveAndMatches(this.mc.options.keyHotbarSlots[i], InputConstants.Type.MOUSE.getOrCreate(keyCode))) {
                         pageClicked(XOffset,YOffset, i, ClickType.SWAP);
                     }
                 }
@@ -365,7 +368,7 @@ public abstract class DisplayPage{
                     pageClicked(XOffset, YOffset, keyCode, ClickType.CLONE);
                 } else {
                     ClickType clicktype = ClickType.PICKUP;
-                    if (hasShiftDown()) {
+                    if (Minecraft.getInstance().hasShiftDown()) {
                         setHoldOn();
                         //this.lastQuickMoved = slot != null && slot.hasItem() ? slot.getItem().copy() : ItemStack.EMPTY;
                         clicktype = ClickType.QUICK_MOVE;
@@ -388,7 +391,7 @@ public abstract class DisplayPage{
     private int lastDraggedPageSlot = -1;
 
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY){
-        if(hasShiftDown()){
+        if(Minecraft.getInstance().hasShiftDown()){
             int slotId = getSlotByMouseOffset(mouseX,mouseY);
             if(slotId>=0 && lastDraggedPageSlot>=0 && slotId!=lastDraggedPageSlot){
                 pageClicked(mouseX,mouseY,button,ClickType.QUICK_MOVE);
@@ -432,23 +435,23 @@ public abstract class DisplayPage{
     }
 
     public boolean keyPressed(int keyCode, int scanCode, int modifiers, int mouseX, int mouseY){
-        boolean isNumericKey = InputConstants.getKey(keyCode, scanCode).getNumericKeyValue().isPresent();
+        boolean isNumericKey = InputConstants.Type.KEYSYM.getOrCreate(keyCode).getNumericKeyValue().isPresent();
 
         if (isNumericKey && this.menu.getCarried().isEmpty()) {
-            if (inputHandler.isActiveAndMatches(mc.options.keySwapOffhand,InputConstants.getKey(keyCode, scanCode))) {
+            if (inputHandler.isActiveAndMatches(mc.options.keySwapOffhand,InputConstants.Type.KEYSYM.getOrCreate(keyCode))) {
                 pageClicked(mouseX, mouseY, 40, ClickType.SWAP);
                 return true;
             }
 
             for(int i = 0; i < 9; ++i) {
-                if (inputHandler.isActiveAndMatches(mc.options.keyHotbarSlots[i],InputConstants.getKey(keyCode, scanCode))) {
+                if (inputHandler.isActiveAndMatches(mc.options.keyHotbarSlots[i],InputConstants.Type.KEYSYM.getOrCreate(keyCode))) {
                     pageClicked(mouseX, mouseY, i, ClickType.SWAP);
                     return true;
                 }
             }
         }
 
-        if(inputHandler.isActiveAndMatches(KeyMappings.STAR_ITEM,InputConstants.getKey(keyCode,scanCode))){
+        if(inputHandler.isActiveAndMatches(KeyMappings.STAR_ITEM,InputConstants.Type.KEYSYM.getOrCreate(keyCode))){
             handleStarItem(mouseX,mouseY);
             return true;
         }

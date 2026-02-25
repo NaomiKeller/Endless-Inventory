@@ -32,24 +32,23 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
-import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.function.Consumer;
 
 import static com.kwwsyk.endinv.common.client.ClientModInfo.containerScreenHelper;
 import static com.kwwsyk.endinv.common.client.ClientModInfo.inputHandler;
 
 public class ScreenFramework implements PageManager{
-
+    @Nullable
     private static ScreenFramework INSTANCE;
 
     private final Minecraft mc;
@@ -75,8 +74,6 @@ public class ScreenFramework implements PageManager{
 
     private final int pageXSize;
     private int pageYSize;
-    private int pageOffsetX;
-    private int pageOffsetY;
     private int roughMouseX;
     private int roughMouseY;
     public EditBox searchBox;
@@ -86,6 +83,7 @@ public class ScreenFramework implements PageManager{
     //page meta data fields
     private int rows;
     private final int columns;
+
     private DisplayPage displayingPage;
     public final List<DisplayPage> pages;
 
@@ -246,14 +244,14 @@ public class ScreenFramework implements PageManager{
         widgets.forEach(installer);
     }
 
-    public void renderBg(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+    public void renderBg(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         SFBgRenderer.renderBg(guiGraphics, partialTick, mouseX, mouseY);
         getDisplayingPage().renderBg(guiGraphics, partialTick, mouseX, mouseY);
     }
 
     private boolean isHoveringOnPage;
 
-    public void render(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         roughMouseX = mouseX;
         roughMouseY = mouseY;
 
@@ -378,8 +376,11 @@ public class ScreenFramework implements PageManager{
         return originalIndex - 9;
     }
 
-    public boolean mouseClicked(double mouseX, double mouseY, int keyCode) {
-        if(this.sortTypeSwitchBox.mouseClicked(mouseX, mouseY, keyCode)){
+    public boolean mouseClicked(MouseButtonEvent clickEvent, boolean pre) {
+        double mouseX = clickEvent.x();
+        double mouseY = clickEvent.y();
+        int keyCode = clickEvent.button();
+        if(this.sortTypeSwitchBox.mouseClicked(clickEvent, pre)){
             return true;
         }
 
@@ -387,7 +388,7 @@ public class ScreenFramework implements PageManager{
             searchBox.setFocused(false);
         } else {
             searchBox.setFocused(true);//this is what JEI behaves
-            if (keyCode == 1) {
+            if (keyCode == InputConstants.MOUSE_BUTTON_RIGHT) {
                 searchBox.setValue("");
                 refreshSearchResults();
                 return true;
@@ -403,7 +404,13 @@ public class ScreenFramework implements PageManager{
             }
         }
 //        //handle clicked on the page switch bar
-        if(pageSwitchBar.mouseClicked(mouseX, mouseY, keyCode)) return true;
+        // Use widget onClick to avoid signature mismatch across versions
+        pageSwitchBar.onClick(mouseX, mouseY);
+        // onClick reports via framework.pageSwitched(), treat as handled when mouse is over tab area
+        if (mouseX >= pageSwitchBar.getX() && mouseX < pageSwitchBar.getX() + pageSwitchBar.getWidth()
+                && mouseY >= pageSwitchBar.getY() && mouseY < pageSwitchBar.getY() + pageSwitchBar.getHeight()) {
+            return true;
+        }
 //        int pageIndex = hasClickedOnPageSwitchBar(mouseX, mouseY);
 //        if (pageIndex >= 0) {
 //            pageSwitched(pageIndex);
@@ -412,7 +419,7 @@ public class ScreenFramework implements PageManager{
         //
         if (hasClickedOnPage(mouseX, mouseY)) {
             sortTypeSwitchBox.setOpen(false);
-            return getDisplayingPage().mouseClicked(mouseX - getPageX(), mouseY - getPageY(), keyCode);
+            return getDisplayingPage().mouseClicked(new MouseButtonEvent(mouseX - pageX, mouseY - pageY, clickEvent.buttonInfo()), pre);
         }
         return false;
     }
@@ -462,7 +469,7 @@ public class ScreenFramework implements PageManager{
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         this.ignoreTextInput = false;
 
-        if (inputHandler.isActiveAndMatches(KeyMappings.STAR_ITEM, InputConstants.getKey(keyCode, scanCode))) {
+        if (inputHandler.isActiveAndMatches(KeyMappings.STAR_ITEM, InputConstants.Type.KEYSYM.getOrCreate(keyCode))) {
             Slot clicked = findSlot(roughMouseX, roughMouseY);
             if (clicked != null && clicked.hasItem()) {
                 ItemStack itemStack = clicked.getItem();
@@ -481,17 +488,7 @@ public class ScreenFramework implements PageManager{
             return true;
         }
 
-        if (getDisplayingPage().hasSearchbox() && this.searchBox.isFocused()) {
-            String s = this.searchBox.getValue();
-            if (this.searchBox.keyPressed(keyCode, scanCode, modifiers)) {
-                if (!Objects.equals(s, this.searchBox.getValue())) {
-                    this.refreshSearchResults();
-                }
-                return true;
-            } else {
-                return this.searchBox.isFocused() && this.searchBox.isVisible() && keyCode != 256;
-            }
-        }
+        // Let default input pipeline handle focused widgets in 1.21.11
         return false;
     }
 
@@ -499,16 +496,8 @@ public class ScreenFramework implements PageManager{
         if (this.ignoreTextInput || !getDisplayingPage().hasSearchbox()) {
             return false;
         } else {
-            String s = this.searchBox.getValue();
-            if (this.searchBox.charTyped(codePoint, modifiers)) {
-                if (!Objects.equals(s, this.searchBox.getValue())) {
-                    this.refreshSearchResults();
-                }
-
-                return true;
-            } else {
-                return false;
-            }
+            // Defer text input handling to the widget pipeline
+            return false;
         }
     }
 

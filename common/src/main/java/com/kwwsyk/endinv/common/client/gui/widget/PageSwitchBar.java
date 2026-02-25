@@ -73,7 +73,6 @@ public class PageSwitchBar extends AbstractWidget {
         tabHeight = param.tabParam().height();
     }
 
-    @Override
     public void onClick(double mouseX, double mouseY) {
         double XOffset = mouseX - getX();
         double YOffset = mouseY - getY();

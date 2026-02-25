@@ -2,8 +2,6 @@ package com.kwwsyk.endinv.common.client.gui;
 
 import com.kwwsyk.endinv.common.client.option.ClientConfigs;
 import com.kwwsyk.endinv.common.options.config.IConfigValue;
-import com.mojang.blaze3d.platform.InputConstants;
-import net.minecraft.Util;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -13,6 +11,7 @@ import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
+import net.minecraft.util.Util;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -196,18 +195,10 @@ public abstract class EndInvSettingScreen extends Screen {
 
     @Override
     public void onClose() {
-        assert this.minecraft != null;
         this.minecraft.setScreen(this.back);
     }
 
-    @Override
-    public boolean charTyped(char code,int modifiers){
-        if(super.charTyped(code,modifiers)){
-            this.typingEditBox = this.getFocused() instanceof EditBox editBox ? editBox : null;
-
-        }
-        return false;
-    }
+    // input handling is routed by the widget pipeline in 1.21.11
 
     @Override
     public void tick() {
@@ -225,33 +216,18 @@ public abstract class EndInvSettingScreen extends Screen {
         }
     }
 
-    @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if(keyCode == InputConstants.KEY_RETURN && this.getFocused()!=null){
-            this.getFocused().setFocused(false);
-        }
-        return super.keyPressed(keyCode, scanCode, modifiers);
-    }
+    // input handling is routed by the widget pipeline in 1.21.11
 
-    @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if(button==1){
-            if(this.getFocused() != null) this.getFocused().setFocused(false);
-            this.setFocused(null);
-            //return true;
-        }
-        return super.mouseClicked(mouseX, mouseY, button);
-    }
+    // input handling is routed by the widget pipeline in 1.21.11
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
         if(entries.size()>MAX_ENTRY_COUNT){
             // normalize wheel direction: negative scrollY means scrolling down
-            double delta = scrollY;
             // map to step-based offset change
             int maxStart = Math.max(0, entries.size()-MAX_ENTRY_COUNT);
-            if (delta < 0) entryOffset = Math.min(entryOffset+1, maxStart);
-            if (delta > 0) entryOffset = Math.max(entryOffset-1, 0);
+            if (scrollY < 0) entryOffset = Math.min(entryOffset+1, maxStart);
+            if (scrollY > 0) entryOffset = Math.max(entryOffset-1, 0);
             // also maintain a proportional indicator for potential future scrollbar
             this.scrollOffset = maxStart == 0 ? 0 : (double)entryOffset / (double)maxStart;
             scrollTo();
@@ -500,10 +476,10 @@ public abstract class EndInvSettingScreen extends Screen {
                 }
                 case Enum<?> anEnum -> {
                     IConfigValue<Enum<?>> enumValue = (IConfigValue<Enum<?>>) configValue;
-                    var button = new CycleButton.Builder<Enum<?>>( 
-                            e -> Component.translatable("endinv.setting.entry." + e.name()))
-                            .withValues((Enum<?>[]) initialValue.getClass().getEnumConstants())
-                            .withInitialValue(anEnum)
+                    var button = new CycleButton.Builder<>(
+                            (Enum<?> e) -> Component.translatable("endinv.setting.entry." + e.name()),
+                            () -> anEnum)
+                        .withValues((Enum<?>[]) initialValue.getClass().getEnumConstants())
                             .displayOnlyValue()
                             .create(widgetX, widgetY, WIDGET_X_SIZE, WIDGET_Y_SIZE, Component.empty(),
                                     (btn, value) -> enumValue.set(value));

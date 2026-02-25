@@ -2,10 +2,13 @@ package com.kwwsyk.endinv.common.client.gui;
 
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.input.MouseButtonEvent;
 
 public interface IScreenEvent {
 
     default void addListener(AbstractWidget widget){}
+
+    default MouseButtonEvent getMouseButtonEvent(){return null;}
 
     default double getMouseX(){
         return 0;

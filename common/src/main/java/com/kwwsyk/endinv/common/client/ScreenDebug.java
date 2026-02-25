@@ -100,7 +100,7 @@ public class ScreenDebug {
             hideMenu=!hideMenu;
         }
         if(screen instanceof EndlessInventoryScreen EIS && EIS.getFrameWork() != null){
-            int step = Screen.hasShiftDown() ? 10 : 1;
+        int step = (Minecraft.getInstance().hasShiftDown() ? 10 : 1);
             int dx = 0;
             int dy = 0;
             if(button == InputConstants.KEY_UP){

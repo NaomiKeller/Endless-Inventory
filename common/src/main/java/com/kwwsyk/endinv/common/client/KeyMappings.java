@@ -1,6 +1,7 @@
 package com.kwwsyk.endinv.common.client;
 
 import com.mojang.blaze3d.platform.InputConstants;
+import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import org.lwjgl.glfw.GLFW;
 
@@ -29,9 +30,30 @@ public class KeyMappings {
         CTRL,NONE;
     }
 
-    public record EndInvKey(String key, InputConstants.Type type, int keyCode, ActiveCondition condition, Modifier modifier){}
+    public record KeyParam(String key, InputConstants.Type type, int keyCode, ActiveCondition condition, Modifier modifier, KeyMapping.Category category){}
 
-    public static final EndInvKey OPEN_MENU = new EndInvKey("key.endinv.open_endinv_menu",InputConstants.Type.KEYSYM,GLFW.GLFW_KEY_I,ActiveCondition.IN_GAME,Modifier.NONE);
-    public static final EndInvKey QUICK_MOVE = new EndInvKey("key.endinv.quick_move_item",InputConstants.Type.MOUSE,GLFW.GLFW_MOUSE_BUTTON_1,ActiveCondition.GUI,Modifier.CTRL);
-    public static final EndInvKey STAR_ITEM = new EndInvKey("key.endinv.star_item",InputConstants.Type.KEYSYM,GLFW.GLFW_KEY_A,ActiveCondition.GUI,Modifier.NONE);
+    public static final KeyParam OPEN_MENU = new KeyParam(
+            "key.endinv.open_endinv_menu",
+            InputConstants.Type.KEYSYM,
+            GLFW.GLFW_KEY_I,
+            ActiveCondition.IN_GAME,
+            Modifier.NONE,
+            KeyMapping.Category.INVENTORY
+    );
+    public static final KeyParam QUICK_MOVE = new KeyParam(
+            "key.endinv.quick_move_item",
+            InputConstants.Type.MOUSE,
+            GLFW.GLFW_MOUSE_BUTTON_1,
+            ActiveCondition.GUI,
+            Modifier.CTRL,
+            KeyMapping.Category.INVENTORY
+    );
+    public static final KeyParam STAR_ITEM = new KeyParam(
+            "key.endinv.star_item",
+            InputConstants.Type.KEYSYM,
+            GLFW.GLFW_KEY_A,
+            ActiveCondition.GUI,
+            Modifier.NONE,
+            KeyMapping.Category.INVENTORY
+    );
 }

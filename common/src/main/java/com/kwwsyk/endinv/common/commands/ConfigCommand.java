@@ -17,7 +17,7 @@ import net.minecraft.network.chat.Component;
 public class ConfigCommand {
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher){
-        dispatcher.register(Commands.literal("endinv").requires(src->src.hasPermission(1))
+        dispatcher.register(Commands.literal("endinv").requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
                 .then(
                         Commands.literal("config")
                                 .then(

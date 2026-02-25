@@ -97,6 +97,10 @@ public class PageSwitchBarConfig extends ComplexConfigEntryImpl<PageSwitchBarCon
         public Param applyOffset(int leftPos, int topPos){
             return new Param(maxBars, tabParam.applyOffset(leftPos, topPos), direction_isVertical, buttonDec.applyOffset(leftPos, topPos), buttonInc.applyOffset(leftPos, topPos));
         }
+
+        public int maxLength(){
+            return maxBars * tabParam.height();
+        }
     }
 
 

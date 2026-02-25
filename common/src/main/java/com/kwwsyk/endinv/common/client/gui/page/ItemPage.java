@@ -11,7 +11,6 @@ import com.kwwsyk.endinv.common.util.ItemKey;
 import com.mojang.logging.LogUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen;
 import net.minecraft.core.NonNullList;
 import net.minecraft.world.entity.player.Inventory;
@@ -154,7 +153,7 @@ public abstract class ItemPage extends GridPage {
             }
             LOGGER.info("EI:sending:ItemClickPayload: player={} clickType={} button={} stack={}"
                     , framework.getPlayer(),clickType,button, clicked);
-            if(clickType == ClickType.PICKUP_ALL && Screen.hasShiftDown()) return;
+            if(clickType == ClickType.PICKUP_ALL && Minecraft.getInstance().hasShiftDown()) return;
             ModInfo.getPacketDistributor().sendToServer(new ItemClickPayload(
                     ItemKey.asKey(clicked),
                     button,clickType));
@@ -258,7 +257,7 @@ public abstract class ItemPage extends GridPage {
     }
     protected void handlePickupAll(ItemStack clicked){
         // Shift + Double Click: bulk quick-move from Endless Inventory page into the open container
-        if (Screen.hasShiftDown()) {
+        if (Minecraft.getInstance().hasShiftDown()) {
             ModInfo.getPacketDistributor().sendToServer(new BulkQuickMoveFromPagePayload(ItemKey.asKey(clicked.copyWithCount(1))));
             int iterations = 0;
             var mover = new PageQuickMoveHandler(framework);

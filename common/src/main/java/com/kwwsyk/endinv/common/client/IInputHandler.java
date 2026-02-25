@@ -7,5 +7,5 @@ public interface IInputHandler {
 
     boolean isActiveAndMatches(KeyMapping keyMapping, InputConstants.Key key);
 
-    boolean isActiveAndMatches(KeyMappings.EndInvKey endInvKey, InputConstants.Key key);
+    boolean isActiveAndMatches(KeyMappings.KeyParam keyParam, InputConstants.Key key);
 }

@@ -5,7 +5,6 @@ import com.kwwsyk.endinv.common.menu.EndlessInventoryMenu;
 import com.kwwsyk.endinv.common.network.payloads.toServer.ToggleCraftingPayload;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.CycleButton;
-import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
@@ -58,8 +57,7 @@ public class EndlessInventoryScreen extends AbstractContainerScreen<EndlessInven
 
     private void addCraftingToggleButton() {
         int width = 70;
-        this.craftingToggleButton = CycleButton.onOffBuilder()
-                .withInitialValue(false)
+        this.craftingToggleButton = CycleButton.onOffBuilder(false)
                 .create(0,0,width,20,Component.literal("Crafter"), (it,on)->{
                     toggleCrafting();
                     if(it.getValue()!=craftingVisible) it.setValue(craftingVisible);
@@ -116,39 +114,7 @@ public class EndlessInventoryScreen extends AbstractContainerScreen<EndlessInven
         this.renderTooltip(gui,mouseX,mouseY);
     }
 
-    public boolean mouseClicked(double mouseX, double mouseY, int keyCode){
-        for(GuiEventListener guieventlistener : this.children()) {
-            if (guieventlistener.mouseClicked(mouseX, mouseY, keyCode)) {
-                this.setFocused(guieventlistener);
-                if (keyCode == 0) {
-                    this.setDragging(true);
-                }
-                return true;
-            }
-        }
-        return frameWork.mouseClicked(mouseX,mouseY,keyCode) || super.mouseClicked(mouseX,mouseY,keyCode);
-    }
-
-
-    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
-        return frameWork.mouseDragged(mouseX,mouseY,button,dragX,dragY) || super.mouseDragged(mouseX,mouseY,button,dragX,dragY);
-    }
-
-    public boolean mouseReleased(double mouseX, double mouseY, int keyCode){
-        return frameWork.mouseReleased(mouseX,mouseY,keyCode) || super.mouseReleased(mouseX,mouseY,keyCode);
-    }
-
-    public boolean mouseScrolled(double mouseX,double mouseY,double scrollX,double scrollY){
-        return super.mouseScrolled(mouseX,mouseY,scrollX,scrollY) || frameWork.mouseScrolled(mouseX,mouseY,scrollY);
-    }
-
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers){
-        return frameWork.keyPressed(keyCode,scanCode,modifiers) || super.keyPressed(keyCode,scanCode,modifiers);
-    }
-
-    public boolean charTyped(char codePoint, int modifiers){
-        return frameWork.charTyped(codePoint,modifiers);
-    }
+    // Input handling migrated in 1.21.11; rely on default widget pipeline
 
     protected void slotClicked(@Nullable Slot slot, int slotId, int mouseButton, @NotNull ClickType type) {
         super.slotClicked(slot,slotId,mouseButton,type);
@@ -195,5 +161,6 @@ public class EndlessInventoryScreen extends AbstractContainerScreen<EndlessInven
     public int getYSize() {
         return imageHeight;
     }
+
 }
 

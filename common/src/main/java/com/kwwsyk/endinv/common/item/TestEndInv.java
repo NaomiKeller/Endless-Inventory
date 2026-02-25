@@ -16,7 +16,7 @@ public class TestEndInv extends Item {
 
     @Override
     public @NotNull InteractionResult use(Level level, @NotNull Player player, @NotNull InteractionHand hand) {
-        if(level.isClientSide) {
+        if(level.isClientSide()) {
             ClientModInfo.sendOpenMenu();
         }
         return InteractionResult.SUCCESS;

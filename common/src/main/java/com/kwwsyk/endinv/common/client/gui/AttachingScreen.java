@@ -68,7 +68,7 @@ public class AttachingScreen<T extends AbstractContainerMenu>{
         return Button.builder(
                 Component.literal("⚙"),
                         btn -> {
-                        if(Screen.hasShiftDown()){
+                        if(Minecraft.getInstance().hasShiftDown()){
                             mc.setScreen(ClientModInfo.createConfigScreen(screen));
                         } else {
                             boolean currentA = ClientConfigs.DO_ATTACH.get();
@@ -117,10 +117,7 @@ public class AttachingScreen<T extends AbstractContainerMenu>{
 
 
     public void mouseClicked(IScreenEvent event) {
-        double mouseX = event.getMouseX();
-        double mouseY = event.getMouseY();
-        int keyCode = event.getButton();
-        boolean isActionOverride = frameWork.mouseClicked(mouseX,mouseY,keyCode);
+        boolean isActionOverride = frameWork.mouseClicked(event.getMouseButtonEvent(), true);
         event.setCanceled(isActionOverride);
     }
 

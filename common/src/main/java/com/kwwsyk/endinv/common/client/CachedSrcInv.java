@@ -11,8 +11,8 @@ import com.kwwsyk.endinv.common.util.ItemState;
 import com.kwwsyk.endinv.common.util.SearchUtil;
 import com.kwwsyk.endinv.common.util.SortType;
 import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
-import net.minecraft.Util;
 import net.minecraft.util.Mth;
+import net.minecraft.util.Util;
 import net.minecraft.world.item.ItemStack;
 
 import javax.annotation.Nullable;

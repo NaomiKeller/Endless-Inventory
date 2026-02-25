@@ -8,6 +8,8 @@ import com.kwwsyk.endinv.common.network.payloads.toServer.OpenEndInvPayload;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 
+import java.util.function.Function;
+
 public class ClientModInfo {
 
     public static IInputHandler inputHandler;
@@ -30,7 +32,7 @@ public class ClientModInfo {
         return Math.max(Math.floorDiv(height - 60, 18) - 4, 1);
     }
 
-    public static void setConfigScreenFactory(java.util.function.Function<Screen, Screen> factory) {
+    public static void setConfigScreenFactory(Function<Screen, Screen> factory) {
         configScreenFactory = factory;
     }
 

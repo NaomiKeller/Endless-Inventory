@@ -87,7 +87,7 @@ public class EIMRecipeTranHandler implements IRecipeTransferHandler<EndlessInven
                 return missing ? transferHelper.createUserErrorWithTooltip(Component.literal("Missing ingredient(s)")) : null;
             }
 
-            if (player.level().isClientSide) {
+            if (player.level().isClientSide()) {
                 container.setCraftingVisible(true);
                 var id = tryResolveRecipeId(recipe);
                 if (id != null) {
