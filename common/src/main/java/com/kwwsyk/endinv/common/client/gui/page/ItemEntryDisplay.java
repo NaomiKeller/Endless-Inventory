@@ -5,35 +5,111 @@ import com.kwwsyk.endinv.common.client.gui.ScreenFramework;
 import com.kwwsyk.endinv.common.client.gui.bg.FromResource;
 import com.kwwsyk.endinv.common.client.gui.bg.SFBgRenderer;
 import com.kwwsyk.endinv.common.client.gui.bg.Transparent;
-import com.kwwsyk.endinv.common.client.gui.page.manager.ResourcePointer;
+import com.kwwsyk.endinv.common.client.gui.page.slotView.EntryPageViewContainer;
+import com.kwwsyk.endinv.common.client.gui.page.slotView.PageViewContainer;
 import com.kwwsyk.endinv.common.client.option.ClientConfigs;
 import com.kwwsyk.endinv.common.client.option.TextureMode;
 import com.kwwsyk.endinv.common.menu.page.PageType;
+import com.kwwsyk.endinv.common.util.ItemKey;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.renderer.Rect2i;
-import net.minecraft.core.NonNullList;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.enchantment.ItemEnchantments;
+import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.function.BiFunction;
 
 public class ItemEntryDisplay extends ItemDisplay{
 
-    private static final int TOOLTIP_X_SEP = 5;
+    public interface DescriptionProvider extends BiFunction<ItemEntryDisplay, ItemStack, Component> {
 
-    /**
-     * Used to disable Item name rendering.
-     */
-    protected boolean jmpTooltip1st = true;
+        static Component fromTooltip(ItemEntryDisplay page,ItemStack stack,boolean jmpName/*Jmp the first row tooltip*/){
+            List<Component> tooltips = AbstractContainerScreen.getTooltipFromItem(page.mc, stack);
+            return fromTooltip(page, tooltips, jmpName);
+        }
 
+        static Component fromTooltip(ItemEntryDisplay page,List<Component> tooltips,boolean jmpName/*Jmp the first row tooltip*/){
+            int strX = 18;
+            int entry_max_x = page.framework.columns() * 18;
+            if(strX > entry_max_x) return Component.empty();
+            var it = tooltips.iterator();
+            if(jmpName && it.hasNext()){
+                it.next();
+            }
+            Component tip1 = Component.empty();
+            while (it.hasNext()){
+                var tip = it.next();
+
+                int strX1 = strX + page.mc.font.width(tip.getVisualOrderText());
+                if( strX1 >= entry_max_x - 3 && strX1 <= entry_max_x){
+                    if(it.hasNext()){
+                        tip1 = Component.literal(tip1.getString() + tip.getString() + ".".repeat(3));
+                        break;
+                    }
+                    tip1 = Component.literal(tip1.getString() + tip.getString());
+                    break;
+                }
+                if( strX1 > entry_max_x) {
+                    tip1 = Component.literal(tip1.getString() + ".".repeat(3));
+                    break;
+                }
+                tip1 = Component.literal(tip1.getString() + tip.getString());
+            }
+            return tip1;
+        }
+
+        static Component fromEnch(ItemEntryDisplay page,ItemStack stack){
+            ItemEnchantments itemEnchantments = stack.get(DataComponents.ENCHANTMENTS);
+            if(itemEnchantments == null || itemEnchantments.isEmpty()) itemEnchantments = stack.get(DataComponents.STORED_ENCHANTMENTS);
+            if(itemEnchantments == null || itemEnchantments.isEmpty()) return Component.empty();
+            List<Component> tooltips = new ArrayList<>();
+            itemEnchantments.addToTooltip(
+                    Item.TooltipContext.of(page.mc.level),
+                    tooltips::add,
+                    TooltipFlag.NORMAL,
+                    stack
+            );
+            return fromTooltip(page, tooltips, false);
+        }
+    }
+
+    public static final DescriptionProvider TOOLTIP_PROVIDER = (page, stack) -> DescriptionProvider.fromTooltip(page, stack, false);
+    public static final DescriptionProvider TOOLTIP_PROVIDER_NO_NAME_ROW = (page, stack) -> DescriptionProvider.fromTooltip(page, stack, true);
+
+
+    @Nullable
     protected SFBgRenderer.PageBgRender renderer = null;
+    protected final DescriptionProvider entryProvider;
+
+    public ItemEntryDisplay(PageType pageType, ScreenFramework screenFramework, DescriptionProvider descriptionProvider) {
+        super(pageType,screenFramework);
+        this.length = framework.rows();
+        this.entryProvider = descriptionProvider;
+    }
 
     public ItemEntryDisplay(PageType pageType, ScreenFramework screenFramework) {
         super(pageType,screenFramework);
         this.length = framework.rows();
+        this.entryProvider = TOOLTIP_PROVIDER;
+    }
+
+    protected PageViewContainer buildView(List<ItemKey> items){
+        return new EntryPageViewContainer(
+                this,
+                items,
+                framework.rows(),
+                getPageLeft() + MARGIN_SIDE_WIDTH,
+                getPageTop() + MARGIN_TOP_HEIGHT,
+                entryProvider
+        );
     }
 
     @Override
@@ -46,15 +122,8 @@ public class ItemEntryDisplay extends ItemDisplay{
     protected void setVisibleRange(int startIndex, int length) {
         this.startIndex = startIndex;
         this.length = Math.min(length, framework.rows());
-        if(items==null || length!=this.items.size()){
-            this.items = NonNullList.withSize(length, ItemPage.ItemPointer.EMPTY);
-        }
         release();
         requestRemoteContents();
-    }
-
-    public void toggleJmpItemName(boolean jmpTooltip1st){
-        this.jmpTooltip1st = jmpTooltip1st;
     }
 
     @Override
@@ -82,72 +151,6 @@ public class ItemEntryDisplay extends ItemDisplay{
                 screen instanceof EndlessInventoryScreen EIS && EIS.getFrameWork().sortTypeSwitchBox.isOpen()
                         || framework.sortTypeSwitchBox.isOpen()
         );
-    }
-
-    @Override
-    public void renderPage(GuiGraphics guiGraphics) {
-        int rowIndex = 0;
-        int columnIndex = 0;
-        for(ResourcePointer<ItemStack> pointer : items){
-            ItemStack stack = pointer.get();
-            guiGraphics.renderItem(stack,leftPos,topPos+rowIndex*18+1,columnIndex+rowIndex<<8);
-            if(!stack.isEmpty())
-                renderItemEntry(stack,leftPos+18,topPos+rowIndex*18+5,guiGraphics);
-            if(!isHiddenBySortBox(rowIndex,columnIndex))
-                guiGraphics.renderItemDecorations(Minecraft.getInstance().font, stack, leftPos,topPos+rowIndex*18+1, getDisplayAmount(stack));
-            rowIndex++;
-            if(rowIndex>= framework.rows()) break;
-        }
-    }
-
-    private void renderItemEntry(ItemStack item, int x, int y, GuiGraphics graphics){
-        Minecraft mc = Minecraft.getInstance();
-        Font font = mc.font;
-        List<Component> tooltips = AbstractContainerScreen.getTooltipFromItem(mc,item);
-        int strX = x;
-        boolean jmp = jmpTooltip1st;
-        for(var tip : tooltips){
-            if(jmp){
-                jmp = false;
-                continue;
-            }
-            Component tip1 = Component.literal(tip.getString());
-            int strX1 = strX + font.width(tip.getVisualOrderText());
-            if(strX1 >= x + framework.columns()*18 -18-3){
-                graphics.drawString(font,Component.literal("..."),strX,y,0xFFFFFF00);
-                break;
-            }
-            graphics.drawString(font,tip1,strX,y,0xFFFFFF00);
-            strX = strX1 + TOOLTIP_X_SEP;
-        }
-    }
-
-    @Override
-    public void renderHovering(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        renderSlotHighlight(graphics, mouseX, mouseY, partialTick);
-        int hoveringSlot = getSlotByMouseOffset(mouseX-leftPos,mouseY-topPos);
-        if(hoveringSlot>=0&&hoveringSlot<items.size()){
-            ItemStack hovering = items.get(hoveringSlot).get();
-            if(hovering.isEmpty()) return;
-            graphics.setTooltipForNextFrame(
-                    Minecraft.getInstance().font,
-                    AbstractContainerScreen.getTooltipFromItem(Minecraft.getInstance(),hovering),
-                    hovering.getTooltipImage(),
-                    mouseX, mouseY);
-        }
-    }
-
-    protected void renderSlotHighlight(GuiGraphics graphics, int mouseX, int mouseY, float partialTick){
-        for(int v = 0; v< framework.rows(); ++v){
-            int x1 = leftPos + MARGIN_SIDE_WIDTH;
-            int x2 = leftPos + MARGIN_SIDE_WIDTH + framework.columns()*18 -2;
-            int y1 = topPos + MARGIN_TOP_HEIGHT + 18*v+1;
-            int y2 = topPos + MARGIN_TOP_HEIGHT + 18*v+18;
-            if(mouseX>x1 && mouseX<x2 && mouseY>y1 && mouseY<y2){
-                if(!framework.getMenu().getCarried().isEmpty()) return;
-                graphics.fillGradient(x1, y1, x2, y2, 0x80ffffff, 0x80ffffff);
-            }
-        }
     }
 
     @Override

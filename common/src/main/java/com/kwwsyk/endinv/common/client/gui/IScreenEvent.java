@@ -2,6 +2,8 @@ package com.kwwsyk.endinv.common.client.gui;
 
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.input.CharacterEvent;
+import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 
 public interface IScreenEvent {
@@ -9,6 +11,10 @@ public interface IScreenEvent {
     default void addListener(AbstractWidget widget){}
 
     default MouseButtonEvent getMouseButtonEvent(){return null;}
+
+    default KeyEvent getKeyEvent(){return null;}
+
+    default CharacterEvent getCharEvent(){return null;}
 
     default double getMouseX(){
         return 0;

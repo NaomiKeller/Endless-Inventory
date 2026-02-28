@@ -3,7 +3,9 @@ package com.kwwsyk.endinv.common.client.gui.page;
 import com.kwwsyk.endinv.common.client.CachedSrcInv;
 import com.kwwsyk.endinv.common.client.gui.EndlessInventoryScreen;
 import com.kwwsyk.endinv.common.client.gui.ScreenFramework;
+import com.kwwsyk.endinv.common.client.gui.page.slotView.PageViewContainer;
 import com.kwwsyk.endinv.common.menu.page.PageType;
+import com.kwwsyk.endinv.common.util.ItemKey;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -12,7 +14,9 @@ import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.Nullable;
 
-public abstract class GridPage extends DisplayPage {
+import java.util.List;
+
+public abstract class GridPage extends DisplayPage {//todo support item and fluid types
 
 
     protected int startIndex = 0;
@@ -23,8 +27,21 @@ public abstract class GridPage extends DisplayPage {
         this.length = this.framework.rows()* this.framework.columns();
     }
 
+    protected PageViewContainer buildView(List<ItemKey> items){
+        return new PageViewContainer(
+                this,
+                items,
+                framework.rows(),
+                framework.columns(),
+                getPageLeft() + MARGIN_SIDE_WIDTH,
+                getPageTop() + MARGIN_TOP_HEIGHT
+        );
+    }
+
     /**Build or reload item page's content by SourceInv {@link CachedSrcInv}
      *  and it will set back to unscrolled status.
+     *  <P>
+     *  Invoked by {@link ScreenFramework#switchPageWithIndex(int)}, as is when the page prepares to be displayed.
      */
     @Override
     public void initializeContents() {
@@ -56,7 +73,7 @@ public abstract class GridPage extends DisplayPage {
      * @param YOffset mouseY-pageY
      * @return one interactable area
      */
-    @Override
+    @Override @Nullable
     public Rect2i getOneInteractableArea(double XOffset, double YOffset){
         return getSlotArea(getSlotByMouseOffset(XOffset, YOffset));
     }
@@ -73,21 +90,6 @@ public abstract class GridPage extends DisplayPage {
         final int rowAt = slot / framework.columns();
         final int columnAt = slot % framework.columns();
         return new Rect2i(leftPos+slotSize*columnAt, topPos+slotSize*rowAt, slotSize, slotSize);
-    }
-
-    protected void renderSlotHighlight(GuiGraphics graphics, int mouseX, int mouseY, float partialTick){
-        for(int u = 0; u< framework.columns(); ++u){
-            for(int v = 0; v< framework.rows(); ++v){
-                int x1 = leftPos+MARGIN_SIDE_WIDTH+18*u;
-                int x2 = leftPos+MARGIN_SIDE_WIDTH+18*u+17;
-                int y1 = topPos+MARGIN_TOP_HEIGHT+18*v+1;
-                int y2 = topPos+MARGIN_TOP_HEIGHT+18*v+18;
-                if(mouseX>x1 && mouseX<x2 && mouseY>y1 && mouseY<y2){
-                    if(!framework.getMenu().getCarried().isEmpty()) return;
-                    graphics.fillGradient(x1, y1, x2, y2, 0x80ffffff, 0x80ffffff);
-                }
-            }
-        }
     }
 
     @Override
@@ -107,24 +109,10 @@ public abstract class GridPage extends DisplayPage {
                 );
     }
 
-    protected void renderEmpty(GuiGraphics guiGraphics, int x, int y, ItemStack itemStack){
+    public void renderEmpty(GuiGraphics guiGraphics, int x, int y, ItemStack itemStack){
         ItemStack toRender = itemStack.copyWithCount(1);
         guiGraphics.renderItem(toRender,x,y,0);
-        guiGraphics.renderItemDecorations(Minecraft.getInstance().font,toRender,x,y, ChatFormatting.RED+"0");
+        guiGraphics.renderItemDecorations(Minecraft.getInstance().font,toRender,x,y, ChatFormatting.RED + "0");
     }
 
-    public void renderHovering(GuiGraphics graphics, int mouseX, int mouseY, float partialTick){
-        renderSlotHighlight(graphics, mouseX, mouseY, partialTick);
-        ItemStack hovering = getHoveredOrClickedItem(mouseX, mouseY);
-        if(hovering.isEmpty()) return;
-
-        {
-            graphics.setTooltipForNextFrame(
-                    Minecraft.getInstance().font,
-                    AbstractContainerScreen.getTooltipFromItem(Minecraft.getInstance(), hovering),
-                    hovering.getTooltipImage(),
-                    mouseX, mouseY
-            );
-        };
-    }
 }

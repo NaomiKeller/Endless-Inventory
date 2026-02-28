@@ -8,6 +8,6 @@ import org.spongepowered.asm.mixin.gen.Invoker;
 @Mixin(Screen.class)
 public interface ScreenMixin {
 
-    @Invoker("removeWidget")
+    @Invoker(value = "removeWidget")
     void endinv$invokeRemoveWidget(GuiEventListener widget);
 }

@@ -16,9 +16,9 @@ public interface SFParamProvider {
 
     List<PageType> pages();
     int pageTabCount();
-    IRectangleParam pageParamA();
+    IRectangleParam pageParamAdjusted();
 
-    IRectangleParam pageTabA();
+    IRectangleParam pageTabParamAdjusted();
     IRectangleParam pageTabDecA();
     IRectangleParam pageTabIncA();
 

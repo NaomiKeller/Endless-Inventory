@@ -3,21 +3,28 @@ package com.kwwsyk.endinv.common.client.gui;
 import com.kwwsyk.endinv.common.ModInfo;
 import com.kwwsyk.endinv.common.menu.EndlessInventoryMenu;
 import com.kwwsyk.endinv.common.network.payloads.toServer.ToggleCraftingPayload;
+import com.kwwsyk.endinv.common.util.NotNullWhenInitialized;
+import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.CycleButton;
+import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.input.CharacterEvent;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.Slot;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class EndlessInventoryScreen extends AbstractContainerScreen<EndlessInventoryMenu> {
     private static final Identifier CRAFTING_TEXTURE = Identifier.fromNamespaceAndPath("minecraft", "textures/gui/container/crafting_table.png");
+    @NotNullWhenInitialized
     private ScreenFramework frameWork;
+    @Nullable
     private CycleButton<Boolean> craftingToggleButton;
     private boolean craftingVisible;
 
@@ -104,19 +111,59 @@ public class EndlessInventoryScreen extends AbstractContainerScreen<EndlessInven
         guiGraphics.blit(RenderPipelines.GUI_TEXTURED, CRAFTING_TEXTURE, craftX, craftY, 0, 12, 176, 58, 256, 256);
     }
 
-    public void render(@NotNull GuiGraphics gui, int mouseX, int mouseY, float partialTick){
-        this.renderBackground(gui, mouseX, mouseY, partialTick);
-        frameWork.renderBg(gui,mouseX,mouseY,partialTick);
+    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick){
+        this.renderBackground(guiGraphics, mouseX, mouseY, partialTick);
+        frameWork.renderBg(guiGraphics,mouseX,mouseY,partialTick);
+        if (menu.isCraftingVisible()) {
+            drawCraftingBackground(guiGraphics);
+        }
+        frameWork.render(guiGraphics,mouseX,mouseY,partialTick);
+        super.render(guiGraphics,mouseX,mouseY,partialTick);
 
-        super.render(gui,mouseX,mouseY,partialTick);
-
-        frameWork.render(gui,mouseX,mouseY,partialTick);
-        this.renderTooltip(gui,mouseX,mouseY);
+        this.renderTooltip(guiGraphics,mouseX,mouseY);
     }
 
-    // Input handling migrated in 1.21.11; rely on default widget pipeline
+    @Override
+    public boolean mouseClicked(MouseButtonEvent event, boolean pre) {
+        for(GuiEventListener guieventlistener : this.children()) {
+            if (guieventlistener.mouseClicked(event, pre)) {
+                this.setFocused(guieventlistener);
+                if (event.button() == InputConstants.MOUSE_BUTTON_LEFT) {
+                    this.setDragging(true);
+                }
+                return true;
+            }
+        }
+        return frameWork.mouseClicked(event, pre) || super.mouseClicked(event, pre);
 
-    protected void slotClicked(@Nullable Slot slot, int slotId, int mouseButton, @NotNull ClickType type) {
+    }
+
+    @Override
+    public boolean mouseDragged(MouseButtonEvent event, double x, double y) {
+        return frameWork.mouseDragged(event, x, y) || super.mouseDragged(event, x, y);
+    }
+
+    @Override
+    public boolean mouseReleased(MouseButtonEvent p_446114_) {
+        return frameWork.mouseReleased(p_446114_) || super.mouseReleased(p_446114_);
+    }
+
+    @Override
+    public boolean mouseScrolled(double p_364830_, double p_360707_, double p_364436_, double p_364417_) {
+        return super.mouseScrolled(p_364830_, p_360707_, p_364436_, p_364417_) || frameWork.mouseScrolled(p_364830_, p_360707_, p_364436_, p_364417_);
+    }
+
+    @Override
+    public boolean keyPressed(KeyEvent p_445387_) {
+        return frameWork.keyPressed(p_445387_) || super.keyPressed(p_445387_);
+    }
+
+    @Override
+    public boolean charTyped(CharacterEvent event) {
+        return frameWork.charTyped(event);
+    }
+
+    protected void slotClicked(Slot slot, int slotId, int mouseButton, ClickType type) {
         super.slotClicked(slot,slotId,mouseButton,type);
         this.menu.broadcastChanges();
     }
@@ -127,11 +174,7 @@ public class EndlessInventoryScreen extends AbstractContainerScreen<EndlessInven
     }
 
     @Override
-    protected void renderBg(@NotNull GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {
-        this.frameWork.renderBg(guiGraphics,mouseX,mouseY,partialTick);
-        if (menu.isCraftingVisible()) {
-            drawCraftingBackground(guiGraphics);
-        }
+    protected void renderBg(GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {
     }
 
     public com.kwwsyk.endinv.common.menu.page.pageManager.PageMetaDataManager getPageManager() {

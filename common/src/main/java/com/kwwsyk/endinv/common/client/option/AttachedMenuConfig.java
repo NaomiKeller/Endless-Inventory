@@ -8,12 +8,12 @@ import com.kwwsyk.endinv.common.options.config.EntryPresentable;
 
 import java.util.List;
 
-public class AttachedMenuConfig extends ComplexConfigEntryImpl<AttachedMenuOptions> {
+public class AttachedMenuConfig extends ComplexConfigEntryImpl<AttachedMenuScreenLayout> {
     
     public static final AttachedMenuConfig INSTANCE = new AttachedMenuConfig("Attached Screen(Menu) Options", new String[]{"Attached Menu Options"});
     
-    public final EnumEntry<AttachedMenuOptions.BasicLayout> BasicLayout = new EnumEntry<>(
-            "BasicLayout", new String[]{"The basic layout of attached screen."}, AttachedMenuOptions.BasicLayout.LEFT);
+    public final EnumEntry<AttachedMenuScreenLayout.BasicLayout> BasicLayout = new EnumEntry<>(
+            "BasicLayout", new String[]{"The basic layout of attached screen."}, AttachedMenuScreenLayout.BasicLayout.LEFT);
     public final IntEntry LeftPos = new IntEntry(
             "LeftPos", new String[]{"The left position of attached screen."}, 20, Integer.MIN_VALUE, Integer.MAX_VALUE);
     public final IntEntry TopPos = new IntEntry(
@@ -31,31 +31,31 @@ public class AttachedMenuConfig extends ComplexConfigEntryImpl<AttachedMenuOptio
             com.kwwsyk.endinv.common.client.option.TextureMode.FROM_RESOURCE
     );
     public final ListEntry<Integer> PageRectangle = IRectangleParam.createRectangleConfigEntry(
-            "PageRectangleParam", new String[]{"The rectangle of page and is active when TextureMode is Transparent"}, AttachedMenuOptions.PAGE_RECTANGLE
+            "PageRectangleParam", new String[]{"The rectangle of page and is active when TextureMode is Transparent"}, AttachedMenuScreenLayout.PAGE_RECTANGLE
     );//todo detailed description
     
     public final PageSwitchBarConfig PageSwitchBar = PageSwitchBarConfig.INSTANCE;
     
     public final ListEntry<Integer> SearchBoxParam = IRectangleParam.createRectangleConfigEntry(
-            "SearchBoxParam", new String[]{"The search box parameters"}, AttachedMenuOptions.SEARCH_BOX);
+            "SearchBoxParam", new String[]{"The search box parameters"}, AttachedMenuScreenLayout.SEARCH_BOX);
     public final ListEntry<Integer> SortBoxParam = IRectangleParam.createRectangleConfigEntry(
-            "SortBoxParam", new String[]{"The sort box parameters"}, AttachedMenuOptions.SORT_BOX);
+            "SortBoxParam", new String[]{"The sort box parameters"}, AttachedMenuScreenLayout.SORT_BOX);
     public final ListEntry<Integer> ReverseSortButtonParam = IRectangleParam.createRectangleConfigEntry(
-            "ReverseSortButtonParam", new String[]{"The reverse sort button parameters"}, AttachedMenuOptions.REVERSE_SORT_BUTTON);
+            "ReverseSortButtonParam", new String[]{"The reverse sort button parameters"}, AttachedMenuScreenLayout.REVERSE_SORT_BUTTON);
     public final ListEntry<Integer> ConfigButtonParam = IRectangleParam.createRectangleConfigEntry(
-            "ConfigButtonParam", new String[]{"The config button parameters"}, AttachedMenuOptions.CONFIG_BUTTON);
+            "ConfigButtonParam", new String[]{"The config button parameters"}, AttachedMenuScreenLayout.CONFIG_BUTTON);
     
     
     public AttachedMenuConfig(String key, String[] comments) {
-        super(key, comments, AttachedMenuOptions.DEFAULT);
+        super(key, comments, AttachedMenuScreenLayout.getDefault());
     }
     
     @Override
-    public AttachedMenuOptions get() {
-        AttachedMenuOptions.BasicLayout basicLayout = BasicLayout.get();
+    public AttachedMenuScreenLayout get() {
+        AttachedMenuScreenLayout.BasicLayout basicLayout = BasicLayout.get();
         switch (basicLayout){
             case LEFT: {
-                return AttachedMenuOptions.ofLeft(
+                return AttachedMenuScreenLayout.ofLeft(
                         TopPos.get(),
                         PageBasicLayout.get(),
                         PageTypeRegistry.displayingPages(DontDisplayPages.get()),
@@ -63,9 +63,9 @@ public class AttachedMenuConfig extends ComplexConfigEntryImpl<AttachedMenuOptio
                         IRectangleParam.fromConfigEntry(PageRectangle)
                 );
             }
-            case MERGE_JEI:{}
+            case MERGE_JEI:{/*todo*/}
             case RIGHT:{
-                return AttachedMenuOptions.ofRight(
+                return AttachedMenuScreenLayout.ofRight(
                         LeftPos.get(),
                         TopPos.get(),
                         PageBasicLayout.get(),
@@ -75,8 +75,7 @@ public class AttachedMenuConfig extends ComplexConfigEntryImpl<AttachedMenuOptio
                 );
             }
         }
-        return new AttachedMenuOptions(
-                BasicLayout.get(),
+        return new AttachedMenuScreenLayout.FullCustomizeLayout(
                 PageBasicLayout.get(),
                 PageTypeRegistry.displayingPages(DontDisplayPages.get()),
                 PageSwitchBar.get(),
@@ -91,20 +90,20 @@ public class AttachedMenuConfig extends ComplexConfigEntryImpl<AttachedMenuOptio
     }
     
     @Override
-    public void set(AttachedMenuOptions attachedMenuOptions) {
+    public void set(AttachedMenuScreenLayout attachedMenuScreenLayout) {
         freezeFieldSaver();
-        BasicLayout.set(attachedMenuOptions.basicLayout);
-        PageBasicLayout.set(attachedMenuOptions.pageParam);
-        DontDisplayPages.set(PageTypeRegistry.dontDisplayPages(attachedMenuOptions.pages()));
-        PageSwitchBar.set(attachedMenuOptions.pageSwitchBarParam);
-        LeftPos.set(attachedMenuOptions.leftPos());
-        TopPos.set(attachedMenuOptions.topPos());
-        TextureMode.set(attachedMenuOptions.textureMode());
-        PageRectangle.set(IRectangleParam.toList(attachedMenuOptions.pageRectangleParam));
-        SearchBoxParam.set(IRectangleParam.toList(attachedMenuOptions.searchBoxParam));
-        SortBoxParam.set(IRectangleParam.toList(attachedMenuOptions.sortBoxParam));
-        ConfigButtonParam.set(IRectangleParam.toList(attachedMenuOptions.configButtonParam));
-        ReverseSortButtonParam.set(IRectangleParam.toList(attachedMenuOptions.reverseSortButtonParam));
+        BasicLayout.set(attachedMenuScreenLayout.basicLayout);
+        PageBasicLayout.set(attachedMenuScreenLayout.pageParam);
+        DontDisplayPages.set(PageTypeRegistry.dontDisplayPages(attachedMenuScreenLayout.pages()));
+        PageSwitchBar.set(attachedMenuScreenLayout.pageSwitchBarParam);
+        LeftPos.set(attachedMenuScreenLayout.leftPos());
+        TopPos.set(attachedMenuScreenLayout.topPos());
+        TextureMode.set(attachedMenuScreenLayout.textureMode());
+        PageRectangle.set(IRectangleParam.toList(attachedMenuScreenLayout.pageRectangleParam));
+        SearchBoxParam.set(IRectangleParam.toList(attachedMenuScreenLayout.searchBoxParam));
+        SortBoxParam.set(IRectangleParam.toList(attachedMenuScreenLayout.sortBoxParam));
+        ConfigButtonParam.set(IRectangleParam.toList(attachedMenuScreenLayout.configButtonParam));
+        ReverseSortButtonParam.set(IRectangleParam.toList(attachedMenuScreenLayout.reverseSortButtonParam));
         unfreezeFieldSaver();
         save();
     }

@@ -42,6 +42,7 @@ public record SetStarredPagePayload(List<ItemStackLike> stacks) implements ModPa
     public void handle(ModPacketContext context) {
         ModPacketPayload.getClientPageMeta().ifPresent(mng->{
             if(mng.getDisplayingPage() instanceof StarredItemPage page){
+                //todo update srcInv item info with item count
                 page.initializeAsMap(stacks);
             }
         });

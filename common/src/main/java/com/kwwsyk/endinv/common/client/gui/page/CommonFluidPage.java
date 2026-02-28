@@ -72,7 +72,7 @@ public abstract class CommonFluidPage<FS> extends GridPage{
     }
 
     @Override
-    public abstract void renderPage(GuiGraphics graphics);
+    public abstract void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks);
 //        int rowIndex = 0;
 //        int columnIndex = 0;
 //        for(FluidData fluid : fluids){

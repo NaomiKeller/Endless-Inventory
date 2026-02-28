@@ -14,7 +14,10 @@ public interface IRectangleParam {
 
     int height();
 
-    boolean hasClickedOn(int mouseX, int mouseY);
+    default boolean hasClickedOn(double mouseX, double mouseY){
+        return mouseX >= x() && mouseX <= x() + width()
+                && mouseY >= y() && mouseY <= y() + height();
+    }
 
     default List<Integer> toList(){
         return List.of(x(),y(),width(),height());

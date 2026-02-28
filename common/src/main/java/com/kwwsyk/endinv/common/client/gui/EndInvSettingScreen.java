@@ -9,6 +9,7 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.CycleButton;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 import net.minecraft.util.Util;
@@ -209,16 +210,28 @@ public abstract class EndInvSettingScreen extends Screen {
                 entry.getEditBox().ifPresent(editBox -> {
                     if(editBox== typingEditBox){
                         entry.applyChanges();
-                        typingEditBox =null;
+                        typingEditBox = null;
                     }
                 });
             }
         }
     }
 
-    // input handling is routed by the widget pipeline in 1.21.11
-
-    // input handling is routed by the widget pipeline in 1.21.11
+    @Override
+    public boolean mouseClicked(MouseButtonEvent event, boolean p_434187_) {
+        if(!super.mouseClicked(event, p_434187_)){
+            if(getFocused() != null){
+                getFocused().setFocused(false);
+                setFocused(null);
+            }
+        }else {
+            if(getFocused() != null && getFocused() instanceof EditBox editBox){
+                typingEditBox = editBox;
+            }
+            return true;
+        }
+        return false;
+    }
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {

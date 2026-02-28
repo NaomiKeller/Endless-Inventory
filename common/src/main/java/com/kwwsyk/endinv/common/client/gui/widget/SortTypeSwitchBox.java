@@ -11,7 +11,6 @@ import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent
 import net.minecraft.client.gui.screens.inventory.tooltip.DefaultTooltipPositioner;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
@@ -46,13 +45,14 @@ public class SortTypeSwitchBox extends AbstractWidget {
         this.height = open ? singleBoxHeight*(1+ SortType.values().length) : singleBoxHeight;
     }
 
-    public void onClick(double mouseX,double mouseY){
+    public void onClick(MouseButtonEvent event, boolean pre){
         if(!isOpen){
             setOpen(true);
         }else {
             int y1 = getY()+singleBoxHeight;
+            int mouseY = (int) event.y();
             for(SortType type : SortType.values()){
-                if(isHoveringOnSingleBox((int)mouseY,y1)){
+                if(isHoveringOnSingleBox(mouseY,y1)){
                     framework.switchSortTypeTo(type);
                     return;
                 }
@@ -66,10 +66,9 @@ public class SortTypeSwitchBox extends AbstractWidget {
      * @return {@code true} if the event is consumed, {@code false} otherwise.
      */
     public boolean mouseClicked(MouseButtonEvent event, boolean pre){
-        double mouseX = event.x();
-        double mouseY = event.y();
-        boolean inside = mouseX >= getX() && mouseX <= getX()+getWidth() && mouseY >= getY() && mouseY <= getY()+getHeight();
-        if(!inside && isOpen){
+        if(super.mouseClicked(event, pre)){
+            return true;
+        }else if(isOpen){
             setOpen(false);
             return true;
         }
@@ -77,7 +76,7 @@ public class SortTypeSwitchBox extends AbstractWidget {
     }
 
     @Override
-    protected void renderWidget(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+    protected void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         guiGraphics.pose().pushMatrix();
         guiGraphics.fill(getX(), getY(), getX() + width, getY() + singleBoxHeight, 0xff888888);
         guiGraphics.fill(getX() + 1, getY() + 1, getX() + width - 1, getY() + singleBoxHeight - 1, 0xff000000);
@@ -87,6 +86,7 @@ public class SortTypeSwitchBox extends AbstractWidget {
         String s = sortType.toString();
         guiGraphics.drawString(Minecraft.getInstance().font, s,getX()+2, getY() +2,0xffffffff);
         if(isOpen){
+            guiGraphics.nextStratum();
             int y1 = getY() +singleBoxHeight;
             for (SortType type : SortType.values()) {
                 guiGraphics.fill(getX(), y1, getX() + width, y1 + singleBoxHeight, 0xff888888);
@@ -118,7 +118,7 @@ public class SortTypeSwitchBox extends AbstractWidget {
     }
 
     @Override
-    protected void updateWidgetNarration(@NotNull NarrationElementOutput narrationElementOutput) {
+    protected void updateWidgetNarration(NarrationElementOutput narrationElementOutput) {
         this.defaultButtonNarrationText(narrationElementOutput);
     }
 }

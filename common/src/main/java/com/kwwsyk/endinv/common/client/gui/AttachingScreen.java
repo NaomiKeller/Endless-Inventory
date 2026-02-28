@@ -33,7 +33,7 @@ import static com.kwwsyk.endinv.common.ModRegistries.NbtAttachments.getSyncedCon
  * @version 1.0.5
  */
 public class AttachingScreen<T extends AbstractContainerMenu>{
-
+    @Nullable
     public static AttachingScreen<?> INSTANCE;
 
     private static final Logger LOGGER = LogUtils.getLogger();
@@ -106,10 +106,10 @@ public class AttachingScreen<T extends AbstractContainerMenu>{
     }
 
     public void render(IScreenEvent event) {
-        int mouseX = (int) event.getMouseX();
-        int mouseY = (int) event.getMouseY();
-        GuiGraphics guiGraphics = event.getGuiGraphics();
-        float partialTick = event.getPartialTick();
+//        int mouseX = (int) event.getMouseX();
+//        int mouseY = (int) event.getMouseY();
+//        GuiGraphics guiGraphics = event.getGuiGraphics();
+//        float partialTick = event.getPartialTick();
 
         //frameWork.renderBg(guiGraphics,mouseX,mouseY,partialTick);
         //frameWork.render(guiGraphics,mouseX,mouseY,partialTick);
@@ -123,38 +123,26 @@ public class AttachingScreen<T extends AbstractContainerMenu>{
 
 
     public void mouseReleased(IScreenEvent event) {
-        double mouseX = event.getMouseX();
-        double mouseY = event.getMouseY();
-        int keyCode = event.getButton();
-        event.setCanceled(frameWork.mouseReleased(mouseX,mouseY,keyCode));
+        event.setCanceled(frameWork.mouseReleased(event.getMouseButtonEvent()));
     }
 
     public void mouseDragged(IScreenEvent event) {
-        double mouseX = event.getMouseX();
-        double mouseY = event.getMouseY();
-        int button = event.getMouseButton();
         double dragX = event.getDragX();
         double dragY = event.getDragY();
 
-        event.setCanceled(frameWork.mouseDragged(mouseX,mouseY,button,dragX,dragY));
+        event.setCanceled(frameWork.mouseDragged(event.getMouseButtonEvent(), dragX, dragY));
     }
 
     public void mouseScrolled(IScreenEvent event) {
-        double scrollY = event.getScrollDeltaY();
-        frameWork.mouseScrolled(event.getMouseX(),event.getMouseY(),scrollY);
+        frameWork.mouseScrolled(event.getMouseX(), event.getMouseY(), event.getScrollDeltaX(), event.getScrollDeltaY());
     }
 
     public void keyPressed(IScreenEvent event) {
-        int keyCode = event.getKeyCode();
-        int scanCode = event.getScanCode();
-        int modifiers = event.getModifiers();
-        event.setCanceled(frameWork.keyPressed(keyCode,scanCode,modifiers));
+        event.setCanceled(frameWork.keyPressed(event.getKeyEvent()));
     }
 
     public void charTyped(IScreenEvent event) {
-        char codePoint = event.getCodePoint();
-        int modifiers = event.getModifiers();
-        event.setCanceled(frameWork.charTyped(codePoint,modifiers));
+        event.setCanceled(frameWork.charTyped(event.getCharEvent()));
     }
 
     public void closed(IScreenEvent event){

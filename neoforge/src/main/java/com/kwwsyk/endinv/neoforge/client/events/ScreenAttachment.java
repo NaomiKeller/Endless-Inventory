@@ -10,6 +10,8 @@ import com.kwwsyk.endinv.common.network.payloads.toServer.OpenEndInvPayload;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.input.CharacterEvent;
+import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.api.distmarker.Dist;
@@ -206,6 +208,10 @@ public class ScreenAttachment {
                 public int getButton() {
                     return event.getButton();
                 }
+                @Override
+                public MouseButtonEvent getMouseButtonEvent(){
+                    return event.getMouseButtonEvent();
+                }
             });
         }
     }
@@ -244,6 +250,11 @@ public class ScreenAttachment {
                 public int getMouseButton() {
                     return event.getMouseButton();
                 }
+
+                @Override
+                public MouseButtonEvent getMouseButtonEvent(){
+                    return event.getMouseButtonEvent();
+                }
             });
         }
     }
@@ -253,6 +264,11 @@ public class ScreenAttachment {
         var attached = checkAndGetAttached(event);
         if(attached!=null){
             attached.mouseScrolled(new IScreenEvent() {
+                @Override
+                public double getScrollDeltaX() {
+                    return event.getScrollDeltaX();
+                }
+
                 @Override
                 public double getScrollDeltaY() {
                     return event.getScrollDeltaY();
@@ -295,6 +311,10 @@ public class ScreenAttachment {
                 public void setCanceled(boolean canceled) {
                     event.setCanceled(canceled);
                 }
+
+                public KeyEvent getKeyEvent(){
+                    return event.getKeyEvent();
+                }
             });
         }
     }
@@ -317,6 +337,11 @@ public class ScreenAttachment {
                 @Override
                 public void setCanceled(boolean canceled) {
                     event.setCanceled(canceled);
+                }
+
+                @Override
+                public CharacterEvent getCharEvent() {
+                    return event.getCharacterEvent();
                 }
             });
         }

@@ -9,6 +9,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
@@ -73,7 +74,8 @@ public class PageSwitchBar extends AbstractWidget {
         tabHeight = param.tabParam().height();
     }
 
-    public void onClick(double mouseX, double mouseY) {
+    public void onClick(MouseButtonEvent event, boolean pre) {
+        double mouseX = event.x(); double mouseY = event.y();
         double XOffset = mouseX - getX();
         double YOffset = mouseY - getY();
         if(XOffset < 0 || XOffset > getWidth() || YOffset < 0 || YOffset > getHeight()) return;

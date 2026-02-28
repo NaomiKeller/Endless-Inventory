@@ -52,7 +52,7 @@ public class FluidPage extends CommonFluidPage<FluidStack> {
     }
 
     @Override
-    public void renderPage(GuiGraphics graphics) {
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
 
     }
 

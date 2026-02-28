@@ -142,12 +142,12 @@ public class EIMConfig extends ComplexConfigEntryImpl<EIMConfig.Param> {
         }
 
         @Override
-        public IRectangleParam pageParamA() {
+        public IRectangleParam pageParamAdjusted() {
             return new ScreenRectangleWidgetParam(leftPos, topPos, 9*18 + 8 +8, 18*rows + 17 + 12);
         }
 
         @Override
-        public IRectangleParam pageTabA() {
+        public IRectangleParam pageTabParamAdjusted() {
             return pageSwitchBarConfig.tabParam().applyOffset(leftPos, topPos);
         }
 

@@ -3,7 +3,6 @@ package com.kwwsyk.endinv.common.network.payloads.toClient;
 import com.kwwsyk.endinv.common.AbstractModInitializer;
 import com.kwwsyk.endinv.common.client.CachedSrcInv;
 import com.kwwsyk.endinv.common.client.gui.page.ItemDisplay;
-import com.kwwsyk.endinv.common.client.gui.page.ItemPage;
 import com.kwwsyk.endinv.common.network.payloads.ModPacketContext;
 import com.kwwsyk.endinv.common.network.payloads.ModPacketPayload;
 import com.kwwsyk.endinv.common.util.ItemKey;
@@ -72,7 +71,7 @@ public record SetItemDisplayContentPayload(List<ItemStack> stacks) implements Mo
         CachedSrcInv.INSTANCE.getItemMap().putAll(partlyMap);
         ModPacketPayload.getClientPageMeta().ifPresent(mng->{
             if(mng.getDisplayingPage() instanceof ItemDisplay itemDisplay){
-                itemDisplay.buildContentsWith(stackStream.map(ItemKey::asKey).map(ItemPage.ItemPointer::new).toList());
+                itemDisplay.buildContentsWith(stackStream.map(ItemKey::asKey).toList());
             }
         });
     }

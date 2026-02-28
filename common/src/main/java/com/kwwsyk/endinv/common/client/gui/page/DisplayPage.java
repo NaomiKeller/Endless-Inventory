@@ -48,10 +48,10 @@ import static com.kwwsyk.endinv.common.client.ClientModInfo.inputHandler;
 @SuppressWarnings("unused")
 public abstract class DisplayPage{
 
-    // Match vanilla generic container margins: 7px sides, 17px top, 7px bottom
-    public static final int MARGIN_SIDE_WIDTH = 7;
-    public static final int MARGIN_TOP_HEIGHT = 17;
-    public static final int MARGIN_BOTTOM_HEIGHT = 7;
+    // Match vanilla generic container margins: 7px sides, 17px top, 7px bottom//todo
+    public static final int MARGIN_SIDE_WIDTH = 8;
+    public static final int MARGIN_TOP_HEIGHT = 18;
+    public static final int MARGIN_BOTTOM_HEIGHT = 7;//???
 
     protected final PageType pageType;
     //the registry name of this page type.
@@ -59,7 +59,7 @@ public abstract class DisplayPage{
 
     @Nullable
     protected final Predicate<ItemStack> itemClassify;
-
+    @Nullable
     public Identifier icon = null;
     //displayed when hovering on Page switch bar.
     public Component name;
@@ -127,7 +127,7 @@ public abstract class DisplayPage{
 
     /**Render page icon with page's {@link #icon}
      * icon can be an item location or sprite location with 16*16 size.
-     */
+     */@Nullable
     public Identifier getIcon(){
         return icon;
     }
@@ -226,16 +226,9 @@ public abstract class DisplayPage{
     public void resize(int rows) {
     }
 
-    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick){
-        renderPage(graphics);
-        if(!framework.overridePageHovering()){
-            renderHovering(graphics, mouseX, mouseY, partialTick);
-        }
-    }
+    public abstract void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks);
 
-    public abstract void renderPage(GuiGraphics graphics);
-
-    protected String getDisplayAmount(ItemStack stack){
+    public String getDisplayAmount(ItemStack stack){
         int count = stack.getCount();
         double value;
         String suffix;
@@ -261,8 +254,6 @@ public abstract class DisplayPage{
 
         return String.format("%.1f%s", value, suffix);
     }
-
-    public void renderHovering(GuiGraphics graphics, int mouseX, int mouseY, float partialTick){}
 
     /**
      * Render Page's icon, will first try render {@link #icon} as {@code Item} location, then it will try render a {@code 16x16} icon.
@@ -346,9 +337,9 @@ public abstract class DisplayPage{
         InputConstants.Key mouseKey = InputConstants.Type.MOUSE.getOrCreate(keyCode);
         boolean isKeyPicking = inputHandler.isActiveAndMatches(mc.options.keyPickItem,mouseKey);//is mouse middle button and enabled for pickup or clone
         long clickTime = Util.getMillis();
-        this.doubleClick = keyCode==lastClickedButton && doubleClickedOnOne(XOffset,YOffset,lastCLickedX,lastClickedY,clickTime-lastClickedTime);
+        this.doubleClick = keyCode == lastClickedButton && doubleClickedOnOne(XOffset,YOffset,lastCLickedX,lastClickedY,clickTime-lastClickedTime);
         this.skipNextRelease = false;
-        if(keyCode!=0&&keyCode!=1&&!isKeyPicking){
+        if(keyCode != InputConstants.MOUSE_BUTTON_LEFT && keyCode != InputConstants.MOUSE_BUTTON_RIGHT && !isKeyPicking){
             checkHotBarClicked:
             if (this.menu.getCarried().isEmpty()) {
                 if (inputHandler.isActiveAndMatches(this.mc.options.keySwapOffhand, InputConstants.Type.MOUSE.getOrCreate(keyCode))) {

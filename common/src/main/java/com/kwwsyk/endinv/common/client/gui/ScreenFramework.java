@@ -5,16 +5,13 @@ import com.kwwsyk.endinv.common.SourceInventory;
 import com.kwwsyk.endinv.common.client.CachedSrcInv;
 import com.kwwsyk.endinv.common.client.ClientModInfo;
 import com.kwwsyk.endinv.common.client.KeyMappings;
-import com.kwwsyk.endinv.common.client.gui.bg.FromResource;
-import com.kwwsyk.endinv.common.client.gui.bg.IRectangleParam;
-import com.kwwsyk.endinv.common.client.gui.bg.SFBgRenderer;
-import com.kwwsyk.endinv.common.client.gui.bg.Transparent;
+import com.kwwsyk.endinv.common.client.gui.bg.*;
 import com.kwwsyk.endinv.common.client.gui.page.DisplayPage;
 import com.kwwsyk.endinv.common.client.gui.page.ItemPage;
 import com.kwwsyk.endinv.common.client.gui.page.manager.PageManager;
 import com.kwwsyk.endinv.common.client.gui.widget.PageSwitchBar;
 import com.kwwsyk.endinv.common.client.gui.widget.SortTypeSwitchBox;
-import com.kwwsyk.endinv.common.client.option.AttachedMenuOptions;
+import com.kwwsyk.endinv.common.client.option.AttachedMenuScreenLayout;
 import com.kwwsyk.endinv.common.client.option.ClientConfigs;
 import com.kwwsyk.endinv.common.client.option.EIMConfig;
 import com.kwwsyk.endinv.common.client.option.TextureMode;
@@ -30,8 +27,12 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen;
+import net.minecraft.client.input.CharacterEvent;
+import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
@@ -47,7 +48,7 @@ import java.util.function.Consumer;
 import static com.kwwsyk.endinv.common.client.ClientModInfo.containerScreenHelper;
 import static com.kwwsyk.endinv.common.client.ClientModInfo.inputHandler;
 
-public class ScreenFramework implements PageManager{
+public class ScreenFramework implements PageManager, GuiEventListener {
     @Nullable
     private static ScreenFramework INSTANCE;
 
@@ -108,10 +109,10 @@ public class ScreenFramework implements PageManager{
         //------WIDGET DATA-------
         //------PAGES-----------
         //------prepare page data---------
-        this.pageX = param.pageParamA().x();
-        this.pageY = param.pageParamA().y();
-        this.pageXSize = param.pageParamA().width();
-        this.pageYSize = param.pageParamA().height();
+        this.pageX = param.pageParamAdjusted().x();
+        this.pageY = param.pageParamAdjusted().y();
+        this.pageXSize = param.pageParamAdjusted().width();
+        this.pageYSize = param.pageParamAdjusted().height();
         this.pages = buildPages(param.pages());//is page a widget? but init page bar count indeed needs it.
         //page switch bar
         this.pageBarCount = Math.min(param.pageTabCount(), getPages().size());
@@ -142,7 +143,7 @@ public class ScreenFramework implements PageManager{
         this.menu = attachingScreen.menu;
 
         //---STRUCTURE AND RENDER DATA---
-        AttachedMenuOptions param = ClientConfigs.ATTACHED_MENU_CONFIG.get().adjust(screen);
+        AttachedMenuScreenLayout param = ClientConfigs.ATTACHED_MENU_CONFIG.get().adjust(screen);
         this.rows = param.rows();//rows and columns affect the structure
         this.columns = param.columns();
         this.leftPos = param.leftPos();
@@ -150,20 +151,20 @@ public class ScreenFramework implements PageManager{
         TextureMode textureMode = param.textureMode();
         // For resource-based (vanilla-like) backgrounds, the 9-slice widths are 7 (left) + 18*columns + 7 (right)
         // Transparent mode uses the provided page width directly.
-        this.imageWidth = textureMode==TextureMode.TRANSPARENT ? param.pageParamA().width() : 7 + columns * 18 + 7;
-        this.imageHeight = screen.height;
+        this.imageWidth = textureMode==TextureMode.TRANSPARENT ? param.pageParamAdjusted().width() : 7 + columns * 18 + 7;
+        this.imageHeight = screen.height;//todo precise
         //renderer may need structure and widget data --here?
         this.SFBgRenderer = textureMode != TextureMode.TRANSPARENT ?
-                new FromResource.LeftLayout(this, param.pageTabA()) :
-                new Transparent(this, param.pageTabA());
+                new FromResource.LeftLayout(this, param.pageTabParamAdjusted()) :
+                new Transparent(this, param.pageTabParamAdjusted());
 
         //---WIDGET DATA---
         //------PAGES-----------
         //------prepare page data---------
-        this.pageX = param.pageParamA().x();
-        this.pageY = param.pageParamA().y();
-        this.pageXSize = param.pageParamA().width();
-        this.pageYSize = param.pageParamA().height();
+        this.pageX = param.pageParamAdjusted().x();
+        this.pageY = param.pageParamAdjusted().y();
+        this.pageXSize = param.pageParamAdjusted().width();
+        this.pageYSize = param.pageParamAdjusted().height();
         this.pages = buildPages(param.pages());//is page a widget? but init page bar count indeed needs it.
         //page switch bar
         this.pageBarCount = Math.min(param.pageTabCount(), getPages().size());
@@ -384,7 +385,7 @@ public class ScreenFramework implements PageManager{
             return true;
         }
 
-        if (!searchBoxParam.hasClickedOn((int) mouseX, (int) mouseY)) {
+        if (!searchBoxParam.hasClickedOn(mouseX, mouseY)) {
             searchBox.setFocused(false);
         } else {
             searchBox.setFocused(true);//this is what JEI behaves
@@ -405,7 +406,7 @@ public class ScreenFramework implements PageManager{
         }
 //        //handle clicked on the page switch bar
         // Use widget onClick to avoid signature mismatch across versions
-        pageSwitchBar.onClick(mouseX, mouseY);
+        pageSwitchBar.onClick(clickEvent, pre);//todo ?
         // onClick reports via framework.pageSwitched(), treat as handled when mouse is over tab area
         if (mouseX >= pageSwitchBar.getX() && mouseX < pageSwitchBar.getX() + pageSwitchBar.getWidth()
                 && mouseY >= pageSwitchBar.getY() && mouseY < pageSwitchBar.getY() + pageSwitchBar.getHeight()) {
@@ -425,7 +426,10 @@ public class ScreenFramework implements PageManager{
     }
 
 
-    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+    public boolean mouseDragged(MouseButtonEvent event, double dragX, double dragY) {
+        double mouseX = event.x();
+        double mouseY = event.y();
+        int button = event.button();
         ItemStack itemstack = this.menu.getCarried();
         //ignore QUICK_CRAFT and touchscreen
         if (!itemstack.isEmpty() || mc.options.touchscreen().get())
@@ -445,7 +449,10 @@ public class ScreenFramework implements PageManager{
         return false;
     }
 
-    public boolean mouseReleased(double mouseX, double mouseY, int keyCode) {
+    public boolean mouseReleased(MouseButtonEvent event) {
+        double mouseX = event.x();
+        double mouseY = event.y();
+        int keyCode = event.button();
         creativeQuickInsertedItem = ItemStack.EMPTY;
 
         DisplayPage displayingPage = getDisplayingPage();
@@ -457,7 +464,7 @@ public class ScreenFramework implements PageManager{
     }
 
 
-    public boolean mouseScrolled(double mouseX, double mouseY, double scrollY) {
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
         if (hasClickedOnPage(mouseX, mouseY)) {
             return getDisplayingPage().mouseScrolled(mouseX - getPageX(), getPageY(), scrollY);
         }
@@ -466,7 +473,10 @@ public class ScreenFramework implements PageManager{
 
     private boolean ignoreTextInput;
 
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+    public boolean keyPressed(KeyEvent event) {
+        int keyCode = event.key();
+        int scanCode = event.scancode();
+        int modifiers = event.modifiers();
         this.ignoreTextInput = false;
 
         if (inputHandler.isActiveAndMatches(KeyMappings.STAR_ITEM, InputConstants.Type.KEYSYM.getOrCreate(keyCode))) {
@@ -492,7 +502,7 @@ public class ScreenFramework implements PageManager{
         return false;
     }
 
-    public boolean charTyped(char codePoint, int modifiers) {
+    public boolean charTyped(CharacterEvent event) {
         if (this.ignoreTextInput || !getDisplayingPage().hasSearchbox()) {
             return false;
         } else {
@@ -542,11 +552,46 @@ public class ScreenFramework implements PageManager{
     public void resizePageRows(int rows) {
         // Mirror menu row changes so the client page layout stays aligned with the server menu.
         this.rows = Math.max(1, rows);
-        this.pageYSize = this.rows * 18;
+        this.pageYSize = this.rows * 18 + 17 + 12;
         DisplayPage current = getDisplayingPage();
         if (current != null) {
             current.resize(this.rows);
         }
+    }
+
+    @Override
+    public ScreenRectangle getRectangle() {
+        return new ScreenRectangle(leftPos, topPos, imageWidth, imageHeight);
+    }
+
+    /**
+     * Checks if the given mouse coordinates are over the GUI element.
+     * <p>
+     *
+     * @param mouseX the X coordinate of the mouse.
+     * @param mouseY the Y coordinate of the mouse.
+     * @return {@code true} if the mouse is over the GUI element, {@code false} otherwise.
+     */
+    @Override
+    public boolean isMouseOver(double mouseX, double mouseY) {
+        return new ScreenRectangleWidgetParam(leftPos, topPos, imageWidth, imageHeight).hasClickedOn(mouseX, mouseY);
+    }
+
+    /**
+     * Sets the focus state of the GUI element.
+     *
+     * @param focused {@code true} to apply focus, {@code false} to remove focus
+     */
+    @Override
+    public void setFocused(boolean focused) {
+        this.focused = focused;
+    }
+
+    private boolean focused;
+
+    @Override
+    public boolean isFocused() {
+        return focused;
     }
 
     @Override

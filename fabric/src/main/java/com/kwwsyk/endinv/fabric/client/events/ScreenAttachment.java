@@ -17,6 +17,7 @@ import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.input.KeyEvent;
 import net.minecraft.world.entity.player.Player;
 
 import javax.annotation.Nullable;
@@ -306,6 +307,10 @@ public final class ScreenAttachment {
         }
         boolean[] canceled = {false};
         expected.keyPressed(new IScreenEvent() {
+            public KeyEvent getKeyEvent(){
+                return
+            }
+
             @Override
             public int getKeyCode() {
                 return keyCode;

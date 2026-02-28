@@ -3,7 +3,7 @@ package com.kwwsyk.endinv.common.client.gui.page;
 import com.kwwsyk.endinv.common.client.CachedSrcInv;
 import com.kwwsyk.endinv.common.client.gui.ScreenFramework;
 import com.kwwsyk.endinv.common.menu.page.PageType;
-import org.jetbrains.annotations.NotNull;
+import com.kwwsyk.endinv.common.util.ItemKey;
 
 import java.util.List;
 
@@ -25,7 +25,7 @@ public class ItemDisplay extends ItemPage{
      * Read items data from {@link CachedSrcInv} when transfer mode is {@code ALL} and rebuild the view.
      */
     public void readCachedItems(){
-        List<ItemPage.ItemPointer> view = CachedSrcInv.INSTANCE.getItemView(getStartIndex(), length,
+        List<ItemKey> view = CachedSrcInv.INSTANCE.getItemView(getStartIndex(), length,
                 framework.sortType(), framework.isSortReversed(),
                 getClassify(), framework.searching());
         buildContentsWith(view);
@@ -39,18 +39,12 @@ public class ItemDisplay extends ItemPage{
      * Build Displayed view with a ItemStack list.
      * @param stacks itemstack list to fill the view
      */
-    public void buildContentsWith(@NotNull List<ItemPage.ItemPointer> stacks){
+    public void buildContentsWith(List<ItemKey> stacks){
         if(holdOn){
             inQueueStacks = stacks;
             return;
         }
-        for(int i=0; i<this.length; ++i){
-            if(i<stacks.size() && stacks.get(i) != null) {
-                this.items.set(i, stacks.get(i));
-            }else {
-                this.items.set(i,ItemPage.ItemPointer.EMPTY);
-            }
-        }
+        this.viewContainer = buildView(stacks);
     }
 
     @Override

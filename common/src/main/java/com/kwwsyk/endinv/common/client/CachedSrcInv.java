@@ -2,7 +2,6 @@ package com.kwwsyk.endinv.common.client;
 
 import com.kwwsyk.endinv.common.ModInfo;
 import com.kwwsyk.endinv.common.SourceInventory;
-import com.kwwsyk.endinv.common.client.gui.page.ItemPage;
 import com.kwwsyk.endinv.common.network.payloads.toClient.EndInvMetadata;
 import com.kwwsyk.endinv.common.options.ContentTransferMode;
 import com.kwwsyk.endinv.common.options.ServerConfigs;
@@ -14,6 +13,7 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
 import net.minecraft.util.Mth;
 import net.minecraft.util.Util;
 import net.minecraft.world.item.ItemStack;
+import org.jetbrains.annotations.Unmodifiable;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -40,19 +40,18 @@ public class CachedSrcInv extends SourceInventory {
         this.itemSize = getItemSize();//here assert transfermode==all //parallelable
         this.validSize = true;
     }
-
-    public List<ItemPage.ItemPointer> getItemView(int startIndex,
-                                                  int length,
-                                                  SortType sortType,
-                                                  boolean reverse,
-                                                  @Nullable Predicate<ItemStack> classify,
-                                                  String search){
+    @Unmodifiable
+    public List<ItemKey> getItemView(int startIndex,
+                                     int length,
+                                     SortType sortType,
+                                     boolean reverse,
+                                     @Nullable Predicate<ItemStack> classify,
+                                     String search){
         var ret = getSortedKeyReference(sortType)
                 .filter(key -> {
                     ItemStack stack = key.toStack(itemMap.get(key).count());
                     return (classify == null || classify.test(stack)) && SearchUtil.matchesSearch(stack, search);
                 })
-                .map(ItemPage.ItemPointer::new)
                 .toList();
         int size = ret.size();
         //update startIndex

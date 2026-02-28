@@ -2,23 +2,24 @@ package com.kwwsyk.endinv.common.client.gui.page;
 
 import com.kwwsyk.endinv.common.ModInfo;
 import com.kwwsyk.endinv.common.client.gui.ScreenFramework;
-import com.kwwsyk.endinv.common.client.gui.page.manager.ResourcePointer;
+import com.kwwsyk.endinv.common.client.gui.page.slotView.ItemPageSlotView;
+import com.kwwsyk.endinv.common.client.gui.page.slotView.PageViewContainer;
 import com.kwwsyk.endinv.common.menu.page.PageType;
 import com.kwwsyk.endinv.common.menu.page.pageManager.PageQuickMoveHandler;
 import com.kwwsyk.endinv.common.network.payloads.PageData;
 import com.kwwsyk.endinv.common.network.payloads.toServer.*;
 import com.kwwsyk.endinv.common.util.ItemKey;
+import com.kwwsyk.endinv.common.util.NotNullWhenInitialized;
 import com.mojang.logging.LogUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen;
-import net.minecraft.core.NonNullList;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 
 import java.util.List;
@@ -31,13 +32,19 @@ import static com.kwwsyk.endinv.common.ModInfo.getPacketDistributor;
 public abstract class ItemPage extends GridPage {
 
     private static final Logger LOGGER = LogUtils.getLogger();
-
-    protected NonNullList<ResourcePointer<ItemStack>> items;
-
-    protected List<ItemPointer> inQueueStacks = null;
+    @NotNullWhenInitialized
+    protected PageViewContainer viewContainer;
+    @Nullable
+    protected List<ItemKey> inQueueStacks = null;
 
     public ItemPage(PageType pageType, ScreenFramework framework) {
         super(pageType, framework);
+    }
+
+    @Override
+    public void initializeContents() {
+        super.initializeContents();
+        viewContainer = buildView(List.of());
     }
 
     /**
@@ -53,7 +60,7 @@ public abstract class ItemPage extends GridPage {
     /**Configure the visible window and reload items.
      * <p>
      * Updates the page's starting index and slot count, ensures the internal
-     * {@link #items} list matches the requested size, clears transient state via {@link #release()},
+     * {@code items} list matches the requested size, clears transient state via {@link #release()},
      * then calls {@link #refreshItems()} to populate the visible entries.
      * </p>
      * @param startIndex the source-inventory index of the first visible item
@@ -63,16 +70,12 @@ public abstract class ItemPage extends GridPage {
     protected void setVisibleRange(int startIndex, int length) {
         this.startIndex = startIndex;
         this.length = Math.min(length, framework.rows()* framework.columns());
-        // ensure internal invariants
-        if(this.items==null || this.items.size()!=this.length) this.items = NonNullList.withSize(this.length, ItemPointer.EMPTY);
-        if(length != this.items.size()){
-            this.items = NonNullList.withSize(length,ItemPointer.EMPTY);
-        }
+
         release();
         this.refreshItems();
     }
 
-    /**The <em>refresh</em> method of ItemPage, this method shall keep the startIndex and length and fill {@link #items}
+    /**The <em>refresh</em> method of ItemPage, this method shall keep the startIndex and length and fill {@link #viewContainer}
      * with such and srcInv.<br>
      * This may invoke {@link #requestRemoteContents()} or other send packet methods.
      * So be caution use this method especially on receiving request-remote-callback packets. Like {@link com.kwwsyk.endinv.common.network.payloads.toClient.EndInvContent}
@@ -90,13 +93,13 @@ public abstract class ItemPage extends GridPage {
     }
 
     public boolean isEmpty() {
-        return items.stream().allMatch(p -> p == null || p.get().isEmpty());
+        return viewContainer.isEmpty();
     }
 
     @Override
     public boolean canScroll() {
         return getStartIndex() >0 ||(getStartIndex() +length <= srcInv.getItemSize());
-    }
+    }//todo
 
     /**Get mouse hovered or clicked item by mouse offset.
      * @param XOffset mouseX-pageX
@@ -106,9 +109,8 @@ public abstract class ItemPage extends GridPage {
     @Override
     public ItemStack getItemByMouseOffset(double XOffset, double YOffset){
         int slot = getSlotByMouseOffset(XOffset,YOffset);
-        if(slot>=0 && slot<items.size()) {
-            ResourcePointer<ItemStack> p = items.get(slot);
-            return p == null ? ItemStack.EMPTY : p.get();
+        if(slot>=0 && slot < viewContainer.getContainerSize()) {
+            return viewContainer.getItem(slot);
         }
         return ItemStack.EMPTY;
     }
@@ -120,28 +122,16 @@ public abstract class ItemPage extends GridPage {
         getPacketDistributor().sendToServer(new StarItemPayload(clicked,true));
     }
 
-    public void renderPage(GuiGraphics guiGraphics){
-        int rowIndex = 0;
-        int columnIndex = 0;
-        for(ResourcePointer<ItemStack> pointer : items){
-            ItemStack stack = pointer.get();
-            int itemX = leftPos + MARGIN_SIDE_WIDTH + columnIndex*18,itemY = topPos + MARGIN_TOP_HEIGHT + rowIndex*18+1;
-            if(stack.isEmpty() && !stack.is(Items.AIR)) renderEmpty(guiGraphics,itemX,itemY,stack);
-            guiGraphics.renderItem(stack,itemX,itemY,columnIndex+rowIndex*180);
-            if(!isHiddenBySortBox(rowIndex,columnIndex))
-                guiGraphics.renderItemDecorations(Minecraft.getInstance().font, stack,itemX,itemY, getDisplayAmount(stack));
-            columnIndex++;
-            if(columnIndex>= framework.columns()){
-                columnIndex=0;
-                rowIndex++;
-            }
+    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks){
+        for(ItemPageSlotView slot : viewContainer.slots()){
+            slot.render(guiGraphics, mouseX, mouseY, partialTicks);
         }
     }
 
     @Override
     public void pageClicked(double XOffset, double YOffset, int button, ClickType clickType) {
         int slot = getSlotByMouseOffset(XOffset,YOffset);
-        if(slot>=0 && slot<items.size()) {
+        if(slot>=0 && slot < viewContainer.getContainerSize()) {
             ItemStack clicked = getItemByMouseOffset(XOffset, YOffset).copy();
             switch (clickType){
                 case PICKUP -> handlePickup(clicked, button);
@@ -171,8 +161,7 @@ public abstract class ItemPage extends GridPage {
     }
 
     public ItemStack takeItem(int index, int count){
-        ResourcePointer<ItemStack> p = this.items.get(index);
-        ItemStack itemStack = p == null ? ItemStack.EMPTY : p.get();
+        ItemStack itemStack = viewContainer.getItem(index);
         setChanged();
         return srcInv.takeItem(itemStack,count);
     }
@@ -296,44 +285,6 @@ public abstract class ItemPage extends GridPage {
         Player player = framework.getPlayer();
         if(player.getAbilities().instabuild && framework.getMenu().getCarried().isEmpty()){
             framework.getMenu().setCarried(clicked.copyWithCount(clicked.getMaxStackSize()));
-        }
-    }
-
-    public static class ItemPointer implements ResourcePointer<ItemStack> {
-
-        public static final ItemPointer EMPTY = new ItemPointer(null){
-            public ItemStack get(){
-                return ItemStack.EMPTY;
-            }
-
-            @Override
-            public boolean isEmpty() {
-                return true;
-            }
-        };
-
-        private final com.kwwsyk.endinv.common.SourceInventory srcInv;
-        private final ItemKey key;
-
-        public ItemPointer(ItemKey key){
-            this.srcInv = com.kwwsyk.endinv.common.client.CachedSrcInv.INSTANCE;
-            this.key = key;
-        }
-
-        @Override
-        public ItemStack get() {
-            if(key == null) return ItemStack.EMPTY;
-            var state = srcInv.getItemMap().get(key);
-            if(state == null) return ItemStack.EMPTY;
-            return key.toStack(state.count());
-        }
-
-        public ItemKey key(){
-            return key;
-        }
-
-        public boolean isEmpty(){
-            return key == null;
         }
     }
 }
