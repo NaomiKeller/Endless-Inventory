@@ -9,4 +9,6 @@ import net.minecraft.world.item.ItemStack;
 public interface IPlatform {
 
     boolean onItemStackedOn(ItemStack clickedItem, ItemStack carriedItem, Slot slot, ClickAction action, Player player, SlotAccess access);
+
+    boolean isModLoaded(String modid);
 }

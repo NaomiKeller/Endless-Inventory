@@ -59,10 +59,10 @@ public class SegmentedViewContainer extends PageViewContainer{
 
 
             if (segment == null || segment.isEmpty()) {
-                if (i % 9 == 0) {
+                if (i % col == 0) {
                     if (it.hasNext()) {
                         segment = itemView.stream().filter(it.next()).collect(Collectors.toList());//.to be modifiable
-                        if(keepClassifiedItemInNextSeg) itemView.removeAll(segment);
+                        if(!keepClassifiedItemInNextSeg) itemView.removeAll(segment);
                     }else if(includeRemainItems){
                         segment = itemView;
                     }

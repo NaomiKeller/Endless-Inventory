@@ -1,5 +1,6 @@
 package com.kwwsyk.endinv.common.client;
 
+import com.kwwsyk.endinv.common.EndInvAffinities;
 import com.kwwsyk.endinv.common.ModInfo;
 import com.kwwsyk.endinv.common.SourceInventory;
 import com.kwwsyk.endinv.common.network.payloads.toClient.EndInvMetadata;
@@ -32,7 +33,7 @@ public class CachedSrcInv extends SourceInventory {
     private boolean validSize;
 
     private CachedSrcInv(){
-        super(ModInfo.DEFAULT_UUID, null);
+        super(ModInfo.DEFAULT_UUID, new EndInvAffinities());
     }
 
     public void initializeContents(Map<ItemKey, ItemState> itemMap){

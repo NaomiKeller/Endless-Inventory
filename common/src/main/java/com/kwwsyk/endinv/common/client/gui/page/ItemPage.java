@@ -1,6 +1,7 @@
 package com.kwwsyk.endinv.common.client.gui.page;
 
 import com.kwwsyk.endinv.common.ModInfo;
+import com.kwwsyk.endinv.common.client.CachedSrcInv;
 import com.kwwsyk.endinv.common.client.gui.ScreenFramework;
 import com.kwwsyk.endinv.common.client.gui.page.slotView.ItemPageSlotView;
 import com.kwwsyk.endinv.common.client.gui.page.slotView.PageViewContainer;
@@ -44,7 +45,7 @@ public abstract class ItemPage extends GridPage {
     @Override
     public void initializeContents() {
         super.initializeContents();
-        viewContainer = buildView(List.of());
+        this.viewContainer = buildView(getViewForPage());
     }
 
     /**
@@ -81,6 +82,12 @@ public abstract class ItemPage extends GridPage {
      * So be caution use this method especially on receiving request-remote-callback packets. Like {@link com.kwwsyk.endinv.common.network.payloads.toClient.EndInvContent}
      */
     public abstract void refreshItems();
+
+    protected List<ItemKey> getViewForPage() {
+        return CachedSrcInv.INSTANCE.getItemView(getStartIndex(), length,
+                framework.sortType(), framework.isSortReversed(),
+                getClassify(), framework.searching());
+    }
 
     public abstract void requestRemoteContents();
 

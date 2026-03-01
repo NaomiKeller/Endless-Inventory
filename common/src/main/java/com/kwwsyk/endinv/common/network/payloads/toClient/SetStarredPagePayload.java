@@ -1,6 +1,7 @@
 package com.kwwsyk.endinv.common.network.payloads.toClient;
 
 import com.kwwsyk.endinv.common.AbstractModInitializer;
+import com.kwwsyk.endinv.common.client.CachedSrcInv;
 import com.kwwsyk.endinv.common.client.gui.page.StarredItemPage;
 import com.kwwsyk.endinv.common.network.payloads.ModPacketContext;
 import com.kwwsyk.endinv.common.network.payloads.ModPacketPayload;
@@ -40,9 +41,9 @@ public record SetStarredPagePayload(List<ItemStackLike> stacks) implements ModPa
 
     @Override
     public void handle(ModPacketContext context) {
+        CachedSrcInv.INSTANCE.affinities.syncStarredItems(stacks.stream().map(ItemStackLike::toKey).toList());
         ModPacketPayload.getClientPageMeta().ifPresent(mng->{
             if(mng.getDisplayingPage() instanceof StarredItemPage page){
-                //todo update srcInv item info with item count
                 page.initializeAsMap(stacks);
             }
         });

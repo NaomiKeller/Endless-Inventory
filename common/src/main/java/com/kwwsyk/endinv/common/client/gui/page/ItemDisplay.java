@@ -25,9 +25,7 @@ public class ItemDisplay extends ItemPage{
      * Read items data from {@link CachedSrcInv} when transfer mode is {@code ALL} and rebuild the view.
      */
     public void readCachedItems(){
-        List<ItemKey> view = CachedSrcInv.INSTANCE.getItemView(getStartIndex(), length,
-                framework.sortType(), framework.isSortReversed(),
-                getClassify(), framework.searching());
+        List<ItemKey> view = getViewForPage();
         buildContentsWith(view);
     }
 

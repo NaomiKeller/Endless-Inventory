@@ -396,7 +396,7 @@ public class ScreenFramework implements PageManager, GuiEventListener {
             }
         }
         //handle menu item quick move
-        boolean flg = inputHandler.isActiveAndMatches(KeyMappings.QUICK_MOVE, InputConstants.Type.MOUSE.getOrCreate(keyCode));
+        boolean flg = inputHandler.isActiveAndMatches(KeyMappings.QUICK_MOVE, clickEvent);
         if (flg) {
             Slot clicked = findSlot(mouseX, mouseY);
             if (clicked != null && clicked.hasItem()) {
@@ -435,7 +435,7 @@ public class ScreenFramework implements PageManager, GuiEventListener {
         if (!itemstack.isEmpty() || mc.options.touchscreen().get())
             return false;
         //CTRL-click(default) to quick move items as behavior as Mouse Tweaks
-        if (inputHandler.isActiveAndMatches(KeyMappings.QUICK_MOVE, InputConstants.Type.MOUSE.getOrCreate(button))) {
+        if (inputHandler.isActiveAndMatches(KeyMappings.QUICK_MOVE, event)) {
             Slot clicked = findSlot(mouseX, mouseY);
             if (clicked != null && clicked.hasItem()) {
                 slotQuickMoved(clicked);
@@ -452,13 +452,12 @@ public class ScreenFramework implements PageManager, GuiEventListener {
     public boolean mouseReleased(MouseButtonEvent event) {
         double mouseX = event.x();
         double mouseY = event.y();
-        int keyCode = event.button();
         creativeQuickInsertedItem = ItemStack.EMPTY;
 
         DisplayPage displayingPage = getDisplayingPage();
         displayingPage.release();
         if (hasClickedOnPage(mouseX, mouseY)) {
-            return displayingPage.mouseReleased(mouseX - getPageX(), mouseY - getPageY(), keyCode);
+            return displayingPage.mouseReleased(new MouseButtonEvent(mouseX - getPageX(), mouseY - getPageY(), event.buttonInfo()));
         }
         return false;
     }
@@ -479,7 +478,7 @@ public class ScreenFramework implements PageManager, GuiEventListener {
         int modifiers = event.modifiers();
         this.ignoreTextInput = false;
 
-        if (inputHandler.isActiveAndMatches(KeyMappings.STAR_ITEM, InputConstants.Type.KEYSYM.getOrCreate(keyCode))) {
+        if (inputHandler.isActiveAndMatches(KeyMappings.STAR_ITEM, event)) {
             Slot clicked = findSlot(roughMouseX, roughMouseY);
             if (clicked != null && clicked.hasItem()) {
                 ItemStack itemStack = clicked.getItem();

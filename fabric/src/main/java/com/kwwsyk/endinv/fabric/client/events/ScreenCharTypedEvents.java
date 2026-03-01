@@ -3,14 +3,15 @@ package com.kwwsyk.endinv.fabric.client.events;
 import net.fabricmc.fabric.api.event.Event;
 import net.fabricmc.fabric.api.event.EventFactory;
 import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.input.CharacterEvent;
 
 public final class ScreenCharTypedEvents {
 
     public static final Event<BeforeCharTyped> BEFORE_CHAR_TYPED = EventFactory.createArrayBacked(
         BeforeCharTyped.class,
-        listeners -> (guiEventListener, codePoint, modifiers) -> {
+        listeners -> (guiEventListener, event) -> {
             for (BeforeCharTyped listener : listeners) {
-                if (listener.beforeCharTyped(guiEventListener, codePoint, modifiers)) {
+                if (listener.beforeCharTyped(guiEventListener, event)) {
                     return true;
                 }
             }
@@ -20,7 +21,7 @@ public final class ScreenCharTypedEvents {
 
     @FunctionalInterface
     public interface BeforeCharTyped {
-        boolean beforeCharTyped(GuiEventListener guiEventListener, char codePoint, int modifiers);
+        boolean beforeCharTyped(GuiEventListener guiEventListener, CharacterEvent event);
     }
 
     private ScreenCharTypedEvents() {

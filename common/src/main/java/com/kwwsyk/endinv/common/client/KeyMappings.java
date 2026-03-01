@@ -3,6 +3,7 @@ package com.kwwsyk.endinv.common.client;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.input.InputWithModifiers;
 import org.lwjgl.glfw.GLFW;
 
 public class KeyMappings {
@@ -27,7 +28,18 @@ public class KeyMappings {
     }
 
     public enum Modifier{
-        CTRL,NONE;
+        CTRL(InputConstants.MOD_CONTROL),
+        NONE(0);
+        @InputWithModifiers.Modifiers
+        int modifier;
+
+        Modifier(int modifier){
+            this.modifier = modifier;
+        }
+
+        public boolean matchesModifier(InputWithModifiers input){
+            return input.modifiers() == modifier;
+        }
     }
 
     public record KeyParam(String key, InputConstants.Type type, int keyCode, ActiveCondition condition, Modifier modifier, KeyMapping.Category category){}
@@ -52,6 +64,14 @@ public class KeyMappings {
             "key.endinv.star_item",
             InputConstants.Type.KEYSYM,
             GLFW.GLFW_KEY_A,
+            ActiveCondition.GUI,
+            Modifier.NONE,
+            KeyMapping.Category.INVENTORY
+    );
+    public static final KeyParam STAR_ITEM_ALTER = new KeyParam(
+            "key.endinv.star_item",
+            InputConstants.Type.KEYSYM,
+            GLFW.GLFW_KEY_F13,
             ActiveCondition.GUI,
             Modifier.NONE,
             KeyMapping.Category.INVENTORY

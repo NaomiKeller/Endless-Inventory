@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
-  "id": "endless_inventory",
-  "version": "1.1.2",
-  "name": "Endless Inventory",
-  "description": "This mod provides an RPG like inventory space, allowing player to store endless items.\nAnd do something else.",
+  "id": "${mod_id}",
+  "version": "${mod_version}",
+  "name": "${mod_name}",
+  "description": "${mod_description}",
   "authors": [
-    "Kay_Zhang"
+    "${mod_authors}"
   ],
   "contact": {},
-  "license": "MIT",
+  "license": "${mod_license}",
   "icon": "assets/endless_inventory/icon.png",
   "environment": "*",
   "entrypoints": {
@@ -28,9 +28,10 @@
   "depends": {
     "fabricloader": ">=0.17",
     "fabric": "*",
-    "minecraft": "1.21.8"
+    "minecraft": "${minecraft_version}"
   },
   "suggests": {
+    "jei": "*",
     "cloth-config2": "*"
   }
 }

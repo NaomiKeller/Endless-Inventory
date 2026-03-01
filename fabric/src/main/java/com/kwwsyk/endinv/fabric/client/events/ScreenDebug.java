@@ -25,9 +25,9 @@ public final class ScreenDebug {
                 com.kwwsyk.endinv.common.client.ScreenDebug.debugInfo(s, graphics, mouseX, mouseY);
             });
 
-            ScreenKeyboardEvents.afterKeyPress(screen).register((s, keyCode, scanCode, modifiers) -> {
-                com.kwwsyk.endinv.common.client.ScreenDebug.click(keyCode, s);
-                if (keyCode == InputConstants.KEY_F4) {
+            ScreenKeyboardEvents.afterKeyPress(screen).register((s, event) -> {
+                com.kwwsyk.endinv.common.client.ScreenDebug.click(event.key(), s);
+                if (event.key() == InputConstants.KEY_F4) {
                     hideMenu = !hideMenu;
                 }
             });

@@ -54,6 +54,11 @@ public class EndInvAffinities {
         starredItems.removeIf(ik -> ik.equals(stack));
     }
 
+    public void syncStarredItems(List<ItemKey> stacks){//todo log
+        starredItems.clear();
+        starredItems.addAll(stacks);
+    }
+
     /**
      * Get list of starred items of EndInv.
      * @param startIndex the startIndex of sublist

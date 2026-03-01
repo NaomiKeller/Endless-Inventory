@@ -1,8 +1,10 @@
 package com.kwwsyk.endinv.common.client.gui.page;
 
+import com.kwwsyk.endinv.common.client.CachedSrcInv;
 import com.kwwsyk.endinv.common.client.gui.ScreenFramework;
 import com.kwwsyk.endinv.common.menu.page.PageType;
 import com.kwwsyk.endinv.common.network.payloads.toServer.StarItemPayload;
+import com.kwwsyk.endinv.common.util.ItemKey;
 import com.kwwsyk.endinv.common.util.ItemStackLike;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
@@ -18,6 +20,11 @@ public class StarredItemPage extends ItemDisplay{
 
     public StarredItemPage(PageType type, ScreenFramework screenFramework) {
         super(type, screenFramework);
+    }
+
+    @Override
+    protected List<ItemKey> getViewForPage() {
+        return CachedSrcInv.INSTANCE.affinities.starredItems;
     }
 
     public void starItem(ItemStack stack, boolean isAdding){

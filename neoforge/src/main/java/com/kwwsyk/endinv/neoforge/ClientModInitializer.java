@@ -2,9 +2,7 @@ package com.kwwsyk.endinv.neoforge;
 
 import com.kwwsyk.endinv.common.AbstractClientModInitializer;
 import com.kwwsyk.endinv.common.client.IContainerScreenHelper;
-import com.kwwsyk.endinv.common.client.IInputHandler;
 import com.kwwsyk.endinv.common.client.KeyMappings;
-import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.neoforged.bus.api.IEventBus;
@@ -18,36 +16,28 @@ import static com.kwwsyk.endinv.common.client.KeyMappings.*;
 
 public class ClientModInitializer extends AbstractClientModInitializer {
 
-    public static Lazy<KeyMapping> OPEN_MENU_KEY = regKey(OPEN_MENU);
-    public static Lazy<KeyMapping> QUICK_MOVE_KEY = regKey(QUICK_MOVE);
-    public static Lazy<KeyMapping> STAR_ITEM_KEY = regKey(STAR_ITEM);
-
-
-    static void init(IEventBus modEventBus){
-        modEventBus.addListener(ClientModInitializer::regKeyMapping);
+    public ClientModInitializer(){
+        super();
+        AbstractClientModInitializer.ENDINV_CLIENT = this;
     }
 
-    private static void regKeyMapping(RegisterKeyMappingsEvent event){
-        event.register(OPEN_MENU_KEY.get());
-        event.register(QUICK_MOVE_KEY.get());
+    void init(IEventBus modEventBus){
+        modEventBus.addListener(this::regKeyMapping);
+    }
+
+    private void regKeyMapping(RegisterKeyMappingsEvent event){
+        event.register(KEY_MAPPING_MAP.get(OPEN_MENU));
+        event.register(KEY_MAPPING_MAP.get(QUICK_MOVE));
         if(!ModList.get().isLoaded("jei")) {
-            event.register(STAR_ITEM_KEY.get());
+            event.register(KEY_MAPPING_MAP.get(STAR_ITEM));
         } else {
-            // Ensure the input handler checks the same mapping we register
-            STAR_ITEM_KEY = Lazy.of(() -> new KeyMapping(
-                    STAR_ITEM.key(),
-                    KeyConflictContext.GUI,
-                    KeyModifier.NONE,
-                    STAR_ITEM.type(),
-                    302, // F13 (Insert on some keyboards)
-                    KeyMapping.Category.INVENTORY
-            ));
-            event.register(STAR_ITEM_KEY.get());
+            event.register(KEY_MAPPING_MAP.get(STAR_ITEM_ALTER));
         }
     }
 
-    private static Lazy<KeyMapping> regKey(KeyParam key) {
-        return Lazy.of(
+    @Override
+    protected void regKeyParam(KeyParam key) {
+        var reg = Lazy.of(
                     ()-> new KeyMapping(
                             key.key(),
                             switch (key.condition()){
@@ -60,34 +50,7 @@ public class ClientModInitializer extends AbstractClientModInitializer {
                     key.category()
                             )
             );
-    }
-
-    @Override
-    protected void initClientConfigs() {
-        // Client config entries are registered via NeoForge CONFIG_SPEC in ModInitializer
-    }
-
-    @Override
-    protected IInputHandler getInputHandler() {
-        return new IInputHandler() {
-            @Override
-            public boolean isActiveAndMatches(KeyMapping keyMapping, InputConstants.Key key) {
-                return keyMapping.isActiveAndMatches(key);
-            }
-
-            @Override
-            public boolean isActiveAndMatches(KeyParam keyParam, InputConstants.Key key) {
-                if (keyParam.equals(OPEN_MENU)) {
-                    return OPEN_MENU_KEY.get().isActiveAndMatches(key);
-                } else if (keyParam.equals(QUICK_MOVE)) {
-                    return QUICK_MOVE_KEY.get().isActiveAndMatches(key);
-                } else if (keyParam.equals(STAR_ITEM)) {
-                    return STAR_ITEM_KEY.get().isActiveAndMatches(key);
-                } else {
-                    return regKey(keyParam).get().isActiveAndMatches(key);
-                }
-            }
-        };
+        KEY_MAPPING_MAP.put(key, reg.get());
     }
 
     @Override

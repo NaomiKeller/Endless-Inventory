@@ -25,6 +25,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
+import net.neoforged.fml.ModList;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
 import net.neoforged.neoforge.attachment.AttachmentType;
@@ -64,7 +65,7 @@ public class ModInitializer extends AbstractModInitializer {
 
         if(isClientDist()) {
             var client = new ClientModInitializer();
-            ClientModInitializer.init(modEventBus);
+            client.init(modEventBus);
             container.registerExtensionPoint(IConfigScreenFactory.class, ConfigurationScreen::new);
         }
     }
@@ -75,6 +76,11 @@ public class ModInitializer extends AbstractModInitializer {
             @Override
             public boolean onItemStackedOn(ItemStack clickedItem, ItemStack carriedItem, Slot slot, ClickAction action, Player player, SlotAccess access) {
                 return CommonHooks.onItemStackedOn(carriedItem,carriedItem,slot,action,player,access);
+            }
+
+            @Override
+            public boolean isModLoaded(String modid) {
+                return ModList.get().isLoaded(modid);
             }
         };
     }

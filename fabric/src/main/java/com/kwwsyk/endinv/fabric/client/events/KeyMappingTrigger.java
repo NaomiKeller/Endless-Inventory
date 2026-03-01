@@ -1,9 +1,10 @@
 package com.kwwsyk.endinv.fabric.client.events;
 
+import com.kwwsyk.endinv.common.AbstractClientModInitializer;
 import com.kwwsyk.endinv.common.client.ClientModInfo;
 import com.kwwsyk.endinv.common.client.KeyMappings;
-import com.kwwsyk.endinv.fabric.ClientModInit;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.minecraft.client.KeyMapping;
 import net.minecraft.client.player.LocalPlayer;
 
 public final class KeyMappingTrigger {
@@ -17,9 +18,12 @@ public final class KeyMappingTrigger {
             if (player == null) {
                 return;
             }
-            var key = ClientModInit.getRegisteredKey(KeyMappings.OPEN_MENU);
-            while (key.consumeClick()) {
-                ClientModInfo.sendOpenMenu();
+            KeyMapping key;
+            if (AbstractClientModInitializer.ENDINV_CLIENT != null) {
+                key = AbstractClientModInitializer.ENDINV_CLIENT.KEY_MAPPING_MAP.get(KeyMappings.OPEN_MENU);
+                while (key.consumeClick()) {
+                    ClientModInfo.sendOpenMenu();
+                }
             }
         });
     }

@@ -9,30 +9,36 @@ import com.kwwsyk.endinv.common.options.config.json.JsonConfigurationHandler;
 import com.kwwsyk.endinv.fabric.client.events.ClientEvents;
 import com.kwwsyk.endinv.fabric.mixin.AbstractContainerScreenAccessor;
 import com.kwwsyk.endinv.fabric.network.FabricClientNetworking;
-import com.mojang.blaze3d.platform.InputConstants;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.KeyMapping;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
-import org.lwjgl.glfw.GLFW;
+import net.minecraft.client.input.InputWithModifiers;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
+import org.jetbrains.annotations.Nullable;
 
-import java.util.HashMap;
-import java.util.Map;
+import static com.kwwsyk.endinv.common.client.KeyMappings.*;
 
 public class ClientModInit extends AbstractClientModInitializer implements ClientModInitializer {
-
-    private static final Map<KeyMappings.KeyParam, KeyMapping> REGISTERED_KEYS = new HashMap<>();
+    @Nullable
     private static JsonConfigurationHandler CLIENT_CONFIGS;
+
+    public ClientModInit(){
+        super();
+        AbstractClientModInitializer.ENDINV_CLIENT = this;
+    }
 
     @Override
     public void onInitializeClient() {
-        registerKey(KeyMappings.OPEN_MENU);
-        registerEmptyKey(KeyMappings.QUICK_MOVE);
-        registerEmptyKey(KeyMappings.STAR_ITEM);
-        // No separate encoder init needed on typed API
+        KeyBindingHelper.registerKeyBinding(KEY_MAPPING_MAP.get(OPEN_MENU));
+        KeyBindingHelper.registerKeyBinding(KEY_MAPPING_MAP.get(QUICK_MOVE));//it may be unchangeable
+        if(FabricLoader.getInstance().isModLoaded("jei")){
+            KeyBindingHelper.registerKeyBinding(KEY_MAPPING_MAP.get(STAR_ITEM));
+        }else KeyBindingHelper.registerKeyBinding(KEY_MAPPING_MAP.get(STAR_ITEM_ALTER));
+        initClientConfigs();
         FabricClientNetworking.init();
         ClientEvents.register();
         ClientLifecycleEvents.CLIENT_STOPPING.register(client -> {
@@ -41,48 +47,43 @@ public class ClientModInit extends AbstractClientModInitializer implements Clien
     }
 
     @Override
-    protected void initClientConfigs() {
-        CLIENT_CONFIGS = new JsonConfigurationHandler(
-                net.fabricmc.loader.api.FabricLoader.getInstance().getConfigDir().resolve("endless_inventory-client.json"),
-                ClientConfigs.getConfigs()
-        );
-        CLIENT_CONFIGS.load();
+    protected void regKeyParam(KeyMappings.KeyParam key) {
+        KeyMapping mapping = new KeyMapping(key.key(), key.type(), key.keyCode(), key.category());
+        KEY_MAPPING_MAP.put(key, mapping);
     }
 
     @Override
     protected IInputHandler getInputHandler() {
         return new IInputHandler() {
             @Override
-            public boolean isActiveAndMatches(KeyMapping keyMapping, InputConstants.Key key) {
-                return matchesKey(keyMapping, key);
-            }
-
-            @Override
-            public boolean isActiveAndMatches(KeyMappings.KeyParam keyParam, InputConstants.Key key) {
-                KeyMapping mapping = REGISTERED_KEYS.computeIfAbsent(keyParam, ClientModInit::registerKey);
-                if (!conditionMatches(keyParam)) {
-                    return false;
+            public boolean isActiveAndMatches(KeyParam keyParam, InputWithModifiers input) {
+                AbstractClientModInitializer modClient = AbstractClientModInitializer.ENDINV_CLIENT;
+                if(modClient == null){
+                    throw new IllegalStateException("Client mod not initialized");
                 }
-
-                boolean boundMatch = matchesKey(mapping, key);
-                if (boundMatch) {
-                    // If user set a dedicated key, do not require extra CTRL.
-                    if (keyParam.modifier() == KeyMappings.Modifier.CTRL && keyParam != KeyMappings.QUICK_MOVE) {
-                        return Screen.hasControlDown();
-                    }
-                    return true;
-                }
-
-                // Fallback: if no dedicated key matched and this is QUICK_MOVE,
-                // allow Ctrl + Left Click inside GUI.
-                if (keyParam == KeyMappings.QUICK_MOVE
-                        && key.getType() == InputConstants.Type.MOUSE
-                        && key.getValue() == GLFW.GLFW_MOUSE_BUTTON_1) {
-                    return Screen.hasControlDown();
-                }
-                return false;
+                if(!keyParam.condition().isActive()) return false;
+                if(!keyParam.modifier().matchesModifier(input)) return false;
+                //fabric hot fix
+                if(input instanceof  MouseButtonEvent buttonEvent
+                        && keyParam.keyCode() == buttonEvent.button()
+                        && keyParam.modifier().matchesModifier(input)
+                ) return true;
+                var reg = modClient.KEY_MAPPING_MAP.get(keyParam);
+                return switch (input){
+                    case KeyEvent keyEvent -> reg.matches(keyEvent);
+                    case MouseButtonEvent buttonEvent -> reg.matchesMouse(buttonEvent);
+                    default -> false;
+                };
             }
         };
+    }
+
+    protected void initClientConfigs() {
+        CLIENT_CONFIGS = new JsonConfigurationHandler(
+                net.fabricmc.loader.api.FabricLoader.getInstance().getConfigDir().resolve("endless_inventory-client.json"),
+                ClientConfigs.getConfigs()
+        );
+        CLIENT_CONFIGS.load();
     }
 
     @Override
@@ -108,38 +109,5 @@ public class ClientModInit extends AbstractClientModInitializer implements Clien
                 return ((AbstractContainerScreenAccessor) screen).endinv$getImageHeight();
             }
         };
-    }
-
-    private static boolean matchesKey(KeyMapping mapping, InputConstants.Key key) {
-        InputConstants.Type type = key.getType();
-        if (type == InputConstants.Type.MOUSE) {
-            return mapping.matchesMouse(key.getValue());
-        }
-        return mapping.matches(key.getValue(), key.getValue());
-    }
-
-    private static boolean conditionMatches(KeyMappings.KeyParam key) {
-        return switch (key.condition()) {
-            case GUI -> Minecraft.getInstance().screen != null;
-            case IN_GAME -> Minecraft.getInstance().screen == null;
-        };
-    }
-
-    private static KeyMapping registerKey(KeyMappings.KeyParam key) {
-        KeyMapping mapping = new KeyMapping(key.key(), key.type(), key.keyCode(), KeyMappings.CATEGORY);
-        KeyBindingHelper.registerKeyBinding(mapping);
-        REGISTERED_KEYS.put(key, mapping);
-        return mapping;
-    }
-
-    private static KeyMapping registerEmptyKey(KeyMappings.KeyParam key) {
-        KeyMapping mapping = new KeyMapping(key.key(), InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_UNKNOWN, KeyMappings.CATEGORY);
-        KeyBindingHelper.registerKeyBinding(mapping);
-        REGISTERED_KEYS.put(key, mapping);
-        return mapping;
-    }
-
-    public static KeyMapping getRegisteredKey(KeyMappings.KeyParam key) {
-        return REGISTERED_KEYS.get(key);
     }
 }

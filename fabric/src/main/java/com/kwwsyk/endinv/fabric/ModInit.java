@@ -20,10 +20,14 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
+import net.minecraft.world.entity.SlotAccess;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.flag.FeatureFlags;
+import net.minecraft.world.inventory.ClickAction;
 import net.minecraft.world.inventory.MenuType;
+import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 
 import javax.annotation.Nullable;
 import java.util.UUID;
@@ -69,10 +73,18 @@ public class ModInit extends AbstractModInitializer implements ModInitializer {
 
     @Override
     protected IPlatform loadOtherPlatformSpecific() {
-        return (clickedItem, carriedItem, slot, action, player, access) -> {
-            var features = player.level().enabledFeatures();
-            return (carriedItem.isItemEnabled(features) && carriedItem.overrideStackedOnOther(slot, action, player))
-                    || (clickedItem.isItemEnabled(features) && clickedItem.overrideOtherStackedOnMe(carriedItem, slot, action, player, access));
+        return new IPlatform() {
+            @Override
+            public boolean onItemStackedOn(ItemStack clickedItem, ItemStack carriedItem, Slot slot, ClickAction action, Player player, SlotAccess access) {
+                var features = player.level().enabledFeatures();
+                return (carriedItem.isItemEnabled(features) && carriedItem.overrideStackedOnOther(slot, action, player))
+                        || (clickedItem.isItemEnabled(features) && clickedItem.overrideOtherStackedOnMe(carriedItem, slot, action, player, access));
+            }
+
+            @Override
+            public boolean isModLoaded(String modid) {
+                return FabricLoader.getInstance().isModLoaded(modid);
+            }
         };
     }
 

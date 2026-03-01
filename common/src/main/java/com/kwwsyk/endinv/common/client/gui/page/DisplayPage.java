@@ -11,6 +11,7 @@ import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.client.renderer.RenderPipelines;
@@ -335,27 +336,27 @@ public abstract class DisplayPage{
         double YOffset = clickEvent.y();
         int keyCode = clickEvent.button();
         InputConstants.Key mouseKey = InputConstants.Type.MOUSE.getOrCreate(keyCode);
-        boolean isKeyPicking = inputHandler.isActiveAndMatches(mc.options.keyPickItem,mouseKey);//is mouse middle button and enabled for pickup or clone
+        boolean isKeyPicking = mc.options.keyPickItem.matchesMouse(clickEvent);//is mouse middle button and enabled for pickup or clone
         long clickTime = Util.getMillis();
         this.doubleClick = keyCode == lastClickedButton && doubleClickedOnOne(XOffset,YOffset,lastCLickedX,lastClickedY,clickTime-lastClickedTime);
         this.skipNextRelease = false;
         if(keyCode != InputConstants.MOUSE_BUTTON_LEFT && keyCode != InputConstants.MOUSE_BUTTON_RIGHT && !isKeyPicking){
             checkHotBarClicked:
             if (this.menu.getCarried().isEmpty()) {
-                if (inputHandler.isActiveAndMatches(this.mc.options.keySwapOffhand, InputConstants.Type.MOUSE.getOrCreate(keyCode))) {
+                if (mc.options.keySwapOffhand.matchesMouse(clickEvent)) {
                     pageClicked(XOffset,YOffset,40, ClickType.SWAP);
                     break checkHotBarClicked;
                 }
 
                 for (int i = 0; i < 9; i++) {
-                    if (inputHandler.isActiveAndMatches(this.mc.options.keyHotbarSlots[i], InputConstants.Type.MOUSE.getOrCreate(keyCode))) {
+                    if (mc.options.keyHotbarSlots[i].matchesMouse(clickEvent)) {
                         pageClicked(XOffset,YOffset, i, ClickType.SWAP);
                     }
                 }
             }
         }else {
             if(menu.getCarried().isEmpty()){
-                if (inputHandler.isActiveAndMatches(mc.options.keyPickItem,mouseKey)) {
+                if (mc.options.keyPickItem.matchesMouse(clickEvent)) {
                     pageClicked(XOffset, YOffset, keyCode, ClickType.CLONE);
                 } else {
                     ClickType clicktype = ClickType.PICKUP;
@@ -392,9 +393,12 @@ public abstract class DisplayPage{
         }else return false;
     }
 
-    public boolean mouseReleased(double XOffset, double YOffset, int keyCode){
+    public boolean mouseReleased(MouseButtonEvent event){
+        int keyCode = event.button();
+        double XOffset = event.x();
+        double YOffset = event.y();
         lastDraggedPageSlot = -1;
-        InputConstants.Key mouseKey = InputConstants.Type.MOUSE.getOrCreate(keyCode);
+        //InputConstants.Key mouseKey = InputConstants.Type.MOUSE.getOrCreate(keyCode);
         if (this.doubleClick) {
             this.pageClicked(XOffset,YOffset,keyCode,ClickType.PICKUP_ALL);
             this.doubleClick = false;
@@ -407,7 +411,7 @@ public abstract class DisplayPage{
                 return true;
             }
             if(!menu.getCarried().isEmpty()){
-                if (inputHandler.isActiveAndMatches(mc.options.keyPickItem,mouseKey)) {
+                if (mc.options.keyPickItem.matchesMouse(event)) {
                     this.pageClicked(XOffset,YOffset,keyCode,ClickType.CLONE);
                     return true;
                 }
@@ -429,20 +433,20 @@ public abstract class DisplayPage{
         boolean isNumericKey = InputConstants.Type.KEYSYM.getOrCreate(keyCode).getNumericKeyValue().isPresent();
 
         if (isNumericKey && this.menu.getCarried().isEmpty()) {
-            if (inputHandler.isActiveAndMatches(mc.options.keySwapOffhand,InputConstants.Type.KEYSYM.getOrCreate(keyCode))) {
+            if (mc.options.keySwapOffhand.matches(new KeyEvent(keyCode, scanCode, modifiers))) {
                 pageClicked(mouseX, mouseY, 40, ClickType.SWAP);
                 return true;
             }
 
             for(int i = 0; i < 9; ++i) {
-                if (inputHandler.isActiveAndMatches(mc.options.keyHotbarSlots[i],InputConstants.Type.KEYSYM.getOrCreate(keyCode))) {
+                if (mc.options.keyHotbarSlots[i].matches(new KeyEvent(keyCode, scanCode, modifiers))) {
                     pageClicked(mouseX, mouseY, i, ClickType.SWAP);
                     return true;
                 }
             }
         }
 
-        if(inputHandler.isActiveAndMatches(KeyMappings.STAR_ITEM,InputConstants.Type.KEYSYM.getOrCreate(keyCode))){
+        if(inputHandler.isActiveAndMatches(KeyMappings.STAR_ITEM,new KeyEvent(keyCode, scanCode, modifiers))){
             handleStarItem(mouseX,mouseY);
             return true;
         }
