@@ -302,7 +302,7 @@ public final class ScreenAttachment {
         return canceled[0];
     }
 
-    private static boolean isAttachmentActive(AttachingScreen<?> expected) {
+    private static boolean isAttachmentActive(@Nullable AttachingScreen<?> expected) {
         Screen screen = Minecraft.getInstance().screen;
         if (!(screen instanceof AbstractContainerScreen<?> c)) {
             attachment = null;
@@ -313,7 +313,8 @@ public final class ScreenAttachment {
             attachment = null;
             return false;
         }
-        if (expected.screen != screen) {
+
+        if (expected == null || expected.screen != screen) {
             return false;
         }
         if (!AttachingScreen.isAttachable(c)) {
