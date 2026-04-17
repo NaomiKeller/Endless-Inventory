@@ -1,8 +1,11 @@
 plugins {
     id 'java-library'
     id 'maven-publish'
-    id 'idea'
-    id 'net.neoforged.moddev' version '2.0.137'
+    //id 'idea'
+
+    //id "me.modmuss50.mod-publish-plugin" version "1.1.0" apply false
+    id 'net.neoforged.moddev' version '2.0.141'
+
 }
 
 base {
@@ -35,13 +38,17 @@ dependencies {
      // add full JEI to compileOnly so mixins to JEI internals can compile
      compileOnly("mezz.jei:jei-${minecraft_version}-neoforge:${jei_version}")
      runtimeOnly("mezz.jei:jei-${minecraft_version}-neoforge:${jei_version}")
-     //runtimeOnly("top.theillusivec4.curios:curios-neoforge:${curio_version}")
-     //compileOnly("top.theillusivec4.curios:curios-neoforge:${curio_version}:api")
+
+     if(!"${curio_version}".isEmpty()){
+         runtimeOnly("top.theillusivec4.curios:curios-neoforge:${curio_version}")
+         compileOnly("top.theillusivec4.curios:curios-neoforge:${curio_version}:api")
+     }
 }
 
 project.evaluationDependsOn(":common")
 
 neoForge {
+    //disableIdeRun()
     // Specify the version of NeoForge to use.
     version = project.neoforge_version
 
@@ -191,3 +198,42 @@ idea {
         downloadJavadoc = true
     }
 }
+
+//publishMods {
+//    file = tasks.named("jar").get().archiveFile
+//    changelog = "port to 26.1"
+//    displayName.set(base.archivesName)
+//    version = mod_version
+//    type = BETA
+//    modLoaders.add("neoforge")
+//
+//    curseforge {
+//        projectId = curseforge_project_id
+//        projectSlug = "endless-inventory" // Required for discord webhook
+//        accessToken = providers.environmentVariable("CURSEFORGE_TOKEN")
+//        minecraftVersions.add(minecraft_version)
+//        javaVersions.add(JavaVersion.toVersion(java_version))
+//        //requires("fabric-api")
+//    }
+//    modrinth {
+//        projectId = modrinth_project_id
+//        accessToken = providers.environmentVariable("MODRINTH_TOKEN")
+//        minecraftVersions.add(minecraft_version)
+////        minecraftVersionRange {
+////            start = "1.19.4"
+////            end = "1.20.2" // Set to "latest" to use the latest minecraft version
+////
+////            // Optionally include snapshot versions, defaults to false
+////            includeSnapshots = true
+////        }
+//        optional("jei")
+//    }
+////    github {
+////        repository = "test/example"
+////        accessToken = providers.environmentVariable("GITHUB_TOKEN")
+////        commitish = "main"
+////    }
+////    discord {
+////        webhookUrl = providers.environmentVariable("DISCORD_WEBHOOK")
+////    }
+//}

@@ -1,38 +1,12 @@
 plugins {
-    id 'net.neoforged.moddev' version '2.0.137'
-    id 'idea'
+    id 'java-library'
+    id 'net.neoforged.moddev' version '2.0.141'
+    //id 'idea'
 
     //id "me.modmuss50.mod-publish-plugin" version "1.1.0"
 }
 
 neoForge {
-    parchment{
-        // The Minecraft version for which the Parchment mappings were created.
-        // This does not necessarily need to match the Minecraft version your mod targets
-        // Defaults to the value of Gradle property neoForge.parchment.minecraftVersion
-        minecraftVersion = parchment_minecraft
-
-        // The version of Parchment mappings to apply.
-        // See https://parchmentmc.org/docs/getting-started for a list.
-        // Defaults to the value of Gradle property neoForge.parchment.mappingsVersion
-        mappingsVersion = parchment_version
-
-        // Overrides the full Maven coordinate of the Parchment artifact to use
-        // This is computed from the minecraftVersion and mappingsVersion properties by default.
-        // If you set this property explicitly, minecraftVersion and mappingsVersion will be ignored.
-        // parchmentArtifact = "org.parchmentmc.data:parchment-$minecraftVersion:$mappingsVersion:checked@zip"
-
-        // The string that parameters are prefixed with when they conflict with other names inside the method.
-        // Defaults to `p_`. You can set this property to an empty string to disable conflict resolution,
-        // for example, when you use the checked version of parchment, which already includes prefixes.
-        // conflictResolutionPrefix = ''
-
-        // Can be used to explicitly disable this subsystem. By default, it will be enabled automatically as soon
-        // as parchmentArtifact or minecraftVersion and mappingsVersion are set.
-        // enabled = true
-    }
-
-    // Look for versions on https://projects.neoforged.net/neoforged/neoform
     neoFormVersion = neoform_version
 }
 
@@ -69,56 +43,3 @@ jar {
     archiveBaseName.set("common")
     from sourceSets.main.output
 }
-
-//publishMods {
-//    changelog = "26/3/20 fixed soft lock on toggle closing attached inventory. And trying mod publish plugin."
-//    type = BETA
-//
-//    // CurseForge options used by both Fabric and Forge
-//    def cfOptions = curseforgeOptions {
-//        accessToken = providers.environmentVariable("CURSEFORGE_TOKEN")
-//        projectId = curseforge_project_id
-//        minecraftVersions.add(minecraft_version)
-//    }
-//
-//    // Modrinth options used by both Fabric and Forge
-//    def mrOptions = modrinthOptions {
-//        accessToken = providers.environmentVariable("MODRINTH_TOKEN")
-//        projectId = modrinth_project_id
-//        minecraftVersions.add(minecraft_version)
-//    }
-//
-//    // Fabric specific options for CurseForge
-//    curseforge("curseforgeFabric") {
-//        from cfOptions
-//        file project(":fabric")
-//        modLoaders.add("fabric")
-//        requires {
-//            slug = "fabric-api"
-//        }
-//    }
-//
-//    // Forge specific options for CurseForge
-//    curseforge("curseforgeNeoforge") {
-//        from cfOptions
-//        file project(":neoforge")
-//        modLoaders.add("neoforge")
-//    }
-//
-//    // Fabric specific options for Modrinth
-//    modrinth("modrinthFabric") {
-//        from mrOptions
-//        file project(":fabric")
-//        modLoaders.add("fabric")
-//        requires {
-//            slug = "fabric-api"
-//        }
-//    }
-//
-//    // Forge specific options for Modrinth
-//    modrinth("modrinthNeoforge") {
-//        from mrOptions
-//        file project(":neoforge")
-//        modLoaders.add("neoforge")
-//    }
-//}
