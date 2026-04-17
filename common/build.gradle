@@ -1,24 +1,10 @@
 plugins {
     id 'java-library'
     id 'net.neoforged.moddev' version '2.0.141'
-    //id 'idea'
-
-    //id "me.modmuss50.mod-publish-plugin" version "1.1.0"
 }
 
 neoForge {
     neoFormVersion = neoform_version
-}
-
-configurations {
-    commonJava {
-        canBeResolved = false
-        canBeConsumed = true
-    }
-    commonResources {
-        canBeResolved = false
-        canBeConsumed = true
-    }
 }
 
 repositories {
@@ -27,19 +13,7 @@ repositories {
 }
 
 dependencies {
-
     implementation 'org.jetbrains:annotations:24.0.1'
-    // Provide Mixin annotations at compile-time only; runtime comes from the loader.
     compileOnly "org.spongepowered:mixin:0.8.7"
     annotationProcessor "org.spongepowered:mixin:0.8.7:processor"
-}
-
-artifacts {
-    commonJava sourceSets.main.java.sourceDirectories.singleFile
-    commonResources sourceSets.main.resources.sourceDirectories.singleFile
-}
-
-jar {
-    archiveBaseName.set("common")
-    from sourceSets.main.output
 }

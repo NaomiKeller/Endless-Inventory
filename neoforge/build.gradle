@@ -1,11 +1,8 @@
 plugins {
     id 'java-library'
     id 'maven-publish'
-    //id 'idea'
-
-    //id "me.modmuss50.mod-publish-plugin" version "1.1.0" apply false
+    id "me.modmuss50.mod-publish-plugin" version "1.1.0"
     id 'net.neoforged.moddev' version '2.0.141'
-
 }
 
 base {
@@ -16,12 +13,10 @@ repositories {
     mavenLocal()
     mavenCentral()
     maven {
-        // location of the maven that hosts JEI files since January 2023
         name = "Jared's maven"
         url = "https://maven.blamejared.com/"
     }
     maven {
-        // location of a maven mirror for JEI files, as a fallback
         name = "ModMaven"
         url = "https://modmaven.dev"
     }
@@ -33,23 +28,17 @@ repositories {
 
 dependencies {
     implementation(project(":common"))
-    // Optional integrations removed from compile path to avoid resolution issues during CI builds.
-     compileOnly("mezz.jei:jei-${minecraft_version}-neoforge-api:${jei_version}")
-     // add full JEI to compileOnly so mixins to JEI internals can compile
-     compileOnly("mezz.jei:jei-${minecraft_version}-neoforge:${jei_version}")
-     runtimeOnly("mezz.jei:jei-${minecraft_version}-neoforge:${jei_version}")
+    compileOnly("mezz.jei:jei-${minecraft_version}-neoforge-api:${jei_version}")
+    compileOnly("mezz.jei:jei-${minecraft_version}-neoforge:${jei_version}")
+    runtimeOnly("mezz.jei:jei-${minecraft_version}-neoforge:${jei_version}")
 
-     if(!"${curio_version}".isEmpty()){
-         runtimeOnly("top.theillusivec4.curios:curios-neoforge:${curio_version}")
-         compileOnly("top.theillusivec4.curios:curios-neoforge:${curio_version}:api")
-     }
+    if(!"${curio_version}".isEmpty()){
+        runtimeOnly("top.theillusivec4.curios:curios-neoforge:${curio_version}")
+        compileOnly("top.theillusivec4.curios:curios-neoforge:${curio_version}:api")
+    }
 }
 
-project.evaluationDependsOn(":common")
-
 neoForge {
-    //disableIdeRun()
-    // Specify the version of NeoForge to use.
     version = project.neoforge_version
 
     parchment {
@@ -57,16 +46,9 @@ neoForge {
         minecraftVersion = project.parchment_minecraft
     }
 
-    // This line is optional. Access Transformers are automatically detected
-    // accessTransformers = project.files('src/main/resources/META-INF/accesstransformer.cfg')
-
-    // Default run configurations.
-    // These can be tweaked, removed, or duplicated as needed.
     runs {
         client {
             client()
-
-            // Comma-separated list of namespaces to load gametests from. Empty = all namespaces.
             systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
         }
 
@@ -76,9 +58,6 @@ neoForge {
             systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
         }
 
-        // This run config launches GameTestServer and runs all registered gametests, then exits.
-        // By default, the server will crash when no gametests are provided.
-        // The gametest system is also enabled by default for other run configs under the /test command.
         gameTestServer {
             type = "gameTestServer"
             systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
@@ -86,40 +65,22 @@ neoForge {
 
         clientData {
             clientData()
-
-            // example of overriding the workingDirectory set in configureEach above, uncomment if you want to use it
-            // gameDirectory = project.file('run-data')
-
-            // Specify the modid for data generation, where to output the resulting resource, and where to look for existing resources.
             programArguments.addAll '--mod', project.mod_id, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
         }
+
         serverData {
             serverData()
             programArguments.addAll '--mod', project.mod_id, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
         }
 
-        // applies to all the run configs above
         configureEach {
-            // Recommended logging data for a userdev environment
-            // The markers can be added/remove as needed separated by commas.
-            // "SCAN": For mods scan.
-            // "REGISTRIES": For firing of registry events.
-            // "REGISTRYDUMP": For getting the contents of all registries.
             systemProperty 'forge.logging.markers', 'REGISTRIES'
-
             jvmArguments.add '--add-opens=java.base/java.lang.ref=ALL-UNNAMED'
-
-            // Recommended logging level for the console
-            // You can set various levels here.
-            // Please read: https://stackoverflow.com/questions/2031163/when-to-use-the-different-log-levels
             logLevel = org.slf4j.event.Level.DEBUG
         }
     }
 
     mods {
-        // define mod <-> source bindings
-        // these are used to tell the game which sources are for which mod
-        // multi mod projects should define one per mod
         "${mod_id}" {
             sourceSet(sourceSets.main)
             sourceSet(project(":common").sourceSets.main)
@@ -127,20 +88,13 @@ neoForge {
     }
 }
 
-// Include resources generated by data generators.
 sourceSets.main.resources { srcDir 'src/generated/resources' }
 
-// Sets up a dependency configuration called 'localRuntime'.
-// This configuration should be used instead of 'runtimeOnly' to declare
-// a dependency that will be present for runtime testing but that is
-// "optional", meaning it will not be pulled by dependents of this mod.
 configurations {
     localRuntime
     runtimeClasspath.extendsFrom localRuntime
 }
 
-// This block of code expands all declared replace properties in the specified resource targets.
-// A missing property will result in an error. Properties are expanded using ${} Groovy notation.
 var generateModMetadata = tasks.register("generateModMetadata", ProcessResources) {
     var replaceProperties = [
             minecraft_version      : minecraft_version,
@@ -160,20 +114,15 @@ var generateModMetadata = tasks.register("generateModMetadata", ProcessResources
     from "src/main/templates"
     into "build/generated/sources/modMetadata"
 }
-// Include the output of "generateModMetadata" as an input directory for the build
-// this works with both building through Gradle and the IDE.
+
 sourceSets.main.resources.srcDir generateModMetadata
-// To avoid having to run "generateModMetadata" manually, make it run on every project reload
 neoForge.ideSyncTask generateModMetadata
 
 jar {
-    // Avoid duplicate resources when merging common outputs
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     from project(":common").sourceSets.main.output
 }
 
-
-// Example configuration to allow publishing using the maven-publish plugin
 publishing {
     publications {
         register('mavenJava', MavenPublication) {
@@ -188,52 +137,28 @@ publishing {
 }
 
 tasks.withType(JavaCompile).configureEach {
-    options.encoding = 'UTF-8' // Use the UTF-8 charset for Java compilation
+    options.encoding = 'UTF-8'
 }
 
-// IDEA no longer automatically downloads sources/javadoc jars for dependencies, so we need to explicitly enable the behavior.
-idea {
-    module {
-        downloadSources = true
-        downloadJavadoc = true
+publishMods {
+    file = tasks.named("jar").get().archiveFile
+    changelog = "port to 26.1"
+    displayName.set(base.archivesName)
+    version = mod_version
+    type = BETA
+    modLoaders.add("neoforge")
+
+    curseforge {
+        projectId = curseforge_project_id
+        projectSlug = "endless-inventory"
+        accessToken = providers.environmentVariable("CURSEFORGE_TOKEN")
+        minecraftVersions.add(minecraft_version)
+        javaVersions.add(JavaVersion.toVersion(java_version))
+    }
+    modrinth {
+        projectId = modrinth_project_id
+        accessToken = providers.environmentVariable("MODRINTH_TOKEN")
+        minecraftVersions.add(minecraft_version)
+        optional("jei")
     }
 }
-
-//publishMods {
-//    file = tasks.named("jar").get().archiveFile
-//    changelog = "port to 26.1"
-//    displayName.set(base.archivesName)
-//    version = mod_version
-//    type = BETA
-//    modLoaders.add("neoforge")
-//
-//    curseforge {
-//        projectId = curseforge_project_id
-//        projectSlug = "endless-inventory" // Required for discord webhook
-//        accessToken = providers.environmentVariable("CURSEFORGE_TOKEN")
-//        minecraftVersions.add(minecraft_version)
-//        javaVersions.add(JavaVersion.toVersion(java_version))
-//        //requires("fabric-api")
-//    }
-//    modrinth {
-//        projectId = modrinth_project_id
-//        accessToken = providers.environmentVariable("MODRINTH_TOKEN")
-//        minecraftVersions.add(minecraft_version)
-////        minecraftVersionRange {
-////            start = "1.19.4"
-////            end = "1.20.2" // Set to "latest" to use the latest minecraft version
-////
-////            // Optionally include snapshot versions, defaults to false
-////            includeSnapshots = true
-////        }
-//        optional("jei")
-//    }
-////    github {
-////        repository = "test/example"
-////        accessToken = providers.environmentVariable("GITHUB_TOKEN")
-////        commitish = "main"
-////    }
-////    discord {
-////        webhookUrl = providers.environmentVariable("DISCORD_WEBHOOK")
-////    }
-//}

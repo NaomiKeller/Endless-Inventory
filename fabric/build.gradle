@@ -1,6 +1,5 @@
 plugins {
     id 'net.fabricmc.fabric-loom' version "${loom_version}"
-    id 'idea'
     id 'java'
 
     id "me.modmuss50.mod-publish-plugin" version "1.1.0"
@@ -53,9 +52,7 @@ repositories {
 }
 dependencies {
     compileOnly 'com.google.code.findbugs:jsr305:3.0.2'
-    implementation(project(path: ":common")) {
-        exclude group: "net.minecraftforge"
-    }
+    implementation(project(":common"))
     //include(project(":common"))
     //jarJar project(":common")
     // To change the versions see the gradle.properties file
