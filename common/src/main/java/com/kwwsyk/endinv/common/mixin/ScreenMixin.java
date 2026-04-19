@@ -5,7 +5,7 @@ import net.minecraft.client.gui.screens.Screen;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Invoker;
 
-@Mixin(Screen.class)
+@Mixin(Screen.class)@SuppressWarnings("all")
 public interface ScreenMixin {
 
     @Invoker(value = "removeWidget")
