@@ -7,6 +7,7 @@ import com.mojang.logging.LogUtils;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.NonNullList;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.datafix.DataFixTypes;
 import net.minecraft.world.level.Level;
@@ -35,12 +36,12 @@ public class EndlessInventoryData extends SavedData {
     public static final SavedDataType<EndlessInventoryData> DATA_TYPE = new SavedDataType<>(
             // The identifier of the saved data
             // Used as the path within the level's `data` folder
-            END_INV_LIST_KEY,
+            Identifier.withDefaultNamespace(END_INV_LIST_KEY),
             // The initial constructor
             EndlessInventoryData::new,
             // The codec used to serialize the data
             RecordCodecBuilder.create(instance -> instance.group(
-                    Codec.list(EndlessInventory.CODEC).fieldOf(END_INV_LIST_KEY).forGetter(EID -> EID.levelEndInvs)
+                    Codec.list(EndlessInventory.CODEC).fieldOf(END_INV_LIST_KEY).forGetter((EndlessInventoryData EID) -> EID.levelEndInvs)
             ).apply(instance, lst -> {
                 var EID = new EndlessInventoryData();
                 for(var endinv : lst){

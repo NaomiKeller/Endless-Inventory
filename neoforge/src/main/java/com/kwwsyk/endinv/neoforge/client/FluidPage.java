@@ -5,7 +5,7 @@ import com.kwwsyk.endinv.common.client.gui.ScreenFramework;
 import com.kwwsyk.endinv.common.client.gui.page.CommonFluidPage;
 import com.kwwsyk.endinv.common.integrate.FluidData;
 import com.kwwsyk.endinv.common.menu.page.PageType;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
@@ -52,7 +52,7 @@ public class FluidPage extends CommonFluidPage<FluidStack> {
     }
 
     @Override
-    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
+    public void render(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTicks) {
 
     }
 

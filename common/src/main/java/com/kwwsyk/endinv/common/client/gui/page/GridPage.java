@@ -8,7 +8,7 @@ import com.kwwsyk.endinv.common.menu.page.PageType;
 import com.kwwsyk.endinv.common.util.ItemKey;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.world.item.ItemStack;
@@ -109,10 +109,11 @@ public abstract class GridPage extends DisplayPage {//todo support item and flui
                 );
     }
 
-    public void renderEmpty(GuiGraphics guiGraphics, int x, int y, ItemStack itemStack){
+    public void renderEmpty(GuiGraphicsExtractor GuiGraphicsExtractor, int x, int y, ItemStack itemStack){
         ItemStack toRender = itemStack.copyWithCount(1);
-        guiGraphics.renderItem(toRender,x,y,0);
-        guiGraphics.renderItemDecorations(Minecraft.getInstance().font,toRender,x,y, ChatFormatting.RED + "0");
+        GuiGraphicsExtractor.item(toRender,x,y,0);
+        GuiGraphicsExtractor.itemDecorations(Minecraft.getInstance().font,toRender,x,y, ChatFormatting.RED + "0");
     }
 
 }
+

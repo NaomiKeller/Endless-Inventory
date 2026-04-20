@@ -5,7 +5,7 @@ import com.kwwsyk.endinv.common.menu.EndlessInventoryMenu;
 import com.kwwsyk.endinv.common.network.payloads.toServer.ToggleCraftingPayload;
 import com.kwwsyk.endinv.common.util.NotNullWhenInitialized;
 import com.mojang.blaze3d.platform.InputConstants;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.CycleButton;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
@@ -16,7 +16,7 @@ import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.inventory.Slot;
 import org.jetbrains.annotations.Nullable;
 
@@ -29,13 +29,11 @@ public class EndlessInventoryScreen extends AbstractContainerScreen<EndlessInven
     private boolean craftingVisible;
 
     public EndlessInventoryScreen(EndlessInventoryMenu menu, Inventory playerInventory, Component title) {
-        super(menu, playerInventory, title);
+        super(menu, playerInventory, title, 176, 114 + menu.getBaseRows() * 18);
         recalcDimensions();
     }
 
     private void recalcDimensions() {
-        int baseRows = menu.getBaseRows();
-        this.imageHeight = 114 + baseRows * 18;
         this.inventoryLabelY = this.imageHeight - 94;
     }
 
@@ -94,33 +92,27 @@ public class EndlessInventoryScreen extends AbstractContainerScreen<EndlessInven
         craftingVisible = !craftingVisible;
         menu.setCraftingVisible(craftingVisible);
         ModInfo.getPacketDistributor().sendToServer(new ToggleCraftingPayload(craftingVisible));
-        int previousTop = this.topPos;
         recalcDimensions();
-        this.leftPos = (this.width - this.imageWidth) / 2;
-        this.topPos = (this.height - this.imageHeight) / 2;
         updateCraftingToggleButtonPosition();
         if (frameWork != null) {
             frameWork.resizePageRows(menu.getVisibleRows());
-            frameWork.move(0, this.topPos - previousTop);
         }
     }
 
-    private void drawCraftingBackground(GuiGraphics guiGraphics) {
+    private void drawCraftingBackground(GuiGraphicsExtractor GuiGraphicsExtractor) {
         int craftX = this.leftPos;
         int craftY = this.topPos + 18 * menu.getVisibleRows() + 18;
-        guiGraphics.blit(RenderPipelines.GUI_TEXTURED, CRAFTING_TEXTURE, craftX, craftY, 0, 12, 176, 58, 256, 256);
+        GuiGraphicsExtractor.blit(RenderPipelines.GUI_TEXTURED, CRAFTING_TEXTURE, craftX, craftY, 0, 12, 176, 58, 256, 256);
     }
 
-    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick){
-        this.renderBackground(guiGraphics, mouseX, mouseY, partialTick);
-        frameWork.renderBg(guiGraphics,mouseX,mouseY,partialTick);
+    public void extractRenderState(GuiGraphicsExtractor GuiGraphicsExtractor, int mouseX, int mouseY, float partialTick){
+        this.extractBackground(GuiGraphicsExtractor, mouseX, mouseY, partialTick);
+        frameWork.renderBg(GuiGraphicsExtractor,mouseX,mouseY,partialTick);
         if (menu.isCraftingVisible()) {
-            drawCraftingBackground(guiGraphics);
+            drawCraftingBackground(GuiGraphicsExtractor);
         }
-        frameWork.render(guiGraphics,mouseX,mouseY,partialTick);
-        super.render(guiGraphics,mouseX,mouseY,partialTick);
-
-        this.renderTooltip(guiGraphics,mouseX,mouseY);
+        frameWork.render(GuiGraphicsExtractor,mouseX,mouseY,partialTick);
+        super.extractRenderState(GuiGraphicsExtractor,mouseX,mouseY,partialTick);
     }
 
     @Override
@@ -163,7 +155,7 @@ public class EndlessInventoryScreen extends AbstractContainerScreen<EndlessInven
         return frameWork.charTyped(event);
     }
 
-    protected void slotClicked(Slot slot, int slotId, int mouseButton, ClickType type) {
+    protected void slotClicked(Slot slot, int slotId, int mouseButton, ContainerInput type) {
         super.slotClicked(slot,slotId,mouseButton,type);
         this.menu.broadcastChanges();
     }
@@ -171,10 +163,6 @@ public class EndlessInventoryScreen extends AbstractContainerScreen<EndlessInven
     public void onClose(){
         super.onClose();
         frameWork.onClose();
-    }
-
-    @Override
-    protected void renderBg(GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {
     }
 
     public com.kwwsyk.endinv.common.menu.page.pageManager.PageMetaDataManager getPageManager() {
@@ -206,4 +194,5 @@ public class EndlessInventoryScreen extends AbstractContainerScreen<EndlessInven
     }
 
 }
+
 

@@ -4,7 +4,7 @@ import com.kwwsyk.endinv.common.client.gui.ScreenFramework;
 import com.kwwsyk.endinv.common.client.gui.bg.IRectangleParam;
 import com.kwwsyk.endinv.common.util.SortType;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
@@ -76,24 +76,24 @@ public class SortTypeSwitchBox extends AbstractWidget {
     }
 
     @Override
-    protected void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        guiGraphics.pose().pushMatrix();
-        guiGraphics.fill(getX(), getY(), getX() + width, getY() + singleBoxHeight, 0xff888888);
-        guiGraphics.fill(getX() + 1, getY() + 1, getX() + width - 1, getY() + singleBoxHeight - 1, 0xff000000);
+    protected void extractWidgetRenderState(GuiGraphicsExtractor GuiGraphicsExtractor, int mouseX, int mouseY, float partialTick) {
+        GuiGraphicsExtractor.pose().pushMatrix();
+        GuiGraphicsExtractor.fill(getX(), getY(), getX() + width, getY() + singleBoxHeight, 0xff888888);
+        GuiGraphicsExtractor.fill(getX() + 1, getY() + 1, getX() + width - 1, getY() + singleBoxHeight - 1, 0xff000000);
         if (isHoveringOnSingleBox(mouseY, getY()))
-            guiGraphics.fillGradient(getX(), getY(), getX() + width, getY() + singleBoxHeight, 0x80ffffff, 0x80ffffff);
+            GuiGraphicsExtractor.fillGradient(getX(), getY(), getX() + width, getY() + singleBoxHeight, 0x80ffffff, 0x80ffffff);
         SortType sortType = framework.sortType();
         String s = sortType.toString();
-        guiGraphics.drawString(Minecraft.getInstance().font, s,getX()+2, getY() +2,0xffffffff);
+        GuiGraphicsExtractor.text(Minecraft.getInstance().font, s,getX()+2, getY() +2,0xffffffff);
         if(isOpen){
-            guiGraphics.nextStratum();
+            GuiGraphicsExtractor.nextStratum();
             int y1 = getY() +singleBoxHeight;
             for (SortType type : SortType.values()) {
-                guiGraphics.fill(getX(), y1, getX() + width, y1 + singleBoxHeight, 0xff888888);
-                guiGraphics.fill(getX() + 1, y1 + 1, getX() + width - 1, y1 + singleBoxHeight - 1, 0xff000000);
+                GuiGraphicsExtractor.fill(getX(), y1, getX() + width, y1 + singleBoxHeight, 0xff888888);
+                GuiGraphicsExtractor.fill(getX() + 1, y1 + 1, getX() + width - 1, y1 + singleBoxHeight - 1, 0xff000000);
                 if (isHoveringOnSingleBox(mouseY, y1)) {
-                    guiGraphics.fillGradient(getX(), y1, getX() + width, y1 + singleBoxHeight, 0x80ffffff, 0x80ffffff);
-                    guiGraphics.renderTooltip(
+                    GuiGraphicsExtractor.fillGradient(getX(), y1, getX() + width, y1 + singleBoxHeight, 0x80ffffff, 0x80ffffff);
+                    GuiGraphicsExtractor.tooltip(
                             Minecraft.getInstance().font,
                             List.of(
                                     ClientTooltipComponent.create(
@@ -107,11 +107,11 @@ public class SortTypeSwitchBox extends AbstractWidget {
                     );
                 }
                 s = type.toString();
-                guiGraphics.drawString(Minecraft.getInstance().font, s,getX()+2,y1+2,0xffffffff);
+                GuiGraphicsExtractor.text(Minecraft.getInstance().font, s,getX()+2,y1+2,0xffffffff);
                 y1+=singleBoxHeight;
             }
         }
-        guiGraphics.pose().popMatrix();
+        GuiGraphicsExtractor.pose().popMatrix();
     }
     private boolean isHoveringOnSingleBox(int mouseY,int minY){
         return mouseY>=minY && mouseY<=minY+singleBoxHeight && isHovered;
@@ -122,3 +122,4 @@ public class SortTypeSwitchBox extends AbstractWidget {
         this.defaultButtonNarrationText(narrationElementOutput);
     }
 }
+

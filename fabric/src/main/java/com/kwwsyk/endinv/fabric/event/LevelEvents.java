@@ -1,9 +1,8 @@
 package com.kwwsyk.endinv.fabric.event;
 
 import com.kwwsyk.endinv.common.data.EndlessInventoryData;
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.level.ServerLevel;
 
 public final class LevelEvents {
 
@@ -11,12 +10,13 @@ public final class LevelEvents {
     }
 
     public static void register() {
-        ServerWorldEvents.LOAD.register(LevelEvents::onLoad);
+        ServerLifecycleEvents.SERVER_STARTED.register(LevelEvents::onServerStarted);
     }
 
-    private static void onLoad(MinecraftServer server, ServerLevel level) {
-        EndlessInventoryData.init(level);
-        // Ensure player->endinv mapping SavedData is ready
+    private static void onServerStarted(MinecraftServer server) {
+        for (var level : server.getAllLevels()) {
+            EndlessInventoryData.init(level);
+        }
         PlayerEvents.markPlayersForSync(server);
     }
 }

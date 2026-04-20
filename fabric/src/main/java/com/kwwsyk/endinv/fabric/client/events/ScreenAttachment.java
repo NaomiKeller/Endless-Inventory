@@ -12,7 +12,7 @@ import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenKeyboardEvents;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenMouseEvents;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
@@ -153,7 +153,7 @@ public final class ScreenAttachment {
         return !canceled[0];
     }
 
-    public static void onRenderAfterBackground(AbstractContainerScreen<?> screen, GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+    public static void onRenderAfterBackground(AbstractContainerScreen<?> screen, GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
         AttachingScreen<?> current = attachment;
         if (current == null || current.getScreen() != screen || !isAttachmentActive(current)) {
             return;
@@ -169,12 +169,12 @@ public final class ScreenAttachment {
             public float getPartialTick() { return partialTick; }
 
             @Override
-            public GuiGraphics getGuiGraphics() { return graphics; }
+            public GuiGraphicsExtractor getGuiGraphics() { return graphics; }
         });
     }
 
     // Reserved for potential overlay rendering parity (currently no-op in common)
-    public static void onRenderPost(AbstractContainerScreen<?> screen, GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+    public static void onRenderPost(AbstractContainerScreen<?> screen, GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
         AttachingScreen<?> current = attachment;
         if (current == null || current.getScreen() != screen || !isAttachmentActive(current)) {
             return;
@@ -190,7 +190,7 @@ public final class ScreenAttachment {
             public float getPartialTick() { return partialTick; }
 
             @Override
-            public GuiGraphics getGuiGraphics() { return graphics; }
+            public GuiGraphicsExtractor getGuiGraphics() { return graphics; }
         });
     }
 

@@ -1,6 +1,6 @@
 package com.kwwsyk.endinv.common.client.gui;
 
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
@@ -24,7 +24,7 @@ public interface IScreenEvent {
         return 0;
     }
 
-    default GuiGraphics getGuiGraphics(){
+    default GuiGraphicsExtractor getGuiGraphics(){
         return null;
     }
 
@@ -75,3 +75,4 @@ public interface IScreenEvent {
         return 0;
     }
 }
+

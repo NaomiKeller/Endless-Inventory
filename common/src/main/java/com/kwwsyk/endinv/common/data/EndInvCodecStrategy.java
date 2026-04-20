@@ -35,7 +35,7 @@ public interface EndInvCodecStrategy {
     Codec<ItemStack> ITEM_STACK_CODEC = Codec.lazyInitialized(
             () -> RecordCodecBuilder.create(
                     p_381569_ -> p_381569_.group(
-                                    Item.CODEC.fieldOf("id").forGetter(ItemStack::getItemHolder),
+                                    Item.CODEC.fieldOf("id").forGetter(stack -> stack.getItem().builtInRegistryHolder()),
                                     Codec.INT.fieldOf("count").orElse(1).forGetter(ItemStack::getCount),
                                     DataComponentPatch.CODEC
                                             .optionalFieldOf("components", DataComponentPatch.EMPTY)

@@ -11,7 +11,7 @@ import com.kwwsyk.endinv.fabric.mixin.AbstractContainerScreenAccessor;
 import com.kwwsyk.endinv.fabric.network.FabricClientNetworking;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
-import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
@@ -33,11 +33,11 @@ public class ClientModInit extends AbstractClientModInitializer implements Clien
 
     @Override
     public void onInitializeClient() {
-        KeyBindingHelper.registerKeyBinding(KEY_MAPPING_MAP.get(OPEN_MENU));
-        KeyBindingHelper.registerKeyBinding(KEY_MAPPING_MAP.get(QUICK_MOVE));//it may be unchangeable
+        KeyMappingHelper.registerKeyMapping(KEY_MAPPING_MAP.get(OPEN_MENU));
+        KeyMappingHelper.registerKeyMapping(KEY_MAPPING_MAP.get(QUICK_MOVE));//it may be unchangeable
         if(FabricLoader.getInstance().isModLoaded("jei")){
-            KeyBindingHelper.registerKeyBinding(KEY_MAPPING_MAP.get(STAR_ITEM));
-        }else KeyBindingHelper.registerKeyBinding(KEY_MAPPING_MAP.get(STAR_ITEM_ALTER));
+            KeyMappingHelper.registerKeyMapping(KEY_MAPPING_MAP.get(STAR_ITEM));
+        }else KeyMappingHelper.registerKeyMapping(KEY_MAPPING_MAP.get(STAR_ITEM_ALTER));
         initClientConfigs();
         FabricClientNetworking.init();
         ClientEvents.register();

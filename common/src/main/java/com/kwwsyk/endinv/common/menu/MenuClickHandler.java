@@ -77,7 +77,7 @@ public abstract class MenuClickHandler {
                                 && menu.canDragTo(slot1)) { //I never know why check twice...
                             int j = slot1.hasItem() ? slot1.getItem().getCount() : 0;//j=itemCount
                             int k = Math.min(copiedCarried.getMaxStackSize(), slot1.getMaxStackSize(copiedCarried));//k=minSlotCapSize
-                            int l = Math.min(getQuickCraftPlaceCount(menu.quickcraftSlots, menu.quickcraftType, copiedCarried) + j, k);//finalCountAfterPlace
+                            int l = Math.min(getQuickCraftPlaceCount(menu.quickcraftType, j, copiedCarried), k);//finalCountAfterPlace
                             count -= l - j;//=count-itemCountDecrease = remainCount
 
                             slot1.setByPlayer(copiedCarried.copyWithCount(l));

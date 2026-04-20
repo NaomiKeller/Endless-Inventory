@@ -16,7 +16,7 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.inventory.InventoryMenu;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
@@ -26,9 +26,9 @@ import org.slf4j.Logger;
  * slot/item clicked in {@link ItemPage}.
  * @param key
  * @param button
- * @param clickType
+ * @param ContainerInput
  */
-public record ItemClickPayload(ItemKey key, int button, ClickType clickType) implements ModPacketPayload {
+public record ItemClickPayload(ItemKey key, int button, ContainerInput ContainerInput) implements ModPacketPayload {
 
     public static final StreamCodec<RegistryFriendlyByteBuf, ItemClickPayload> STREAM_CODEC =
             StreamCodec.of((buf, value) -> encode(value, buf), ItemClickPayload::decode);
@@ -42,7 +42,7 @@ public record ItemClickPayload(ItemKey key, int button, ClickType clickType) imp
         return new ItemClickPayload(
                 ItemKey.STREAM_CODEC.decode(buf),
                 buf.readInt(),
-                buf.readEnum(ClickType.class)
+                buf.readEnum(ContainerInput.class)
         );
     }
 
@@ -50,7 +50,7 @@ public record ItemClickPayload(ItemKey key, int button, ClickType clickType) imp
     public static void encode(ItemClickPayload itemClickPayload,RegistryFriendlyByteBuf o) {
         ItemKey.STREAM_CODEC.encode(o , itemClickPayload.key);
         o.writeInt(itemClickPayload.button);
-        o.writeEnum(itemClickPayload.clickType);
+        o.writeEnum(itemClickPayload.ContainerInput);
     }
 
     @Override
@@ -59,7 +59,7 @@ public record ItemClickPayload(ItemKey key, int button, ClickType clickType) imp
         assert player != null;//on server
         AbstractContainerMenu menu = player.containerMenu;
         ItemStack carried = menu.getCarried();
-        LOGGER.debug("EI:ItemClickPayload.handle: player={} clickType={} button={} carriedEmpty={} key={}", player.getName().getString(), clickType, button, carried.isEmpty(), key);
+        LOGGER.debug("EI:ItemClickPayload.handle: player={} ContainerInput={} button={} carriedEmpty={} key={}", player.getName().getString(), ContainerInput, button, carried.isEmpty(), key);
         var opt = ServerLevelEndInv.getEndInvForPlayer(player);
         if(opt.isEmpty()) {
             LOGGER.warn("ItemClickPayload.handle: no EndInv for player={}", player.getName().getString());
@@ -70,7 +70,7 @@ public record ItemClickPayload(ItemKey key, int button, ClickType clickType) imp
         int count = state != null ? state.count() : 0;
         ItemStack snapStack = key.toStack(count);//should be deleted at the method return.
 
-        switch (clickType){
+        switch (ContainerInput){
             case PICKUP -> {
                 if(!carried.isEmpty()){
                     ItemStack remain = endInv.addItem(carried);
@@ -165,3 +165,4 @@ public record ItemClickPayload(ItemKey key, int button, ClickType clickType) imp
         return TYPE;
     }
 }
+

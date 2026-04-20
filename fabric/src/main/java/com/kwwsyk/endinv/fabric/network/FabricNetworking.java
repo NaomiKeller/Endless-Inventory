@@ -14,7 +14,7 @@ public final class FabricNetworking {
 
     public static void init() {
         // Register all payload types/codecs before registering receivers
-        var c2s = PayloadTypeRegistry.playC2S();
+        var c2s = PayloadTypeRegistry.serverboundPlay();
         c2s.register(ItemClickPayload.TYPE, ItemClickPayload.STREAM_CODEC);
         c2s.register(CreativeItemModPayload.TYPE, CreativeItemModPayload.STREAM_CODEC);
         c2s.register(ItemPageContext.TYPE, ItemPageContext.STREAM_CODEC);
@@ -27,7 +27,7 @@ public final class FabricNetworking {
         c2s.register(com.kwwsyk.endinv.fabric.network.payloads.JeiTransferRecipePayload.TYPE,
                 com.kwwsyk.endinv.fabric.network.payloads.JeiTransferRecipePayload.STREAM_CODEC);
 
-        var s2c = PayloadTypeRegistry.playS2C();
+        var s2c = PayloadTypeRegistry.clientboundPlay();
         s2c.register(EndInvContent.TYPE, EndInvContent.STREAM_CODEC);
         s2c.register(EndInvMetadata.TYPE, EndInvMetadata.STREAM_CODEC);
         s2c.register(ItemPickedUpPayload.TYPE, ItemPickedUpPayload.STREAM_CODEC);

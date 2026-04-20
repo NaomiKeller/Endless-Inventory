@@ -6,7 +6,7 @@ import com.kwwsyk.endinv.common.client.option.ClientConfigs;
 import com.kwwsyk.endinv.common.client.option.PageSwitchBarConfig;
 import com.kwwsyk.endinv.common.client.option.TextureMode;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.input.MouseButtonEvent;
@@ -87,16 +87,16 @@ public class PageSwitchBar extends AbstractWidget {
     }
 
     @Override
-    protected void renderWidget(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+    protected void extractWidgetRenderState(@NotNull GuiGraphicsExtractor GuiGraphicsExtractor, int mouseX, int mouseY, float partialTick) {
         int tabX = getX();
         int tabY = getY();
         int selectedPageIndex = framework.getDisplayingPageIndex();
         if(textureMode == TextureMode.TRANSPARENT){
             for (int i = ScreenFramework.firstPageIndex; i < ScreenFramework.firstPageIndex + framework.pageBarCount; ++i) {
                 if (i == selectedPageIndex) {
-                    guiGraphics.fill(tabX,tabY,tabX+tabWidth,tabY+tabHeight,PAGE_FRAME_COLOR);
+                    GuiGraphicsExtractor.fill(tabX,tabY,tabX+tabWidth,tabY+tabHeight,PAGE_FRAME_COLOR);
                 } else {
-                    guiGraphics.fill(tabX+4,tabY,tabX+tabWidth,tabY+tabHeight,PAGE_BG_COLOR);
+                    GuiGraphicsExtractor.fill(tabX+4,tabY,tabX+tabWidth,tabY+tabHeight,PAGE_BG_COLOR);
                 }
                 if(direction_isVertical) tabY+=tabHeight; else tabX+=tabWidth;
             }
@@ -106,20 +106,20 @@ public class PageSwitchBar extends AbstractWidget {
                     if (i == 0) {
                         var tex = getTabsTexture(TabType.TOP);
                         if (tex.equals(TabType.TOP.vanillaTexture)) tex = TabType.TOP.dedicatedLocation;
-                        guiGraphics.blit(RenderPipelines.GUI_TEXTURED, tex, tabX, tabY, 0.0F, 0.0F, tabWidth, tabHeight, tabWidth, tabHeight);
+                        GuiGraphicsExtractor.blit(RenderPipelines.GUI_TEXTURED, tex, tabX, tabY, 0.0F, 0.0F, tabWidth, tabHeight, tabWidth, tabHeight);
                     } else if (i == ScreenFramework.firstPageIndex + framework.pageBarCount - 1) {
                         var tex = getTabsTexture(TabType.BOTTOM);
                         if (tex.equals(TabType.BOTTOM.vanillaTexture)) tex = TabType.BOTTOM.dedicatedLocation;
-                        guiGraphics.blit(RenderPipelines.GUI_TEXTURED, tex, tabX, tabY, 0.0F, 0.0F, tabWidth, tabHeight, tabWidth, tabHeight);
+                        GuiGraphicsExtractor.blit(RenderPipelines.GUI_TEXTURED, tex, tabX, tabY, 0.0F, 0.0F, tabWidth, tabHeight, tabWidth, tabHeight);
                     } else {
                         var tex = getTabsTexture(TabType.MIDDLE);
                         if (tex.equals(TabType.MIDDLE.vanillaTexture)) tex = TabType.MIDDLE.dedicatedLocation;
-                        guiGraphics.blit(RenderPipelines.GUI_TEXTURED, tex, tabX, tabY, 0.0F, 0.0F, tabWidth, tabHeight, tabWidth, tabHeight);
+                        GuiGraphicsExtractor.blit(RenderPipelines.GUI_TEXTURED, tex, tabX, tabY, 0.0F, 0.0F, tabWidth, tabHeight, tabWidth, tabHeight);
                     }
                 } else {
                     var tex = getTabsTexture(TabType.UNSELECTED);
                     if (tex.equals(TabType.UNSELECTED.vanillaTexture)) tex = TabType.UNSELECTED.dedicatedLocation;
-                    guiGraphics.blit(RenderPipelines.GUI_TEXTURED, tex, tabX + 8, tabY, 4.0F, 0.0F, tabWidth - 4, tabHeight, tabWidth, tabHeight);
+                    GuiGraphicsExtractor.blit(RenderPipelines.GUI_TEXTURED, tex, tabX + 8, tabY, 4.0F, 0.0F, tabWidth - 4, tabHeight, tabWidth, tabHeight);
                 }
                 if(direction_isVertical) tabY+=tabHeight; else tabX+=tabWidth;
             }
@@ -127,9 +127,9 @@ public class PageSwitchBar extends AbstractWidget {
         tabX = getX();
         tabY = getY();
         for (int i = ScreenFramework.firstPageIndex; i < ScreenFramework.firstPageIndex + framework.pageBarCount; ++i) {
-            framework.getPages().get(i).renderPageIcon(guiGraphics, tabX + 15, tabY + 5, partialTick);
+            framework.getPages().get(i).renderPageIcon(GuiGraphicsExtractor, tabX + 15, tabY + 5, partialTick);
             if (mouseX > tabX && mouseX < tabX + tabWidth && mouseY > tabY && mouseY < tabY + tabHeight) {
-                guiGraphics.renderTooltip(
+                GuiGraphicsExtractor.tooltip(
                         Minecraft.getInstance().font,
                         java.util.List.of(
                                 net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent.create(
@@ -151,3 +151,4 @@ public class PageSwitchBar extends AbstractWidget {
         this.defaultButtonNarrationText(narrationElementOutput);
     }
 }
+

@@ -3,7 +3,7 @@ package com.kwwsyk.endinv.common.client.gui;
 import com.kwwsyk.endinv.common.client.option.ClientConfigs;
 import com.kwwsyk.endinv.common.options.config.IConfigValue;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.CycleButton;
@@ -176,22 +176,22 @@ public abstract class EndInvSettingScreen extends Screen {
     }
 
     @Override
-    public void render(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+    public void extractRenderState(@NotNull GuiGraphicsExtractor GuiGraphicsExtractor, int mouseX, int mouseY, float partialTick) {
         // Render background first to respect 1.21.8 element ordering
-        this.renderBackground(guiGraphics, mouseX, mouseY, partialTick);
-        super.render(guiGraphics, mouseX, mouseY, partialTick);
+        this.extractBackground(GuiGraphicsExtractor, mouseX, mouseY, partialTick);
+        super.extractRenderState(GuiGraphicsExtractor, mouseX, mouseY, partialTick);
         for(var entry : renderingEntries){
             if(entry!=null) {
-                entry.render(guiGraphics, partialTick, mouseX, mouseY);
+                entry.render(GuiGraphicsExtractor, partialTick, mouseX, mouseY);
             }
         }
     }
 
     @Override
-    public void renderBackground(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        guiGraphics.fill(leftPos,topPos,leftPos+imageWidth,topPos+imageHeight,0x88888888);
+    public void extractBackground(@NotNull GuiGraphicsExtractor GuiGraphicsExtractor, int mouseX, int mouseY, float partialTick) {
+        GuiGraphicsExtractor.fill(leftPos,topPos,leftPos+imageWidth,topPos+imageHeight,0x88888888);
         
-        //guiGraphics.blit(BLANK_LOCATION,leftPos,topPos,0,0,imageWidth,imageHeight);
+        //GuiGraphicsExtractor.blit(BLANK_LOCATION,leftPos,topPos,0,0,imageWidth,imageHeight);
     }
 
     @Override
@@ -265,7 +265,7 @@ public abstract class EndInvSettingScreen extends Screen {
         };
     }*/
 
-    public static void renderScrollingString(GuiGraphics guiGraphics, Font font, Component text, int minX, int minY, int maxX, int maxY, int color) {
+    public static void renderScrollingString(GuiGraphicsExtractor GuiGraphicsExtractor, Font font, Component text, int minX, int minY, int maxX, int maxY, int color) {
         int i = font.width(text);
         int j = (minY + maxY - 9) / 2 + 1;
         int k = maxX - minX;
@@ -275,11 +275,11 @@ public abstract class EndInvSettingScreen extends Screen {
             double d1 = Math.max((double)l * (double)0.5F, 3.0F);
             double d2 = Math.sin((Math.PI / 2D) * Math.cos((Math.PI * 2D) * d0 / d1)) / (double)2.0F + (double)0.5F;
             double d3 = Mth.lerp(d2, 0.0F, l);
-            guiGraphics.enableScissor(minX, minY, maxX, maxY);
-            guiGraphics.drawString(font, text, minX - (int)d3, j, color);
-            guiGraphics.disableScissor();
+            GuiGraphicsExtractor.enableScissor(minX, minY, maxX, maxY);
+            GuiGraphicsExtractor.text(font, text, minX - (int)d3, j, color);
+            GuiGraphicsExtractor.disableScissor();
         } else {
-            guiGraphics.drawCenteredString(font, text, (minX + maxX) / 2, j, color);
+            GuiGraphicsExtractor.centeredText(font, text, (minX + maxX) / 2, j, color);
         }
 
     }
@@ -288,7 +288,7 @@ public abstract class EndInvSettingScreen extends Screen {
 
         void build();
 
-        void render(GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY);
+        void render(GuiGraphicsExtractor GuiGraphicsExtractor, float partialTick, int mouseX, int mouseY);
 
         void syncConfig();
 
@@ -298,7 +298,7 @@ public abstract class EndInvSettingScreen extends Screen {
             return Optional.empty();
         }
 
-        // Position the entry’s widget(s) at the visible slot index [0..MAX_ENTRY_COUNT)
+        // Position the entryâ€™s widget(s) at the visible slot index [0..MAX_ENTRY_COUNT)
         default void placeAtSlot(int slot){ }
     }
 
@@ -320,13 +320,13 @@ public abstract class EndInvSettingScreen extends Screen {
         }
 
         @Override
-        public void render(GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {
+        public void render(GuiGraphicsExtractor GuiGraphicsExtractor, float partialTick, int mouseX, int mouseY) {
             Font font = EndInvSettingScreen.this.font;
-            guiGraphics.drawString(font,tip,leftPos+CONFIG_ENTRY_X_OFFSET,widgetY,0xFFFFFF00);
+            GuiGraphicsExtractor.text(font,tip,leftPos+CONFIG_ENTRY_X_OFFSET,widgetY,0xFFFFFF00);
             Component v = Component.literal(info.get()!=null? info.get().toString():"null");
             int infoLength = Math.min(font.width(v.getVisualOrderText()), 100);
-            //guiGraphics.drawString(font,v,widgetMidX-infoLength/2,widgetY,0xFF00FFFF);
-            renderScrollingString(guiGraphics,font,v,widgetMidX-infoLength/2,widgetY,widgetMidX+infoLength/2,widgetY+7,0xFF00FFFF);
+            //GuiGraphicsExtractor.text(font,v,widgetMidX-infoLength/2,widgetY,0xFF00FFFF);
+            renderScrollingString(GuiGraphicsExtractor,font,v,widgetMidX-infoLength/2,widgetY,widgetMidX+infoLength/2,widgetY+7,0xFF00FFFF);
         }
 
         @Override
@@ -371,8 +371,8 @@ public abstract class EndInvSettingScreen extends Screen {
         }
 
         @Override
-        public void render(GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {
-            guiGraphics.drawString(EndInvSettingScreen.this.font,tip,leftPos+CONFIG_ENTRY_X_OFFSET,widgetY,0xFFFFFF00);
+        public void render(GuiGraphicsExtractor GuiGraphicsExtractor, float partialTick, int mouseX, int mouseY) {
+            GuiGraphicsExtractor.text(EndInvSettingScreen.this.font,tip,leftPos+CONFIG_ENTRY_X_OFFSET,widgetY,0xFFFFFF00);
         }
 
         @Override
@@ -509,14 +509,14 @@ public abstract class EndInvSettingScreen extends Screen {
                 }
                 case null, default -> {
                     EndInvSettingScreen self = EndInvSettingScreen.this;
-                    self.addRenderableOnly((guiGraphics, i, i1, v) ->
-                            guiGraphics.drawString(self.font, "Error", widgetX, widgetY, 0xFFFF3737));
+                    self.addRenderableOnly((GuiGraphicsExtractor, i, i1, v) ->
+                            GuiGraphicsExtractor.text(self.font, "Error", widgetX, widgetY, 0xFFFF3737));
                 }
             }
         }
 
-        public void render(GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY){
-            guiGraphics.drawString(EndInvSettingScreen.this.font,tip,leftPos+CONFIG_ENTRY_X_OFFSET,widgetY,0xFFFFFF00);
+        public void render(GuiGraphicsExtractor GuiGraphicsExtractor, float partialTick, int mouseX, int mouseY){
+            GuiGraphicsExtractor.text(EndInvSettingScreen.this.font,tip,leftPos+CONFIG_ENTRY_X_OFFSET,widgetY,0xFFFFFF00);
         }
 
         @SuppressWarnings("unchecked")
@@ -571,3 +571,4 @@ public abstract class EndInvSettingScreen extends Screen {
         }
     }
 }
+

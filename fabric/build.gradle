@@ -32,6 +32,9 @@ loom {
 sourceSets {
     main {
         resources.srcDir project(':common').file('src/main/resources')
+        if ("${cloth_config_version}".isEmpty()) {
+            java.exclude 'com/kwwsyk/endinv/fabric/integrates/clothconfig/**'
+        }
     }
 }
 
@@ -125,7 +128,7 @@ publishMods {
     changelog = "port to 26.1"
     displayName.set(base.archivesName)
     version = mod_version
-    type = BETA
+    type = ALPHA
     modLoaders.add("fabric")
 
     curseforge {
@@ -140,13 +143,6 @@ publishMods {
         projectId = modrinth_project_id
         accessToken = providers.environmentVariable("MODRINTH_TOKEN")
         minecraftVersions.add(minecraft_version)
-//        minecraftVersionRange {
-//            start = "1.19.4"
-//            end = "1.20.2" // Set to "latest" to use the latest minecraft version
-//
-//            // Optionally include snapshot versions, defaults to false
-//            includeSnapshots = true
-//        }
         optional("jei")
     }
 //    github {

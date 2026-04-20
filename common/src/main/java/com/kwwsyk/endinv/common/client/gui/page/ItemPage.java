@@ -13,11 +13,11 @@ import com.kwwsyk.endinv.common.util.ItemKey;
 import com.kwwsyk.endinv.common.util.NotNullWhenInitialized;
 import com.mojang.logging.LogUtils;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.Nullable;
@@ -129,18 +129,18 @@ public abstract class ItemPage extends GridPage {
         getPacketDistributor().sendToServer(new StarItemPayload(clicked,true));
     }
 
-    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks){
+    public void render(GuiGraphicsExtractor GuiGraphicsExtractor, int mouseX, int mouseY, float partialTicks){
         for(ItemPageSlotView slot : viewContainer.slots()){
-            slot.render(guiGraphics, mouseX, mouseY, partialTicks);
+            slot.render(GuiGraphicsExtractor, mouseX, mouseY, partialTicks);
         }
     }
 
     @Override
-    public void pageClicked(double XOffset, double YOffset, int button, ClickType clickType) {
+    public void pageClicked(double XOffset, double YOffset, int button, ContainerInput ContainerInput) {
         int slot = getSlotByMouseOffset(XOffset,YOffset);
         if(slot>=0 && slot < viewContainer.getContainerSize()) {
             ItemStack clicked = getItemByMouseOffset(XOffset, YOffset).copy();
-            switch (clickType){
+            switch (ContainerInput){
                 case PICKUP -> handlePickup(clicked, button);
                 case QUICK_MOVE -> handleQuickMove(clicked);
                 case SWAP -> handleSwap(clicked, slot);
@@ -148,12 +148,12 @@ public abstract class ItemPage extends GridPage {
                 case CLONE -> handleClone(clicked);
                 case PICKUP_ALL -> handlePickupAll(clicked);
             }
-            LOGGER.info("EI:sending:ItemClickPayload: player={} clickType={} button={} stack={}"
-                    , framework.getPlayer(),clickType,button, clicked);
-            if(clickType == ClickType.PICKUP_ALL && Minecraft.getInstance().hasShiftDown()) return;
+            LOGGER.info("EI:sending:ItemClickPayload: player={} ContainerInput={} button={} stack={}"
+                    , framework.getPlayer(),ContainerInput,button, clicked);
+            if(ContainerInput == ContainerInput.PICKUP_ALL && Minecraft.getInstance().hasShiftDown()) return;
             ModInfo.getPacketDistributor().sendToServer(new ItemClickPayload(
                     ItemKey.asKey(clicked),
-                    button,clickType));
+                    button,ContainerInput));
             this.refreshItems();
         }
     }
@@ -295,5 +295,6 @@ public abstract class ItemPage extends GridPage {
         }
     }
 }
+
 
 

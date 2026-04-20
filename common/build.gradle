@@ -17,3 +17,10 @@ dependencies {
     compileOnly "org.spongepowered:mixin:0.8.7"
     annotationProcessor "org.spongepowered:mixin:0.8.7:processor"
 }
+
+tasks.withType(JavaCompile).configureEach {
+    // Keep mixin AP diagnostics quiet during compilation; no runtime behavior change.
+    options.compilerArgs += ["-Aquiet=true"]
+    options.compilerArgs += ["-Xlint:none", "-nowarn"]
+    options.warnings = false
+}

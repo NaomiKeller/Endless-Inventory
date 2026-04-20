@@ -1,7 +1,7 @@
 package com.kwwsyk.endinv.fabric.mixin;
 
 import com.kwwsyk.endinv.fabric.client.events.ScreenAttachment;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.input.MouseButtonEvent;
 import org.spongepowered.asm.mixin.Mixin;
@@ -20,8 +20,8 @@ public abstract class AbstractContainerScreenMixin {
         }
     }
 
-    @Inject(method = "renderBackground", at = @At("TAIL"))
-    private void endinv$renderTail(GuiGraphics graphics, int mouseX, int mouseY, float partialTick, CallbackInfo ci) {
+    @Inject(method = "extractContents", at = @At("TAIL"))
+    private void endinv$renderTail(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick, CallbackInfo ci) {
         // Fallback: if we cannot pinpoint renderBg reliably across mappings, draw both phases at TAIL.
         ScreenAttachment.onRenderAfterBackground((AbstractContainerScreen<?>) (Object) this, graphics, mouseX, mouseY, partialTick);
         ScreenAttachment.onRenderPost((AbstractContainerScreen<?>) (Object) this, graphics, mouseX, mouseY, partialTick);

@@ -5,7 +5,7 @@ import com.kwwsyk.endinv.common.client.gui.ScreenFramework;
 import com.kwwsyk.endinv.common.client.option.ClientConfigs;
 import com.kwwsyk.endinv.common.client.option.TextureMode;
 import com.kwwsyk.endinv.common.menu.EndlessInventoryMenu;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.NotNull;
@@ -38,17 +38,17 @@ public abstract class FromResource extends SFBgRendererImpl {
         }
 
         @Override
-        public void renderBg(@NotNull GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {
-            super.renderBg(guiGraphics, partialTick, mouseX, mouseY);
+        public void renderBg(@NotNull GuiGraphicsExtractor GuiGraphicsExtractor, float partialTick, int mouseX, int mouseY) {
+            super.renderBg(GuiGraphicsExtractor, partialTick, mouseX, mouseY);
 
             int baseRows = frameWork.menu instanceof EndlessInventoryMenu endless ? endless.getBaseRows() : rows;
 
             int startY = menuTop + 17 + baseRows*18;
-            renderPlayerInv(guiGraphics,partialTick,mouseX,mouseY,menuLeft,startY);
+            renderPlayerInv(GuiGraphicsExtractor,partialTick,mouseX,mouseY,menuLeft,startY);
         }
 
-        private void renderPlayerInv(GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY, int startX, int startY){
-            guiGraphics.blit(RenderPipelines.GUI_TEXTURED, getContainerTexture(), startX, startY,
+        private void renderPlayerInv(GuiGraphicsExtractor GuiGraphicsExtractor, float partialTick, int mouseX, int mouseY, int startX, int startY){
+            GuiGraphicsExtractor.blit(RenderPipelines.GUI_TEXTURED, getContainerTexture(), startX, startY,
                     0.0F, 126.0F, imageWidth, 96, 256, 256);
         }
     }
@@ -66,47 +66,47 @@ public abstract class FromResource extends SFBgRendererImpl {
         public abstract Identifier texture();
 
         @Override
-        public void renderBg(@NotNull GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {
+        public void renderBg(@NotNull GuiGraphicsExtractor GuiGraphicsExtractor, float partialTick, int mouseX, int mouseY) {
             int startX = frameWork.getPageX();
             int startY = frameWork.getPageY();
             int columns = frameWork.columns();
             int rows = frameWork.rows();
 
             if(columns!=9){
-                renderSpecialBg(guiGraphics,partialTick,mouseX,mouseY,startX,startY);
+                renderSpecialBg(GuiGraphicsExtractor,partialTick,mouseX,mouseY,startX,startY);
             }else {
-                guiGraphics.blit(RenderPipelines.GUI_TEXTURED, texture(), startX, startY, 0.0F, 0.0F, imageWidth, 17, 256, 256);
+                GuiGraphicsExtractor.blit(RenderPipelines.GUI_TEXTURED, texture(), startX, startY, 0.0F, 0.0F, imageWidth, 17, 256, 256);
                 startY += 17;
                 int rowsToRender = rows;
                 while (rowsToRender > 0) {
                     int height = 18 * Math.min(rowsToRender, 6);
-                    guiGraphics.blit(RenderPipelines.GUI_TEXTURED, texture(), startX, startY,
+                    GuiGraphicsExtractor.blit(RenderPipelines.GUI_TEXTURED, texture(), startX, startY,
                             0.0F, 17.0F, imageWidth, height, 256, 256);
                     rowsToRender -= 6;
                     startY += height;
                 }
-                guiGraphics.blit(RenderPipelines.GUI_TEXTURED, texture(), startX, frameWork.getPageY() + 17 + 18 * rows, 0.0F, 124.0F, imageWidth, 12, 256, 256);
+                GuiGraphicsExtractor.blit(RenderPipelines.GUI_TEXTURED, texture(), startX, frameWork.getPageY() + 17 + 18 * rows, 0.0F, 124.0F, imageWidth, 12, 256, 256);
             }
 
         }
 
-        private void renderSpecialBg(@NotNull GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY,
+        private void renderSpecialBg(@NotNull GuiGraphicsExtractor GuiGraphicsExtractor, float partialTick, int mouseX, int mouseY,
                                      int startX, int startY) {
             int initialX = startX;
             int columns = frameWork.columns();
             int rows = frameWork.rows();
 
-            guiGraphics.blit(RenderPipelines.GUI_TEXTURED, texture(), startX, startY, 0.0F, 0.0F,
+            GuiGraphicsExtractor.blit(RenderPipelines.GUI_TEXTURED, texture(), startX, startY, 0.0F, 0.0F,
                     7, 17, 256, 256);
             startX+=7;
             for (int columnsToRender = columns;columnsToRender>0;columnsToRender-=9) {
                 int width = 18 * Math.min(9,columnsToRender);
-                guiGraphics.blit(RenderPipelines.GUI_TEXTURED, texture(), startX, startY, 7.0F, 0.0F,
+                GuiGraphicsExtractor.blit(RenderPipelines.GUI_TEXTURED, texture(), startX, startY, 7.0F, 0.0F,
                         width, 17, 256,256);
 
                 startX+=width;
             }
-            guiGraphics.blit(RenderPipelines.GUI_TEXTURED, texture(), startX, startY, 168.0F, 0.0F,
+            GuiGraphicsExtractor.blit(RenderPipelines.GUI_TEXTURED, texture(), startX, startY, 168.0F, 0.0F,
                     8, 17, 256, 256);
             startX = initialX;
 
@@ -115,32 +115,32 @@ public abstract class FromResource extends SFBgRendererImpl {
                 int height = 18*Math.min(rowsToRender,6);
 
 
-                guiGraphics.blit(RenderPipelines.GUI_TEXTURED, texture(), startX, startY, 0.0F, 17.0F,
+                GuiGraphicsExtractor.blit(RenderPipelines.GUI_TEXTURED, texture(), startX, startY, 0.0F, 17.0F,
                         7, height, 256, 256);
                 startX+=7;
                 for (int columnsToRender = columns;columnsToRender>0;columnsToRender-=9) {
                     int width = 18 * Math.min(9,columnsToRender);
-                    guiGraphics.blit(RenderPipelines.GUI_TEXTURED, texture(), startX, startY, 7.0F, 17.0F,
+                    GuiGraphicsExtractor.blit(RenderPipelines.GUI_TEXTURED, texture(), startX, startY, 7.0F, 17.0F,
                             width, height, 256, 256);
                     startX+=width;
                 }
-                guiGraphics.blit(RenderPipelines.GUI_TEXTURED, texture(), startX, startY, 168.0F, 17.0F,
+                GuiGraphicsExtractor.blit(RenderPipelines.GUI_TEXTURED, texture(), startX, startY, 168.0F, 17.0F,
                         8, height, 256, 256);
                 startX = initialX;
                 startY += height;
             }
 
-            guiGraphics.blit(RenderPipelines.GUI_TEXTURED, texture(), startX, startY, 0.0F, 124.0F,
+            GuiGraphicsExtractor.blit(RenderPipelines.GUI_TEXTURED, texture(), startX, startY, 0.0F, 124.0F,
                     7, 12, 256, 256);
             startX+=7;
             for (int columnsToRender = columns;columnsToRender>0;columnsToRender-=9) {
                 int width = 18 * Math.min(9,columnsToRender);
-                guiGraphics.blit(RenderPipelines.GUI_TEXTURED, texture(), startX, startY, 7.0F, 124.0F,
+                GuiGraphicsExtractor.blit(RenderPipelines.GUI_TEXTURED, texture(), startX, startY, 7.0F, 124.0F,
                         width, 12, 256, 256);
 
                 startX+=width;
             }
-            guiGraphics.blit(RenderPipelines.GUI_TEXTURED, texture(), startX, startY, 168.0F, 124.0F,
+            GuiGraphicsExtractor.blit(RenderPipelines.GUI_TEXTURED, texture(), startX, startY, 168.0F, 124.0F,
                     8, 12, 256, 256);
             startX = initialX;
         }
@@ -167,6 +167,7 @@ public abstract class FromResource extends SFBgRendererImpl {
     }
 
     @Override
-    public void renderBg(@NotNull GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {
+    public void renderBg(@NotNull GuiGraphicsExtractor GuiGraphicsExtractor, float partialTick, int mouseX, int mouseY) {
     }
 }
+

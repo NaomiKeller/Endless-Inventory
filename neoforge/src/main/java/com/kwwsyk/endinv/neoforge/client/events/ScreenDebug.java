@@ -3,7 +3,7 @@ package com.kwwsyk.endinv.neoforge.client.events;
 import com.kwwsyk.endinv.common.ModInfo;
 import com.kwwsyk.endinv.common.client.option.ClientConfigs;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.neoforged.api.distmarker.Dist;
@@ -20,10 +20,10 @@ public class ScreenDebug {
     @SubscribeEvent
     public static void hideScreen(ScreenEvent.Render.Pre event){
         if(hideMenu){
-            GuiGraphics graphics = event.getGuiGraphics();
+            GuiGraphicsExtractor graphics = event.getGuiGraphics();
             Screen screen = event.getScreen();
             Minecraft mc = screen.getMinecraft();
-            graphics.drawString(mc.font,Component.literal("[F4]Menu screen rendering stopped!"),0,0,0xFFFFAA00);
+            graphics.text(mc.font,Component.literal("[F4]Menu screen rendering stopped!"),0,0,0xFFFFAA00);
             event.setCanceled(true);
         }
     }

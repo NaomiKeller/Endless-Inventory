@@ -10,7 +10,7 @@ import com.kwwsyk.endinv.common.menu.page.PageType;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.Rect2i;
@@ -21,7 +21,7 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 import net.minecraft.util.Util;
 import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
@@ -209,8 +209,8 @@ public abstract class DisplayPage{
 
 
     //page renderer
-    public void renderBg(GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {
-        framework.SFBgRenderer.getDefaultPageBgRenderer().ifPresent(bgRenderer -> bgRenderer.renderBg(guiGraphics, partialTick, mouseX, mouseY));
+    public void renderBg(GuiGraphicsExtractor GuiGraphicsExtractor, float partialTick, int mouseX, int mouseY) {
+        framework.SFBgRenderer.getDefaultPageBgRenderer().ifPresent(bgRenderer -> bgRenderer.renderBg(GuiGraphicsExtractor, partialTick, mouseX, mouseY));
     }
 
     /**
@@ -227,7 +227,7 @@ public abstract class DisplayPage{
     public void resize(int rows) {
     }
 
-    public abstract void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks);
+    public abstract void render(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTicks);
 
     public String getDisplayAmount(ItemStack stack){
         int count = stack.getCount();
@@ -235,7 +235,7 @@ public abstract class DisplayPage{
         String suffix;
 
         if(count == this.framework.getMaxStackSize() && framework.enableInfinity()){
-            return "∞";
+            return "âˆž";
         }
 
         if (count >= 1_000_000_000) {
@@ -261,12 +261,12 @@ public abstract class DisplayPage{
      * <p>
      *Invoked when page s not initialized (items) yet.
      */
-    public void renderPageIcon(GuiGraphics graphics, int x, int y, float partialTick) {
+    public void renderPageIcon(GuiGraphicsExtractor graphics, int x, int y, float partialTick) {
         if(getIcon()==null) return;
         Optional<Item> optionalItem = BuiltInRegistries.ITEM.getOptional(getIcon());
         if (optionalItem.isPresent()) {
             ItemStack stack = new ItemStack(optionalItem.get());
-            graphics.renderItem(stack,x,y);
+            graphics.item(stack,x,y);
             return;
         }
         try {
@@ -283,7 +283,7 @@ public abstract class DisplayPage{
      */
     public abstract boolean doubleClickedOnOne(double XOffset, double YOffset, double lastX, double lastY, long clickInterval);
 
-    public abstract void pageClicked(double XOffset, double YOffset, int keyCode, ClickType clickType);
+    public abstract void pageClicked(double XOffset, double YOffset, int keyCode, ContainerInput ContainerInput);
 
     /**
      * Get an area of one independent interactable area, mainly one item slot.
@@ -344,32 +344,32 @@ public abstract class DisplayPage{
             checkHotBarClicked:
             if (this.menu.getCarried().isEmpty()) {
                 if (mc.options.keySwapOffhand.matchesMouse(clickEvent)) {
-                    pageClicked(XOffset,YOffset,40, ClickType.SWAP);
+                    pageClicked(XOffset,YOffset,40, ContainerInput.SWAP);
                     break checkHotBarClicked;
                 }
 
                 for (int i = 0; i < 9; i++) {
                     if (mc.options.keyHotbarSlots[i].matchesMouse(clickEvent)) {
-                        pageClicked(XOffset,YOffset, i, ClickType.SWAP);
+                        pageClicked(XOffset,YOffset, i, ContainerInput.SWAP);
                     }
                 }
             }
         }else {
             if(menu.getCarried().isEmpty()){
                 if (mc.options.keyPickItem.matchesMouse(clickEvent)) {
-                    pageClicked(XOffset, YOffset, keyCode, ClickType.CLONE);
+                    pageClicked(XOffset, YOffset, keyCode, ContainerInput.CLONE);
                 } else {
-                    ClickType clicktype = ClickType.PICKUP;
+                    ContainerInput clickInput = ContainerInput.PICKUP;
                     if (Minecraft.getInstance().hasShiftDown()) {
                         setHoldOn();
                         //this.lastQuickMoved = slot != null && slot.hasItem() ? slot.getItem().copy() : ItemStack.EMPTY;
-                        clicktype = ClickType.QUICK_MOVE;
+                        clickInput = ContainerInput.QUICK_MOVE;
                     }
-                    pageClicked(XOffset, YOffset, keyCode, clicktype);
+                    pageClicked(XOffset, YOffset, keyCode, clickInput);
                 }
                 this.skipNextRelease = true;
             }else {//deference to vanilla
-                pageClicked(XOffset, YOffset, keyCode, ClickType.PICKUP);
+                pageClicked(XOffset, YOffset, keyCode, ContainerInput.PICKUP);
             }
         }
         this.lastClickedTime = clickTime;
@@ -386,7 +386,7 @@ public abstract class DisplayPage{
         if(Minecraft.getInstance().hasShiftDown()){
             int slotId = getSlotByMouseOffset(mouseX,mouseY);
             if(slotId>=0 && lastDraggedPageSlot>=0 && slotId!=lastDraggedPageSlot){
-                pageClicked(mouseX,mouseY,button,ClickType.QUICK_MOVE);
+                pageClicked(mouseX,mouseY,button,ContainerInput.QUICK_MOVE);
             }
             lastDraggedPageSlot = slotId;
             return true;
@@ -400,7 +400,7 @@ public abstract class DisplayPage{
         lastDraggedPageSlot = -1;
         //InputConstants.Key mouseKey = InputConstants.Type.MOUSE.getOrCreate(keyCode);
         if (this.doubleClick) {
-            this.pageClicked(XOffset,YOffset,keyCode,ClickType.PICKUP_ALL);
+            this.pageClicked(XOffset,YOffset,keyCode,ContainerInput.PICKUP_ALL);
             this.doubleClick = false;
             this.lastClickedTime = 0L;
             return true;
@@ -412,7 +412,7 @@ public abstract class DisplayPage{
             }
             if(!menu.getCarried().isEmpty()){
                 if (mc.options.keyPickItem.matchesMouse(event)) {
-                    this.pageClicked(XOffset,YOffset,keyCode,ClickType.CLONE);
+                    this.pageClicked(XOffset,YOffset,keyCode,ContainerInput.CLONE);
                     return true;
                 }
             }
@@ -434,13 +434,13 @@ public abstract class DisplayPage{
 
         if (isNumericKey && this.menu.getCarried().isEmpty()) {
             if (mc.options.keySwapOffhand.matches(new KeyEvent(keyCode, scanCode, modifiers))) {
-                pageClicked(mouseX, mouseY, 40, ClickType.SWAP);
+                pageClicked(mouseX, mouseY, 40, ContainerInput.SWAP);
                 return true;
             }
 
             for(int i = 0; i < 9; ++i) {
                 if (mc.options.keyHotbarSlots[i].matches(new KeyEvent(keyCode, scanCode, modifiers))) {
-                    pageClicked(mouseX, mouseY, i, ClickType.SWAP);
+                    pageClicked(mouseX, mouseY, i, ContainerInput.SWAP);
                     return true;
                 }
             }
@@ -453,3 +453,4 @@ public abstract class DisplayPage{
         return false;
     }
 }
+

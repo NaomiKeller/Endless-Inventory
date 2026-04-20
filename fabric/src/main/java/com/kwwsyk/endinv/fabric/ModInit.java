@@ -9,7 +9,6 @@ import com.kwwsyk.endinv.common.network.payloads.SyncedConfig;
 import com.kwwsyk.endinv.common.options.ServerConfigs;
 import com.kwwsyk.endinv.common.options.config.json.JsonConfigurationHandler;
 import com.kwwsyk.endinv.fabric.event.FabricEvents;
-import com.kwwsyk.endinv.fabric.integrates.clothconfig.ClothConfigIntegration;
 import com.kwwsyk.endinv.fabric.network.FabricServerNetworking;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.ModInitializer;
@@ -67,7 +66,11 @@ public class ModInit extends AbstractModInitializer implements ModInitializer {
         super.init();
         if (FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT
                 && FabricLoader.getInstance().isModLoaded("cloth-config2")) {
-            ClothConfigIntegration.register();
+            try {
+                Class<?> clazz = Class.forName("com.kwwsyk.endinv.fabric.integrates.clothconfig.ClothConfigIntegration");
+                clazz.getMethod("register").invoke(null);
+            } catch (Throwable ignored) {
+            }
         }
     }
 

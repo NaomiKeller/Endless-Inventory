@@ -36,7 +36,7 @@ public class SearchUtil {
     }
 
     private static boolean matchesTag(ItemStack stack, String tagId) {
-        return stack.getTags().anyMatch(tag ->
+        return stack.getItem().builtInRegistryHolder().tags().anyMatch(tag ->
                 tag.location().toString().toLowerCase(Locale.ROOT).contains(tagId)
         );
     }

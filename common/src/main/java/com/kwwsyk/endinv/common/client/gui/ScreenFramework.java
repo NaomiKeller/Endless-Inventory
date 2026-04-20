@@ -23,7 +23,7 @@ import com.kwwsyk.endinv.common.network.payloads.toServer.StarItemPayload;
 import com.kwwsyk.endinv.common.util.SortType;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
@@ -191,14 +191,14 @@ public class ScreenFramework implements PageManager, GuiEventListener {
 
 
     private void addWidgets() {
-        Button configButton = Button.builder(Component.literal("⚙"),
+        Button configButton = Button.builder(Component.literal("âš™"),
                         btn -> {
                             mc.setScreen(ClientModInfo.createConfigScreen(screen));
                         })
                 .pos(this.configButtonParam.x(), this.configButtonParam.y())
                 .size(this.configButtonParam.width(), this.configButtonParam.height())
                 .build();
-        this.reverseSortButton = Button.builder(Component.literal("⇅"),
+        this.reverseSortButton = Button.builder(Component.literal("â‡…"),
                         btn -> {
                             reverseSort = !reverseSort;
                             if(getDisplayingPage() instanceof ItemPage page){
@@ -245,23 +245,23 @@ public class ScreenFramework implements PageManager, GuiEventListener {
         widgets.forEach(installer);
     }
 
-    public void renderBg(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        SFBgRenderer.renderBg(guiGraphics, partialTick, mouseX, mouseY);
-        getDisplayingPage().renderBg(guiGraphics, partialTick, mouseX, mouseY);
+    public void renderBg(GuiGraphicsExtractor GuiGraphicsExtractor, int mouseX, int mouseY, float partialTick) {
+        SFBgRenderer.renderBg(GuiGraphicsExtractor, partialTick, mouseX, mouseY);
+        getDisplayingPage().renderBg(GuiGraphicsExtractor, partialTick, mouseX, mouseY);
     }
 
     private boolean isHoveringOnPage;
 
-    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+    public void render(GuiGraphicsExtractor GuiGraphicsExtractor, int mouseX, int mouseY, float partialTick) {
         roughMouseX = mouseX;
         roughMouseY = mouseY;
 
         isHoveringOnPage = hasClickedOnPage(mouseX, mouseY);
 
-        getDisplayingPage().render(guiGraphics, mouseX, mouseY, partialTick);
+        getDisplayingPage().render(GuiGraphicsExtractor, mouseX, mouseY, partialTick);
 
         if (searchBox.isHovered() && !searchBox.isFocused())
-            guiGraphics.setTooltipForNextFrame(
+            GuiGraphicsExtractor.setTooltipForNextFrame(
                     mc.font,
                     List.of(
                             Component.translatable("search.endinv.prefix.sharp"),
@@ -274,14 +274,14 @@ public class ScreenFramework implements PageManager, GuiEventListener {
                     mouseY
             );
         if (reverseSortButton.isHovered())
-            guiGraphics.setTooltipForNextFrame(
+            GuiGraphicsExtractor.setTooltipForNextFrame(
                     mc.font,
                     List.of(Component.translatable("button.endinv.reverse")),
                     java.util.Optional.empty(),
                     mouseX,
                     mouseY
             );
-        this.sortTypeSwitchBox.render(guiGraphics, mouseX, mouseY, partialTick);
+        this.sortTypeSwitchBox.extractRenderState(GuiGraphicsExtractor, mouseX, mouseY, partialTick);
     }
 
     protected boolean hasClickedOnPage(double mouseX, double mouseY) {
@@ -665,3 +665,4 @@ public class ScreenFramework implements PageManager, GuiEventListener {
         return displayingPage;
     }
 }
+

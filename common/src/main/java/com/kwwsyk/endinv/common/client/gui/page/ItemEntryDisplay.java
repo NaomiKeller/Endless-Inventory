@@ -12,7 +12,7 @@ import com.kwwsyk.endinv.common.client.option.TextureMode;
 import com.kwwsyk.endinv.common.menu.page.PageType;
 import com.kwwsyk.endinv.common.util.ItemKey;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.core.component.DataComponents;
@@ -154,37 +154,38 @@ public class ItemEntryDisplay extends ItemDisplay{
     }
 
     @Override
-    public void renderBg(GuiGraphics guiGraphics, float partialTicks, int mouseX, int mouseY) {
+    public void renderBg(GuiGraphicsExtractor GuiGraphicsExtractor, float partialTicks, int mouseX, int mouseY) {
         if (this.renderer == null) renderer = bgRender(framework.SFBgRenderer);
-        renderer.renderBg(guiGraphics, partialTicks, mouseX, mouseY);
+        renderer.renderBg(GuiGraphicsExtractor, partialTicks, mouseX, mouseY);
     }
 
     protected SFBgRenderer.PageBgRender bgRender(SFBgRenderer sfBgRenderer){
         TextureMode mode = ClientConfigs.ATTACHED_MENU_CONFIG.TextureMode.get();
         if(sfBgRenderer instanceof FromResource fromResource){
             if(mode == TextureMode.DEDICATED_LOCATION) return fromResource.dedicatePageBgRender(FromResource.ITEM_ENTRY_DISPLAY_RESOURCE);
-            return (guiGraphics, partialTicks, mouseX, mouseY) ->{// assert mode = from_resource
-                sfBgRenderer.getDefaultPageBgRenderer().ifPresent(bgRenderer -> bgRenderer.renderBg(guiGraphics, partialTicks, mouseX, mouseY));
+            return (GuiGraphicsExtractor, partialTicks, mouseX, mouseY) ->{// assert mode = from_resource
+                sfBgRenderer.getDefaultPageBgRenderer().ifPresent(bgRenderer -> bgRenderer.renderBg(GuiGraphicsExtractor, partialTicks, mouseX, mouseY));
                 int pageX = leftPos + MARGIN_SIDE_WIDTH;
                 int startY = topPos + MARGIN_TOP_HEIGHT;
                 for(int i = 0; i< framework.rows(); ++i){
-                    guiGraphics.fill(pageX,startY,pageX+18* framework.columns()-2,startY+1,0xFF373737);
-                    guiGraphics.fill(pageX,startY+1,pageX+18* framework.columns()-2,startY+17,0xFF8b8b8b);
-                    guiGraphics.fill(pageX,startY+17,pageX+18* framework.columns()-2,startY+18,0xFFFFFFFF);
+                    GuiGraphicsExtractor.fill(pageX,startY,pageX+18* framework.columns()-2,startY+1,0xFF373737);
+                    GuiGraphicsExtractor.fill(pageX,startY+1,pageX+18* framework.columns()-2,startY+17,0xFF8b8b8b);
+                    GuiGraphicsExtractor.fill(pageX,startY+17,pageX+18* framework.columns()-2,startY+18,0xFFFFFFFF);
                     startY+=18;
                 }
             };
         }
-        return (guiGraphics, partialTicks, mouseX, mouseY) ->{//assert mode = transparent
-            ((Transparent)framework.SFBgRenderer).new GridPageRenderer().renderBg(guiGraphics, partialTicks, mouseX, mouseY);
+        return (GuiGraphicsExtractor, partialTicks, mouseX, mouseY) ->{//assert mode = transparent
+            ((Transparent)framework.SFBgRenderer).new GridPageRenderer().renderBg(GuiGraphicsExtractor, partialTicks, mouseX, mouseY);
             int pageX = leftPos + MARGIN_SIDE_WIDTH;
             int startY = topPos + MARGIN_TOP_HEIGHT;
             for(int i = 0; i< framework.rows(); ++i){
-                guiGraphics.fill(pageX,startY,pageX+18* framework.columns()-2,startY+1,0xFF373737);
-                guiGraphics.fill(pageX,startY+1,pageX+18* framework.columns()-2,startY+17,0x37606037);
-                guiGraphics.fill(pageX,startY+17,pageX+18* framework.columns()-2,startY+18,0xFFFFFFFF);
+                GuiGraphicsExtractor.fill(pageX,startY,pageX+18* framework.columns()-2,startY+1,0xFF373737);
+                GuiGraphicsExtractor.fill(pageX,startY+1,pageX+18* framework.columns()-2,startY+17,0x37606037);
+                GuiGraphicsExtractor.fill(pageX,startY+17,pageX+18* framework.columns()-2,startY+18,0xFFFFFFFF);
                 startY+=18;
             }
         };
     }
 }
+

@@ -1,8 +1,7 @@
 package com.kwwsyk.endinv.common.client.event;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.renderer.entity.ItemRenderer;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Rarity;
@@ -24,7 +23,7 @@ public class AutoPickTipper {
         if (Minecraft.getInstance().player != null) {
             Minecraft.getInstance().player.playSound(SoundEvents.ITEM_PICKUP, 0.5f, 1.0f);
         }
-        // 尝试合并已有物品
+        // å°è¯•åˆå¹¶å·²æœ‰ç‰©å“
         for (PickupDisplayItem item : pickupQueue) {
             if (ItemStack.isSameItemSameComponents(item.stack, stack)) {
                 item.stack.grow(stack.getCount());
@@ -35,18 +34,17 @@ public class AutoPickTipper {
             }
         }
 
-        // 新物品加入
+        // æ–°ç‰©å“åŠ å…¥
         if (pickupQueue.size() >= MAX_QUEUE_SIZE) {
             pickupQueue.pollLast();
         }
         pickupQueue.addFirst(new PickupDisplayItem(stack.copy(), DISPLAY_TICKS));
     }
 
-    public static void onRenderGui(GuiGraphics guiGraphics) {
+    public static void onRenderGui(GuiGraphicsExtractor GuiGraphicsExtractor) {
         if (pickupQueue.isEmpty()) return;
 
         Minecraft mc =Minecraft.getInstance();
-        ItemRenderer itemRenderer = mc.getItemRenderer();
         int screenWidth = mc.getWindow().getGuiScaledWidth();
         int screenHeight = mc.getWindow().getGuiScaledHeight();
 
@@ -56,17 +54,17 @@ public class AutoPickTipper {
             int y = screenHeight - 20 - (index * 18);
             int color = rarityColor(item.stack.getRarity());
 
-            guiGraphics.renderItem(item.stack,x,y);
-            guiGraphics.renderItemDecorations(Minecraft.getInstance().font, item.stack, x, y);
-            //guiGraphics.pose().pushPose();
-            //guiGraphics.pose().mulPose(new Quaternionf(new AxisAngle4d(Math.PI/2, 1.0, 1.0, 1.0)));
-            guiGraphics.fillGradient(x - 48, y, x + 16, y + 16, 0x00000000, color);
-            //guiGraphics.pose().popPose();
+            GuiGraphicsExtractor.item(item.stack,x,y);
+            GuiGraphicsExtractor.itemDecorations(Minecraft.getInstance().font, item.stack, x, y);
+            //GuiGraphicsExtractor.pose().pushPose();
+            //GuiGraphicsExtractor.pose().mulPose(new Quaternionf(new AxisAngle4d(Math.PI/2, 1.0, 1.0, 1.0)));
+            GuiGraphicsExtractor.fillGradient(x - 48, y, x + 16, y + 16, 0x00000000, color);
+            //GuiGraphicsExtractor.pose().popPose();
 
             index++;
         }
 
-        // 处理时间
+        // å¤„ç†æ—¶é—´
         if (removalDelayCounter > 0) {
             removalDelayCounter--;
         } else if (!pickupQueue.isEmpty()) {
@@ -102,3 +100,4 @@ public class AutoPickTipper {
         }
     }
 }
+

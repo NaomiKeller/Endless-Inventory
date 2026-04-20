@@ -6,7 +6,7 @@ import com.kwwsyk.endinv.common.client.gui.page.GridPage;
 import com.kwwsyk.endinv.common.client.gui.page.manager.ResourcePointer;
 import com.kwwsyk.endinv.common.util.ItemKey;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.Slot;
@@ -54,32 +54,36 @@ public class ItemPageSlotView extends Slot implements ResourcePointer<ItemStack>
     /**
      * Renders the graphical user interface (GUI) element.
      *
-     * @param guiGraphics the GuiGraphics object used for rendering.
+     * @param GuiGraphicsExtractor the GuiGraphicsExtractor object used for rendering.
      * @param mouseX      the x-coordinate of the mouse cursor.
      * @param mouseY      the y-coordinate of the mouse cursor.
      * @param partialTick the partial tick time.
      */
-    @Override
-    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+    public void render(GuiGraphicsExtractor GuiGraphicsExtractor, int mouseX, int mouseY, float partialTick) {
         ItemStack stack = get();
-        if(hasClickedOn(mouseX, mouseY)) renderSlotHighlightBack(guiGraphics, mouseX, mouseY, partialTick);
-        guiGraphics.renderItem(stack, x, y, 0);
-        guiGraphics.renderItemDecorations(Minecraft.getInstance().font, stack, x, y, page.getDisplayAmount(stack));
-        if(hasClickedOn(mouseX, mouseY)) renderSlotHighlightFront(guiGraphics, mouseX, mouseY, partialTick);
-        if(stack.isEmpty() && !stack.is(Items.AIR)) page.renderEmpty(guiGraphics, x, y, stack);
+        if(hasClickedOn(mouseX, mouseY)) renderSlotHighlightBack(GuiGraphicsExtractor, mouseX, mouseY, partialTick);
+        GuiGraphicsExtractor.item(stack, x, y, 0);
+        GuiGraphicsExtractor.itemDecorations(Minecraft.getInstance().font, stack, x, y, page.getDisplayAmount(stack));
+        if(hasClickedOn(mouseX, mouseY)) renderSlotHighlightFront(GuiGraphicsExtractor, mouseX, mouseY, partialTick);
+        if(stack.isEmpty() && !stack.is(Items.AIR)) page.renderEmpty(GuiGraphicsExtractor, x, y, stack);
     }
 
     @Override
-    public void renderSlotHighlightBack(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick){
-        guiGraphics.fill(x, y, x+width - 2, y+height - 2, 0x80ffffff);
+    public void extractRenderState(GuiGraphicsExtractor GuiGraphicsExtractor, int mouseX, int mouseY, float partialTick) {
+        render(GuiGraphicsExtractor, mouseX, mouseY, partialTick);
     }
 
     @Override
-    public void renderSlotHighlightFront(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick){
-        guiGraphics.fill(x, y, x+width - 2, y+height - 2, 0x20ffffff);
+    public void renderSlotHighlightBack(GuiGraphicsExtractor GuiGraphicsExtractor, int mouseX, int mouseY, float partialTick){
+        GuiGraphicsExtractor.fill(x, y, x+width - 2, y+height - 2, 0x80ffffff);
+    }
+
+    @Override
+    public void renderSlotHighlightFront(GuiGraphicsExtractor GuiGraphicsExtractor, int mouseX, int mouseY, float partialTick){
+        GuiGraphicsExtractor.fill(x, y, x+width - 2, y+height - 2, 0x20ffffff);
         ItemStack hovering = get();
         if(hovering.isEmpty()) return;
-        guiGraphics.setTooltipForNextFrame(
+        GuiGraphicsExtractor.setTooltipForNextFrame(
                 Minecraft.getInstance().font,
                 AbstractContainerScreen.getTooltipFromItem(Minecraft.getInstance(), hovering),
                 hovering.getTooltipImage(),
@@ -230,3 +234,4 @@ public class ItemPageSlotView extends Slot implements ResourcePointer<ItemStack>
         return mouseX>= x && mouseX< x + width && mouseY>= y && mouseY< y + height;
     }
 }
+

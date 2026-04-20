@@ -7,7 +7,7 @@ import com.kwwsyk.endinv.common.client.gui.IScreenEvent;
 import com.kwwsyk.endinv.common.client.gui.bg.IRectangleParam;
 import com.kwwsyk.endinv.common.client.option.ClientConfigs;
 import com.kwwsyk.endinv.common.network.payloads.toServer.OpenEndInvPayload;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.input.CharacterEvent;
@@ -117,7 +117,7 @@ public class ScreenAttachment {
                 }
 
                 @Override
-                public GuiGraphics getGuiGraphics() {
+                public GuiGraphicsExtractor getGuiGraphics() {
                     return event.getGuiGraphics();
                 }
             });
@@ -144,7 +144,7 @@ public class ScreenAttachment {
                 }
 
                 @Override
-                public GuiGraphics getGuiGraphics() {
+                public GuiGraphicsExtractor getGuiGraphics() {
                     return event.getGuiGraphics();
                 }
             });
@@ -299,7 +299,7 @@ public class ScreenAttachment {
 
                 @Override
                 public int getModifiers() {
-                    return event.getModifiers();
+                    return event.getKeyEvent().modifiers();
                 }
 
                 @Override
@@ -331,7 +331,7 @@ public class ScreenAttachment {
 
                 @Override
                 public int getModifiers() {
-                    return event.getModifiers();
+                    return 0;
                 }
 
                 @Override

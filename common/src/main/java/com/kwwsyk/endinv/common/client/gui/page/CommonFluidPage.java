@@ -6,9 +6,9 @@ import com.kwwsyk.endinv.common.menu.page.PageType;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.core.NonNullList;
-import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import org.jetbrains.annotations.NotNull;
@@ -72,7 +72,7 @@ public abstract class CommonFluidPage<FS> extends GridPage{
     }
 
     @Override
-    public abstract void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks);
+    public abstract void render(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTicks);
 //        int rowIndex = 0;
 //        int columnIndex = 0;
 //        for(FluidData fluid : fluids){
@@ -93,16 +93,16 @@ public abstract class CommonFluidPage<FS> extends GridPage{
 //     * Render a fluid stack in a slot.
 //     * @param fluid the fluid data and should convert it to the Fluid stack instance.
 //     */
-//    protected abstract void renderFluid(GuiGraphics graphics, FluidData fluid, int x, int y);
+//    protected abstract void renderFluid(GuiGraphicsExtractor graphics, FluidData fluid, int x, int y);
 
     /**only render count in this raw method
      * @param x fluid slot x
      * @param y fluid slot y
      */
-    protected void renderFluidDecorations(GuiGraphics graphics, FluidData fluid, int x, int y){
+    protected void renderFluidDecorations(GuiGraphicsExtractor graphics, FluidData fluid, int x, int y){
         String s = getDisplayAmount(fluid);
         Font font = Minecraft.getInstance().font;
-        graphics.drawString(font, s, x + 19 - 2 - font.width(s), y + 6 + 3, -1, true);
+        graphics.text(font, s, x + 19 - 2 - font.width(s), y + 6 + 3, -1, true);
     }
 
     protected String getDisplayAmount(FluidData fluid){
@@ -111,7 +111,7 @@ public abstract class CommonFluidPage<FS> extends GridPage{
         String suffix = "mB";
 
 //        if(count == this.framework.getMaxStackSize() && framework.enableInfinity()){
-//            return "∞";
+//            return "âˆž";
 //        }
 
         if (count >= 1_000_000_000_000L) {
@@ -136,12 +136,12 @@ public abstract class CommonFluidPage<FS> extends GridPage{
     }
 
     @Override
-    public void pageClicked(double XOffset, double YOffset, int keyCode, ClickType clickType) {
+    public void pageClicked(double XOffset, double YOffset, int keyCode, ContainerInput ContainerInput) {
         int i = getSlotByMouseOffset(XOffset,YOffset);
         if(i >= 0 && i < fluids.size()){
             FS clicked = fluids.get(i);
             ItemStack carried = menu.getCarried();
-            switch (clickType){
+            switch (ContainerInput){
                 case PICKUP -> handlePickup(clicked, carried, keyCode);
                 case QUICK_MOVE -> handleQuickMove(clicked, carried, keyCode);
                 case SWAP -> handleSwap(clicked, carried, keyCode);
@@ -245,3 +245,4 @@ public abstract class CommonFluidPage<FS> extends GridPage{
      */
     protected abstract void handlePickUpAll(FS clicked, ItemStack carried, int keyCode);
 }
+

@@ -343,32 +343,32 @@ public class EndlessInventoryMenu extends AbstractContainerMenu implements PageM
         return 9;
     }
 
-    /**Override {@link AbstractContainerMenu#clicked(int, int, ClickType, Player)}
+    /**Override {@link AbstractContainerMenu#clicked(int, int, ContainerInput, Player)}
      * Invoked when Client click in container screen/Server handle click packet.
      * for details see below.
      * @param slotId index
      * @param button ...0: left 1: right 2: middle ? Is there anyone who can explain?
-     * @param clickType {@link ClickType}
+     * @param ContainerInput {@link ContainerInput}
      * @param player player performing menu click
      */
-    public void clicked(int slotId, int button, ClickType clickType, Player player) {
+    public void clicked(int slotId, int button, ContainerInput ContainerInput, Player player) {
         try {
-            if(clickType==ClickType.QUICK_CRAFT){
+            if(ContainerInput==ContainerInput.QUICK_CRAFT){
                 MenuClickHandler.handleQuickCraft(this,slotId,button,player);
             }else if(this.quickcraftStatus!=0){
                 this.resetQuickCraft();
             }
-            if (clickType == ClickType.PICKUP) {
+            if (ContainerInput == ContainerInput.PICKUP) {
                 MenuClickHandler.handlePickup(this, slotId, button, player);
-            } else if (clickType == ClickType.QUICK_MOVE) {
+            } else if (ContainerInput == ContainerInput.QUICK_MOVE) {
                 MenuClickHandler.handleQuickMove(this, slotId, button, player);
-            } else if (clickType == ClickType.SWAP) {
+            } else if (ContainerInput == ContainerInput.SWAP) {
                 MenuClickHandler.handleSwap(this, slotId, button, player);
-            } else if (clickType == ClickType.THROW) {
+            } else if (ContainerInput == ContainerInput.THROW) {
                 MenuClickHandler.handleThrow(this, slotId, button, player);
-            } else if (clickType == ClickType.CLONE) {
+            } else if (ContainerInput == ContainerInput.CLONE) {
                 MenuClickHandler.handleClone(this, slotId, button, player);
-            } else if (clickType == ClickType.PICKUP_ALL) {
+            } else if (ContainerInput == ContainerInput.PICKUP_ALL) {
                 this.handlePickupAll(slotId, button, player);
             } else {
                 return;
@@ -384,7 +384,7 @@ public class EndlessInventoryMenu extends AbstractContainerMenu implements PageM
             crashreportcategory.setDetail("Slot Count", this.slots.size());
             crashreportcategory.setDetail("Slot", slotId);
             crashreportcategory.setDetail("Button", button);
-            crashreportcategory.setDetail("Type", clickType);
+            crashreportcategory.setDetail("Type", ContainerInput);
             throw new ReportedException(crashreport);
         }
     }
@@ -725,7 +725,7 @@ public class EndlessInventoryMenu extends AbstractContainerMenu implements PageM
             RecipeHolder<CraftingRecipe> holder = optional.get();
             CraftingRecipe recipe = holder.value();
             if (this.craftResult.setRecipeUsed(serverPlayer, holder)) {
-                ItemStack assembled = recipe.assemble(input, level.registryAccess());
+                ItemStack assembled = recipe.assemble(input);
                 if (assembled.isItemEnabled(level.enabledFeatures())) {
                     resultStack = assembled;
                 }
@@ -776,4 +776,5 @@ public class EndlessInventoryMenu extends AbstractContainerMenu implements PageM
         void refreshAfterMenuInteraction(SourceInventory source);
     }
 }
+
 
