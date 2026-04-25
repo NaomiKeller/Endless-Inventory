@@ -49,6 +49,8 @@ import static com.kwwsyk.endinv.common.client.ClientModInfo.containerScreenHelpe
 import static com.kwwsyk.endinv.common.client.ClientModInfo.inputHandler;
 
 public class ScreenFramework implements PageManager, GuiEventListener {
+    public static final String CONFIG_ICON = "⚙";
+    public static final String REVERSE_SORT_ICON = "⇅";
     @Nullable
     private static ScreenFramework INSTANCE;
 
@@ -191,14 +193,14 @@ public class ScreenFramework implements PageManager, GuiEventListener {
 
 
     private void addWidgets() {
-        Button configButton = Button.builder(Component.literal("âš™"),
+        Button configButton = Button.builder(Component.literal(CONFIG_ICON),
                         btn -> {
                             mc.setScreen(ClientModInfo.createConfigScreen(screen));
                         })
                 .pos(this.configButtonParam.x(), this.configButtonParam.y())
                 .size(this.configButtonParam.width(), this.configButtonParam.height())
                 .build();
-        this.reverseSortButton = Button.builder(Component.literal("â‡…"),
+        this.reverseSortButton = Button.builder(Component.literal(REVERSE_SORT_ICON),
                         btn -> {
                             reverseSort = !reverseSort;
                             if(getDisplayingPage() instanceof ItemPage page){

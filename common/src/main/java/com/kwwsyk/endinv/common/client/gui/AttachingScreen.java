@@ -66,7 +66,7 @@ public class AttachingScreen<T extends AbstractContainerMenu>{
                                                                           Runnable open, Runnable close) {
         Minecraft mc = Minecraft.getInstance();
         return Button.builder(
-                Component.literal("âš™"),
+                Component.literal(ScreenFramework.CONFIG_ICON),
                         btn -> {
                         if(Minecraft.getInstance().hasShiftDown()){
                             mc.setScreen(ClientModInfo.createConfigScreen(screen));

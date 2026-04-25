@@ -48,10 +48,9 @@ public class AttachmentGuiHandler implements IGuiContainerHandler<AbstractContai
         Rect2i area = page.getOneInteractableArea(localX, localY);
         if (area == null) return Optional.empty();
 
-        // JEI 期望绝对坐标区域；contains 用绝对坐标检查
-        int absX = (int) Math.floor(mouseX);
-        int absY = (int) Math.floor(mouseY);
-        if (!area.contains(absX, absY)) return Optional.empty();
+//        int absX = (int) Math.floor(mouseX);
+//        int absY = (int) Math.floor(mouseY);
+//        if (!area.contains(absX, absY)) return Optional.empty();
 
         return Optional.of(new ItemClickEventWrapper(hovered, area));
     }

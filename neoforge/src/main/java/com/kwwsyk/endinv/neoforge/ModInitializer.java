@@ -9,6 +9,7 @@ import com.kwwsyk.endinv.common.network.IPacketDistributor;
 import com.kwwsyk.endinv.common.network.payloads.ModPacketPayload;
 import com.kwwsyk.endinv.common.network.payloads.SyncedConfig;
 import com.kwwsyk.endinv.neoforge.client.config.ClientConfig;
+import com.kwwsyk.endinv.neoforge.integrates.curio.CurioPageType;
 import com.kwwsyk.endinv.neoforge.options.ServerConfig;
 import com.kwwsyk.endinv.neoforge.options.StartupConfig;
 import net.minecraft.client.Minecraft;
@@ -62,6 +63,13 @@ public class ModInitializer extends AbstractModInitializer {
         container.registerConfig(ModConfig.Type.CLIENT, ClientConfig.CONFIG_SPEC);
         container.registerConfig(ModConfig.Type.SERVER, ServerConfig.CONFIG_SPEC);
         container.registerConfig(ModConfig.Type.STARTUP, StartupConfig.CONFIG_SPEC);
+
+        if(ModList.get().isLoaded(CurioPageType.CURIOS_MODID)){
+            try {
+                CurioPageType.register();
+            } catch (Exception ignored) {
+            }
+        }
 
         if(isClientDist()) {
             var client = new ClientModInitializer();

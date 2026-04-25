@@ -19,6 +19,7 @@ public class CurioPageType {
             (stack)-> false,
             Identifier.fromNamespaceAndPath(ModInfo.MOD_ID,"textures/curios_icon.png")
     );
+    public static final String CURIOS_MODID = "curios";
 
     public static void register(){
         PageTypeRegistry.register(CURIO_PAGE_TYPE,0x450);
