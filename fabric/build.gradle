@@ -128,22 +128,30 @@ publishMods {
     changelog = "port to 26.1"
     displayName.set(base.archivesName)
     version = mod_version
-    type = ALPHA
+    type = STABLE
     modLoaders.add("fabric")
 
     curseforge {
         projectId = curseforge_project_id
         projectSlug = "endless-inventory" // Required for discord webhook
         accessToken = providers.environmentVariable("CURSEFORGE_TOKEN")
-        minecraftVersions.add(minecraft_version)
+        minecraftVersionRange {
+            start = "26.1"
+            end = "latest" // Set to "latest" to use the latest Minecraft version
+        }
         javaVersions.add(JavaVersion.toVersion(java_version))
         requires("fabric-api")
     }
     modrinth {
         projectId = modrinth_project_id
         accessToken = providers.environmentVariable("MODRINTH_TOKEN")
-        minecraftVersions.add(minecraft_version)
-        optional("jei")
+        minecraftVersionRange {
+            start = "26.1"
+            end = "latest" // Set to "latest" to use the latest Minecraft version
+
+            // Optionally include snapshot versions, defaults to false
+            includeSnapshots = true
+        }
     }
 //    github {
 //        repository = "test/example"

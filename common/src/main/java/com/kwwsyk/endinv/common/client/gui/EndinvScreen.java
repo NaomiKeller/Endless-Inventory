@@ -25,7 +25,7 @@ import net.minecraft.world.inventory.Slot;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
-
+//unused, test for future frame
 public  class EndinvScreen<T extends AbstractContainerMenu> extends AbstractContainerScreen<T> implements PageManager {
 
     public static final String CONFIG_ICON = "⚙";

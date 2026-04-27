@@ -20,9 +20,9 @@ public abstract class AbstractContainerScreenMixin {
         }
     }
 
-    @Inject(method = "extractContents", at = @At("TAIL"))
-    private void endinv$renderTail(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick, CallbackInfo ci) {
-        // Fallback: if we cannot pinpoint renderBg reliably across mappings, draw both phases at TAIL.
+    @Inject(method = "extractContents", at = @At("HEAD"))
+    private void endinv$renderHead(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick, CallbackInfo ci) {
+        // Render before the screen widget layer so attached-page content does not cover widget tooltips.
         ScreenAttachment.onRenderAfterBackground((AbstractContainerScreen<?>) (Object) this, graphics, mouseX, mouseY, partialTick);
         ScreenAttachment.onRenderPost((AbstractContainerScreen<?>) (Object) this, graphics, mouseX, mouseY, partialTick);
     }

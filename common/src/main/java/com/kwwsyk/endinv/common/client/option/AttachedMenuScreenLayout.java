@@ -320,7 +320,10 @@ public abstract class AttachedMenuScreenLayout implements SFParamProvider{
             return Math.max(1, rows);
         }
         // marginH = 17
-        int rows = Math.min(Math.floorDiv(givenPageY - 17 - 12, 18),pageParam.rows());
+        int rows = Math.floorDiv(givenPageY - 17 - 12, 18);
+        if(pageParam.autoRows() && pageParam.rows() > 0){
+            rows = Math.min(rows, pageParam.rows());
+        }
         // When not auto, ensure rows does not exceed configured maximum; when auto, just clamp minimum
         return Math.max(1, rows);
     }
@@ -333,10 +336,16 @@ public abstract class AttachedMenuScreenLayout implements SFParamProvider{
                 pageW = Math.min(givenPageX, pageRectangleParam.width());
             }
             int columns = Math.floorDiv(pageW, 18);// marginW = pageW % 18 / 2
+            if(pageParam.autoColumns() && pageParam.columns() > 0){
+                columns = Math.min(columns, pageParam.columns());
+            }
             return Math.max(1, columns);
         }
         //marginW = 8
         int columns = treatAsAuto ? Math.floorDiv(givenPageX - 8 - 8, 18) : pageParam.columns();
+        if(pageParam.autoColumns() && pageParam.columns() > 0){
+            columns = Math.min(columns, pageParam.columns());
+        }
         return Math.max(1, columns);
     }
 

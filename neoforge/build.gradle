@@ -145,7 +145,7 @@ publishMods {
     changelog = "26.1 1.1.3.1 bug fix"
     displayName.set(base.archivesName)
     version = mod_version
-    type = BETA
+    type = STABLE
     modLoaders.add("neoforge")
 
     curseforge {
