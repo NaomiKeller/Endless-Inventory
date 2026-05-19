@@ -4,14 +4,16 @@ import com.kwwsyk.endinv.common.AbstractClientModInitializer;
 import com.kwwsyk.endinv.common.client.IContainerScreenHelper;
 import com.kwwsyk.endinv.common.client.IInputHandler;
 import com.kwwsyk.endinv.common.client.KeyMappings;
-import com.kwwsyk.endinv.common.client.option.IClientConfig;
-import com.kwwsyk.endinv.fabric.client.FabricClientConfig;
+import com.kwwsyk.endinv.common.client.option.ClientConfigs;
+import com.kwwsyk.endinv.common.options.config.json.JsonConfigurationHandler;
 import com.kwwsyk.endinv.fabric.client.events.ClientEvents;
 import com.kwwsyk.endinv.fabric.mixin.AbstractContainerScreenAccessor;
 import com.kwwsyk.endinv.fabric.network.FabricNetworking;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
@@ -24,6 +26,7 @@ import java.util.Map;
 public class ClientModInit extends AbstractClientModInitializer implements ClientModInitializer {
 
     private static final Map<KeyMappings.EndInvKey, KeyMapping> REGISTERED_KEYS = new HashMap<>();
+    private static JsonConfigurationHandler clientConfigs;
 
     @Override
     public void onInitializeClient() {
@@ -33,11 +36,18 @@ public class ClientModInit extends AbstractClientModInitializer implements Clien
         // No separate encoder init needed on typed API
         FabricNetworking.initClient();
         ClientEvents.register();
+        ClientLifecycleEvents.CLIENT_STOPPING.register(client -> {
+            if (clientConfigs != null) clientConfigs.save();
+        });
     }
 
     @Override
-    protected IClientConfig loadClientConfig() {
-        return FabricClientConfig.INSTANCE;
+    protected void loadClientConfig() {
+        clientConfigs = new JsonConfigurationHandler(
+                FabricLoader.getInstance().getConfigDir().resolve("endless_inventory-client.json"),
+                ClientConfigs.getConfigs()
+        );
+        clientConfigs.load();
     }
 
     @Override

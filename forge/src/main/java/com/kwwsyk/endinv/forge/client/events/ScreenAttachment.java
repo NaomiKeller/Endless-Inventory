@@ -1,11 +1,11 @@
 package com.kwwsyk.endinv.forge.client.events;
 
 import com.kwwsyk.endinv.common.ModInfo;
-import com.kwwsyk.endinv.common.client.ClientModInfo;
 import com.kwwsyk.endinv.common.client.gui.AttachingScreen;
 import com.kwwsyk.endinv.common.client.gui.EndlessInventoryScreen;
 import com.kwwsyk.endinv.common.client.gui.IScreenEvent;
 import com.kwwsyk.endinv.common.client.option.CachedConfig;
+import com.kwwsyk.endinv.common.client.option.ClientConfigs;
 import com.kwwsyk.endinv.common.client.option.MenuAttachabilityCache;
 import com.kwwsyk.endinv.common.network.payloads.SyncedConfig;
 import com.kwwsyk.endinv.common.network.payloads.toServer.OpenEndInvPayload;
@@ -31,7 +31,7 @@ public class ScreenAttachment {
         if(event.getScreen() instanceof AbstractContainerScreen<?> screen){
             Player player = screen.getMinecraft().player;
             if(player==null) return null;
-            if(!ClientModInfo.getClientConfig().attaching().get()) {
+            if(!ClientConfigs.DO_ATTACH.get()) {
                 ATTACHMENT_MANAGER = null;
                 return null;
             }
@@ -66,6 +66,7 @@ public class ScreenAttachment {
             if(player==null) return;
 
             SyncedConfig syncedConfig = getSyncedConfig().getWith(player);
+            if(!ClientConfigs.DO_ATTACH.get()) return;
             if(!syncedConfig.checkForAttaching()) return;
             if(!MenuAttachabilityCache.isAttachable(screen)) return;
 

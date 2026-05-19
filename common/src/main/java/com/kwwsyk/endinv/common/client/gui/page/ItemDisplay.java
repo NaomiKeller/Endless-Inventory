@@ -1,10 +1,9 @@
 package com.kwwsyk.endinv.common.client.gui.page;
 
 import com.kwwsyk.endinv.common.client.CachedSrcInv;
-import com.kwwsyk.endinv.common.client.gui.page.manager.PageManager;
-import com.kwwsyk.endinv.common.client.option.CachedConfig;
+import com.kwwsyk.endinv.common.client.gui.ScreenFramework;
 import com.kwwsyk.endinv.common.menu.page.PageType;
-import org.jetbrains.annotations.NotNull;
+import com.kwwsyk.endinv.common.util.ItemKey;
 
 import java.util.List;
 
@@ -13,8 +12,8 @@ import java.util.List;
  */
 public class ItemDisplay extends ItemPage{
 
-    public ItemDisplay(PageType pageType, PageManager metaDataManager) {
-        super(pageType,metaDataManager);
+    public ItemDisplay(PageType pageType, ScreenFramework framework) {
+        super(pageType,framework);
     }
 
     public void refreshItems(){
@@ -26,9 +25,7 @@ public class ItemDisplay extends ItemPage{
      * Read items data from {@link CachedSrcInv} when transfer mode is {@code ALL} and rebuild the view.
      */
     public void readCachedItems(){
-        List<ItemPointer> view = CachedSrcInv.INSTANCE.getItemView(startIndex,length,
-                CachedConfig.sortType(), CachedConfig.reverseSort(),
-                getClassify(), CachedConfig.searching());
+        List<ItemKey> view = getViewForPage();
         buildContentsWith(view);
     }
 
@@ -40,18 +37,12 @@ public class ItemDisplay extends ItemPage{
      * Build Displayed view with a ItemStack list.
      * @param stacks itemstack list to fill the view
      */
-    public void buildContentsWith(@NotNull List<ItemPointer> stacks){
+    public void buildContentsWith(List<ItemKey> stacks){
         if(holdOn){
             inQueueStacks = stacks;
             return;
         }
-        for(int i=0; i<this.length; ++i){
-            if(i<stacks.size() && stacks.get(i) != null) {
-                this.items.set(i, stacks.get(i));
-            }else {
-                this.items.set(i,ItemPointer.EMPTY);
-            }
-        }
+        this.viewContainer = buildView(stacks);
     }
 
     @Override
@@ -63,6 +54,8 @@ public class ItemDisplay extends ItemPage{
     public boolean hasSortTypeSwitchBar() {
         return true;
     }
+
+    // Pointer-based: rely on srcInv and server to update; no local animation here.
 
     public void release(){
         if(holdOn){

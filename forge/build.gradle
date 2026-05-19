@@ -13,6 +13,7 @@ plugins {
     id 'net.minecraftforge.gradle' version '[6.0.16,6.2)'
     id 'idea'
     id 'org.parchmentmc.librarian.forgegradle' version '1.+'
+    id "me.modmuss50.mod-publish-plugin" version "1.1.0"
 }
 
 apply plugin: 'org.spongepowered.mixin'
@@ -185,11 +186,34 @@ compileJava {
 
 jar {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    finalizedBy('reobfJar')
     from(project(':common').sourceSets.main.output)
     manifest.attributes([
             "MixinConfigs": "${mod_id}.mixins.json,${mod_id}.experimental.mixins.json"
     ])
+}
+
+publishMods {
+    file = tasks.named("jar").get().archiveFile
+    changelog = ""
+    displayName.set(base.archivesName)
+    version = mod_version
+    type = STABLE
+    modLoaders.add("forge")
+
+    curseforge {
+        projectId = curseforge_project_id
+        projectSlug = "endless-inventory"
+        accessToken = providers.environmentVariable("CURSEFORGE_TOKEN")
+        minecraftVersions.add(minecraft_version)
+        javaVersions.add(JavaVersion.toVersion(java_version))
+        optional("jei")
+    }
+    modrinth {
+        projectId = modrinth_project_id
+        accessToken = providers.environmentVariable("MODRINTH_TOKEN")
+        minecraftVersions.add(minecraft_version)
+        optional("jei")
+    }
 }
 
 tasks.withType(JavaCompile).configureEach {

@@ -1,5 +1,9 @@
 package com.kwwsyk.endinv.common.util;
 
+import com.kwwsyk.endinv.common.data.EndInvCodecStrategy;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponentPatch;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -9,6 +13,7 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
@@ -16,17 +21,26 @@ import java.util.Objects;
 /**
  *
  * @param item
- * @param components should not be null, but somewhere may construct it to null
+ * @param components in mc versions using component, those are not null.
  */
-public record ItemKey(Item item, DataComponentPatch components) {
-
-    public static final ItemKey EMPTY = new ItemKey(Items.AIR, DataComponentPatch.EMPTY);
+public record ItemKey(Item item,@NotNull DataComponentPatch components) {
 
     public static final StreamCodec<RegistryFriendlyByteBuf,ItemKey> STREAM_CODEC = StreamCodec.composite(
             ByteBufCodecs.registry(Registries.ITEM),ItemKey::item,
             DataComponentPatch.STREAM_CODEC,ItemKey::components,
             ItemKey::new
     );
+
+    public static final Codec<ItemKey> CODEC = RecordCodecBuilder.create(
+            instance -> instance.group(
+                    BuiltInRegistries.ITEM.holderByNameCodec().fieldOf(EndInvCodecStrategy.ITEM_ID_KEY).forGetter(ItemKey::itemHolder),
+                    DataComponentPatch.CODEC.optionalFieldOf(EndInvCodecStrategy.COMPONENTS_KEY, DataComponentPatch.EMPTY).forGetter(ItemKey::components)
+            ).apply(instance ,ItemKey::new)
+    );
+
+    public ItemKey(Holder<Item> itemHolder, DataComponentPatch components){
+        this(itemHolder.value(),components);
+    }
 
     public ItemKey(Item item, @Nullable DataComponentPatch components){
         this.item = item;
@@ -39,6 +53,10 @@ public record ItemKey(Item item, DataComponentPatch components) {
 
     public ItemStack toStack(int count){
         return new ItemStack(BuiltInRegistries.ITEM.wrapAsHolder(item),count,components);
+    }
+
+    private Holder<Item> itemHolder(){
+        return item.builtInRegistryHolder();
     }
 
     public static ItemKey asKey(ItemStack stack){

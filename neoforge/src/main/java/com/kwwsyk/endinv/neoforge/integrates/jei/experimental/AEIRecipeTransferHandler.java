@@ -1,11 +1,15 @@
 package com.kwwsyk.endinv.neoforge.integrates.jei.experimental;
 
+import com.kwwsyk.endinv.common.EndlessInventory;
 import com.kwwsyk.endinv.common.ModInfo;
 import com.kwwsyk.endinv.common.ServerLevelEndInv;
 import com.kwwsyk.endinv.common.SourceInventory;
 import com.kwwsyk.endinv.common.client.CachedSrcInv;
 import com.kwwsyk.endinv.common.menu.page.pageManager.PageMetaDataManager;
+import com.kwwsyk.endinv.common.network.payloads.toClient.EndInvContent;
+import com.kwwsyk.endinv.common.network.payloads.toClient.EndInvMetadata;
 import com.kwwsyk.endinv.common.options.ContentTransferMode;
+import com.kwwsyk.endinv.common.options.ServerConfigs;
 import com.kwwsyk.endinv.common.util.ItemKey;
 import com.kwwsyk.endinv.neoforge.client.events.ScreenAttachment;
 import mezz.jei.api.constants.VanillaTypes;
@@ -53,7 +57,7 @@ public final class AEIRecipeTransferHandler {
             List<Slot> inventorySlots
     ) {
         SourceInventory endInv = getClientAttachedInventory(container);
-        if (endInv == null && ModInfo.getServerConfig().transferMode().get() == ContentTransferMode.ALL) {
+        if (endInv == null && ServerConfigs.ENDINV_BEHAVIOR.TransferMode.get() == ContentTransferMode.ALL) {
             endInv = CachedSrcInv.INSTANCE;
         }
         Ingredient[] layout = buildLayoutFromRecipeSlots(recipeSlotsView, recipeSlots.size());
@@ -99,11 +103,10 @@ public final class AEIRecipeTransferHandler {
             List<Slot> recipeSlots,
             List<Slot> inventorySlots,
             ServerPlayer player,
-            @Nullable PageMetaDataManager manager,
             boolean maxTransfer,
             boolean requireCompleteSets
     ) {
-        SourceInventory endInv = ServerLevelEndInv.getEndInvForPlayer(player).orElse(null);
+        EndlessInventory endInv = ServerLevelEndInv.getEndInvForPlayer(player).orElse(null);
         if (endInv == null) {
             return;
         }
@@ -112,16 +115,11 @@ public final class AEIRecipeTransferHandler {
             return;
         }
         performTransfer(container, plan, player, recipeSlots, inventorySlots, endInv);
-        if (manager != null) {
-            manager.sendEndInvData();
-        } else {
-            var mode = com.kwwsyk.endinv.common.ModInfo.getServerConfig().transferMode().get();
-            switch (mode) {
-                case ALL -> com.kwwsyk.endinv.common.ModInfo.getPacketDistributor()
-                        .sendToPlayer(player, new com.kwwsyk.endinv.common.network.payloads.toClient.EndInvContent(endInv.getItemMap()));
-                case PART -> com.kwwsyk.endinv.common.ModInfo.getPacketDistributor()
-                        .sendToPlayer(player, com.kwwsyk.endinv.common.network.payloads.toClient.EndInvMetadata.getWith((com.kwwsyk.endinv.common.EndlessInventory) endInv));
-            }
+        switch (ServerConfigs.ENDINV_BEHAVIOR.TransferMode.get()) {
+            case ALL -> ModInfo.getPacketDistributor()
+                    .sendToPlayer(player, new EndInvContent(endInv.getItemMap()));
+            case PART -> ModInfo.getPacketDistributor()
+                    .sendToPlayer(player, EndInvMetadata.getWith(endInv));
         }
     }
 
@@ -158,7 +156,7 @@ public final class AEIRecipeTransferHandler {
 
         for (int i = 0; i < layout.length; i++) {
             Ingredient ing = layout[i];
-            if (ing.isEmpty()) continue;
+            if (ing == null || ing.isEmpty()) continue;
             Selection selection = chooseBestCandidate(ing, availability, reservation);
             if (selection.isEmpty()) { missing = true; continue; }
             reservation.reserve(selection);
@@ -442,7 +440,7 @@ public final class AEIRecipeTransferHandler {
         private static SourceInventory getAttachedInventory(AbstractContainerMenu container) {
             var attachment = ScreenAttachment.ATTACHMENT_MANAGER;
             if (attachment == null) {
-                if (ModInfo.getServerConfig().transferMode().get() == ContentTransferMode.ALL) {
+                if (ServerConfigs.ENDINV_BEHAVIOR.TransferMode.get() == ContentTransferMode.ALL) {
                     return CachedSrcInv.INSTANCE;
                 }
                 return null;

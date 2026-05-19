@@ -3,6 +3,7 @@ package com.kwwsyk.endinv.common.client;
 import com.kwwsyk.endinv.common.client.gui.EndlessInventoryScreen;
 import com.kwwsyk.endinv.common.client.gui.page.ItemPage;
 import com.kwwsyk.endinv.common.client.option.CachedConfig;
+import com.kwwsyk.endinv.common.client.option.ClientConfigs;
 import com.kwwsyk.endinv.common.network.payloads.PageData;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.Minecraft;
@@ -14,7 +15,6 @@ import net.minecraft.network.chat.Component;
 import java.util.Optional;
 
 import static com.kwwsyk.endinv.common.client.ClientModInfo.containerScreenHelper;
-import static com.kwwsyk.endinv.common.client.ClientModInfo.getClientConfig;
 
 public class ScreenDebug {
 
@@ -25,7 +25,7 @@ public class ScreenDebug {
     protected static Minecraft mc;
 
     public static void debugInfo(Screen screen, GuiGraphics graphics, double mouseX, double mouseY){
-        if(!ClientModInfo.getClientConfig().screenDebugging().get()) return;
+        if(!ClientConfigs.SCREEN_DEBUG.get()) return;
         int width = screen.width;
         int height = screen.height;
         int imageWidth = 0;
@@ -89,9 +89,8 @@ public class ScreenDebug {
                     graphics.drawString(mc.font, Component.literal("Sort reversed: "+pageData.reverseSort()), 10, 60, 0xFFFFFF00);
                     graphics.drawString(mc.font, Component.literal("Searching: "+pageData.search()), 10, 70, 0xFFFFFF00);
                     graphics.drawString(mc.font, Component.literal("Configurations: "), 0, 80, 0xFFFFFF00);
-                    var config = getClientConfig();
-                    graphics.drawString(mc.font, Component.literal("Auto suit in columns: "+ config.autoSuitColumn().get()), 10, 90, 0xFFFFFF00);
-                    graphics.drawString(mc.font, Component.literal("Texture mode: "+ config.textureMode().get()), 10, 100, 0xFFFFFF00);
+                    graphics.drawString(mc.font, Component.literal("Auto suit in columns: "+ ClientConfigs.ATTACHED_MENU_CONFIG.PageBasicLayout.autoColumns.get()), 10, 90, 0xFFFFFF00);
+                    graphics.drawString(mc.font, Component.literal("Texture mode: "+ ClientConfigs.ATTACHED_MENU_CONFIG.TextureMode.get()), 10, 100, 0xFFFFFF00);
                 }
             }
         }
@@ -99,7 +98,7 @@ public class ScreenDebug {
     }
 
     public static void click(int button, Screen screen){
-        if(!ClientModInfo.getClientConfig().screenDebugging().get()) return;
+        if(!ClientConfigs.SCREEN_DEBUG.get()) return;
 
         if(button == InputConstants.KEY_F3){
             phase++;

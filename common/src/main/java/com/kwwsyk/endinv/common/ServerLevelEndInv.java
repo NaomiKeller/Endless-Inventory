@@ -4,16 +4,15 @@ import com.kwwsyk.endinv.common.data.EndlessInventoryData;
 import com.kwwsyk.endinv.common.menu.EndlessInventoryMenu;
 import com.kwwsyk.endinv.common.menu.page.pageManager.AttachingMonitor;
 import com.kwwsyk.endinv.common.menu.page.pageManager.PageMetaDataManager;
+import com.kwwsyk.endinv.common.options.ServerConfigs;
 import com.kwwsyk.endinv.common.util.Accessibility;
 import com.mojang.logging.LogUtils;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import org.slf4j.Logger;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import javax.annotation.Nullable;
+import java.util.*;
 
 public final class ServerLevelEndInv {
 
@@ -46,15 +45,13 @@ public final class ServerLevelEndInv {
             endlessInventory = getPlayerDefaultEndInv(player);
         }
         if(endlessInventory==null){
-            switch (ModInfo.getServerConfig().policyHandlingMissing().get()){
+            switch (ServerConfigs.CREATION_MODE.get()){
                 case CREATE_PER_PLAYER -> {
                     endlessInventory = levelEndInvData.levelEndInvs
                             .stream()
                             .filter(endinv->endinv.owner!=null && endinv.owner.equals(player.getUUID()))
                             .findFirst()
                             .orElseGet(() -> createForPlayer(player));
-                    //To prevent an invalid state that an EndInv that its owner is this player but player shall create a new EndInv
-                    // happens often when player lost EndInvUUID when death
                     ModRegistries.NbtAttachments.getEndInvUUID().setTo(player,endlessInventory.getUuid());
                 }
                 case USE_GLOBAL_SHARED -> {
@@ -88,9 +85,9 @@ public final class ServerLevelEndInv {
     }
 
     private static EndlessInventory createForPlayer(Player player){
-        EndlessInventory endlessInventory = new EndlessInventory();
+        EndlessInventory endlessInventory = new EndlessInventory(ModRegistries.NbtAttachments.getEndInvUUID().computeIfAbsent(player));
         levelEndInvData.addEndInvToLevel(endlessInventory);
-        endlessInventory.setAccessibility(ModInfo.getServerConfig().defaultAccessibility().get());
+        endlessInventory.setAccessibility(ServerConfigs.ENDINV_BEHAVIOR.Access.get());
         endlessInventory.setOwner(player.getUUID());
         ModRegistries.NbtAttachments.getEndInvUUID().setTo(player,endlessInventory.getUuid());
         return endlessInventory;
@@ -103,14 +100,15 @@ public final class ServerLevelEndInv {
      */
     public static boolean hasEndInvUuid(Player player){
         UUID optional = ModRegistries.NbtAttachments.getEndInvUUID().getWith(player);
-        if (optional == ModInfo.DEFAULT_UUID) {
+        if(optional == null) return false;
+        if (Objects.equals(optional, ModInfo.DEFAULT_UUID)) {
             LOGGER.warn("Player {} has default endless inventory UUID.", player.getName().getString());
             return false;
         }
         return true;
     }
-
+    @Nullable
     private static EndlessInventory getPlayerDefaultEndInv(Player player){
-        return levelEndInvData.fromUUID(ModRegistries.NbtAttachments.getEndInvUUID().getWith(player));
+        return levelEndInvData.fromUUID(ModRegistries.NbtAttachments.getEndInvUUID().computeIfAbsent(player));
     }
 }

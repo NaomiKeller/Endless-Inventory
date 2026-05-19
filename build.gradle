@@ -1,6 +1,16 @@
 plugins {
     id 'java-library'
     id 'idea'
+
+
+    // https://maven.fabricmc.net/fabric-loom/fabric-loom.gradle.plugin/maven-metadata.xml
+    id("fabric-loom") version("${loom_version}") apply(false)
+
+    // https://projects.neoforged.net/neoforged/moddevgradle
+    id("net.neoforged.moddev") version("2.0.80") apply(false)
+
+    // https://plugins.gradle.org/plugin/me.modmuss50.mod-publish-plugin
+    id("me.modmuss50.mod-publish-plugin") version("1.1.0") apply(false)
 }
 
 group = mod_group_id

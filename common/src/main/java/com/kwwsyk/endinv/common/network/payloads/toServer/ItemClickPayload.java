@@ -38,8 +38,6 @@ public record ItemClickPayload(ItemKey key, int button, ClickType clickType) imp
 
     private static final Logger LOGGER = LogUtils.getLogger();
 
-
-
     public static ItemClickPayload decode(RegistryFriendlyByteBuf buf) {
         return new ItemClickPayload(
                 ItemKey.STREAM_CODEC.decode(buf),
@@ -68,7 +66,7 @@ public record ItemClickPayload(ItemKey key, int button, ClickType clickType) imp
             return;
         }
         EndlessInventory endInv = opt.get();
-        ItemState state = endInv.snapshotItemMap().get(key);
+        ItemState state = endInv.getItemMap().get(key);
         int count = state != null ? state.count() : 0;
         ItemStack snapStack = key.toStack(count);//should be deleted at the method return.
 

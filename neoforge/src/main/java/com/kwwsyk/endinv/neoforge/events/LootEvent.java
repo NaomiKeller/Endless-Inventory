@@ -5,7 +5,7 @@ import com.kwwsyk.endinv.common.ModInfo;
 import com.kwwsyk.endinv.common.ModRegistries;
 import com.kwwsyk.endinv.common.ServerLevelEndInv;
 import com.kwwsyk.endinv.common.network.payloads.toClient.ItemPickedUpPayload;
-import com.kwwsyk.endinv.neoforge.options.ServerConfig;
+import com.kwwsyk.endinv.common.options.ServerConfigs;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -38,7 +38,7 @@ public class LootEvent {
     public static void onLivingDrops(LivingDropsEvent event) {
         if (!(event.getSource().getEntity() instanceof ServerPlayer player)) return;
         if(!isPlayerEnabledAutoPick(player)) return;
-        if (ServerConfig.CONFIG.ENABLE_AUTO_PICK.getAsBoolean()) {
+        if (ServerConfigs.ENABLE_AUTOPICK.get()) {
             EndlessInventory endInv = ServerLevelEndInv.getEndInvForPlayer(player).orElse(null);
             if(endInv==null) return;
             boolean flag = true;
@@ -63,7 +63,7 @@ public class LootEvent {
     public static void onBlockDrops(BlockDropsEvent event){
         if (!(event.getBreaker() instanceof ServerPlayer player)) return;
         if(!isPlayerEnabledAutoPick(player)) return;
-        if (ServerConfig.CONFIG.ENABLE_AUTO_PICK.getAsBoolean()) {
+        if (ServerConfigs.ENABLE_AUTOPICK.get()) {
             EndlessInventory endInv = ServerLevelEndInv.getEndInvForPlayer(player).orElse(null);
             if(endInv==null) return;
             boolean flag = true;
@@ -95,7 +95,7 @@ public class LootEvent {
     @SubscribeEvent
     public static void onExpDrops(LivingExperienceDropEvent event){
         if(event.getAttackingPlayer() instanceof  ServerPlayer player){
-            if(!isPlayerEnabledAutoPick(player) || !ServerConfig.CONFIG.ENABLE_AUTO_PICK.getAsBoolean()) return;
+            if(!isPlayerEnabledAutoPick(player) || !ServerConfigs.ENABLE_AUTOPICK.get()) return;
             int exp = event.getDroppedExperience();
             int newValue = repairPlayerItems(player,exp);
             player.giveExperiencePoints(newValue);
@@ -106,7 +106,7 @@ public class LootEvent {
     @SubscribeEvent
     public static void onPickupItem(ItemEntityPickupEvent.Pre event){
         Player player = event.getPlayer();
-        if(!(player instanceof ServerPlayer) || !ServerConfig.CONFIG.ENABLE_AUTO_PICK.getAsBoolean() || !isPlayerEnabledAutoPick(player)){
+        if(!(player instanceof ServerPlayer) || !ServerConfigs.ENABLE_AUTOPICK.get() || !isPlayerEnabledAutoPick(player)){
             return;
         }
         ItemEntity entity = event.getItemEntity();

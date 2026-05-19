@@ -1,10 +1,11 @@
 package com.kwwsyk.endinv.common.client;
 
+import com.kwwsyk.endinv.common.EndInvAffinities;
 import com.kwwsyk.endinv.common.ModInfo;
 import com.kwwsyk.endinv.common.SourceInventory;
-import com.kwwsyk.endinv.common.client.gui.page.ItemPage;
 import com.kwwsyk.endinv.common.network.payloads.toClient.EndInvMetadata;
 import com.kwwsyk.endinv.common.options.ContentTransferMode;
+import com.kwwsyk.endinv.common.options.ServerConfigs;
 import com.kwwsyk.endinv.common.util.ItemKey;
 import com.kwwsyk.endinv.common.util.ItemState;
 import com.kwwsyk.endinv.common.util.SearchUtil;
@@ -13,6 +14,7 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
 import net.minecraft.Util;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
+import org.jetbrains.annotations.Unmodifiable;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -25,12 +27,13 @@ import java.util.function.Predicate;
 public class CachedSrcInv extends SourceInventory {
 
     public static final CachedSrcInv INSTANCE = new CachedSrcInv();
+
     private int itemSize;
     //controls whether itemSize data is valid when transfermode==all.
     private boolean validSize;
 
     private CachedSrcInv(){
-        super(ModInfo.DEFAULT_UUID);
+        super(ModInfo.DEFAULT_UUID, new EndInvAffinities());
     }
 
     public void initializeContents(Map<ItemKey, ItemState> itemMap){
@@ -38,19 +41,18 @@ public class CachedSrcInv extends SourceInventory {
         this.itemSize = getItemSize();//here assert transfermode==all //parallelable
         this.validSize = true;
     }
-
-    public List<ItemPage.ItemPointer> getItemView(int startIndex,
-                                                  int length,
-                                                  SortType sortType,
-                                                  boolean reverse,
-                                                  @Nullable Predicate<ItemStack> classify,
-                                                  String search){
+    @Unmodifiable
+    public List<ItemKey> getItemView(int startIndex,
+                                     int length,
+                                     SortType sortType,
+                                     boolean reverse,
+                                     @Nullable Predicate<ItemStack> classify,
+                                     String search){
         var ret = getSortedKeyReference(sortType)
                 .filter(key -> {
                     ItemStack stack = key.toStack(itemMap.get(key).count());
                     return (classify == null || classify.test(stack)) && SearchUtil.matchesSearch(stack, search);
                 })
-                .map(ItemPage.ItemPointer::new)
                 .toList();
         int size = ret.size();
         //update startIndex
@@ -65,7 +67,7 @@ public class CachedSrcInv extends SourceInventory {
      */
     @Override
     public int getItemSize() {
-        if(ModInfo.getServerConfig().transferMode().get()== ContentTransferMode.PART) return itemSize;
+        if(ServerConfigs.ENDINV_BEHAVIOR.TransferMode.get()== ContentTransferMode.PART) return itemSize;
         if(this.validSize) return itemSize;
         return super.getItemSize();
     }
@@ -131,6 +133,11 @@ public class CachedSrcInv extends SourceInventory {
     public void setChanged() {
         super.setChanged();
         validSize = false;
+    }
+
+    @Override
+    public Map<ItemKey, ItemState> getItemMap() {
+        return itemMap;
     }
 
     public long updateLastModTime(){

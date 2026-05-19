@@ -8,8 +8,10 @@ import net.minecraft.core.component.DataComponentPatch;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import org.jetbrains.annotations.Unmodifiable;
 import org.slf4j.Logger;
 
+import javax.annotation.Nonnegative;
 import javax.annotation.Nullable;
 import java.util.*;
 import java.util.concurrent.locks.Lock;
@@ -18,13 +20,12 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static com.kwwsyk.endinv.common.ModInfo.getServerConfig;
-
 /**Holder of core and shared ({@link EndlessInventory}&{@link com.kwwsyk.endinv.common.client.CachedSrcInv} endless INVENTORY logic.
  */
 public abstract class SourceInventory {
 
     private static final Logger LOGGER = LogUtils.getLogger();
+    public final EndInvAffinities affinities;
 
     //item container
     protected final Map<ItemKey, ItemState> itemMap;
@@ -46,15 +47,31 @@ public abstract class SourceInventory {
     private final Lock writeLock = lock.writeLock();
     private volatile boolean itemsDirty = true;
 
-    public SourceInventory(UUID uuid){
+    protected SourceInventory(UUID uuid, EndInvAffinities affinities){
         this.items = new ArrayList<>();
         this.itemMap = new Object2ObjectLinkedOpenHashMap<>();
         this.uuid = uuid;
-        this.maxStackSize = ModInfo.getServerConfig().getMaxAllowedStackSize().get();
-        this.infinityMode = ModInfo.getServerConfig().allowInfinityMode().get();
-        this.accessibility = ModInfo.getServerConfig().defaultAccessibility().get();
+        this.maxStackSize = com.kwwsyk.endinv.common.options.ServerConfigs.ENDINV_BEHAVIOR.MaxStackSize.get();
+        this.infinityMode = com.kwwsyk.endinv.common.options.ServerConfigs.ENDINV_BEHAVIOR.EnableInfinity.get();
+        this.accessibility = com.kwwsyk.endinv.common.options.ServerConfigs.ENDINV_BEHAVIOR.Access.get();
+        this.affinities = affinities;
     }
 
+
+    public List<ItemStackLike> getStarredItems(@Nonnegative int startIndex, @Nonnegative int length){
+        var items = affinities.getStarredItems(startIndex,length);
+        return items.stream().map(this::getStackWithZeroCount).toList();
+    }
+
+    public List<ItemStackLike> getStarredItems(){
+        return getStarredItems(0,affinities.starredItems.size());
+    }
+
+    public ItemStackLike getStackWithZeroCount(ItemKey stack){
+        var state = itemMap.get(stack);
+        if(state==null) return ItemStackLike.asKey(stack);
+        return ItemStackLike.asKey(stack,state.count());
+    }
 
     public void setChanged(){
         markCacheDirty();
@@ -69,13 +86,9 @@ public abstract class SourceInventory {
         uuid=UUID.randomUUID();
         return uuid;
     }
-
-    public Map<ItemKey,ItemState> snapshotItemMap(){
-        return new Object2ObjectLinkedOpenHashMap<>(itemMap);
-    }
-
+    @Unmodifiable
     public Map<ItemKey,ItemState> getItemMap(){
-        return itemMap;
+        return new Object2ObjectLinkedOpenHashMap<>(itemMap);
     }
 
     public List<ItemStack> getItemsAsList(){
@@ -176,7 +189,7 @@ public abstract class SourceInventory {
             if (state == null) {
                 LOGGER.warn("EI:takeItem: no state for {}", key);
                 LOGGER.debug("EI:Current Source Inventory: Class:{},UUID:{},Items:{}",this.getClass(),uuid,buildSnapshotLocked());
-                if(getServerConfig().doConvertEmptyTag().get()){
+                if(com.kwwsyk.endinv.common.options.ServerConfigs.CONVERT_EMPTY_TAG.get()){
                     if(key.components() == null) key = new ItemKey(key.item(), DataComponentPatch.EMPTY);
                     else if(key.components().isEmpty()) key = new ItemKey(key.item(), null);
                     if((state=itemMap.get(key))!=null){
@@ -291,21 +304,21 @@ public abstract class SourceInventory {
 
     public Stream<ItemKey> getSortedKeyReference(SortType sortType){
         return switch (sortType){
-            case ID -> this.snapshotItemMap().keySet()
+            case ID -> this.getItemMap().keySet()
                     .stream()
                     .sorted(Comparator.comparingInt(key -> BuiltInRegistries.ITEM.getId(key.item())));
-            case DEFAULT -> this.snapshotItemMap().keySet()
+            case DEFAULT -> this.getItemMap().keySet()
                     .stream();
-            case COUNT -> this.snapshotItemMap()
+            case COUNT -> this.getItemMap()
                     .entrySet()
                     .stream()
                     .sorted(Comparator.comparingInt(e -> e.getValue().count()))
                     .map(Map.Entry::getKey);
-            case SPACE_AND_NAME -> this.snapshotItemMap()
+            case SPACE_AND_NAME -> this.getItemMap()
                     .keySet()
                     .stream()
                     .sorted(Comparator.comparing(key -> BuiltInRegistries.ITEM.getKey(key.item()).toString()));
-            case LAST_MODIFIED -> this.snapshotItemMap()
+            case LAST_MODIFIED -> this.getItemMap()
                     .entrySet()
                     .stream()
                     .sorted(Comparator.comparing(e -> e.getValue().lastModTime()))

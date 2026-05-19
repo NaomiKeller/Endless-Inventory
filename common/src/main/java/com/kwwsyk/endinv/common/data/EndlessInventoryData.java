@@ -6,6 +6,7 @@ import com.mojang.logging.LogUtils;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.NbtOps;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.datafix.DataFixTypes;
 import net.minecraft.world.level.Level;
@@ -32,9 +33,6 @@ public class EndlessInventoryData extends SavedData {
 
     private static final Logger LOGGER = LogUtils.getLogger();
     public final List<EndlessInventory> levelEndInvs;
-
-    public static EndInvCodecStrategy LoadStrategy = new FullCodecStrategy();
-    public static EndInvCodecStrategy SaveStrategy = new FullCodecStrategy();
 
     public record BackupResult(boolean success, @Nullable String message) {}
 
@@ -95,7 +93,7 @@ public class EndlessInventoryData extends SavedData {
         if(index<0 || index>= levelEndInvs.size()) return;
         levelEndInvs.remove(index);
     }
-
+    @Nullable
     public EndlessInventory fromUUID(UUID uuid){
         for(EndlessInventory endlessInventory : levelEndInvs){
             if (Objects.equals(endlessInventory.getUuid(),uuid)) return endlessInventory;
@@ -123,35 +121,21 @@ public class EndlessInventoryData extends SavedData {
         //Get EndInv[]
         ListTag listTag = tag.getList(END_INV_LIST_KEY,10) ;
 
-        CompoundTag head = listTag.getCompound(0);
-        checkStrategy(head);
-
         //{}EndInv -> EndInvs -> levelEndInvs
-        listTag.iterator().forEachRemaining(
-                (t)->   data.levelEndInvs.add(LoadStrategy.deserializeEndInv((CompoundTag) t, provider))
+        listTag.forEach(
+                (t)->data.levelEndInvs.add(EndlessInventory.CODEC.parse(provider.createSerializationContext(NbtOps.INSTANCE), t).getOrThrow())
         );
         return data;
     }
 
-    static void checkStrategy(final CompoundTag tag){
-        boolean flag = LoadStrategy.canHandle(tag);
-        if(!flag) {
-            LoadStrategy = new SortedSaveStrategy();
-            LOGGER.debug("EndInv load strategy changed to default as current strategy cannot handle.");
-        }
-    }
-
     @Override
     public CompoundTag save(CompoundTag compoundTag, HolderLookup.Provider provider) {
-
         // []:List of {}EndInv
         ListTag nbtTagList = new ListTag();
-
         for (EndlessInventory endlessInventory : levelEndInvs) {
-            CompoundTag invTag = SaveStrategy.serializeEndInv(endlessInventory, provider);
+            CompoundTag invTag = (CompoundTag) EndlessInventory.CODEC.encode(endlessInventory, provider.createSerializationContext(NbtOps.INSTANCE), compoundTag).getOrThrow();
             nbtTagList.add(invTag);
         }
-
         CompoundTag saveTag = new CompoundTag();
         //{HEAD}: endless_inventories: []
         saveTag.put(END_INV_LIST_KEY,nbtTagList);

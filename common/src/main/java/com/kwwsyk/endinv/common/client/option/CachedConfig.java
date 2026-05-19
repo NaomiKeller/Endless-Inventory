@@ -1,7 +1,6 @@
 package com.kwwsyk.endinv.common.client.option;
 
 import com.kwwsyk.endinv.common.ModRegistries;
-import com.kwwsyk.endinv.common.client.ClientModInfo;
 import com.kwwsyk.endinv.common.menu.page.PageType;
 import com.kwwsyk.endinv.common.network.payloads.PageData;
 import com.kwwsyk.endinv.common.network.payloads.SyncedConfig;
@@ -53,8 +52,7 @@ public final class CachedConfig {
             return;
         }
         //client attaching data
-        IClientConfig config = ClientModInfo.getClientConfig();
-        attaching = config.attaching().get();
+        attaching = ClientConfigs.DO_ATTACH.get();
         //server attaching data is prior
         SyncedConfig serverFlags = ModRegistries.NbtAttachments.getSyncedConfig().getWith(player);
         if(serverFlags==null) {
@@ -76,22 +74,20 @@ public final class CachedConfig {
      * @return {@link PageData} recode with updated row, column data.
      */
     public static PageData resolveLayout(@Nullable AbstractContainerScreen<?> screen, boolean ofMenu) {
-        IClientConfig config = ClientModInfo.getClientConfig();
-
-        int rows = config.rows().get();
+        int rows = ofMenu ? ClientConfigs.EIM_CONFIG.Rows.get() : ClientConfigs.ATTACHED_MENU_CONFIG.PageBasicLayout.Rows.get();
         if (rows <= 0) {
-            rows = config.calculateDefaultRowCount(ofMenu);
+            rows = calculateDefaultRowCount(ofMenu);
         }
         if (rows <= 0) {
             rows = cachedLayout.rows() > 0 ? cachedLayout.rows() : PageData.DEFAULT.rows();
         }
 
-        int columns = config.columns().get();
+        int columns = ofMenu ? 9 : ClientConfigs.ATTACHED_MENU_CONFIG.PageBasicLayout.Columns.get();
         if (columns <= 0) {
             columns = PageData.DEFAULT.columns();
         }
-        if (screen != null && config.autoSuitColumn().get()) {
-            int fitted = config.calculateSuitInColumnCount(screen);
+        if (screen != null && !ofMenu && ClientConfigs.ATTACHED_MENU_CONFIG.PageBasicLayout.autoColumns.get()) {
+            int fitted = calculateSuitInColumnCount(screen);
             columns = Math.min(columns, fitted);
         }
         if (columns <= 0) {
@@ -149,5 +145,17 @@ public final class CachedConfig {
     public static void setDisplayingPageKey(String key) {
         pageRegKey = key;
         cachedLayout = new PageData(pageRegKey, rows, columns, sortType, reverseSort, searching);
+    }
+
+    private static int calculateDefaultRowCount(boolean ofMenu){
+        Minecraft mc = Minecraft.getInstance();
+        int height = mc.getWindow().getGuiScaledHeight();
+        return Math.max(Math.floorDiv(height - 60, 18) - (ofMenu ? 4 : 0), 1);
+    }
+
+    private static int calculateSuitInColumnCount(AbstractContainerScreen<?> screen){
+        int leftPos = (screen.width - 176) / 2;
+        int width = leftPos - 20 - 6 - 6;
+        return Math.max(1, Math.floorDiv(width, 18));
     }
 }

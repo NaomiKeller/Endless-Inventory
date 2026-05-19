@@ -2,6 +2,7 @@ package com.kwwsyk.endinv.forge.integrates.jei.experimental.mixin;
 
 import com.kwwsyk.endinv.common.ModInfo;
 import com.kwwsyk.endinv.common.options.ContentTransferMode;
+import com.kwwsyk.endinv.common.options.ServerConfigs;
 import com.kwwsyk.endinv.forge.integrates.jei.experimental.AEIRecipeTransferHandler;
 import com.kwwsyk.endinv.forge.integrates.jei.experimental.AEIRecipeTransferHandler.TransferContext;
 import com.kwwsyk.endinv.forge.network.payloads.JeiAttachedTransferPayload;
@@ -115,7 +116,7 @@ public abstract class BasicRecipeTransferHandlerMixin<C extends AbstractContaine
             if (allow != null && allow && cir.getReturnValue() != null) {
                 cir.setReturnValue(null);
             }
-            if (ENDINV$TEMP_ALWAYS_COSMETIC_WHEN_ALL && ModInfo.getServerConfig().transferMode().get() == ContentTransferMode.ALL) {
+            if (ENDINV$TEMP_ALWAYS_COSMETIC_WHEN_ALL && ServerConfigs.ENDINV_BEHAVIOR.TransferMode.get() == ContentTransferMode.ALL) {
                 IRecipeTransferError err = cir.getReturnValue();
                 if (err != null) {
                     cir.setReturnValue(() -> IRecipeTransferError.Type.COSMETIC);

@@ -1,18 +1,19 @@
 package com.kwwsyk.endinv.common.client.gui.page.manager;
 
 import com.kwwsyk.endinv.common.client.CachedSrcInv;
+import com.kwwsyk.endinv.common.client.gui.ScreenFramework;
 import com.kwwsyk.endinv.common.client.gui.page.DisplayPage;
 import com.kwwsyk.endinv.common.client.gui.page.ItemPage;
-import com.kwwsyk.endinv.common.client.option.CachedConfig;
 import com.kwwsyk.endinv.common.menu.page.PageType;
-import com.kwwsyk.endinv.common.menu.page.PageTypeRegistry;
 import com.kwwsyk.endinv.common.menu.page.pageManager.PageMetaDataManager;
 import com.kwwsyk.endinv.common.network.payloads.toServer.ItemPageContext;
-import com.kwwsyk.endinv.common.util.SortType;
 
 import java.util.List;
 import java.util.Objects;
-//client
+
+/**Server as a link between client and server ?... maybe so
+ * Only one Implementation: {@link com.kwwsyk.endinv.common.client.gui.ScreenFramework}
+ */
 public interface PageManager extends PageMetaDataManager {
 
     List<DisplayPage> getPages();
@@ -43,8 +44,8 @@ public interface PageManager extends PageMetaDataManager {
     /**
      * the return value of {@link #getPages()} shall be from this.
      */
-    default List<DisplayPage> buildPages(){
-        return PageTypeRegistry.getDisplayPages().stream().map(type -> type.buildPage(this)).toList();
+    default List<DisplayPage> buildPages(List<PageType> displayingPages){
+        return displayingPages.stream().map(type -> type.buildPage((ScreenFramework) this)).toList();
     }
 
     default ItemPageContext getInPageContext(){
@@ -79,37 +80,4 @@ public interface PageManager extends PageMetaDataManager {
         return CachedSrcInv.INSTANCE.isInfinityMode();
     }
 
-    @Override
-    default SortType sortType() {
-        return CachedConfig.sortType();
-    }
-
-    @Override
-    default void setSortType(SortType sortType) {
-        CachedConfig.setSortType(sortType);
-    }
-
-    @Override
-    default boolean isSortReversed() {
-        return CachedConfig.reverseSort();
-    }
-
-    @Override
-    default void setSortReversed(boolean reversed) {
-        CachedConfig.setReverseSort(reversed);
-    }
-
-    @Override
-    default String searching() {
-        return CachedConfig.searching();
-    }
-
-    @Override
-    default void setSearching(String searching) {
-        CachedConfig.setSearching(searching);
-    }
-
-    @Override
-    default void sendEndInvData() {//do nop as in the client
-    }
 }

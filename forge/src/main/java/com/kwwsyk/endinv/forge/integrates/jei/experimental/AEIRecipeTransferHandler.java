@@ -1,11 +1,11 @@
 package com.kwwsyk.endinv.forge.integrates.jei.experimental;
 
-import com.kwwsyk.endinv.common.ModInfo;
 import com.kwwsyk.endinv.common.ServerLevelEndInv;
 import com.kwwsyk.endinv.common.SourceInventory;
 import com.kwwsyk.endinv.common.client.CachedSrcInv;
 import com.kwwsyk.endinv.common.menu.page.pageManager.PageMetaDataManager;
 import com.kwwsyk.endinv.common.options.ContentTransferMode;
+import com.kwwsyk.endinv.common.options.ServerConfigs;
 import com.kwwsyk.endinv.common.util.ItemKey;
 import com.kwwsyk.endinv.forge.client.events.ScreenAttachment;
 import mezz.jei.api.constants.VanillaTypes;
@@ -62,7 +62,7 @@ public final class AEIRecipeTransferHandler {
     ) {
         // Support all recipe types; rely on JEI's provided recipeSlots ordering
         SourceInventory endInv = getClientAttachedInventory(container);
-        if (endInv == null && ModInfo.getServerConfig().transferMode().get() == ContentTransferMode.ALL) {
+        if (endInv == null && ServerConfigs.ENDINV_BEHAVIOR.TransferMode.get() == ContentTransferMode.ALL) {
             endInv = CachedSrcInv.INSTANCE;
         }
         Ingredient[] layout = buildLayoutFromRecipeSlots(recipeSlotsView, recipeSlots.size());
@@ -133,7 +133,7 @@ public final class AEIRecipeTransferHandler {
             manager.sendEndInvData();
         } else {
             // Fallback sync when no manager is available (e.g., JEI replaced the screen)
-            var mode = com.kwwsyk.endinv.common.ModInfo.getServerConfig().transferMode().get();
+            var mode = ServerConfigs.ENDINV_BEHAVIOR.TransferMode.get();
             switch (mode) {
                 case ALL -> com.kwwsyk.endinv.common.ModInfo.getPacketDistributor()
                         .sendToPlayer(player, new com.kwwsyk.endinv.common.network.payloads.toClient.EndInvContent(endInv.snapshotItemMap()));
@@ -581,7 +581,7 @@ public final class AEIRecipeTransferHandler {
         private static SourceInventory getAttachedInventory(AbstractContainerMenu container) {
             var attachment = ScreenAttachment.ATTACHMENT_MANAGER;
             if (attachment == null) {//when jei's recipe handler screen is set, it will instantly change to null.
-                if (ModInfo.getServerConfig().transferMode().get() == ContentTransferMode.ALL) {
+                if (ServerConfigs.ENDINV_BEHAVIOR.TransferMode.get() == ContentTransferMode.ALL) {
                     return CachedSrcInv.INSTANCE;
                 }
                 return null;

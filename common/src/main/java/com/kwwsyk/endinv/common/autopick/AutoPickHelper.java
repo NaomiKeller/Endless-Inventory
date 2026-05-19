@@ -24,7 +24,7 @@ import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.List;
 
-import static com.kwwsyk.endinv.common.ModInfo.getServerConfig;
+import static com.kwwsyk.endinv.common.options.ServerConfigs.ENABLE_AUTOPICK;
 
 public final class AutoPickHelper {
 
@@ -34,11 +34,11 @@ public final class AutoPickHelper {
      * @return true -> proceed auto pick process
      */
     public static boolean isEnabled(Player player){
-        return isPlayerEnabledAutoPick(player) && getServerConfig().enableAutoPick().get();
+        return isPlayerEnabledAutoPick(player) && ENABLE_AUTOPICK.get();
     }
 
     private static boolean isPlayerEnabledAutoPick(Player player){
-        return ModRegistries.NbtAttachments.getSyncedConfig().getWith(player).autoPicking();
+        return ModRegistries.NbtAttachments.getSyncedConfig().computeIfAbsent(player).autoPicking();
     }
 
     /**

@@ -4,8 +4,6 @@ import com.kwwsyk.endinv.common.AbstractClientModInitializer;
 import com.kwwsyk.endinv.common.client.IContainerScreenHelper;
 import com.kwwsyk.endinv.common.client.IInputHandler;
 import com.kwwsyk.endinv.common.client.KeyMappings;
-import com.kwwsyk.endinv.common.client.option.IClientConfig;
-import com.kwwsyk.endinv.neoforge.client.config.ClientConfig;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
@@ -65,8 +63,7 @@ public class ClientModInitializer extends AbstractClientModInitializer {
     }
 
     @Override
-    protected IClientConfig loadClientConfig() {
-        return ClientConfig.CONFIG.INSTANCE;
+    protected void loadClientConfig() {
     }
 
     @Override

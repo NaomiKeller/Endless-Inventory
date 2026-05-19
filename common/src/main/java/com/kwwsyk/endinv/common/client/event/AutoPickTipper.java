@@ -2,7 +2,6 @@ package com.kwwsyk.endinv.common.client.event;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Rarity;
@@ -24,7 +23,6 @@ public class AutoPickTipper {
         if (Minecraft.getInstance().player != null) {
             Minecraft.getInstance().player.playSound(SoundEvents.ITEM_PICKUP, 0.5f, 1.0f);
         }
-        // 尝试合并已有物品
         for (PickupDisplayItem item : pickupQueue) {
             if (ItemStack.isSameItemSameComponents(item.stack, stack)) {
                 item.stack.grow(stack.getCount());
@@ -35,7 +33,6 @@ public class AutoPickTipper {
             }
         }
 
-        // 新物品加入
         if (pickupQueue.size() >= MAX_QUEUE_SIZE) {
             pickupQueue.pollLast();
         }
@@ -46,7 +43,6 @@ public class AutoPickTipper {
         if (pickupQueue.isEmpty()) return;
 
         Minecraft mc =Minecraft.getInstance();
-        ItemRenderer itemRenderer = mc.getItemRenderer();
         int screenWidth = mc.getWindow().getGuiScaledWidth();
         int screenHeight = mc.getWindow().getGuiScaledHeight();
 
@@ -66,7 +62,6 @@ public class AutoPickTipper {
             index++;
         }
 
-        // 处理时间
         if (removalDelayCounter > 0) {
             removalDelayCounter--;
         } else if (!pickupQueue.isEmpty()) {

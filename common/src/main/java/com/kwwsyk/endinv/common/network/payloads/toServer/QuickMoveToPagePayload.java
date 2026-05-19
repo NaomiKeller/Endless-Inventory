@@ -52,7 +52,7 @@ public record QuickMoveToPagePayload(int slotId) implements ModPacketPayload {
         Optional<EndlessInventory> oendinv = ServerLevelEndInv.getEndInvForPlayer(player);
         {
             Optional<PageMetaDataManager> optional = ServerLevelEndInv.checkAndGetManagerForPlayer(player);
-            LOGGER.info("Test: Optional AttachingManager Status: {}", optional);
+            LOGGER.debug("Test: Optional AttachingManager Status: {}", optional);
         }
         if(oendinv.isEmpty()){
             LOGGER.warn("{}: Player who has not an EndInv quick-moved item to EndInv's page.", id()+" payload");

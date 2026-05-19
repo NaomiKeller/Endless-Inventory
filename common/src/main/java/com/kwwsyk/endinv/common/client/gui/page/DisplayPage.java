@@ -5,10 +5,10 @@ import com.kwwsyk.endinv.common.SourceInventory;
 import com.kwwsyk.endinv.common.client.CachedSrcInv;
 import com.kwwsyk.endinv.common.client.KeyMappings;
 import com.kwwsyk.endinv.common.client.gui.ScreenFramework;
-import com.kwwsyk.endinv.common.client.gui.bg.SFBgRenderer;
 import com.kwwsyk.endinv.common.client.gui.page.manager.PageManager;
 import com.kwwsyk.endinv.common.menu.page.PageType;
 import com.mojang.blaze3d.platform.InputConstants;
+import net.minecraft.ChatFormatting;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -46,6 +46,10 @@ import static net.minecraft.client.gui.screens.Screen.hasShiftDown;
  * */
 public abstract class DisplayPage{
 
+    // Match vanilla generic container margins: 7px sides, 17px top, 7px bottom//todo
+    public static final int MARGIN_SIDE_WIDTH = 8;
+    public static final int MARGIN_TOP_HEIGHT = 18;
+    public static final int MARGIN_BOTTOM_HEIGHT = 7;//???
 
     protected final PageType pageType;
     //the registry name of this page type.
@@ -59,17 +63,20 @@ public abstract class DisplayPage{
     public Component name;
 
     public PageManager meta;
+    public ScreenFramework framework;
 
     public final SourceInventory srcInv;
-
     protected final AbstractContainerMenu menu;
-
     protected final Minecraft mc;
 
     //leftPos and topPos are used as Renderer param
-    protected ScreenFramework framework;
-
+    /**
+     * The itemGrid start is {@code leftPos + MARGIN_SIDE_WIDTH}
+     */
     protected int leftPos;
+    /**
+     * The itemGrid start is {@code topPos + MARGIN_TOP_HEIGHT}
+     */
     protected int topPos;
     protected int renderOffsetX;
     protected int renderOffsetY;
@@ -81,20 +88,22 @@ public abstract class DisplayPage{
 
     //constructor and initialization methods
     /**
-     * Pages are constructed when {@link PageManager#buildPages()} is invoked.
+     * Pages are constructed when {@link PageManager#buildPages} is invoked.
      *
      * @param pageType defines type that is synced, including the item-classify.
-     * @param manager
      */
-    public DisplayPage(PageType pageType, PageManager manager){
+    public DisplayPage(PageType pageType, ScreenFramework framework){
         this.mc = Minecraft.getInstance();
-        this.meta = manager;
-        this.menu = manager.getMenu();
+        this.framework = framework;
+        this.menu = framework.getMenu();
         this.srcInv = CachedSrcInv.INSTANCE;
         this.pageType = pageType;
         this.id = pageType.registerName;
         this.itemClassify = pageType.itemClassify;
         this.name = Component.translatableWithFallback("page.endinv."+pageType.registerName, pageType.registerName);
+
+        this.leftPos = framework.getPageX();
+        this.topPos = framework.getPageY();
     }
 
     //abstract methods
@@ -153,11 +162,11 @@ public abstract class DisplayPage{
     }
 
     public int calculateRowCount(){
-        return Math.max(meta.getItemSize()/ meta.columns(), CachedSrcInv.INSTANCE.getItemSize()/ meta.columns());
+        return Math.max(framework.getItemSize()/ framework.columns(), CachedSrcInv.INSTANCE.getItemSize()/ framework.columns());
     }
 
     protected float subtractInputFromScroll(float scrollOffs, double input) {
-        return Mth.clamp(scrollOffs - (float)(input / (double)meta.rows()), 0.0F, 1.0F);
+        return Mth.clamp(scrollOffs - (float)(input / (double) framework.rows()), 0.0F, 1.0F);
     }
 
     public void setChanged() {}
@@ -203,35 +212,16 @@ public abstract class DisplayPage{
 
 
     //page renderer
-    public void renderBg(SFBgRenderer SFBgRenderer, GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {
-        SFBgRenderer.getDefaultPageBgRenderer().ifPresent(bgRenderer -> bgRenderer.renderBg(guiGraphics, partialTick, mouseX, mouseY));
-    }
-
-    public void initRenderer(ScreenFramework framework, int pageXPos, int pageYPos){
-        this.framework = framework;
-        if (!rendererInitialized) {
-            this.leftPos = pageXPos;
-            this.topPos = pageYPos;
-            this.renderOffsetX = 0;
-            this.renderOffsetY = 0;
-            this.rendererInitialized = true;
-        } else {
-            this.leftPos = pageXPos + renderOffsetX;
-            this.topPos = pageYPos + renderOffsetY;
-        }
-
-        this.lastFrameworkPageX = pageXPos;
-        this.lastFrameworkPageY = pageYPos;
+    public void renderBg(GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {
+        framework.SFBgRenderer.getDefaultPageBgRenderer().ifPresent(bgRenderer -> bgRenderer.renderBg(guiGraphics, partialTick, mouseX, mouseY));
     }
 
     /**
      * Apply a relative offset so debug adjustments survive screen refreshes.
      */
-    public void move(int deltaX, int deltaY) {
-        this.renderOffsetX += deltaX;
-        this.renderOffsetY += deltaY;
-        this.leftPos = lastFrameworkPageX + renderOffsetX;
-        this.topPos = lastFrameworkPageY + renderOffsetY;
+    public void syncPos(int pageX, int pageY) {
+        this.leftPos += pageX;
+        this.topPos += pageY;
     }
 
     /**
@@ -240,16 +230,34 @@ public abstract class DisplayPage{
     public void resize(int rows) {
     }
 
-    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick){
-        renderPage(graphics);
-        if(framework.hoveringOnPage()){
-            renderHovering(graphics, mouseX, mouseY, partialTick);
+    public abstract void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks);
+
+    public String getDisplayAmount(ItemStack stack){
+        int count = stack.getCount();
+        double value;
+        String suffix;
+
+        if(count == this.framework.getMaxStackSize() && framework.enableInfinity()){
+            return "∞";
         }
+
+        if (count >= 1_000_000_000) {
+            value = count / 1_000_000_000.0;
+            suffix = "b";
+        } else if (count >= 1_000_000) {
+            value = count / 1_000_000.0;
+            suffix = "m";
+        } else if (count >= 1_000) {
+            value = count / 1_000.0;
+            suffix = "k";
+        }else if(count==0){
+            return ChatFormatting.RED + "0";
+        }else {
+            return String.valueOf(count);
+        }
+
+        return String.format("%.1f%s", value, suffix);
     }
-
-    public abstract void renderPage(GuiGraphics graphics);
-
-    public void renderHovering(GuiGraphics graphics, int mouseX, int mouseY, float partialTick){}
 
     /**
      * Render Page's icon, will first try render {@link #icon} as {@code Item} location, then it will try render a {@code 16x16} icon.

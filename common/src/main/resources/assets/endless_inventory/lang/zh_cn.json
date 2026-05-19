@@ -33,6 +33,7 @@
   "page.endinv.bookmark": "书签页",
 
   "endinv.setting.rows": "行数，0为自动",
+  "endinv.setting.auto_rows": "自动适应行数",
   "endinv.setting.columns": "列数，0为自动",
   "endinv.setting.auto_suit": "自动适应列数",
   "endinv.setting.attaching": "附随菜单",

@@ -51,8 +51,6 @@ public interface PageMetaDataManager {
 
     void setSearching(String searching);
 
-    void sendEndInvData();
-
     String getDisplayingPageId();
 
     void switchPageWithId(String id);

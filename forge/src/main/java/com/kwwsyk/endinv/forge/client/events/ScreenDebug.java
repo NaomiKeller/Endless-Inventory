@@ -1,7 +1,7 @@
 package com.kwwsyk.endinv.forge.client.events;
 
 import com.kwwsyk.endinv.common.ModInfo;
-import com.kwwsyk.endinv.forge.client.config.ClientConfig;
+import com.kwwsyk.endinv.common.client.option.ClientConfigs;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -30,7 +30,7 @@ public class ScreenDebug {
 
     @SubscribeEvent
     public static void renderScreen(ScreenEvent.Render.Post event){
-        if(!ClientConfig.CONFIG.ENABLE_DEBUG.get()) return;
+        if(!ClientConfigs.SCREEN_DEBUG.get()) return;
         Screen screen = event.getScreen();
         com.kwwsyk.endinv.common.client.ScreenDebug.debugInfo(screen,event.getGuiGraphics(),event.getMouseX(),event.getMouseY());
     }

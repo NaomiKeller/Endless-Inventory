@@ -7,7 +7,7 @@ import com.kwwsyk.endinv.common.network.payloads.SyncedConfig;
 import com.kwwsyk.endinv.common.network.payloads.toClient.EndInvContent;
 import com.kwwsyk.endinv.common.network.payloads.toClient.EndInvMetadata;
 import com.kwwsyk.endinv.common.options.ContentTransferMode;
-import com.kwwsyk.endinv.fabric.ServerConfig;
+import com.kwwsyk.endinv.common.options.ServerConfigs;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
@@ -75,9 +75,8 @@ public final class PlayerEvents {
         ModInfo.getPacketDistributor().sendToPlayer(player, syncedConfig);
 
         // Broadcast effective menu attachability on join
-        var serverCfg = ModInfo.getServerConfig();
-        var menuCfg = serverCfg.specifiedMenuAttachability().get();
-        boolean defaultAttach = serverCfg.enableAttaching().get();
+        var menuCfg = ServerConfigs.SPECIFIED_ATTACHABILITY.get();
+        boolean defaultAttach = ServerConfigs.DEFAULT_ATTACH.get();
         ModInfo.getPacketDistributor().sendToPlayer(player,
                 new com.kwwsyk.endinv.common.network.payloads.toClient.MenuAttachabilityPayload(
                         defaultAttach,
@@ -85,7 +84,7 @@ public final class PlayerEvents {
                         menuCfg.getConfigs()
                 ));
 
-        if (ServerConfig.INSTANCE.transferMode().get() == ContentTransferMode.ALL) {
+        if (ServerConfigs.ENDINV_BEHAVIOR.TransferMode.get() == ContentTransferMode.ALL) {
             ServerLevelEndInv.getEndInvForPlayer(player).ifPresent(endInv -> {
                 ModInfo.getPacketDistributor().sendToPlayer(player, new EndInvContent(endInv.snapshotItemMap()));
                 ModInfo.getPacketDistributor().sendToPlayer(player, EndInvMetadata.getWith(endInv));

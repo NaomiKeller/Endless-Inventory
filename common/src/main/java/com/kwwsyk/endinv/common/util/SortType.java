@@ -39,7 +39,7 @@ public enum SortType {
                 case COUNT -> Comparator.comparingInt(ItemStack::getCount);
                 case SPACE_AND_NAME -> Comparator.comparing(it-> BuiltInRegistries.ITEM.getKey(it.getItem()).toString());
                 case ID -> REGISTRY_ORDER_COMPARATOR;
-                case LAST_MODIFIED -> Comparator.comparingLong(s -> srcInv.snapshotItemMap().get(ItemKey.asKey(s)).lastModTime());
+                case LAST_MODIFIED -> Comparator.comparingLong(s -> srcInv.getItemMap().get(ItemKey.asKey(s)).lastModTime());
             };
         }
 

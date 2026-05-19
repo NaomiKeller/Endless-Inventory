@@ -1,6 +1,7 @@
 package com.kwwsyk.endinv.common.options;
 
-import com.kwwsyk.endinv.common.ModInfo;
+import com.kwwsyk.endinv.common.options.config.ComplexConfigEntryImpl;
+import com.kwwsyk.endinv.common.options.config.ConfigEntryImpl;
 import com.mojang.logging.LogUtils;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
@@ -19,7 +20,6 @@ import java.util.*;
 /**A menu attachability config of specified menu types with better priority
  *
  */
-@SuppressWarnings("deprecation")
 public class SpecifiedMenuAttachingConfig {
 
     private static final Logger LOGGER = LogUtils.getLogger();
@@ -53,13 +53,13 @@ public class SpecifiedMenuAttachingConfig {
     }
 
     /**Check if a menu can be attached by {@link com.kwwsyk.endinv.common.client.gui.AttachingScreen}<br>
-     * It checks {@link #getMenuConfig} also checks {@link IServerConfig#enableAttaching()}<br>
+     * It checks {@link #getMenuConfig} also checks {@link ServerConfigs#DEFAULT_ATTACH}<br>
      * <p>
      *     Whether a menu can be attached depends on:
      *      <table>
      *          <thead>
      *              <tr>
-     *                  <th>{@link IServerConfig#enableAttaching()}</th>
+     *                  <th>{@link ServerConfigs#DEFAULT_ATTACH}</th>
      *                  <th>Value: True</th>
      *                  <th>Value: null</th>
      *                  <th>value: false</th>
@@ -87,7 +87,7 @@ public class SpecifiedMenuAttachingConfig {
     public boolean isMenuAttachable(@Nullable MenuType<?> type){
         if(type==null) return isInventoryAttachable();
         Boolean menuConfig = getMenuConfig(type);
-        return menuConfig!=null ? menuConfig : ModInfo.getServerConfig().enableAttaching().get();
+        return menuConfig!=null ? menuConfig : ServerConfigs.DEFAULT_ATTACH.get();
     }
 
     public boolean isMenuAttachable(AbstractContainerMenu menu){
@@ -147,7 +147,7 @@ public class SpecifiedMenuAttachingConfig {
      * Complexity: O(n). No ConcurrentModificationException.
      */
     public void trimNonsenseValues() {//doc and self helped with gpt
-        final Boolean target = ModInfo.getServerConfig().enableAttaching().get();
+        final Boolean target = ServerConfigs.DEFAULT_ATTACH.get();
         configs.entrySet().removeIf(e -> Objects.equals(e.getValue(), target));
     }
 
@@ -246,7 +246,7 @@ public class SpecifiedMenuAttachingConfig {
         }
 
         public static void testConfig(){
-            var a = ModInfo.getServerConfig().specifiedMenuAttachability();
+            var a = ServerConfigs.SPECIFIED_ATTACHABILITY;
             var b = a.get();
             b.fill(true,false);
             a.set(b);
@@ -260,6 +260,33 @@ public class SpecifiedMenuAttachingConfig {
          public record ParseStringResult(boolean success, @Nullable MenuType<?> type, boolean value){
 
              public static final ParseStringResult FAILED = new ParseStringResult(false,null,false);
+        }
+    }
+
+    public static class Entry extends ComplexConfigEntryImpl<SpecifiedMenuAttachingConfig> {
+
+        public static final String[] COMMENTS = Parser.configComments;
+        public static final Entry INSTANCE = new Entry("specifiedMenuAttachability",new String[]{},SpecifiedMenuAttachingConfig.DEFAULT);
+
+        private final ConfigEntryImpl.ListEntry<String> menuKey2bools = new ConfigEntryImpl.ListEntry<>("container2attachable",COMMENTS,new ArrayList<>());
+
+        public Entry(String key, String[] comments, SpecifiedMenuAttachingConfig defaultValue) {
+            super(key, comments, defaultValue);
+        }
+
+        @Override
+        public ConfigEntryImpl<?>[] fields() {
+            return new ConfigEntryImpl[]{menuKey2bools};
+        }
+
+        @Override
+        public SpecifiedMenuAttachingConfig get() {
+            return Parser.readList(menuKey2bools.get());
+        }
+
+        @Override
+        public void set(SpecifiedMenuAttachingConfig config) {
+            menuKey2bools.set(new Parser(config).encodeConfig());
         }
     }
 }

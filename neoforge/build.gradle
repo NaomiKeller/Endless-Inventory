@@ -2,6 +2,7 @@ plugins {
     id 'java'
     id 'java-library'
     id 'maven-publish'
+    id "me.modmuss50.mod-publish-plugin" version "1.1.0"
     id 'net.neoforged.moddev' version '2.0.80'
     id 'idea'
 }
@@ -186,5 +187,30 @@ idea {
     module {
         downloadSources = true
         downloadJavadoc = true
+    }
+}
+
+publishMods {
+    file = tasks.named("jar").get().archiveFile
+    changelog = ""
+    displayName.set(base.archivesName)
+    version = mod_version
+    type = STABLE
+    modLoaders.add("neoforge")
+
+    curseforge {
+        projectId = curseforge_project_id
+        projectSlug = "endless-inventory"
+        accessToken = providers.environmentVariable("CURSEFORGE_TOKEN")
+        minecraftVersions.add(minecraft_version)
+        javaVersions.add(JavaVersion.toVersion(java_version))
+        optional("jei")
+        optional("curios-api-continuation")
+    }
+    modrinth {
+        projectId = modrinth_project_id
+        accessToken = providers.environmentVariable("MODRINTH_TOKEN")
+        minecraftVersions.add(minecraft_version)
+        optional("jei")
     }
 }

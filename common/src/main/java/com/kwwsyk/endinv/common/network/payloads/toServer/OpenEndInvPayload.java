@@ -1,7 +1,6 @@
 package com.kwwsyk.endinv.common.network.payloads.toServer;
 
 import com.kwwsyk.endinv.common.AbstractModInitializer;
-import com.kwwsyk.endinv.common.ModInfo;
 import com.kwwsyk.endinv.common.ModRegistries;
 import com.kwwsyk.endinv.common.ServerLevelEndInv;
 import com.kwwsyk.endinv.common.menu.EndlessInventoryMenu;
@@ -9,6 +8,7 @@ import com.kwwsyk.endinv.common.menu.page.pageManager.AttachingMonitor;
 import com.kwwsyk.endinv.common.network.payloads.ModPacketContext;
 import com.kwwsyk.endinv.common.network.payloads.ModPacketPayload;
 import com.kwwsyk.endinv.common.network.payloads.SyncedConfig;
+import com.kwwsyk.endinv.common.options.ServerConfigs;
 import com.mojang.logging.LogUtils;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.RegistryFriendlyByteBuf;
@@ -75,7 +75,7 @@ public record OpenEndInvPayload(boolean openNew, int rows, int columns) implemen
             ServerLevelEndInv.getEndInvForPlayer(player).ifPresent(endInv->{
                 AttachingMonitor manager = new AttachingMonitor(player.containerMenu, endInv ,player);
                 ServerLevelEndInv.PAGE_META_DATA_MANAGER.put(player,manager);
-                manager.sendEndInvData();
+                //manager.sendEndInvData(); Deprecated: let page request data
             });
 
         }
@@ -87,8 +87,8 @@ public record OpenEndInvPayload(boolean openNew, int rows, int columns) implemen
     private boolean checkAttachingStatus(ServerPlayer player){
         SyncedConfig syncedConfig = ModRegistries.NbtAttachments.getSyncedConfig().getWith(player);
         boolean nbtAttaching = syncedConfig.attaching();//presents player's client attaching config
-        //boolean configAttaching = ModInfo.getServerConfig().enableAttaching().get();
-        boolean menuAttachable = ModInfo.getServerConfig().specifiedMenuAttachability().get().attachable(player);
+        //boolean configAttaching = ServerConfigs.DEFAULT_ATTACH.get();
+        boolean menuAttachable = ServerConfigs.SPECIFIED_ATTACHABILITY.get().attachable(player);
 
         if(!nbtAttaching){
             LOGGER.warn("Player with attaching=false nbt sent openAttaching payload.");

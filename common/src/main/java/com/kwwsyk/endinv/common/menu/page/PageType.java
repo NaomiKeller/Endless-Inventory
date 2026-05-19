@@ -1,10 +1,12 @@
 package com.kwwsyk.endinv.common.menu.page;
 
+import com.kwwsyk.endinv.common.client.gui.ScreenFramework;
 import com.kwwsyk.endinv.common.client.gui.page.*;
-import com.kwwsyk.endinv.common.client.gui.page.manager.PageManager;
+import com.kwwsyk.endinv.common.util.ItemKey;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.*;
 
 import javax.annotation.Nullable;
@@ -15,17 +17,26 @@ import java.util.function.Predicate;
 
 import static net.minecraft.tags.ItemTags.*;
 
-@SuppressWarnings("removal")
 public class PageType {
 
     public static final String DEFAULT_KEY = "all_items";
 
-    private static final List<Predicate<ItemStack>> equipmentSubclassifications = List.of(
-            is-> is.getItem() instanceof ArmorItem armor && armor.getType()==ArmorItem.Type.HELMET,
-            is-> is.getItem() instanceof ArmorItem armor && armor.getType()==ArmorItem.Type.CHESTPLATE,
-            is-> is.getItem() instanceof ArmorItem armor && armor.getType()==ArmorItem.Type.LEGGINGS,
-            is-> is.getItem() instanceof ArmorItem armor && armor.getType()==ArmorItem.Type.BOOTS
+    private static final List<Predicate<ItemKey>> equipmentSubclassifications = List.of(
+            ofEquipmentSlotType(EquipmentSlot.HEAD),
+            ofEquipmentSlotType(EquipmentSlot.CHEST),
+            ofEquipmentSlotType(EquipmentSlot.LEGS),
+            ofEquipmentSlotType(EquipmentSlot.FEET),
+            ofEquipmentSlotType(EquipmentSlot.MAINHAND),
+            ofEquipmentSlotType(EquipmentSlot.OFFHAND)
     );
+
+    private static Predicate<ItemKey> ofEquipmentSlotType(EquipmentSlot slot){
+        return it-> {
+            EquipmentSlot slot1 = it.item() instanceof ArmorItem armorItem ?
+                    armorItem.getEquipmentSlot() : null;
+            return slot1!=null && slot1 == slot;
+        };
+    }
 
     public static final List<TagKey<Item>> WEAPON_TAGS = new ArrayList<>();
     public static final List<TagKey<Item>> TOOL_TAGS = new ArrayList<>();
@@ -40,7 +51,15 @@ public class PageType {
             "equipments",PageType::isDefenceEquipment,ResourceLocation.withDefaultNamespace("iron_chestplate")
     );
     public static final PageType CONSUMABLE = createClassifiedPage("consumable",PageType::isFoodOrPotion,"bread");
-    public static final PageType ENCHANTED_BOOKS = createItemEntry("enchanted_books",stack->stack.getItem() instanceof EnchantedBookItem,"enchanted_book");
+    //updatable entry: Let items who have::: .components().has(DataComponents.STORED_ENCHANTMENTS
+    public static final PageType ENCHANTED_BOOKS = new PageType(
+            (t, f) -> new ItemEntryDisplay(
+                    t, f, ItemEntryDisplay.DescriptionProvider::fromEnch
+            ),
+            "enchanted_books",
+            stack -> stack.getItem() == Items.ENCHANTED_BOOK,
+            ResourceLocation.withDefaultNamespace("enchanted_book")
+    );
     public static final PageType BOOKMARK = new PageType(StarredItemPage::new,"bookmark",null,ResourceLocation.withDefaultNamespace("book"));
 
     private final PageConstructor constructor;
@@ -53,15 +72,14 @@ public class PageType {
     public interface PageConstructor {
         /**
          * DisplayPage's constructor or it's variation.
-         * Called by {@link com.kwwsyk.endinv.common.client.gui.ScreenFramework}'s constructor
+         * Called by {@link ScreenFramework}'s constructor
          *
          * @since 1.1.0
          *
          * @param pageType registered page type
          * @param manager since 1.1.0, it's always ScreenFramework/
-         * @return
          */
-        DisplayPage create(PageType pageType, PageManager manager);
+        DisplayPage create(PageType pageType, ScreenFramework manager);
     }
 
     public PageType(PageConstructor constructor, String registerName){
@@ -87,18 +105,11 @@ public class PageType {
         return new PageType(ItemDisplay::new,registerName,itemClassify,ResourceLocation.withDefaultNamespace(icon));
     }
 
-    public static PageType createItemEntry(String registerName, Predicate<ItemStack> itemClassify, String icon){
-        return new PageType(ItemEntryDisplay::new,registerName,itemClassify, ResourceLocation.withDefaultNamespace(icon));
-    }
-
     /**
      * Build new DisplayPage.<p>
      * Called by ScreenFramework's constructor on client.
-     *
-     * @param meta
-     * @return
      */
-    public DisplayPage buildPage(PageManager meta){
+    public DisplayPage buildPage(ScreenFramework meta){
         var page =  constructor.create(this, meta);
         if(icon!=null) page.icon = icon;
         return page;

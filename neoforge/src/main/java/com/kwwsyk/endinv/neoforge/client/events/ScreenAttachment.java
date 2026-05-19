@@ -1,11 +1,11 @@
 package com.kwwsyk.endinv.neoforge.client.events;
 
 import com.kwwsyk.endinv.common.ModInfo;
-import com.kwwsyk.endinv.common.client.ClientModInfo;
 import com.kwwsyk.endinv.common.client.gui.AttachingScreen;
 import com.kwwsyk.endinv.common.client.gui.EndlessInventoryScreen;
 import com.kwwsyk.endinv.common.client.gui.IScreenEvent;
 import com.kwwsyk.endinv.common.client.option.CachedConfig;
+import com.kwwsyk.endinv.common.client.option.ClientConfigs;
 import com.kwwsyk.endinv.common.client.option.MenuAttachabilityCache;
 import com.kwwsyk.endinv.common.network.payloads.toServer.OpenEndInvPayload;
 import net.minecraft.client.gui.GuiGraphics;
@@ -28,7 +28,7 @@ public class ScreenAttachment {
         if(event.getScreen() instanceof AbstractContainerScreen<?> screen){
             Player player = screen.getMinecraft().player;
             if(player==null) return null;
-            if(!ClientModInfo.getClientConfig().attaching().get()) {
+            if(!ClientConfigs.DO_ATTACH.get()) {
                 ATTACHMENT_MANAGER = null;
                 return null;
             }
@@ -62,7 +62,7 @@ public class ScreenAttachment {
             Player player = screen.getMinecraft().player;
             if(player==null) return;
 
-            if(!ClientModInfo.getClientConfig().attaching().get()) return;
+            if(!ClientConfigs.DO_ATTACH.get()) return;
             if(!MenuAttachabilityCache.isAttachable(screen)) return;
 
             CachedConfig.readAndSyncClientConfigToServer(false);

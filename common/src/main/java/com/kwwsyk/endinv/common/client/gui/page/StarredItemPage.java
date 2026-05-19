@@ -1,28 +1,30 @@
 package com.kwwsyk.endinv.common.client.gui.page;
 
-import com.kwwsyk.endinv.common.client.gui.page.manager.PageManager;
+import com.kwwsyk.endinv.common.client.CachedSrcInv;
+import com.kwwsyk.endinv.common.client.gui.ScreenFramework;
 import com.kwwsyk.endinv.common.menu.page.PageType;
 import com.kwwsyk.endinv.common.network.payloads.toServer.StarItemPayload;
 import com.kwwsyk.endinv.common.util.ItemKey;
 import com.kwwsyk.endinv.common.util.ItemStackLike;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.core.NonNullList;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
 import static com.kwwsyk.endinv.common.ModInfo.getPacketDistributor;
 
-public class StarredItemPage extends ItemPage{
+public class StarredItemPage extends ItemDisplay{
 
     public ResourceLocation icon = ResourceLocation.fromNamespaceAndPath("minecraft", "book");
     private int[] countArray;
 
-    public StarredItemPage(PageType type, PageManager metaDataManager) {
-        super(type, metaDataManager);
+    public StarredItemPage(PageType type, ScreenFramework screenFramework) {
+        super(type, screenFramework);
+    }
+
+    @Override
+    protected List<ItemKey> getViewForPage() {
+        return CachedSrcInv.INSTANCE.affinities.starredItems;
     }
 
     public void starItem(ItemStack stack, boolean isAdding){
@@ -32,53 +34,20 @@ public class StarredItemPage extends ItemPage{
     }
 
     @Override
-    public ResourceLocation getIcon(){
-        return icon;
-    }
-
-    @Override
-    public void initializeContents(int startIndex, int length){
+    protected void setVisibleRange(int startIndex, int length){
         this.startIndex = startIndex;
-        this.length = Math.min(length, meta.rows()* meta.columns());
-        this.items = NonNullList.withSize(length, ItemPointer.EMPTY);
+        this.length = Math.min(length, framework.rows()* framework.columns());
         this.countArray = new int[length];
         this.refreshItems();
     }
 
-    /**
-     * The <em>refresh</em> method of ItemPage, this method shall keep the startIndex and length and fill {@link #items}
-     * with such and srcInv.
-     */
     @Override
     public void refreshItems() {
         requestRemoteContents();
     }
 
-    public void initializeContents(@NotNull List<ItemPointer> stacks){
-        if(holdOn){
-            inQueueStacks = stacks;
-            return;
-        }
-        for(int i=0; i<items.size(); ++i){
-            if(i<stacks.size() && stacks.get(i)!=null){
-                items.set(i,stacks.get(i));
-                countArray[i]=stacks.get(i).get().getCount();
-            }else {
-                items.set(i,ItemPointer.EMPTY);
-            }
-        }
-    }
-
-    public void initializeAsMap(@NotNull List<ItemStackLike> stacks){
-        for(int i=0; i<items.size(); ++i){
-            ItemStackLike itemStackLike = stacks.get(i);
-            if(itemStackLike != null){
-                items.set(i,new ItemPointer(new ItemKey(itemStackLike.item(), itemStackLike.components())));
-                countArray[i]= itemStackLike.count();
-            }else {
-                items.set(i,ItemPointer.EMPTY);
-            }
-        }
+    public void initializeAsMap(List<ItemStackLike> stacks){
+        this.viewContainer = buildView(stacks.stream().map(ItemStackLike::toKey).toList());
     }
 
     public void requestRemoteContents(){
@@ -86,50 +55,7 @@ public class StarredItemPage extends ItemPage{
     }
 
     @Override
-    public boolean hasSearchbox() {
-        return true;
-    }
-
-    @Override
-    public boolean hasSortTypeSwitchBar() {
-        return false;
-    }
-
-    @Override
-    public void renderPage(GuiGraphics guiGraphics){
-        guiGraphics.pose().pushPose();
-        guiGraphics.pose().translate(0.0F, 0.0F, 100.0F);
-        int rowIndex = 0;
-        int columnIndex = 0;
-        for(int i=0; i<length; ++i){
-            ItemStack stack = items.get(i).get();
-            int count = countArray[i];
-            guiGraphics.renderItem(stack,leftPos+columnIndex*18,topPos+rowIndex*18+1,columnIndex+rowIndex*180);
-            if(!isHiddenBySortBox(rowIndex,columnIndex))
-                guiGraphics.renderItemDecorations(Minecraft.getInstance().font, stack,leftPos+columnIndex*18,topPos+rowIndex*18+1, getDisplayAmount(stack.copyWithCount(count)));
-            columnIndex++;
-            if(columnIndex>= meta.columns()){
-                columnIndex=0;
-                rowIndex++;
-            }
-        }
-        guiGraphics.pose().popPose();
-    }
-
-    @Override
     public void handleStarItem(double XOffset, double YOffset) {
-        int slot = getSlotByMouseOffset(XOffset,YOffset);
-        if(slot>=0&&slot<items.size()) {
-            ItemStack clicked = items.get(slot).get();
-            starItem(clicked,false);
-        }
-    }
-
-    public void release(){
-        if(holdOn){
-            holdOn = false;
-            if(inQueueStacks==null) return;
-            initializeContents(inQueueStacks);
-        }
+        starItem(getItemByMouseOffset(XOffset, YOffset), false);
     }
 }

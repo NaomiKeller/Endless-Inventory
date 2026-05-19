@@ -1,9 +1,8 @@
 package com.kwwsyk.endinv.common.client.gui.bg;
 
-import com.kwwsyk.endinv.common.AbstractModInitializer;
 import com.kwwsyk.endinv.common.ModInfo;
-import com.kwwsyk.endinv.common.client.ClientModInfo;
 import com.kwwsyk.endinv.common.client.gui.ScreenFramework;
+import com.kwwsyk.endinv.common.client.option.ClientConfigs;
 import com.kwwsyk.endinv.common.client.option.TextureMode;
 import com.kwwsyk.endinv.common.menu.EndlessInventoryMenu;
 import net.minecraft.client.gui.GuiGraphics;
@@ -16,41 +15,12 @@ public abstract class FromResource extends SFBgRendererImpl {
 
 
     public static final ResourceLocation CONTAINER_TEXTURE_RESOURCE = ResourceLocation.withDefaultNamespace("textures/gui/container/generic_54.png");
-    public static final ResourceLocation TABS_RESOURCE = ResourceLocation.withDefaultNamespace("textures/gui/advancements/tabs.png");
-    private static final ResourceLocation TAB_LEFT_MIDDLE_SPRITE = ResourceLocation.withDefaultNamespace("advancements/tab_left_middle");
-    private static final ResourceLocation TAB_LEFT_TOP_SELECTED = ResourceLocation.withDefaultNamespace("advancements/tab_left_top_selected");
-    private static final ResourceLocation TAB_LEFT_MIDDLE_SELECTED = ResourceLocation.withDefaultNamespace("advancements/tab_left_middle_selected");
-    private static final ResourceLocation TAB_LEFT_BOTTOM_SELECTED = ResourceLocation.withDefaultNamespace("advancements/tab_left_bottom_selected");
-
     public static final ResourceLocation DEDICATED_CONTAINER_TEXTURE = ResourceLocation.fromNamespaceAndPath(ModInfo.MOD_ID, "textures/gui/item_grid.png");
     public static final ResourceLocation DEDICATED_TABS = ResourceLocation.fromNamespaceAndPath(ModInfo.MOD_ID, "textures/gui/tabs.png");
-    private static final ResourceLocation TAB_UNSELECTED = AbstractModInitializer.withModLocation("textures/gui/tab_left_middle");
-    private static final ResourceLocation TAB_TOP = ResourceLocation.withDefaultNamespace("textures/gui/tab_left_top_selected");
-    private static final ResourceLocation TAB_MIDDLE = ResourceLocation.withDefaultNamespace("textures/gui/tab_left_middle_selected");
-    private static final ResourceLocation TAB_BOTTOM = ResourceLocation.withDefaultNamespace("textures/gui/tab_left_bottom_selected");
     public static final ResourceLocation ITEM_ENTRY_DISPLAY_RESOURCE = ResourceLocation.fromNamespaceAndPath(ModInfo.MOD_ID, "textures/gui/item_entry.png");
 
     private static ResourceLocation getContainerTexture(){
-        return ClientModInfo.getClientConfig().textureMode().get() == TextureMode.DEDICATED_LOCATION ? DEDICATED_CONTAINER_TEXTURE : CONTAINER_TEXTURE_RESOURCE;
-    }
-
-    private static ResourceLocation getTabsTexture(TabType type){
-        return ClientModInfo.getClientConfig().textureMode().get() == TextureMode.DEDICATED_LOCATION ? type.dedicatedLocation : type.vanillaTexture;
-    }
-
-    public enum TabType{
-        UNSELECTED(TAB_LEFT_MIDDLE_SPRITE, TAB_UNSELECTED),
-        TOP(TAB_LEFT_TOP_SELECTED, TAB_TOP),
-        MIDDLE(TAB_LEFT_MIDDLE_SELECTED, TAB_MIDDLE),
-        BOTTOM(TAB_LEFT_BOTTOM_SELECTED, TAB_BOTTOM);
-
-        final ResourceLocation vanillaTexture;
-        final ResourceLocation dedicatedLocation;
-
-        TabType(ResourceLocation vanillaTexture, ResourceLocation dedicatedLocation){
-            this.vanillaTexture = vanillaTexture;
-            this.dedicatedLocation = dedicatedLocation;
-        }
+        return ClientConfigs.ATTACHED_MENU_CONFIG.TextureMode.get() == TextureMode.DEDICATED_LOCATION ? DEDICATED_CONTAINER_TEXTURE : CONTAINER_TEXTURE_RESOURCE;
     }
 
     public FromResource(ScreenFramework frameWork){
@@ -59,9 +29,8 @@ public abstract class FromResource extends SFBgRendererImpl {
 
     public static class MenuMode extends FromResource{
 
-        public MenuMode(ScreenFramework frameWork, ScreenRectangleWidgetParam pageSwitchTabParam) {
+        public MenuMode(ScreenFramework frameWork) {
             super(frameWork);
-            this.pageSwitchTabParam = pageSwitchTabParam;
         }
 
         @Override
@@ -82,9 +51,8 @@ public abstract class FromResource extends SFBgRendererImpl {
 
     public static class LeftLayout extends FromResource{
 
-        public LeftLayout(ScreenFramework frameWork, ScreenRectangleWidgetParam pageSwitchTabParam){
+        public LeftLayout(ScreenFramework frameWork){
             super(frameWork);
-            this.pageSwitchTabParam = pageSwitchTabParam;
         }
     }
 
@@ -94,8 +62,10 @@ public abstract class FromResource extends SFBgRendererImpl {
 
         @Override
         public void renderBg(@NotNull GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {
-            int startX = pageLeft;
-            int startY = pageTop;
+            int startX = frameWork.getPageX();
+            int startY = frameWork.getPageY();
+            int columns = frameWork.columns();
+            int rows = frameWork.rows();
 
             if(columns!=9){
                 renderSpecialBg(guiGraphics,partialTick,mouseX,mouseY,startX,startY);
@@ -192,23 +162,5 @@ public abstract class FromResource extends SFBgRendererImpl {
 
     @Override
     public void renderBg(@NotNull GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {
-        int pageX = pageSwitchTabParam.XPos();
-        int pageY = pageSwitchTabParam.YPos();
-        int selectedPageIndex = frameWork.getDisplayingPageIndex();
-        for (int i = frameWork.firstPageIndex; i < frameWork.firstPageIndex + frameWork.pageBarCount; ++i) {
-            if (i == selectedPageIndex) {
-                if (i == 0) {
-                    guiGraphics.blitSprite(getTabsTexture(TabType.TOP),pageX,pageY,32,28);
-                } else if (i == frameWork.firstPageIndex + frameWork.pageBarCount-1) {
-                    guiGraphics.blitSprite(getTabsTexture(TabType.BOTTOM),pageX,pageY,32,28);
-                } else
-                    guiGraphics.blitSprite(getTabsTexture(TabType.MIDDLE),pageX,pageY,32,28);
-            } else {
-                guiGraphics.blitSprite(getTabsTexture(TabType.UNSELECTED),pageX+4,pageY,32,28);
-            }
-            pageY+=28;
-        }
-
-        renderPageBarContent(guiGraphics, partialTick, mouseX, mouseY);
     }
 }

@@ -1,6 +1,6 @@
 package com.kwwsyk.endinv.common.commands;
 
-import com.kwwsyk.endinv.common.ModInfo;
+import com.kwwsyk.endinv.common.options.ServerConfigs;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.BoolArgumentType;
 import net.minecraft.commands.CommandSourceStack;
@@ -36,7 +36,7 @@ public class ConfigCommand {
 
     private static int cmdSetAutoPick(CommandSourceStack source,boolean enable){
         try {
-            ModInfo.getServerConfig().enableAutoPick().set(enable);
+            ServerConfigs.ENABLE_AUTOPICK.set(enable);
             source.sendSuccess(()-> Component.literal(enable ? "Enabled":"Disabled"+ " autoPick utility"), true);
             return 1;
         } catch (Exception e) {

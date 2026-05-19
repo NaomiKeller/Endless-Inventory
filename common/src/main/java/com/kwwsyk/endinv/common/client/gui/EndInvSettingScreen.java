@@ -1,6 +1,7 @@
 package com.kwwsyk.endinv.common.client.gui;
 
-import com.kwwsyk.endinv.common.options.IConfigValue;
+import com.kwwsyk.endinv.common.client.option.ClientConfigs;
+import com.kwwsyk.endinv.common.options.config.IConfigValue;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.Util;
 import net.minecraft.client.gui.Font;
@@ -23,10 +24,13 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import static com.kwwsyk.endinv.common.client.CachedSrcInv.INSTANCE;
-import static com.kwwsyk.endinv.common.client.ClientModInfo.getClientConfig;
-public class EndInvSettingScreen extends Screen {
 
-    //private static final ResourceLocation BLANK_LOCATION = new ResourceLocation("minecraft","textures/gui/demo_background.png");
+/** A simple configuration screen for EndInv.
+ *
+ */
+public abstract class EndInvSettingScreen extends Screen {
+
+    //private static final Identifier BLANK_LOCATION = new Identifier("minecraft","textures/gui/demo_background.png");
     private static final int CONFIG_ENTRY_Y_OFFSET = 17;
     private static final int CONFIG_ENTRY_X_OFFSET = 10;
     private static final int ENTRY_HEIGHT = 20,MAX_ENTRY_COUNT = 7;
@@ -41,6 +45,7 @@ public class EndInvSettingScreen extends Screen {
     private int pageIndex = 0;
     private int entryOffset = 0;
     private double scrollOffset = 0;
+    private final java.util.List<AbstractWidget> entryWidgets = new java.util.ArrayList<>();
 
     public final List<EntryBuilder> entries = new ArrayList<>();
     public final EntryBuilder[] renderingEntries = new EntryBuilder[7];
@@ -50,6 +55,37 @@ public class EndInvSettingScreen extends Screen {
     public EndInvSettingScreen(Screen lastScreen) {
         super(Component.translatable("title.endinv.settings"));
         this.back = lastScreen;
+    }
+
+    public static class Attachment extends EndInvSettingScreen{
+
+        public Attachment(Screen lastScreen) {
+            super(lastScreen);
+        }
+
+        protected void addConfigEntries(){
+            addConfigEntry("endinv.setting.rows", ClientConfigs.ATTACHED_MENU_CONFIG.PageBasicLayout.Rows);
+            // add auto rows toggle before auto columns
+            addConfigEntry(Component.translatable("endinv.setting.auto_rows"), ClientConfigs.ATTACHED_MENU_CONFIG.PageBasicLayout.autoRows);
+            addConfigEntry("endinv.setting.columns", ClientConfigs.ATTACHED_MENU_CONFIG.PageBasicLayout.Columns);
+            addConfigEntry("endinv.setting.auto_suit", ClientConfigs.ATTACHED_MENU_CONFIG.PageBasicLayout.autoColumns);
+            addConfigEntry("endinv.setting.attaching", ClientConfigs.DO_ATTACH);
+            addConfigEntry("endinv.setting.texture", ClientConfigs.ATTACHED_MENU_CONFIG.TextureMode);
+            addConfigEntry("endinv.setting.max_page_bar", ClientConfigs.ATTACHED_MENU_CONFIG.PageSwitchBar.MaxBars);
+            addConfigEntry(Component.literal("Screen debug"), ClientConfigs.SCREEN_DEBUG);
+        }
+    }
+
+    public static class Menu extends EndInvSettingScreen{
+        public Menu(Screen lastScreen) {
+            super(lastScreen);
+        }
+
+        protected void addConfigEntries(){
+            addConfigEntry("endinv.setting.rows", ClientConfigs.EIM_CONFIG.Rows);
+            addConfigEntry("endinv.setting.max_page_bar", ClientConfigs.EIM_CONFIG.PageSwitchBar.MaxBars);
+            addConfigEntry(Component.literal("Screen debug"), ClientConfigs.SCREEN_DEBUG);
+        }
     }
 
     @Override
@@ -75,24 +111,35 @@ public class EndInvSettingScreen extends Screen {
             addInfoEntry(Component.translatable("endinv.info.owner_uuid"),INSTANCE::getOwnerUUID);
             addInfoEntry(Component.translatable("endinv.info.white_list_size"),()->"Size :"+INSTANCE.white_list.size());
         } else {
-            addConfigEntry("endinv.setting.rows", getClientConfig().rows());
-            addConfigEntry("endinv.setting.columns", getClientConfig().columns());
-            addConfigEntry("endinv.setting.auto_suit", getClientConfig().autoSuitColumn());
-            addConfigEntry("endinv.setting.attaching", getClientConfig().attaching());
-            addConfigEntry("endinv.setting.texture", getClientConfig().textureMode());
-            addConfigEntry("endinv.setting.max_page_bar", getClientConfig().maxPageBarCount());
-            addConfigEntry(Component.literal("Screen debug"), getClientConfig().screenDebugging());
+            addConfigEntries();
         }
+        // reset scroll when switching pages
+        this.entryOffset = 0;
+        this.scrollOffset = 0;
         scrollTo();
     }
 
+    protected abstract void addConfigEntries();
+
     private void scrollTo(){
-        for(int i = 0; i<Math.min(MAX_ENTRY_COUNT,entries.size()); ++i){
-            assert entryOffset<entries.size()-i;
-            renderingEntries[i] = entries.get(i + entryOffset);
+        // Remove previously created entry widgets to avoid duplication and stale positions
+        if(!entryWidgets.isEmpty()){
+            for (AbstractWidget w : entryWidgets) {
+                this.removeWidget(w);
+            }
+            entryWidgets.clear();
         }
-        for (var entry : renderingEntries){
+        int visible = Math.min(MAX_ENTRY_COUNT, entries.size());
+        int maxStart = Math.max(0, entries.size() - visible);
+        entryOffset = Mth.clamp(entryOffset, 0, maxStart);
+        for(int i = 0; i<MAX_ENTRY_COUNT; ++i){
+            int idx = i + entryOffset;
+            renderingEntries[i] = (idx >= 0 && idx < entries.size()) ? entries.get(idx) : null;
+        }
+        for (int i = 0; i < MAX_ENTRY_COUNT; i++){
+            var entry = renderingEntries[i];
             if(entry==null) continue;
+            entry.placeAtSlot(i);
             entry.build();
             entry.syncConfig();
         }
@@ -103,15 +150,15 @@ public class EndInvSettingScreen extends Screen {
         switchPage();
     }
 
-    private <T> void addConfigEntry(String key, IConfigValue<T> configValue){
+    protected  <T> void addConfigEntry(String key, IConfigValue<T> configValue){
         addConfigEntry(Component.translatable(key),configValue);
     }
 
-    private <T> void addConfigEntry(Component tip, IConfigValue<T> configValue){
+    protected  <T> void addConfigEntry(Component tip, IConfigValue<T> configValue){
         entries.add(new ConfigEntry<>(entries.size(),tip,configValue.get(),configValue));
     }
 
-    private void addInfoEntry(Component tip, Supplier<Object> info){
+    protected void addInfoEntry(Component tip, Supplier<Object> info){
         entries.add(new InfoEntry(entries.size(),tip,info));
     }
 
@@ -152,7 +199,6 @@ public class EndInvSettingScreen extends Screen {
     public void onClose() {
         assert this.minecraft != null;
         this.minecraft.setScreen(this.back);
-        getClientConfig().save();
     }
 
     @Override
@@ -262,6 +308,9 @@ public class EndInvSettingScreen extends Screen {
         default Optional<EditBox> getEditBox(){
             return Optional.empty();
         }
+
+        // Position the entry’s widget(s) at the visible slot index [0..MAX_ENTRY_COUNT)
+        default void placeAtSlot(int slot){ }
     }
 
     public class InfoEntry implements EntryBuilder{
@@ -298,6 +347,12 @@ public class EndInvSettingScreen extends Screen {
         @Override
         public void applyChanges() {
         }
+
+        @Override
+        public void placeAtSlot(int slot) {
+            widgetMidX = leftPos+WIDGET_X_OFFSET+WIDGET_X_SIZE/2 - 40;
+            widgetY = topPos+CONFIG_ENTRY_Y_OFFSET+slot*ENTRY_HEIGHT+1;
+        }
     }
 
     public abstract class AttributeEntry<T> implements EntryBuilder{
@@ -323,6 +378,7 @@ public class EndInvSettingScreen extends Screen {
             EditBox editBox = new EditBox(EndInvSettingScreen.this.font,widgetX,widgetY,WIDGET_X_SIZE,WIDGET_Y_SIZE,Component.empty());
             EndInvSettingScreen.this.addRenderableWidget(editBox);
             this.editBox = editBox;
+            entryWidgets.add(editBox);
         }
 
         @Override
@@ -349,6 +405,16 @@ public class EndInvSettingScreen extends Screen {
 
         public Optional<EditBox> getEditBox(){
             return Optional.of(editBox);
+        }
+
+        @Override
+        public void placeAtSlot(int slot) {
+            this.widgetX = leftPos+WIDGET_X_OFFSET;
+            this.widgetY = topPos+CONFIG_ENTRY_Y_OFFSET+slot*ENTRY_HEIGHT+1;
+            if(this.editBox!=null){
+                this.editBox.setX(widgetX);
+                this.editBox.setY(widgetY);
+            }
         }
     }
 
@@ -420,36 +486,40 @@ public class EndInvSettingScreen extends Screen {
 
         @SuppressWarnings("unchecked")
         public void build() {
-            if (initialValue instanceof Boolean) {
-                IConfigValue<Boolean> booleanValue = (IConfigValue<Boolean>) configValue;
-                var button = CycleButton.onOffBuilder((Boolean) initialValue)
-                        .displayOnlyValue()
-                        .create(widgetX, widgetY, WIDGET_X_SIZE, WIDGET_Y_SIZE, Component.empty(),
-                                (btn, value) -> booleanValue.set(value));
-                this.configWidget = button;
-                EndInvSettingScreen.this.addRenderableWidget(button);
+            switch (initialValue) {
+                case Boolean b -> {
+                    IConfigValue<Boolean> booleanValue = (IConfigValue<Boolean>) configValue;
+                    var button = CycleButton.onOffBuilder(b)
+                            .displayOnlyValue()
+                            .create(widgetX, widgetY, WIDGET_X_SIZE, WIDGET_Y_SIZE, Component.empty(),
+                                    (btn, value) -> booleanValue.set(value));
+                    this.configWidget = button;
+                    EndInvSettingScreen.this.addRenderableWidget(button);
 
-            } else if (initialValue instanceof Enum<?>) {
-                IConfigValue<Enum<?>> enumValue = (IConfigValue<Enum<?>>) configValue;
-                var button = new CycleButton.Builder<Enum<?>>(
-                        e -> Component.translatable("endinv.setting.entry." + e.name()))
-                        .withValues((Enum<?>[]) initialValue.getClass().getEnumConstants())
-                        .withInitialValue((Enum<?>) initialValue)
-                        .displayOnlyValue()
-                        .create(widgetX, widgetY, WIDGET_X_SIZE, WIDGET_Y_SIZE, Component.empty(),
-                                (btn, value) -> enumValue.set(value));
-                this.configWidget = button;
-                EndInvSettingScreen.this.addRenderableWidget(button);
+                }
+                case Enum<?> anEnum -> {
+                    IConfigValue<Enum<?>> enumValue = (IConfigValue<Enum<?>>) configValue;
+                    var button = new CycleButton.Builder<Enum<?>>(
+                            e -> Component.translatable("endinv.setting.entry." + e.name()))
+                            .withValues((Enum<?>[]) initialValue.getClass().getEnumConstants())
+                            .withInitialValue(anEnum)
+                            .displayOnlyValue()
+                            .create(widgetX, widgetY, WIDGET_X_SIZE, WIDGET_Y_SIZE, Component.empty(),
+                                    (btn, value) -> enumValue.set(value));
+                    this.configWidget = button;
+                    EndInvSettingScreen.this.addRenderableWidget(button);
 
-            } else if (initialValue instanceof Integer) {
-                EditBox editBox = new EditBox(EndInvSettingScreen.this.font, widgetX, widgetY, WIDGET_X_SIZE, WIDGET_Y_SIZE, tip);
-                this.configWidget = editBox;
-                EndInvSettingScreen.this.addRenderableWidget(editBox);
-
-            } else {
-                EndInvSettingScreen self = EndInvSettingScreen.this;
-                self.addRenderableOnly((guiGraphics, i, i1, v) ->
-                        guiGraphics.drawString(self.font, "Error", widgetX, widgetY, 0xFFFF3737));
+                }
+                case Integer integer -> {
+                    EditBox editBox = new EditBox(EndInvSettingScreen.this.font, widgetX, widgetY, WIDGET_X_SIZE, WIDGET_Y_SIZE, tip);
+                    this.configWidget = editBox;
+                    EndInvSettingScreen.this.addRenderableWidget(editBox);
+                }
+                case null, default -> {
+                    EndInvSettingScreen self = EndInvSettingScreen.this;
+                    self.addRenderableOnly((guiGraphics, i, i1, v) ->
+                            guiGraphics.drawString(self.font, "Error", widgetX, widgetY, 0xFFFF3737));
+                }
             }
         }
 

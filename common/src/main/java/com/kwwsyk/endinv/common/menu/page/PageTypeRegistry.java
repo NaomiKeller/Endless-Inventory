@@ -1,6 +1,6 @@
 package com.kwwsyk.endinv.common.menu.page;
 
-import com.kwwsyk.endinv.common.client.ClientModInfo;
+import com.kwwsyk.endinv.common.client.option.ClientConfigs;
 import it.unimi.dsi.fastutil.Pair;
 import it.unimi.dsi.fastutil.objects.ObjectIntImmutablePair;
 
@@ -15,8 +15,6 @@ public class PageTypeRegistry {
     private static final LinkedHashMap<String, PageType> PAGE_TYPES = new LinkedHashMap<>();
     private static final List<String> INDEX_LIST = new ArrayList<>();
     private static final List<Integer> ORDER = new ArrayList<>();
-
-    private static List<PageType> cache = null;
 
     static {
         register(ALL_ITEMS,0);
@@ -35,7 +33,6 @@ public class PageTypeRegistry {
         PAGE_TYPES.put(id, type);
         INDEX_LIST.add(id);
         ORDER.add(getLastPageOrder() + ORDER_INTERVAL);
-        cache = null;//inlined
     }
 
     public static void register(PageType type, int order) {
@@ -44,16 +41,13 @@ public class PageTypeRegistry {
         PAGE_TYPES.put(id, type);
         INDEX_LIST.add(id);
         ORDER.add(order);
-        cache = null;//inlined
     }
 
     public static List<PageType> getDisplayPages(){
-        return cache!=null? cache :
-                (cache = getSortedList().stream()
-                        .filter(str-> !ClientModInfo.getClientConfig().hidingPageIds().contains(str))
-                        .map(PAGE_TYPES::get)
-                        .toList()
-                );
+        if(ClientConfigs.ATTACHED_MENU_CONFIG == null || !ClientConfigs.ATTACHED_MENU_CONFIG.DontDisplayPages.isInitialized()) {
+            return getSortedList().stream().map(PAGE_TYPES::get).toList();
+        }
+        return displayingPages(ClientConfigs.ATTACHED_MENU_CONFIG.DontDisplayPages.get());
     }
 
     public static int getLastPageOrder(){
@@ -67,6 +61,14 @@ public class PageTypeRegistry {
         }
         ret.sort(Comparator.comparingInt(Pair::right));
         return ret.stream().map(Pair::left).toList();
+    }
+
+    public static List<PageType> displayingPages(Collection<String> dontDisplayPages){
+        return PAGE_TYPES.values().stream().filter(pt->!dontDisplayPages.contains(pt.registerName)).toList();
+    }
+
+    public static List<String> dontDisplayPages(Collection<PageType> pages){
+        return PAGE_TYPES.keySet().stream().filter(id->!pages.contains(byId(id))).toList();
     }
 
     public static PageType byId(String id) {
@@ -90,7 +92,6 @@ public class PageTypeRegistry {
     }
 
     public static void setChanged(){
-        cache = null;
     }
 
     public static List<String> getIdList(){
