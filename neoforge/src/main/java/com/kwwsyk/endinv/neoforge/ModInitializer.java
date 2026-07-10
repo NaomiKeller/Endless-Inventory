@@ -9,6 +9,7 @@ import com.kwwsyk.endinv.common.network.IPacketDistributor;
 import com.kwwsyk.endinv.common.network.payloads.ModPacketPayload;
 import com.kwwsyk.endinv.common.network.payloads.SyncedConfig;
 import com.kwwsyk.endinv.neoforge.client.config.ClientConfig;
+import com.kwwsyk.endinv.neoforge.integrates.curio.CurioPageType;
 import com.kwwsyk.endinv.neoforge.options.ServerConfig;
 import com.kwwsyk.endinv.neoforge.options.StartupConfig;
 import net.minecraft.core.UUIDUtil;
@@ -24,6 +25,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
+import net.neoforged.fml.ModList;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
 import net.neoforged.fml.loading.FMLEnvironment;
@@ -51,16 +53,18 @@ public class ModInitializer extends AbstractModInitializer {
 
     public ModInitializer(IEventBus modEventBus, ModContainer container){
         super.init();
+        container.registerConfig(ModConfig.Type.CLIENT, ClientConfig.CONFIG_SPEC);
+        container.registerConfig(ModConfig.Type.SERVER, ServerConfig.CONFIG_SPEC);
+        container.registerConfig(ModConfig.Type.STARTUP, StartupConfig.CONFIG_SPEC);
 
         MENUS.register(modEventBus);
         ITEMS.register(modEventBus);
         //should be after page reg
         ATTACHMENT_TYPES.register(modEventBus);
 
-
-        container.registerConfig(ModConfig.Type.CLIENT, ClientConfig.CONFIG_SPEC);
-        container.registerConfig(ModConfig.Type.SERVER, ServerConfig.CONFIG_SPEC);
-        container.registerConfig(ModConfig.Type.STARTUP, StartupConfig.CONFIG_SPEC);
+        if(ModList.get().isLoaded("curios")){
+            CurioPageType.register();
+        }
 
         if(FMLEnvironment.dist.isClient()) {
             var client = new ClientModInitializer();

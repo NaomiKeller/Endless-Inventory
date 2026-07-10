@@ -25,6 +25,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.ContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
@@ -39,14 +40,13 @@ import net.minecraft.world.item.ItemStack;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 
 import static com.kwwsyk.endinv.common.client.ClientModInfo.containerScreenHelper;
 import static com.kwwsyk.endinv.common.client.ClientModInfo.inputHandler;
 
-public class ScreenFramework implements PageManager, ContainerEventHandler {
+public class ScreenFramework implements PageManager, ContainerEventHandler, Renderable {
     @Nullable
     private static ScreenFramework INSTANCE;
 
@@ -150,45 +150,30 @@ public class ScreenFramework implements PageManager, ContainerEventHandler {
     }
 
     private void addWidgets() {
-        Button configButton = Button.builder(Component.literal("⚙"),
-                        btn -> {
-                            mc.setScreen(ClientModInfo.createConfigScreen(screen));
-                        })
-                .pos(this.configButtonParam.x(), this.configButtonParam.y())
-                .size(this.configButtonParam.width(), this.configButtonParam.height())
-                .build();
-        this.reverseSortButton = Button.builder(Component.literal("⇅"),
-                        btn -> {
-                            reverseSort = !reverseSort;
-                            if(getDisplayingPage() instanceof ItemPage page){
-                                page.refreshItems();
-                            }
-                        }
-                )
-                .pos(reverseSortButtonParam.x(), reverseSortButtonParam.y())
-                .size(reverseSortButtonParam.height(), reverseSortButtonParam.height())
-                .build();
-        this.searchBox = new EditBox(mc.font,
-                this.searchBoxParam.x(), this.searchBoxParam.y(), this.searchBoxParam.width(), this.searchBoxParam.height(),
-                Component.translatable("itemGroup.search"));
+        Button configButton = this.configButtonParam.buildButton(Component.literal("⚙"),
+                btn -> mc.setScreen(ClientModInfo.createConfigScreen(screen)));
+        this.reverseSortButton = this.reverseSortButtonParam.buildButton(Component.literal("⇅"),
+                btn -> {
+                    reverseSort = !reverseSort;
+                    if(getDisplayingPage() instanceof ItemPage page){
+                        page.refreshItems();
+                    }
+                });
+        this.searchBox = this.searchBoxParam.buildEditBox(mc.font,
+                Component.translatableWithFallback("itemGroup.search", "Search Items"),
+                s -> refreshSearchResults());
         this.sortTypeSwitchBox = new SortTypeSwitchBox(this,  sortBoxParam);
 
         this.searchBox.setValue(searching());
 
         if (pageBarCount < getPages().size()) {
-            Button up = Button.builder(Component.literal("^"), btn -> {
+            Button up = pageBarScrollUpButtonParam.buildButton(Component.literal("^"), btn -> {
                         if (firstPageIndex > 0) firstPageIndex--;
-                    })
-                    .pos(pageBarScrollUpButtonParam.x(), pageBarScrollUpButtonParam.y())
-                    .size(pageBarScrollUpButtonParam.width(), pageBarScrollUpButtonParam.height())
-                    .build();
-            Button down = Button.builder(Component.literal("v"), btn -> {
+                    });
+            Button down = pageBarScrollDownButtonParam.buildButton(Component.literal("v"), btn -> {
                         if (firstPageIndex + pageBarCount < getPages().size())
                             firstPageIndex++;
-                    })
-                    .pos(pageBarScrollDownButtonParam.x(), pageBarScrollDownButtonParam.y())
-                    .size(pageBarScrollDownButtonParam.width(), pageBarScrollDownButtonParam.height())
-                    .build();
+                    });
             widgets.add(up);
             widgets.add(down);
         }
@@ -425,44 +410,24 @@ public class ScreenFramework implements PageManager, ContainerEventHandler {
             }
         }
 
-        boolean flag = false;
         if (isHoveringOnPage) {
-            flag = getDisplayingPage().keyPressed(keyCode, scanCode, modifiers, roughMouseX - getPageX(), roughMouseY - getPageY());
+            getDisplayingPage().keyPressed(keyCode, scanCode, modifiers, roughMouseX - getPageX(), roughMouseY - getPageY());
         }
-        if (flag) {
-            this.ignoreTextInput = true;
-            return true;
-        }
-
-        if (getDisplayingPage().hasSearchbox() && this.searchBox.isFocused()) {
-            String s = this.searchBox.getValue();
-            if (this.searchBox.keyPressed(keyCode, scanCode, modifiers)) {
-                if (!Objects.equals(s, this.searchBox.getValue())) {
-                    this.refreshSearchResults();
-                }
+        for(AbstractWidget widget : widgets) {
+            if(widget.keyPressed(keyCode, scanCode, modifiers)) {
                 return true;
-            } else {
-                return this.searchBox.isFocused() && this.searchBox.isVisible() && keyCode != 256;
             }
         }
         return false;
     }
 
     public boolean charTyped(char codePoint, int modifiers) {
-        if (this.ignoreTextInput || !getDisplayingPage().hasSearchbox()) {
-            return false;
-        } else {
-            String s = this.searchBox.getValue();
-            if (this.searchBox.charTyped(codePoint, modifiers)) {
-                if (!Objects.equals(s, this.searchBox.getValue())) {
-                    this.refreshSearchResults();
-                }
-
+        for (AbstractWidget widget : widgets) {
+            if(widget.charTyped(codePoint, modifiers)) {
                 return true;
-            } else {
-                return false;
             }
         }
+        return false;
     }
 
     @Override

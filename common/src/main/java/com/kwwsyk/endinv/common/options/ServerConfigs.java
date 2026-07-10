@@ -1,5 +1,6 @@
 package com.kwwsyk.endinv.common.options;
 
+import com.kwwsyk.endinv.common.autopick.options.PickupHelperOptions;
 import com.kwwsyk.endinv.common.options.config.ConfigEntryImpl;
 import com.kwwsyk.endinv.common.options.config.IConfigValue;
 
@@ -39,6 +40,8 @@ public final class ServerConfigs {
     public static final ConfigEntryImpl<Boolean> DEFAULT_ATTACH = register(new ConfigEntryImpl.BooleanEntry("DefaultAttach", new String[]{"Whether the endless inventory's display pages view is attached by default"}, true));
     public static final DefaultEndinvBehavior ENDINV_BEHAVIOR = register(DefaultEndinvBehavior.INSTANCE);
     public static final SpecifiedMenuAttachingConfig.Entry SPECIFIED_ATTACHABILITY = register(SpecifiedMenuAttachingConfig.Entry.INSTANCE);
-    public static final ConfigEntryImpl<Boolean> ENABLE_AUTOPICK = register(new ConfigEntryImpl.BooleanEntry("EnableAutoPick", new String[]{"Whether the endless inventory will auto pick up items when they are dropped"}, true));
+    public static final PickupHelperOptions PICKUP_HELPER = register(
+            new PickupHelperOptions()
+    );
     public static final ConfigEntryImpl<Boolean> CONVERT_EMPTY_TAG = register(new ConfigEntryImpl.BooleanEntry("ConvertEmptyTag", new String[]{"Convert itemstack with empty tag {} to null tag."}, true));
 }

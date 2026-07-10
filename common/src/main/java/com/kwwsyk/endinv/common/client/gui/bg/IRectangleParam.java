@@ -1,9 +1,14 @@
 package com.kwwsyk.endinv.common.client.gui.bg;
 
 import com.kwwsyk.endinv.common.options.config.ConfigEntryImpl;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.network.chat.Component;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Consumer;
 
 public interface IRectangleParam {
     int x();
@@ -25,6 +30,18 @@ public interface IRectangleParam {
 
     default IRectangleParam applyOffset(int basicX, int basicY){
         return new ScreenRectangleWidgetParam(x()+basicX,y()+basicY,width(),height());
+    }
+
+    default Button buildButton(Component component, Button.OnPress onPress){
+        return Button.builder(component, onPress)
+                .bounds(x(),y(),width(),height())
+                .build();
+    }
+
+    default EditBox buildEditBox(Font font, Component component, Consumer<String> responder){
+        var editbox = new EditBox(font, x(), y(), width(), height(), component);
+        editbox.setResponder(responder);
+        return editbox;
     }
 
     static ConfigEntryImpl.ListEntry<Integer> createRectangleConfigEntry(String key, String[] comments, IRectangleParam defaultValue){

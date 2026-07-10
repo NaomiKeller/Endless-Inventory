@@ -138,11 +138,6 @@ public class AttachingMonitor implements PageMetaDataManager{
     }
 
     @Override
-    public void switchSortReversed() {
-        this.reverseSort = !this.reverseSort;
-    }
-
-    @Override
     public void setSortReversed(boolean reversed) {
         this.reverseSort = reversed;
     }

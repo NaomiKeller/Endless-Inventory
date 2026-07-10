@@ -606,11 +606,6 @@ public class EndlessInventoryMenu extends AbstractContainerMenu implements PageM
     }
 
     @Override
-    public void switchSortReversed() {
-        reverseSort=!reverseSort;
-    }
-
-    @Override
     public void setSortReversed(boolean reversed) {
         this.reverseSort = reversed;
     }

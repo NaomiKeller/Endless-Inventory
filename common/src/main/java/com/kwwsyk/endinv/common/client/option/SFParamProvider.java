@@ -16,6 +16,10 @@ public interface SFParamProvider {
 
     List<PageType> pages();
     int pageTabCount();
+
+    /*
+    * Absolute coordinates
+     */
     IRectangleParam pageParamAdjusted();
 
     PageSwitchBarConfig.Param pageTabParamAdjusted();

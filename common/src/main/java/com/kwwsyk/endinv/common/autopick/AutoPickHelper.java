@@ -24,7 +24,8 @@ import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.List;
 
-import static com.kwwsyk.endinv.common.options.ServerConfigs.ENABLE_AUTOPICK;
+
+import static com.kwwsyk.endinv.common.options.ServerConfigs.PICKUP_HELPER;
 
 public final class AutoPickHelper {
 
@@ -34,7 +35,7 @@ public final class AutoPickHelper {
      * @return true -> proceed auto pick process
      */
     public static boolean isEnabled(Player player){
-        return isPlayerEnabledAutoPick(player) && ENABLE_AUTOPICK.get();
+        return isPlayerEnabledAutoPick(player) && PICKUP_HELPER.ITEM_DROPS.DIRECTLY_SEND_TO_ENDINV.get();
     }
 
     private static boolean isPlayerEnabledAutoPick(Player player){

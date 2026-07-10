@@ -41,10 +41,6 @@ public interface PageMetaDataManager {
 
     boolean isSortReversed();
 
-    default void switchSortReversed(){
-        setSortReversed(!isSortReversed());
-    }
-
     void setSortReversed(boolean reversed);
 
     String searching();

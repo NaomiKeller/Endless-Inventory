@@ -15,6 +15,7 @@ import net.minecraft.world.item.*;
 import net.minecraft.world.item.enchantment.EnchantedItemInUse;
 import net.minecraft.world.item.enchantment.EnchantmentEffectComponents;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.living.LivingDropsEvent;
@@ -22,7 +23,7 @@ import net.neoforged.neoforge.event.entity.living.LivingExperienceDropEvent;
 import net.neoforged.neoforge.event.entity.player.ItemEntityPickupEvent;
 import net.neoforged.neoforge.event.level.BlockDropsEvent;
 
-import java.util.Optional;
+import java.util.*;
 
 import static com.kwwsyk.endinv.common.ModInfo.getPacketDistributor;
 
@@ -34,96 +35,141 @@ import static com.kwwsyk.endinv.common.ModInfo.getPacketDistributor;
 @EventBusSubscriber(modid = ModInfo.MOD_ID)
 public class LootEvent {
 
-    @SubscribeEvent
-    public static void onLivingDrops(LivingDropsEvent event) {
-        if (!(event.getSource().getEntity() instanceof ServerPlayer player)) return;
-        if(!isPlayerEnabledAutoPick(player)) return;
-        if (ServerConfigs.ENABLE_AUTOPICK.get()) {
-            EndlessInventory endInv = ServerLevelEndInv.getEndInvForPlayer(player).orElse(null);
-            if(endInv==null) return;
-            boolean flag = true;
-            for (ItemEntity drop : event.getDrops()) {
-                ItemStack stack = drop.getItem();
-                ItemStack remain = endInv.addItem(stack);
-                stack.split(remain.getCount());
-                if(!stack.isEmpty()) getPacketDistributor().sendToPlayer(player,new ItemPickedUpPayload(stack));
-                if (remain.isEmpty()) {
-                    drop.remove(Entity.RemovalReason.DISCARDED);
-                } else {
-                    drop.setItem(remain);
-                    flag = false;
-                }
-            }
-            if (flag)
-                event.setCanceled(true); // 取消原始掉落
-        }
-    }
+    private static final Set<ItemEntity> CapturedDrops = new HashSet<>();
 
     @SubscribeEvent
     public static void onBlockDrops(BlockDropsEvent event){
-        if (!(event.getBreaker() instanceof ServerPlayer player)) return;
-        if(!isPlayerEnabledAutoPick(player)) return;
-        if (ServerConfigs.ENABLE_AUTOPICK.get()) {
-            EndlessInventory endInv = ServerLevelEndInv.getEndInvForPlayer(player).orElse(null);
-            if(endInv==null) return;
-            boolean flag = true;
+        List<ItemEntity> drops = event.getDrops();
+        if(ServerConfigs.PICKUP_HELPER.ITEM_DROPS.PROTECT_DROPS.get()){
+            drops.forEach(
+                    item -> {
+                        item.invulnerableTime = 6000;
+                    }
+            );
+        }
+        if(!(event.getBreaker() instanceof Player player)) return;
+        if(ServerConfigs.PICKUP_HELPER.ITEM_DROPS.DIRECTLY_SEND_TO_ENDINV.get()){
+            drops.forEach(
+                    itemEntity -> {
+                        ItemStack remain = sendItemToEndinv(player, itemEntity.getItem());
+                        if(!remain.isEmpty()){
+                            itemEntity.setItem(remain);
+                        }
+                    }
+            );
+        }
+        if(ServerConfigs.PICKUP_HELPER.ITEM_DROPS.SEND_TO_INVENTORY.get()){
+            drops.forEach(
+                    itemEntity -> {
+                        CapturedDrops.add(itemEntity);
+                        itemEntity.setNoPickUpDelay();
+                        itemEntity.playerTouch(player);
+                    }
+            );
+        }
+        int v;
+        if((v = ServerConfigs.PICKUP_HELPER.ITEM_DROPS.DIRECTED_DISTRIBUTE.get()) != 0){
+            drops.forEach(
+                    itemEntity -> {
+                        if(itemEntity.isRemoved()) return;
+                        if(v < 0) tpEntityToPlayer(itemEntity, player);
+                        else directEntityToPlayer(itemEntity, player, 0.05 * v);
+                    }
+            );
+        }
 
-            int exp = event.getDroppedExperience();
-            int newValue = repairPlayerItems(player,exp);
-            player.giveExperiencePoints(newValue);
-
-            for (ItemEntity drop : event.getDrops()) {
-                ItemStack stack = drop.getItem();
-                ItemStack remain = endInv.addItem(stack);
-                stack.split(remain.getCount());
-                if(!stack.isEmpty()) getPacketDistributor().sendToPlayer(player,new ItemPickedUpPayload(stack));
-                if (remain.isEmpty()) {
-                    drop.remove(Entity.RemovalReason.DISCARDED);
-                } else {
-                    drop.setItem(remain);
-                    flag = false;
-                }
-            }
-            if (flag) {
-                event.setCanceled(true); // 取消原始掉落
-            } else {
+        if(ServerConfigs.PICKUP_HELPER.EXP_DROPS.GIVE_DIRECTLY.get()){
+            int xp = event.getDroppedExperience();
+            if(xp > 0){
+                player.giveExperiencePoints(xp);
                 event.setDroppedExperience(0);
             }
         }
     }
 
     @SubscribeEvent
-    public static void onExpDrops(LivingExperienceDropEvent event){
-        if(event.getAttackingPlayer() instanceof  ServerPlayer player){
-            if(!isPlayerEnabledAutoPick(player) || !ServerConfigs.ENABLE_AUTOPICK.get()) return;
-            int exp = event.getDroppedExperience();
-            int newValue = repairPlayerItems(player,exp);
-            player.giveExperiencePoints(newValue);
-            event.setCanceled(true);
+    public static void onLivingDrops(LivingDropsEvent event) {
+        Collection<ItemEntity> drops = event.getDrops();
+        if(ServerConfigs.PICKUP_HELPER.ITEM_DROPS.PROTECT_DROPS.get()){
+            drops.forEach(item -> item.invulnerableTime = 6000);
+        }
+        if(!(event.getSource().getEntity() instanceof Player player)) return;
+        if(ServerConfigs.PICKUP_HELPER.ITEM_DROPS.DIRECTLY_SEND_TO_ENDINV.get()){
+            drops.forEach(
+                    itemEntity -> {
+                        ItemStack remain = sendItemToEndinv(player, itemEntity.getItem());
+                        if(!remain.isEmpty()){
+                            itemEntity.setItem(remain);
+                        }
+                    }
+            );
+        }
+        if(ServerConfigs.PICKUP_HELPER.ITEM_DROPS.SEND_TO_INVENTORY.get()){
+            drops.forEach(itemEntity -> {
+                CapturedDrops.add(itemEntity);
+                itemEntity.setNoPickUpDelay();
+                itemEntity.playerTouch(player);
+            });
+        }
+
+        int v;
+        if((v = ServerConfigs.PICKUP_HELPER.ITEM_DROPS.DIRECTED_DISTRIBUTE.get()) != 0){
+            drops.forEach(itemEntity -> {
+                if(itemEntity.isRemoved()) return;
+                if(v < 0) tpEntityToPlayer(itemEntity, player);
+                else directEntityToPlayer(itemEntity, player, 0.05 * v);
+            });
         }
     }
 
-    @SubscribeEvent
+    @SubscribeEvent(priority = EventPriority.LOWEST)
+    public static void onExpDrops(LivingExperienceDropEvent event){
+        Player player = event.getAttackingPlayer();
+        if(player == null) return;
+
+        // Deliver experience directly via event when configured
+        if(ServerConfigs.PICKUP_HELPER.EXP_DROPS.GIVE_DIRECTLY.get()){
+            int xp = event.getDroppedExperience();
+            xp = repairPlayerItems((ServerPlayer) player, xp);
+            if(xp > 0){
+                player.giveExperiencePoints(xp);
+                event.setDroppedExperience(0);
+            }
+        }
+
+        // Note: Protection and directed distribution for XP orbs likely require
+        // altering ExperienceOrb behavior (e.g., via mixin). Left unimplemented here.
+    }
+
+    @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void onPickupItem(ItemEntityPickupEvent.Pre event){
         Player player = event.getPlayer();
-        if(!(player instanceof ServerPlayer) || !ServerConfigs.ENABLE_AUTOPICK.get() || !isPlayerEnabledAutoPick(player)){
+        if(!(player instanceof ServerPlayer) || !isPlayerEnabledAutoPick(player)){
             return;
         }
         ItemEntity entity = event.getItemEntity();
         if(entity.hasPickUpDelay() || entity.getTarget()!=null && entity.getTarget()!=player.getUUID()) return;
-        ItemStack stack = entity.getItem();
-        if(shouldMoveTo(player,stack)){
-            ServerLevelEndInv.getEndInvForPlayer(player).ifPresent(endInv->{
-                ItemStack remain = endInv.addItem(stack.copy());
-
-                if(!stack.isEmpty()) getPacketDistributor().sendToPlayer((ServerPlayer) player,new ItemPickedUpPayload(stack.copy()));
-                if(remain.isEmpty()){
-                    stack.setCount(0);
-                }else {
-                    stack.split(remain.getCount());
-                }
-            });
+        if(
+                ServerConfigs.PICKUP_HELPER.ITEM_DROPS.ENDINV_AFTER_INVENTORY.get() && CapturedDrops.contains(entity)
+                || ServerConfigs.PICKUP_HELPER.ITEM_DROPS.PICK_TO_ENDINV.get()
+        ) {
+            ItemStack stack = entity.getItem();
+            ItemStack remain = sendItemToEndinv(player, stack);
+            entity.setItem(remain);
         }
+    }
+
+    private static ItemStack sendItemToEndinv(Player player, ItemStack stack){
+        if (player instanceof ServerPlayer && shouldMoveTo(player, stack)) {
+            if(ServerLevelEndInv.getEndInvForPlayer(player).isPresent()){
+                EndlessInventory endinv = ServerLevelEndInv.getEndInvForPlayer(player).get();
+                ItemStack remain = endinv.addItem(stack.copy());
+                if (!stack.isEmpty())
+                    getPacketDistributor().sendToPlayer((ServerPlayer) player, new ItemPickedUpPayload(stack.copy().split(remain.getCount())));
+                return remain;
+            }
+        }
+        return stack;
     }
 
     /**Items satisfied with several conditions will stay in the player inventory.
@@ -223,5 +269,24 @@ public class LootEvent {
 
     private static boolean isPlayerEnabledAutoPick(Player player){
         return ModRegistries.NbtAttachments.getSyncedConfig().computeIfAbsent(player).autoPicking();
+    }
+
+    private static void directEntityToPlayer(Entity entity,
+                                             Player player,
+                                             double speed) {
+        var from = entity.position();
+        var to = player.position().add(0.0, player.getBbHeight() * 0.75, 0.0);
+        var dir = to.subtract(from);
+        if (dir.lengthSqr() < 1.0e-6) return;
+
+        dir = dir.scale(speed);
+        entity.setDeltaMovement(dir);
+    }
+
+    private static void tpEntityToPlayer(Entity entity,
+                                         Player player
+    ) {
+        var to = player.position();
+        entity.setPos(to);
     }
 }
