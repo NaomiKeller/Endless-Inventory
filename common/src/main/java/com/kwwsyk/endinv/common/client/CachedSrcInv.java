@@ -37,7 +37,11 @@ public class CachedSrcInv extends SourceInventory {
     }
 
     public void initializeContents(Map<ItemKey, ItemState> itemMap){
-        overwriteItems(new Object2ObjectLinkedOpenHashMap<>(itemMap));
+        Object2ObjectLinkedOpenHashMap<ItemKey, ItemState> filtered = new Object2ObjectLinkedOpenHashMap<>();
+        itemMap.forEach((key, state) -> {
+            if(!key.isEmpty() && state.count() > 0) filtered.put(key, state);
+        });
+        overwriteItems(filtered);
         this.itemSize = getItemSize();//here assert transfermode==all //parallelable
         this.validSize = true;
     }
@@ -49,8 +53,11 @@ public class CachedSrcInv extends SourceInventory {
                                      @Nullable Predicate<ItemStack> classify,
                                      String search){
         var ret = getSortedKeyReference(sortType)
+                .filter(key -> !key.isEmpty())
                 .filter(key -> {
-                    ItemStack stack = key.toStack(itemMap.get(key).count());
+                    ItemState state = itemMap.get(key);
+                    if(state == null || state.count() <= 0) return false;
+                    ItemStack stack = key.toStack(state.count());
                     return (classify == null || classify.test(stack)) && SearchUtil.matchesSearch(stack, search);
                 })
                 .toList();

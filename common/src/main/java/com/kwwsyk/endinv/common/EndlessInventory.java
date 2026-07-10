@@ -70,10 +70,9 @@ public class EndlessInventory extends SourceInventory {//todo add content transf
             )
     );
 
-    @SuppressWarnings("unchecked")
-    private final List<ItemStack>[] sortedViews = new List[SortType.values().length];
+    private final Map<String, List<ItemStack>> sortedViews = new HashMap<>();
 
-    private final long[] lastSortedTimes = new long[SortType.values().length];
+    private final Map<String, Long> lastSortedTimes = new HashMap<>();
 
     public List<ServerPlayer> viewers = new ArrayList<>();
 
@@ -90,16 +89,16 @@ public class EndlessInventory extends SourceInventory {//todo add content transf
     }
 
     protected List<ItemStack> getSortedView(SortType type, boolean reverse) {
-        int idx = type.ordinal();
         List<ItemStack> result;
         synchronized (sortedViews) {
-            if (lastSortedTimes[idx] != lastModTime || sortedViews[idx] == null) {
+            String key = type.name();
+            if (!Objects.equals(lastSortedTimes.get(key), lastModTime) || sortedViews.get(key) == null) {
                 List<ItemStack> view = snapshotItems();
                 view.sort(ModInfo.sortHelper.getComparator(type, this));
-                sortedViews[idx] = view;
-                lastSortedTimes[idx] = lastModTime;
+                sortedViews.put(key, view);
+                lastSortedTimes.put(key, lastModTime);
             }
-            result = new ArrayList<>(sortedViews[idx]);
+            result = new ArrayList<>(sortedViews.get(key));
         }
         if(reverse) Collections.reverse(result);
         return result;

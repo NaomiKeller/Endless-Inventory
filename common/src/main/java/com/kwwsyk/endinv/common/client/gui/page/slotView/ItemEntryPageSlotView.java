@@ -23,6 +23,7 @@ public class ItemEntryPageSlotView extends ItemPageSlotView {
     @Override
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         super.render(guiGraphics, mouseX, mouseY, partialTick);
+        if(get().isEmpty()) return;
         var view = ((EntryPageViewContainer) container);
         guiGraphics.drawString(
                 Minecraft.getInstance().font,

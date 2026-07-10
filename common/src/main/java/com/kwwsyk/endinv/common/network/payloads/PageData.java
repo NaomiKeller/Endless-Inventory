@@ -34,7 +34,7 @@ public record PageData(String pageRegKey, int rows, int columns, SortType sortTy
         o.writeUtf(data.pageRegKey);
         o.writeInt(data.rows);
         o.writeInt(data.columns);
-        o.writeEnum(data.sortType);
+        o.writeUtf(data.sortType.name());
         o.writeBoolean(data.reverseSort);
         o.writeUtf(data.search);
     }
@@ -44,7 +44,7 @@ public record PageData(String pageRegKey, int rows, int columns, SortType sortTy
                 o.readUtf(),
                 o.readInt(),
                 o.readInt(),
-                o.readEnum(SortType.class),
+                SortType.byName(o.readUtf()),
                 o.readBoolean(),
                 o.readUtf()
         );
@@ -77,7 +77,7 @@ public record PageData(String pageRegKey, int rows, int columns, SortType sortTy
         return obj instanceof PageData pageData
                 && pageData.pageRegKey.equals(pageRegKey)
                 && pageData.rows == rows && pageData.columns() ==columns
-                && pageData.reverseSort == reverseSort && sortType ==pageData.sortType
+                && pageData.reverseSort == reverseSort && Objects.equals(sortType, pageData.sortType)
                 && Objects.equals(pageData.search,search);
     }
 }

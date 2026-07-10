@@ -28,6 +28,10 @@ repositories {
         name = "Curios"
         url = uri("https://maven.theillusivec4.top/")
     }
+    maven {
+        name = "Modrinth"
+        url = uri("https://api.modrinth.com/maven")
+    }
 }
 
 dependencies {
@@ -39,6 +43,12 @@ dependencies {
      runtimeOnly("mezz.jei:jei-${minecraft_version}-neoforge:${jei_version}")
      runtimeOnly("top.theillusivec4.curios:curios-neoforge:${curio_version}")
      compileOnly("top.theillusivec4.curios:curios-neoforge:${curio_version}:api")
+     compileOnly("maven.modrinth:irons-spells-n-spellbooks:${irons_spellbooks_version}")
+     runtimeOnly("maven.modrinth:irons-spells-n-spellbooks:${irons_spellbooks_version}")
+     compileOnly("maven.modrinth:silent-lib:${silent_lib_version}")
+     runtimeOnly("maven.modrinth:silent-lib:${silent_lib_version}")
+     compileOnly("maven.modrinth:silent-gear:${silent_gear_version}")
+     runtimeOnly("maven.modrinth:silent-gear:${silent_gear_version}")
 }
 
 project.evaluationDependsOn(":common")
@@ -206,11 +216,15 @@ publishMods {
         javaVersions.add(JavaVersion.toVersion(java_version))
         optional("jei")
         optional("curios-api-continuation")
+        optional("irons-spells-n-spellbooks")
+        optional("silent-gear")
     }
     modrinth {
         projectId = modrinth_project_id
         accessToken = providers.environmentVariable("MODRINTH_TOKEN")
         minecraftVersions.add(minecraft_version)
         optional("jei")
+        optional("irons-spells-n-spellbooks")
+        optional("silent-gear")
     }
 }

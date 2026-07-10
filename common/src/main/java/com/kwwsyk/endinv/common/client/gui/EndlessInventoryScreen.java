@@ -108,12 +108,9 @@ public class EndlessInventoryScreen extends AbstractContainerScreen<EndlessInven
 
     public void render(@NotNull GuiGraphics gui, int mouseX, int mouseY, float partialTick){
         this.renderBackground(gui, mouseX, mouseY, partialTick);
-        frameWork.render(gui,mouseX,mouseY,partialTick);
-
         super.render(gui,mouseX,mouseY,partialTick);
-
-        frameWork.render(gui,mouseX,mouseY,partialTick);
         this.renderTooltip(gui,mouseX,mouseY);
+        frameWork.render(gui,mouseX,mouseY,partialTick);
     }
 
     public boolean mouseClicked(double mouseX, double mouseY, int keyCode){

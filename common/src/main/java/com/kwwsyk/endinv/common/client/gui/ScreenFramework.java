@@ -142,6 +142,7 @@ public class ScreenFramework implements PageManager, ContainerEventHandler, Rend
 
         //---construct and switch displaying pages---
         switchPageWithId(displayingPageType.registerName);
+        normalizeSortTypeForPage();
 
         //add widgets when base info are all prepared including displayingPage
         addWidgets();
@@ -162,7 +163,7 @@ public class ScreenFramework implements PageManager, ContainerEventHandler, Rend
         this.searchBox = this.searchBoxParam.buildEditBox(mc.font,
                 Component.translatableWithFallback("itemGroup.search", "Search Items"),
                 s -> refreshSearchResults());
-        this.sortTypeSwitchBox = new SortTypeSwitchBox(this,  sortBoxParam);
+        this.sortTypeSwitchBox = new SortTypeSwitchBox(this,  sortBoxParam, getDisplayingPage().getSortTypes());
 
         this.searchBox.setValue(searching());
 
@@ -192,6 +193,7 @@ public class ScreenFramework implements PageManager, ContainerEventHandler, Rend
     public void renderBg(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         SFBgRenderer.renderBg(guiGraphics, partialTick, mouseX, mouseY);
         getDisplayingPage().renderBg(guiGraphics, partialTick, mouseX, mouseY);
+        getDisplayingPage().render(guiGraphics, mouseX, mouseY, partialTick);
     }
 
     private boolean isHoveringOnPage;
@@ -202,7 +204,9 @@ public class ScreenFramework implements PageManager, ContainerEventHandler, Rend
 
         isHoveringOnPage = hasClickedOnPage(mouseX, mouseY);
 
-        getDisplayingPage().render(guiGraphics, mouseX, mouseY, partialTick);
+        if(!sortTypeSwitchBox.isMouseOver(mouseX, mouseY)) {
+            getDisplayingPage().renderTooltip(guiGraphics, mouseX, mouseY);
+        }
 
         if (searchBox.isHovered() && !searchBox.isFocused()) guiGraphics.renderTooltip(mc.font, List.of(
                 Component.translatable("search.endinv.prefix.sharp"),
@@ -212,6 +216,7 @@ public class ScreenFramework implements PageManager, ContainerEventHandler, Rend
         ), Optional.empty(), mouseX, mouseY);
         if (reverseSortButton.isHovered())
             guiGraphics.renderTooltip(mc.font, Component.translatable("button.endinv.reverse"), mouseX, mouseY);
+        sortTypeSwitchBox.renderTooltip(guiGraphics, mouseX, mouseY);
 
     }
 
@@ -223,15 +228,25 @@ public class ScreenFramework implements PageManager, ContainerEventHandler, Rend
 
     public void pageSwitched(int index) {
         switchPageWithIndex(index + firstPageIndex);
+        normalizeSortTypeForPage();
+        this.sortTypeSwitchBox.setSortTypes(getDisplayingPage().getSortTypes());
         //getDisplayingPage().syncContentToServer();
         this.searchBox.setVisible(getDisplayingPage().hasSearchbox());
         this.sortTypeSwitchBox.visible = getDisplayingPage().hasSortTypeSwitchBar();
     }
 
     public void switchSortTypeTo(SortType type) {
+        if(!getDisplayingPage().getSortTypes().contains(type)) return;
         sortType = type;
         if(getDisplayingPage() instanceof ItemPage page){
             page.refreshItems();
+        }
+    }
+
+    private void normalizeSortTypeForPage() {
+        List<SortType> sortTypes = getDisplayingPage().getSortTypes();
+        if(!sortTypes.contains(sortType) && !sortTypes.isEmpty()) {
+            sortType = sortTypes.get(0);
         }
     }
 

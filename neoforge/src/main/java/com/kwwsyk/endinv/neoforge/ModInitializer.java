@@ -10,6 +10,8 @@ import com.kwwsyk.endinv.common.network.payloads.ModPacketPayload;
 import com.kwwsyk.endinv.common.network.payloads.SyncedConfig;
 import com.kwwsyk.endinv.neoforge.client.config.ClientConfig;
 import com.kwwsyk.endinv.neoforge.integrates.curio.CurioPageType;
+import com.kwwsyk.endinv.neoforge.integrates.irons_spellbooks.IronsSpellbooksPageType;
+import com.kwwsyk.endinv.neoforge.integrates.silentgear.SilentGearPageType;
 import com.kwwsyk.endinv.neoforge.options.ServerConfig;
 import com.kwwsyk.endinv.neoforge.options.StartupConfig;
 import net.minecraft.core.UUIDUtil;
@@ -64,6 +66,12 @@ public class ModInitializer extends AbstractModInitializer {
 
         if(ModList.get().isLoaded("curios")){
             CurioPageType.register();
+        }
+        if(ModList.get().isLoaded("irons_spellbooks")){
+            IronsSpellbooksPageType.register();
+        }
+        if(ModList.get().isLoaded("silentgear")){
+            SilentGearPageType.register();
         }
 
         if(FMLEnvironment.dist.isClient()) {

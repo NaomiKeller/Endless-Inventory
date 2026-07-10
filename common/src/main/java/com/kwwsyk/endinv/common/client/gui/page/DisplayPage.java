@@ -7,6 +7,7 @@ import com.kwwsyk.endinv.common.client.KeyMappings;
 import com.kwwsyk.endinv.common.client.gui.ScreenFramework;
 import com.kwwsyk.endinv.common.client.gui.page.manager.PageManager;
 import com.kwwsyk.endinv.common.menu.page.PageType;
+import com.kwwsyk.endinv.common.util.SortType;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.ChatFormatting;
 import net.minecraft.Util;
@@ -23,6 +24,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
 import javax.annotation.Nullable;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
 
@@ -129,6 +131,10 @@ public abstract class DisplayPage{
 
     public abstract boolean hasSortTypeSwitchBar();
 
+    public List<SortType> getSortTypes() {
+        return SortType.DEFAULT_SORT_TYPES;
+    }
+
     /**Render page icon with page's {@link #icon}
      * icon can be an item location or sprite location with 16*16 size.
      */
@@ -231,6 +237,9 @@ public abstract class DisplayPage{
     }
 
     public abstract void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks);
+
+    public void renderTooltip(GuiGraphics graphics, int mouseX, int mouseY) {
+    }
 
     public String getDisplayAmount(ItemStack stack){
         int count = stack.getCount();

@@ -77,6 +77,9 @@ public class ItemPageSlotView extends Slot implements ResourcePointer<ItemStack>
     @Override
     public void renderSlotHighlightFront(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick){
         guiGraphics.fill(x, y, x+width - 2, y+height - 2, 0x20ffffff);
+    }
+
+    public void renderTooltip(GuiGraphics guiGraphics, int mouseX, int mouseY) {
         ItemStack hovering = get();
         if(hovering.isEmpty()) return;
         guiGraphics.renderTooltip(

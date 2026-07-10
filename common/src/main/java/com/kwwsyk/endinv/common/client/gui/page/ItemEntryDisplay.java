@@ -66,6 +66,38 @@ public class ItemEntryDisplay extends ItemDisplay{
             return tip1;
         }
 
+        static Component ofRowCount(ItemEntryDisplay page,List<Component> tooltips,boolean jmpName/*Jmp the first row tooltip*/,int count){
+            int strX = 18;
+            int entry_max_x = page.framework.columns() * 18;
+            if(strX > entry_max_x) return Component.empty();
+            var it = tooltips.iterator();
+            if(jmpName && it.hasNext()){
+                it.next();
+            }
+            Component tip1 = Component.empty();
+            while (it.hasNext() && count > 0){
+                var tip = it.next();
+
+                int strX1 = strX + page.mc.font.width(tip.getVisualOrderText());
+                if( strX1 >= entry_max_x - 3 && strX1 <= entry_max_x){
+                    if(it.hasNext()){
+                        tip1 = Component.literal(tip1.getString() + tip.getString() + ".".repeat(3));
+                        break;
+                    }
+                    tip1 = Component.literal(tip1.getString() + tip.getString());
+                    break;
+                }
+                if( strX1 > entry_max_x) {
+                    tip1 = Component.literal(tip1.getString() + ".".repeat(3));
+                    break;
+                }
+                tip1 = Component.literal(tip1.getString() + tip.getString());
+
+                count --;
+            }
+            return tip1;
+        }
+
         static Component fromEnch(ItemEntryDisplay page,ItemStack stack){
             ItemEnchantments itemEnchantments = stack.get(DataComponents.ENCHANTMENTS);
             if(itemEnchantments == null || itemEnchantments.isEmpty()) itemEnchantments = stack.get(DataComponents.STORED_ENCHANTMENTS);

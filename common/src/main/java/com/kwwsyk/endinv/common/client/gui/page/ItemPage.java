@@ -11,6 +11,7 @@ import com.kwwsyk.endinv.common.network.payloads.PageData;
 import com.kwwsyk.endinv.common.network.payloads.toServer.*;
 import com.kwwsyk.endinv.common.util.ItemKey;
 import com.kwwsyk.endinv.common.util.NotNullWhenInitialized;
+import com.kwwsyk.endinv.common.util.SortType;
 import com.mojang.logging.LogUtils;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -37,6 +38,7 @@ public abstract class ItemPage extends GridPage {
     protected PageViewContainer viewContainer;
     @Nullable
     protected List<ItemKey> inQueueStacks = null;
+    protected List<SortType> availableSorts = SortType.DEFAULT_SORT_TYPES;
 
     public ItemPage(PageType pageType, ScreenFramework framework) {
         super(pageType, framework);
@@ -91,6 +93,11 @@ public abstract class ItemPage extends GridPage {
 
     public abstract void requestRemoteContents();
 
+    @Override
+    public List<SortType> getSortTypes() {
+        return availableSorts;
+    }
+
     /**The change usually means pageMetaData changes and called by framework in sort,search,... changes.<br>
      * For ItemPage and ItemDisplay: also used to request contents as sending {@link ItemPageContext} has such side effect.
      */
@@ -132,6 +139,16 @@ public abstract class ItemPage extends GridPage {
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks){
         for(ItemPageSlotView slot : viewContainer.slots()){
             slot.render(guiGraphics, mouseX, mouseY, partialTicks);
+        }
+    }
+
+    @Override
+    public void renderTooltip(GuiGraphics guiGraphics, int mouseX, int mouseY) {
+        for(ItemPageSlotView slot : viewContainer.slots()){
+            if(slot.hasClickedOn(mouseX, mouseY)) {
+                slot.renderTooltip(guiGraphics, mouseX, mouseY);
+                return;
+            }
         }
     }
 

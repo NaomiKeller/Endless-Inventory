@@ -5,7 +5,6 @@ import com.mojang.logging.LogUtils;
 import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
 import net.minecraft.Util;
 import net.minecraft.core.component.DataComponentPatch;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.Unmodifiable;
@@ -303,27 +302,14 @@ public abstract class SourceInventory {
     }
 
     public Stream<ItemKey> getSortedKeyReference(SortType sortType){
-        return switch (sortType){
-            case ID -> this.getItemMap().keySet()
-                    .stream()
-                    .sorted(Comparator.comparingInt(key -> BuiltInRegistries.ITEM.getId(key.item())));
-            case DEFAULT -> this.getItemMap().keySet()
-                    .stream();
-            case COUNT -> this.getItemMap()
-                    .entrySet()
-                    .stream()
-                    .sorted(Comparator.comparingInt(e -> e.getValue().count()))
-                    .map(Map.Entry::getKey);
-            case SPACE_AND_NAME -> this.getItemMap()
-                    .keySet()
-                    .stream()
-                    .sorted(Comparator.comparing(key -> BuiltInRegistries.ITEM.getKey(key.item()).toString()));
-            case LAST_MODIFIED -> this.getItemMap()
-                    .entrySet()
-                    .stream()
-                    .sorted(Comparator.comparing(e -> e.getValue().lastModTime()))
-                    .map(Map.Entry::getKey);
-        };
+        return this.getItemMap()
+                .entrySet()
+                .stream()
+                .sorted((a, b) -> ModInfo.sortHelper.getComparator(sortType, this).compare(
+                        a.getKey().toStack(a.getValue().count()),
+                        b.getKey().toStack(b.getValue().count())
+                ))
+                .map(Map.Entry::getKey);
     }
 
     //item handler: map-list sync methods
