@@ -36,6 +36,14 @@ public class EIMConfig extends ComplexConfigEntryImpl<EIMConfig.Param> {
         super(key, comments, Param.DEFAULT);
     }
 
+    public static int resolveRows(int rows) {
+        if (rows > 0) {
+            return rows;
+        }
+        int screenHeight = Minecraft.getInstance().getWindow().getGuiScaledHeight();
+        return Math.max(Math.floorDiv(screenHeight - 60, 18) - 4, 1);
+    }
+
     /**
      * The getter of a complex config entry may be null.
      * Let it return {@link #fields()}'s returns.
@@ -107,6 +115,11 @@ public class EIMConfig extends ComplexConfigEntryImpl<EIMConfig.Param> {
         );
 
         public Param adjust(){
+            return adjust(EIMConfig.resolveRows(rows));
+        }
+
+        public Param adjust(int rows){
+            rows = Math.max(1, rows);
             int screenHeight = Minecraft.getInstance().getWindow().getGuiScaledHeight();
             int screenWidth = Minecraft.getInstance().getWindow().getGuiScaledWidth();
             return new Param(

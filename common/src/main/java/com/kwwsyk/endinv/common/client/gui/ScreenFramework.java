@@ -87,7 +87,7 @@ public class ScreenFramework implements PageManager, ContainerEventHandler, Rend
     public final List<DisplayPage> pages;
 
     public ScreenFramework(EndlessInventoryScreen screen) {//when opening EIS
-        this(screen, ClientConfigs.EIM_CONFIG.get().adjust());
+        this(screen, ClientConfigs.EIM_CONFIG.get().adjust(screen.getMenu().getBaseRows()));
     }
 
     public ScreenFramework(AttachingScreen<?> attachingScreen) {

@@ -6,6 +6,8 @@ __branch 1.21.1__
 - Reworked common/loader build scripts to resolve 1.21.1 dependencies (NeoForm, JEI, Curios, Cloth Config) and add missing central Maven mirrors.
 - Began API migration by replacing deprecated `ResourceLocation` constructors with the new 1.21 static factories across common and loader integrations.
 - Updated JEI recipe-transfer hooks to the new identifier helpers while preparing to restore optional startup configuration gating.
+- Fixed EndlessInventoryMenu row auto-sizing when rows is set to 0 and avoided partial row-layout refreshes on an already-open menu screen.
+- Reopen EndlessInventoryMenu after leaving its settings screen so layout changes apply immediately, and close settings when clicking transparent space outside the panel.
 - Note: Further work remains to finish data-component migrations and stabilize Fabric tooling once upstream repositories are reachable.
 
 #### draft from another branch

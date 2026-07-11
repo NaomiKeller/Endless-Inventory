@@ -1,5 +1,6 @@
 package com.kwwsyk.endinv.common.client.gui;
 
+import com.kwwsyk.endinv.common.client.ClientModInfo;
 import com.kwwsyk.endinv.common.client.option.ClientConfigs;
 import com.kwwsyk.endinv.common.options.config.IConfigValue;
 import com.mojang.blaze3d.platform.InputConstants;
@@ -85,6 +86,19 @@ public abstract class EndInvSettingScreen extends Screen {
             addConfigEntry("endinv.setting.rows", ClientConfigs.EIM_CONFIG.Rows);
             addConfigEntry("endinv.setting.max_page_bar", ClientConfigs.EIM_CONFIG.PageSwitchBar.MaxBars);
             addConfigEntry(Component.literal("Screen debug"), ClientConfigs.SCREEN_DEBUG);
+        }
+
+        @Override
+        protected void closeToBackScreen() {
+            if (this.minecraft == null) {
+                return;
+            }
+            if (this.getBackScreen() instanceof EndlessInventoryScreen && this.minecraft.player != null) {
+                this.minecraft.player.closeContainer();
+                ClientModInfo.sendOpenMenu();
+            } else {
+                super.closeToBackScreen();
+            }
         }
     }
 
@@ -197,6 +211,15 @@ public abstract class EndInvSettingScreen extends Screen {
 
     @Override
     public void onClose() {
+        applyTypingEditBoxChanges();
+        closeToBackScreen();
+    }
+
+    protected Screen getBackScreen() {
+        return back;
+    }
+
+    protected void closeToBackScreen() {
         assert this.minecraft != null;
         this.minecraft.setScreen(this.back);
     }
@@ -237,11 +260,39 @@ public abstract class EndInvSettingScreen extends Screen {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if(this.getFocused()!=null || button==1){
-            this.getFocused().setFocused(false);
-            this.setFocused(null);
+            if (this.getFocused() != null) {
+                this.getFocused().setFocused(false);
+                this.setFocused(null);
+            }
             //return true;
         }
-        return super.mouseClicked(mouseX, mouseY, button);
+        if (super.mouseClicked(mouseX, mouseY, button)) {
+            return true;
+        }
+        if (!hasClickedOnBackground(mouseX, mouseY)) {
+            onClose();
+            return true;
+        }
+        return false;
+    }
+
+    private boolean hasClickedOnBackground(double mouseX, double mouseY) {
+        return mouseX >= leftPos && mouseX <= leftPos + imageWidth
+                && mouseY >= topPos && mouseY <= topPos + imageHeight;
+    }
+
+    private void applyTypingEditBoxChanges() {
+        if (typingEditBox == null) {
+            return;
+        }
+        for(var entry : entries){
+            entry.getEditBox().ifPresent(editBox -> {
+                if(editBox== typingEditBox){
+                    entry.applyChanges();
+                    typingEditBox =null;
+                }
+            });
+        }
     }
 
     @Override
