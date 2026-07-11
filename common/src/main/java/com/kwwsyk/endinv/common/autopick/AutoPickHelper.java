@@ -2,7 +2,6 @@ package com.kwwsyk.endinv.common.autopick;
 
 import com.kwwsyk.endinv.common.EndlessInventory;
 import com.kwwsyk.endinv.common.ModInfo;
-import com.kwwsyk.endinv.common.ModRegistries;
 import com.kwwsyk.endinv.common.ServerLevelEndInv;
 import com.kwwsyk.endinv.common.autopick.events.IBlockBreakEvent;
 import com.kwwsyk.endinv.common.autopick.events.ILivingDropsEvent;
@@ -24,7 +23,6 @@ import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.List;
 
-
 import static com.kwwsyk.endinv.common.options.ServerConfigs.PICKUP_HELPER;
 
 public final class AutoPickHelper {
@@ -38,8 +36,8 @@ public final class AutoPickHelper {
         return isPlayerEnabledAutoPick(player) && PICKUP_HELPER.ITEM_DROPS.DIRECTLY_SEND_TO_ENDINV.get();
     }
 
-    private static boolean isPlayerEnabledAutoPick(Player player){
-        return ModRegistries.NbtAttachments.getSyncedConfig().computeIfAbsent(player).autoPicking();
+    public static boolean isPlayerEnabledAutoPick(Player player){
+        return true;
     }
 
     /**

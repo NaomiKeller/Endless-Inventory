@@ -2,7 +2,6 @@ package com.kwwsyk.endinv.neoforge.events;
 
 import com.kwwsyk.endinv.common.EndlessInventory;
 import com.kwwsyk.endinv.common.ModInfo;
-import com.kwwsyk.endinv.common.ModRegistries;
 import com.kwwsyk.endinv.common.ServerLevelEndInv;
 import com.kwwsyk.endinv.common.network.payloads.toClient.ItemPickedUpPayload;
 import com.kwwsyk.endinv.common.options.ServerConfigs;
@@ -18,6 +17,7 @@ import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.common.util.TriState;
 import net.neoforged.neoforge.event.entity.living.LivingDropsEvent;
 import net.neoforged.neoforge.event.entity.living.LivingExperienceDropEvent;
 import net.neoforged.neoforge.event.entity.player.ItemEntityPickupEvent;
@@ -35,9 +35,9 @@ import static com.kwwsyk.endinv.common.ModInfo.getPacketDistributor;
 @EventBusSubscriber(modid = ModInfo.MOD_ID)
 public class LootEvent {
 
-    private static final Set<ItemEntity> CapturedDrops = new HashSet<>();
+    public static final Set<ItemEntity> CapturedDrops = new HashSet<>();
 
-    @SubscribeEvent
+    @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void onBlockDrops(BlockDropsEvent event){
         List<ItemEntity> drops = event.getDrops();
         if(ServerConfigs.PICKUP_HELPER.ITEM_DROPS.PROTECT_DROPS.get()){
@@ -87,7 +87,7 @@ public class LootEvent {
         }
     }
 
-    @SubscribeEvent
+    @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void onLivingDrops(LivingDropsEvent event) {
         Collection<ItemEntity> drops = event.getDrops();
         if(ServerConfigs.PICKUP_HELPER.ITEM_DROPS.PROTECT_DROPS.get()){
@@ -116,6 +116,7 @@ public class LootEvent {
         if((v = ServerConfigs.PICKUP_HELPER.ITEM_DROPS.DIRECTED_DISTRIBUTE.get()) != 0){
             drops.forEach(itemEntity -> {
                 if(itemEntity.isRemoved()) return;
+                itemEntity.setNoPickUpDelay();
                 if(v < 0) tpEntityToPlayer(itemEntity, player);
                 else directEntityToPlayer(itemEntity, player, 0.05 * v);
             });
@@ -141,7 +142,8 @@ public class LootEvent {
         // altering ExperienceOrb behavior (e.g., via mixin). Left unimplemented here.
     }
 
-    @SubscribeEvent(priority = EventPriority.LOWEST)
+    //@SubscribeEvent(priority = EventPriority.LOWEST)
+    @Deprecated
     public static void onPickupItem(ItemEntityPickupEvent.Pre event){
         Player player = event.getPlayer();
         if(!(player instanceof ServerPlayer) || !isPlayerEnabledAutoPick(player)){
@@ -155,17 +157,24 @@ public class LootEvent {
         ) {
             ItemStack stack = entity.getItem();
             ItemStack remain = sendItemToEndinv(player, stack);
+            //simply set item of itemEntity cannot change the itemstack the player will get
             entity.setItem(remain);
+            if(!remain.equals(stack)){
+                event.setCanPickup(TriState.FALSE);
+            }
         }
     }
 
-    private static ItemStack sendItemToEndinv(Player player, ItemStack stack){
+    public static ItemStack sendItemToEndinv(Player player, ItemStack stack){
         if (player instanceof ServerPlayer && shouldMoveTo(player, stack)) {
             if(ServerLevelEndInv.getEndInvForPlayer(player).isPresent()){
                 EndlessInventory endinv = ServerLevelEndInv.getEndInvForPlayer(player).get();
                 ItemStack remain = endinv.addItem(stack.copy());
-                if (!stack.isEmpty())
-                    getPacketDistributor().sendToPlayer((ServerPlayer) player, new ItemPickedUpPayload(stack.copy().split(remain.getCount())));
+                if (!stack.isEmpty()) {
+                    ItemStack copy = stack.copy();
+                    copy.split(remain.getCount());
+                    getPacketDistributor().sendToPlayer((ServerPlayer) player, new ItemPickedUpPayload(copy));
+                }
                 return remain;
             }
         }
@@ -268,7 +277,7 @@ public class LootEvent {
     }
 
     private static boolean isPlayerEnabledAutoPick(Player player){
-        return ModRegistries.NbtAttachments.getSyncedConfig().computeIfAbsent(player).autoPicking();
+        return true;
     }
 
     private static void directEntityToPlayer(Entity entity,
