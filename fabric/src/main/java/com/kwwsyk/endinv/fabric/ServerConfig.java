@@ -1,10 +1,7 @@
 package com.kwwsyk.endinv.fabric;
 
 import com.google.gson.*;
-import com.kwwsyk.endinv.common.options.ContentTransferMode;
-import com.kwwsyk.endinv.common.options.IConfigValue;
-import com.kwwsyk.endinv.common.options.IServerConfig;
-import com.kwwsyk.endinv.common.options.MissingEndInvPolicy;
+import com.kwwsyk.endinv.common.options.*;
 import com.kwwsyk.endinv.common.util.Accessibility;
 import net.fabricmc.loader.api.FabricLoader;
 import org.slf4j.Logger;
@@ -145,26 +142,26 @@ public final class ServerConfig implements IServerConfig {
         }
     }
 
-    private <T> IConfigValue<T> tracked(java.util.function.Supplier<T> getter, java.util.function.Consumer<T> setter) {
-        return IConfigValue.of(getter, value -> {
+    private <T> LegacyIConfigValue<T> tracked(java.util.function.Supplier<T> getter, java.util.function.Consumer<T> setter) {
+        return LegacyIConfigValue.of(getter, value -> {
             setter.accept(value);
             save();
         });
     }
 
     @Override
-    public IConfigValue<Integer> getMaxAllowedStackSize() {
+    public LegacyIConfigValue<Integer> getMaxAllowedStackSize() {
         return tracked(() -> maxStackSize, value -> maxStackSize = value);
     }
 
     @Override
-    public IConfigValue<Boolean> allowInfinityMode() {
+    public LegacyIConfigValue<Boolean> allowInfinityMode() {
         return tracked(() -> infinite, value -> infinite = value);
     }
 
     @Override
-    public IConfigValue<Boolean> enableAutoPick() {
-        return IConfigValue.of(() -> autoPick, value -> {
+    public LegacyIConfigValue<Boolean> enableAutoPick() {
+        return LegacyIConfigValue.of(() -> autoPick, value -> {
             autoPick = value;
             save();
             onAttachingOrAutopickConfigChanged();
@@ -172,8 +169,8 @@ public final class ServerConfig implements IServerConfig {
     }
 
     @Override
-    public IConfigValue<Boolean> enableAttaching() {
-        return IConfigValue.of(() -> attaching, value -> {
+    public LegacyIConfigValue<Boolean> enableAttaching() {
+        return LegacyIConfigValue.of(() -> attaching, value -> {
             attaching = value;
             save();
             onAttachingOrAutopickConfigChanged();
@@ -182,28 +179,28 @@ public final class ServerConfig implements IServerConfig {
     }
 
     @Override
-    public IConfigValue<ContentTransferMode> transferMode() {
+    public LegacyIConfigValue<ContentTransferMode> transferMode() {
         return tracked(() -> transferModeValue, value -> transferModeValue = value);
     }
 
     @Override
-    public IConfigValue<Accessibility> defaultAccessibility() {
+    public LegacyIConfigValue<Accessibility> defaultAccessibility() {
         return tracked(() -> defaultAccess, value -> defaultAccess = value);
     }
 
     @Override
-    public IConfigValue<MissingEndInvPolicy> policyHandlingMissing() {
+    public LegacyIConfigValue<MissingEndInvPolicy> policyHandlingMissing() {
         return tracked(() -> creationPolicy, value -> creationPolicy = value);
     }
 
     @Override
-    public IConfigValue<Boolean> doConvertEmptyTag() {
+    public LegacyIConfigValue<Boolean> doConvertEmptyTag() {
         return tracked(() -> convertEmpty, value -> convertEmpty = value);
     }
 
     @Override
-    public IConfigValue<com.kwwsyk.endinv.common.options.SpecifiedMenuAttachingConfig> specifiedMenuAttachability() {
-        return IConfigValue.of(() -> specifiedAttach, value -> {
+    public LegacyIConfigValue<SpecifiedMenuAttachingConfig> specifiedMenuAttachability() {
+        return LegacyIConfigValue.of(() -> specifiedAttach, value -> {
             specifiedAttach.clearConfigs();
             specifiedAttach.getConfigs().putAll(value.getConfigs());
             specifiedAttach.setInventoryAttachable(value.isInventoryAttachable());

@@ -14,9 +14,11 @@ public class DropsConfig extends ComplexConfigEntryImpl<DropsConfig.Param> {
             boolean protectDrops,
             int directedDistribute,
             boolean sendToInventory,
-            boolean directlySendToEndinv
+            boolean directlySendToEndinv,
+            boolean endinvAfterInventory,
+            boolean pick2Endinv
     ){
-        public static final Param DEFAULT = new Param(true,-1,false, false);
+        public static final Param DEFAULT = new Param(false,-1,false, false,true,false);
     }
 
     /// Impl

@@ -6,13 +6,13 @@ import com.kwwsyk.endinv.common.util.Accessibility;
 
 public interface IServerConfig {
 
-    IConfigValue<Integer> getMaxAllowedStackSize();
+    LegacyIConfigValue<Integer> getMaxAllowedStackSize();
 
-    IConfigValue<Boolean> allowInfinityMode();
+    LegacyIConfigValue<Boolean> allowInfinityMode();
 
-    IConfigValue<Boolean> enableAttaching();
+    LegacyIConfigValue<Boolean> enableAttaching();
 
-    IConfigValue<Boolean> enableAutoPick();
+    LegacyIConfigValue<Boolean> enableAutoPick();
 
     default void onAttachingOrAutopickConfigChanged(){
         ModInfo.getPacketDistributor().sendToAllPlayer(new SyncedConfig(enableAttaching().get(),enableAutoPick().get()));
@@ -33,13 +33,13 @@ public interface IServerConfig {
         ModInfo.getPacketDistributor().sendToAllPlayer(payload);
     }
 
-    IConfigValue<ContentTransferMode> transferMode();
+    LegacyIConfigValue<ContentTransferMode> transferMode();
 
-    IConfigValue<Accessibility> defaultAccessibility();
+    LegacyIConfigValue<Accessibility> defaultAccessibility();
 
-    IConfigValue<MissingEndInvPolicy> policyHandlingMissing();
+    LegacyIConfigValue<MissingEndInvPolicy> policyHandlingMissing();
 
-    IConfigValue<Boolean> doConvertEmptyTag();
+    LegacyIConfigValue<Boolean> doConvertEmptyTag();
 
-    IConfigValue<SpecifiedMenuAttachingConfig> specifiedMenuAttachability();
+    LegacyIConfigValue<SpecifiedMenuAttachingConfig> specifiedMenuAttachability();
 }

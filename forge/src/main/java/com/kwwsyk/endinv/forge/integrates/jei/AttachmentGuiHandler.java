@@ -51,14 +51,8 @@ public class AttachmentGuiHandler implements IGuiContainerHandler<AbstractContai
         ItemStack hovered = page.getHoveredOrClickedItem(mouseX, mouseY);
         if (hovered == null || hovered.isEmpty()) return Optional.empty();
 
-        int localX = (int) Math.floor(mouseX - page.getPageLeft());
-        int localY = (int) Math.floor(mouseY - page.getPageTop());
-        Rect2i area = page.getOneInteractableArea(localX, localY);
+        Rect2i area = page.getInteractableAreaUnderMouse(mouseX, mouseY);
         if (area == null) return Optional.empty();
-
-        int absX = (int) Math.floor(mouseX);
-        int absY = (int) Math.floor(mouseY);
-        if (!area.contains(absX, absY)) return Optional.empty();
 
         return Optional.of(new ItemClickEventWrapper(hovered, area));
     }

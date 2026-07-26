@@ -1,6 +1,6 @@
 package com.kwwsyk.endinv.common.client.option;
 
-import com.kwwsyk.endinv.common.options.IConfigValue;
+import com.kwwsyk.endinv.common.options.LegacyIConfigValue;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 
@@ -8,19 +8,19 @@ import java.util.Set;
 
 public interface IClientConfig {
 
-    IConfigValue<Boolean> attaching();
+    LegacyIConfigValue<Boolean> attaching();
 
-    IConfigValue<Integer> rows();
+    LegacyIConfigValue<Integer> rows();
 
-    IConfigValue<Integer> columns();
+    LegacyIConfigValue<Integer> columns();
 
-    IConfigValue<Boolean> autoSuitColumn();
+    LegacyIConfigValue<Boolean> autoSuitColumn();
 
-    IConfigValue<TextureMode> textureMode();
+    LegacyIConfigValue<TextureMode> textureMode();
 
-    IConfigValue<Boolean> screenDebugging();
+    LegacyIConfigValue<Boolean> screenDebugging();
 
-    IConfigValue<Integer> maxPageBarCount();
+    LegacyIConfigValue<Integer> maxPageBarCount();
 
     Set<String> hidingPageIds();
 

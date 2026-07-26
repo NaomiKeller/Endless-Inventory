@@ -129,17 +129,12 @@ public final class AEIRecipeTransferHandler {
             return;
         }
         performTransfer(container, plan, player, recipeSlots, inventorySlots, endInv);
-        if (manager != null) {
-            manager.sendEndInvData();
-        } else {
-            // Fallback sync when no manager is available (e.g., JEI replaced the screen)
-            var mode = ServerConfigs.ENDINV_BEHAVIOR.TransferMode.get();
-            switch (mode) {
-                case ALL -> com.kwwsyk.endinv.common.ModInfo.getPacketDistributor()
-                        .sendToPlayer(player, new com.kwwsyk.endinv.common.network.payloads.toClient.EndInvContent(endInv.snapshotItemMap()));
-                case PART -> com.kwwsyk.endinv.common.ModInfo.getPacketDistributor()
-                        .sendToPlayer(player, com.kwwsyk.endinv.common.network.payloads.toClient.EndInvMetadata.getWith((com.kwwsyk.endinv.common.EndlessInventory) endInv));
-            }
+        var mode = ServerConfigs.ENDINV_BEHAVIOR.TransferMode.get();
+        switch (mode) {
+            case ALL -> com.kwwsyk.endinv.common.ModInfo.getPacketDistributor()
+                    .sendToPlayer(player, new com.kwwsyk.endinv.common.network.payloads.toClient.EndInvContent(endInv.getItemMap()));
+            case PART -> com.kwwsyk.endinv.common.ModInfo.getPacketDistributor()
+                    .sendToPlayer(player, com.kwwsyk.endinv.common.network.payloads.toClient.EndInvMetadata.getWith((com.kwwsyk.endinv.common.EndlessInventory) endInv));
         }
     }
 

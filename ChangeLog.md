@@ -1,6 +1,93 @@
 # Change Log
 __branch 1.21.1__
 
+## 更新日志
+
+**警告：升级 mod 版本前应备份游戏存档。**
+
+### 1. 布局优化和组件渲染、交互体验优化
+- 修复附随菜单与 Endless Inventory Menu 中 PageSwitchBar 的布局问题：Tab 数量会根据 Page 高度自动收缩，Tab 显示位置恢复到旧版表现，上下翻页按钮与 Page 左侧边缘对齐。
+- 修复 PageSwitchBar 上下按钮、ConfigButton、SearchBox、Page 区域之间的默认排列关系。
+- 修复 SortTypeSwitchBox 与 ReverseSortButton 在附随菜单中的显示和点击响应问题。
+- 调整 SortTypeSwitchBox 渲染层级：关闭状态不再压过 Page、Tab 或 Tooltip，展开列表仍显示在 Page 内容上方。
+- 修复展开 SortTypeSwitchBox 覆盖物品时数量、耐久等 item decoration 可能渲染到组件上方的问题；被覆盖的物品本体仍会渲染。
+- 修复 Fabric 附随菜单中 SortTypeSwitchBox、ReverseSortButton 的显示次序问题。
+- 修复 Page 背景、SortTypeSwitchBox、PageSwitchBar 等区域在手持物品点击时可能被宿主菜单视为丢弃区域的问题。
+- 修复 Page 内鼠标滚轮、hover、点击区域的相对坐标处理问题。
+
+### 2. Mod 兼容
+- 修复 JEI 与 Page 物品的兼容表现：在 Page 物品上使用 JEI 的配方/用途查询按键时，现在会按原版菜单物品的交互表现返回正确物品与点击区域。
+- 同步修复 NeoForge、Forge、Fabric 的 JEI Page clickable ingredient 处理。
+- 初步增加对 Iron's Spellbooks 和 Silent Gear 的页面兼容支持。
+
+### 3. Auto Pick 系统优化
+- 优化了 Auto Pick 的拾取逻辑，并加入更复杂的设置，用于更细粒度地控制物品、经验、直接进入 EndInv、先进入背包、拾取后进入 EndInv 等行为。
+- 这些设置旨在预防潜在的 mod 冲突，尤其是其它 mod 同时处理掉落物或经验拾取时的冲突。
+- 可使用 `/endinv autoPick enable` 应用推荐的自动拾取设置。
+- 可使用 `/endinv autoPick print` 查看当前 Auto Pick 相关设置状态。
+
+### 4. Bug 修复与设置/指令系统优化
+- 修复 dedicated server 上附随菜单 screen 相关代码导致的服务端崩溃问题，来自 GitHub PR by tyh1023。
+- 更新物品显示逻辑，目标是解决因 mod 冲突导致部分物品无法从 EndInv 中取出的问题。
+- 优化设置和指令系统，使配置项展示、查询与修改更清晰。
+
+## 1.1.3 -> 1.1.4 Release ChangeLog (English)
+
+**Warning: Back up your game saves before upgrading the mod version.**
+
+### 1. Layout, Component Rendering, and Interaction Improvements
+- Fixed PageSwitchBar layout in attached menus and the Endless Inventory Menu: the number of visible tabs now shrinks according to available Page height, tab visuals have been restored to their previous left-side placement, and tab scroll buttons align with the Page edge.
+- Fixed the default arrangement between PageSwitchBar scroll buttons, ConfigButton, SearchBox, and the Page area.
+- Fixed SortTypeSwitchBox and ReverseSortButton display and interaction in attached menus.
+- Adjusted SortTypeSwitchBox render layering: the closed box no longer renders above Page, tabs, or tooltips, while the opened dropdown still appears above Page content.
+- Fixed item decorations, such as stack counts and durability overlays, rendering above an opened SortTypeSwitchBox; covered item bodies still render normally.
+- Fixed Fabric attached-menu render ordering for SortTypeSwitchBox and ReverseSortButton.
+- Fixed carried-item clicks on Page background, SortTypeSwitchBox, PageSwitchBar, and related UI areas being treated by the host menu as item-drop clicks.
+- Fixed relative coordinate handling for Page mouse scrolling, hover checks, and click regions.
+
+### 2. Mod Compatibility
+- Fixed JEI compatibility with Page items: using JEI recipe/usage lookup keys on Page items now returns the correct item and clickable region, matching vanilla menu behavior more closely.
+- Applied the JEI Page clickable ingredient fix across NeoForge, Forge, and Fabric.
+- Added initial page compatibility support for Iron's Spellbooks and Silent Gear.
+
+### 3. Auto Pick System Improvements
+- Improved Auto Pick pickup logic and added more detailed configuration options for item drops, experience drops, direct EndInv pickup, inventory-first pickup, and EndInv-after-inventory flows.
+- These settings are intended to reduce potential mod conflicts, especially when other mods also handle dropped items or experience pickup.
+- Use `/endinv autoPick enable` to apply the recommended Auto Pick settings.
+- Use `/endinv autoPick print` to inspect the current Auto Pick-related settings.
+
+### 4. Bug Fixes and Settings/Command Improvements
+- Fixed a server-side crash on dedicated servers when attaching menu screens, from the GitHub PR by tyh1023.
+- Updated item display logic to address cases where some items could not be extracted from EndInv because of mod conflicts.
+- Improved the settings and command systems so config entries are easier to display, inspect, and modify.
+
+## 2026-07-24
+
+### Part 1: 1.1.4 UI and interaction fixes
+- Fixed attached-menu and Endless Inventory Menu PageSwitchBar layout: visible tab count now follows the available Page height, tab visuals were restored to the previous left-side alignment, and tab scroll buttons align with the Page edge.
+- Fixed SortTypeSwitchBox and ReverseSortButton rendering/interaction in attached screens, including Fabric-only render ordering so these controls draw above the attached Page content.
+- Adjusted SortTypeSwitchBox layering so only the opened dropdown is elevated; item bodies remain visible below it while item decorations such as counts and durability overlays are suppressed when covered.
+- Fixed Page click handling so Page background and framework widgets consume carried-item clicks without being treated as item-drop areas; widget clicks also consume the matching mouse release.
+- Fixed Page scroll and hover coordinate handling for attached menus.
+- Fixed JEI clickable ingredient detection inside EndInv Pages across NeoForge, Forge, and Fabric by returning absolute slot areas that include Page grid margins.
+- Updated config command output so ComplexConfigEntryImpl nodes print their full section state instead of only a section label.
+
+### Part 2: Unpushed 1.21.1 changes and PR merge
+- Reworked the common configuration system with typed config entries, complex config sections, JSON-backed config loading/saving, localized comments, lazy save helpers, and a deprecated legacy config-value bridge for older adapter code.
+- Added server/client config registries for common options and migrated Fabric, Forge, and NeoForge config adapters toward the new shared config model.
+- Added `/endinv config` command-tree generation for typed config values and `/endinv autoPick` command support for status, print, enable, and disable operations.
+- Reworked attached-menu/EIM layout configuration into reusable page, tab, texture, and screen-layout config objects, including transparent/dedicated texture modes and runtime cached layout sync.
+- Refactored Page rendering and interaction around GridPage, item-entry pages, page view containers, slot views, and the new PageSwitchBar/SortTypeSwitchBox widgets.
+- Updated item display, starred page, segmented/classified pages, search/sort state, and page metadata syncing to match the new Page view model.
+- Reworked EndlessInventory/SourceInventory internals, item key handling, item-state snapshots, save strategies, affinity handling, and cached client inventory updates for the 1.21.1 data model.
+- Added fluid integration base types for future mod integration work.
+- Added or updated NeoForge compat pages for Iron's Spellbooks and Silent Gear, with shared compat item/entry page bases.
+- Refreshed JEI integration and recipe transfer code across loaders, including attached-screen transfer handling, clickable ingredient handling, and current EndInv content/metadata sync APIs.
+- Updated Cloth Config integration screens for Fabric and Forge to reflect the new config layout and hidden-page controls.
+- Reworked auto-pick configuration into item/exp drop option sections, added NeoForge item/experience pickup mixins, and adjusted pickup/drop defaults for inventory-after-EndInv and pick-to-EndInv flows.
+- Registered missing Fabric networking for `BulkQuickMoveFromPagePayload` and updated loader event/command registration paths to current shared command signatures.
+- Fixed several 1.21.1 regression bugs from the unpushed branch, including searched-content refresh crashes, item rendering/transfer edge cases, player join/opening sync issues, and dedicated-server attaching classloading behavior from the merged PR.
+
 ## 2025-10-18
 - Bumped Gradle properties to target Minecraft 1.21.1 and refreshed loader/tooling versions for Forge, NeoForge, and Fabric builds.
 - Reworked common/loader build scripts to resolve 1.21.1 dependencies (NeoForm, JEI, Curios, Cloth Config) and add missing central Maven mirrors.

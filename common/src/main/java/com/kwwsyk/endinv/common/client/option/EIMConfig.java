@@ -122,20 +122,47 @@ public class EIMConfig extends ComplexConfigEntryImpl<EIMConfig.Param> {
             rows = Math.max(1, rows);
             int screenHeight = Minecraft.getInstance().getWindow().getGuiScaledHeight();
             int screenWidth = Minecraft.getInstance().getWindow().getGuiScaledWidth();
+            int adjustedLeftPos = (screenWidth - 176) / 2;
+            int adjustedTopPos = (screenHeight - 114 - rows*18) / 2;
+            IRectangleParam adjustedConfigButtonParam = new ScreenRectangleWidgetParam(
+                    configButtonParam.x() <= 0 ? 176 + configButtonParam.x() : configButtonParam.x(),
+                    configButtonParam.y() <= 0 ? Math.min(114 + rows * 18, screenHeight + configButtonParam.y() - adjustedTopPos) : configButtonParam.y(),
+                    configButtonParam.width(),
+                    configButtonParam.height());
             return new Param(
                     rows,
-                    (screenWidth - 176) / 2,
-                    (screenHeight - 114 - rows*18) / 2,
+                    adjustedLeftPos,
+                    adjustedTopPos,
                     pages,
-                    pageSwitchBarConfig,
+                    adjustPageSwitchBarParam(pageSwitchBarConfig, pages.size(), adjustedConfigButtonParam.y()),
                     searchBoxParam,
                     sortBoxParam,
-                    new ScreenRectangleWidgetParam(
-                            configButtonParam.x() <= 0 ? 176 + configButtonParam.x() : configButtonParam.x(),
-                            configButtonParam.y() <= 0 ? Math.min(114 + rows * 18, screenHeight + configButtonParam.y() - leftPos) : configButtonParam.y(),
-                            configButtonParam.width(),
-                            configButtonParam.height()),
+                    adjustedConfigButtonParam,
                     reverseSortButtonParam
+            );
+        }
+
+        private PageSwitchBarConfig.Param adjustPageSwitchBarParam(PageSwitchBarConfig.Param param, int pageCount, int availableLength) {
+            IRectangleParam tab = param.tabParam();
+            IRectangleParam buttonDec = param.buttonDec();
+            IRectangleParam buttonInc = param.buttonInc();
+            int shownTabs = param.getMaxTabCount(pageCount, availableLength);
+            if(param.direction_isVertical()){
+                int buttonX = tab.x() + tab.width() - buttonDec.width();
+                return new PageSwitchBarConfig.Param(
+                        param.maxBars(),
+                        tab,
+                        true,
+                        new ScreenRectangleWidgetParam(buttonX, tab.y() - buttonDec.height(), buttonDec.width(), buttonDec.height()),
+                        new ScreenRectangleWidgetParam(tab.x() + tab.width() - buttonInc.width(), tab.y() + shownTabs * tab.height(), buttonInc.width(), buttonInc.height())
+                );
+            }
+            return new PageSwitchBarConfig.Param(
+                    param.maxBars(),
+                    tab,
+                    false,
+                    new ScreenRectangleWidgetParam(tab.x() - buttonDec.width(), tab.y(), buttonDec.width(), buttonDec.height()),
+                    new ScreenRectangleWidgetParam(tab.x() + shownTabs * tab.width(), tab.y(), buttonInc.width(), buttonInc.height())
             );
         }
 
@@ -147,11 +174,6 @@ public class EIMConfig extends ComplexConfigEntryImpl<EIMConfig.Param> {
         @Override
         public TextureMode textureMode() {
             return TextureMode.FROM_RESOURCE;
-        }
-
-        @Override
-        public int pageTabCount() {
-            return pageSwitchBarConfig.maxBars();
         }
 
         @Override

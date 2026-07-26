@@ -325,6 +325,19 @@ public abstract class DisplayPage{
         return getItemByMouseOffset(mouseX - leftPos, mouseY - topPos);
     }
 
+    @Nullable
+    public Rect2i getInteractableAreaUnderMouse(double mouseX, double mouseY) {
+        Rect2i area = getOneInteractableArea(mouseX - leftPos, mouseY - topPos);
+        if(area == null) return null;
+        int x = (int) Math.floor(mouseX);
+        int y = (int) Math.floor(mouseY);
+        if(area.contains(x, y)) {
+            return area;
+        }
+        Rect2i absolute = new Rect2i(area.getX() + leftPos, area.getY() + topPos, area.getWidth(), area.getHeight());
+        return absolute.contains(x, y) ? absolute : null;
+    }
+
     public abstract void handleStarItem(double XOffset, double YOffset);
 
     /**Used to handle mouse clicked/dragged on page and page has slots
@@ -345,6 +358,11 @@ public abstract class DisplayPage{
 
     public boolean mouseClicked(double XOffset, double YOffset, int keyCode){
         InputConstants.Key mouseKey = InputConstants.Type.MOUSE.getOrCreate(keyCode);
+        if(getSlotByMouseOffset(XOffset, YOffset) < 0) {
+            this.doubleClick = false;
+            this.skipNextRelease = true;
+            return true;
+        }
         boolean isKeyPicking = inputHandler.isActiveAndMatches(mc.options.keyPickItem,mouseKey);//is mouse middle button and enabled for pickup or clone
         long clickTime = Util.getMillis();
         this.doubleClick = keyCode==lastClickedButton && doubleClickedOnOne(XOffset,YOffset,lastCLickedX,lastClickedY,clickTime-lastClickedTime);

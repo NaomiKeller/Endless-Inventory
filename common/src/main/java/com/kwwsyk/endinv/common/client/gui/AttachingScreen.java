@@ -92,6 +92,7 @@ public class AttachingScreen<T extends AbstractContainerMenu>{
     public void init(IScreenEvent event){
         this.frameWork = ScreenFramework.getInstance()==null ? new ScreenFramework(this) : ScreenFramework.getInstance();
         frameWork.addWidgetToScreen(event::addListener);
+        frameWork.setWidgetsManagedByScreen(event.rendersAddedWidgets());
         // Ensure server-side manager attaches for the current menu so actions like quick-move are authoritative
         ModInfo.getPacketDistributor().sendToServer(new OpenEndInvPayload(false, frameWork.rows()));
     }
@@ -143,7 +144,7 @@ public class AttachingScreen<T extends AbstractContainerMenu>{
     public void mouseScrolled(IScreenEvent event) {
         if(temporarilyDisabled) return;
         double scrollY = event.getScrollDeltaY();
-        frameWork.mouseScrolled(event.getMouseX(),event.getMouseY(),scrollY);
+        event.setCanceled(frameWork.mouseScrolled(event.getMouseX(),event.getMouseY(),scrollY));
     }
 
     public void keyPressed(IScreenEvent event) {

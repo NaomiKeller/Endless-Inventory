@@ -4,7 +4,7 @@ import com.google.gson.*;
 import com.kwwsyk.endinv.common.client.option.IClientConfig;
 import com.kwwsyk.endinv.common.client.option.TextureMode;
 import com.kwwsyk.endinv.common.menu.page.PageType;
-import com.kwwsyk.endinv.common.options.IConfigValue;
+import com.kwwsyk.endinv.common.options.LegacyIConfigValue;
 import com.kwwsyk.endinv.common.util.SortType;
 import net.fabricmc.loader.api.FabricLoader;
 import org.slf4j.Logger;
@@ -150,45 +150,45 @@ public final class FabricClientConfig implements IClientConfig {
         }
     }
 
-    private <T> IConfigValue<T> tracked(Supplier<T> getter, Consumer<T> setter) {
-        return IConfigValue.of(getter, value -> {
+    private <T> LegacyIConfigValue<T> tracked(Supplier<T> getter, Consumer<T> setter) {
+        return LegacyIConfigValue.of(getter, value -> {
             setter.accept(value);
             save();
         });
     }
 
     @Override
-    public IConfigValue<Boolean> attaching() {
+    public LegacyIConfigValue<Boolean> attaching() {
         return tracked(() -> attachingMenu, value -> attachingMenu = value);
     }
 
     @Override
-    public IConfigValue<Integer> rows() {
+    public LegacyIConfigValue<Integer> rows() {
         return tracked(() -> rowCount, value -> rowCount = value);
     }
 
     @Override
-    public IConfigValue<Integer> columns() {
+    public LegacyIConfigValue<Integer> columns() {
         return tracked(() -> columnCount, value -> columnCount = value);
     }
 
     @Override
-    public IConfigValue<Boolean> autoSuitColumn() {
+    public LegacyIConfigValue<Boolean> autoSuitColumn() {
         return tracked(() -> autoSuitColumn, value -> autoSuitColumn = value);
     }
 
     @Override
-    public IConfigValue<TextureMode> textureMode() {
+    public LegacyIConfigValue<TextureMode> textureMode() {
         return tracked(() -> textureMode, value -> textureMode = value);
     }
 
     @Override
-    public IConfigValue<Boolean> screenDebugging() {
+    public LegacyIConfigValue<Boolean> screenDebugging() {
         return tracked(() -> screenDebug, value -> screenDebug = value);
     }
 
     @Override
-    public IConfigValue<Integer> maxPageBarCount() {
+    public LegacyIConfigValue<Integer> maxPageBarCount() {
         return tracked(() -> maxPageBars, value -> maxPageBars = value);
     }
 

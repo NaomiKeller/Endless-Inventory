@@ -12,6 +12,7 @@ import com.kwwsyk.endinv.common.client.gui.page.manager.PageManager;
 import com.kwwsyk.endinv.common.client.gui.widget.PageSwitchBar;
 import com.kwwsyk.endinv.common.client.gui.widget.SortTypeSwitchBox;
 import com.kwwsyk.endinv.common.client.option.ClientConfigs;
+import com.kwwsyk.endinv.common.client.option.PageSwitchBarConfig;
 import com.kwwsyk.endinv.common.client.option.SFParamProvider;
 import com.kwwsyk.endinv.common.client.option.TextureMode;
 import com.kwwsyk.endinv.common.menu.page.PageType;
@@ -79,6 +80,8 @@ public class ScreenFramework implements PageManager, ContainerEventHandler, Rend
     public SortTypeSwitchBox sortTypeSwitchBox;
     private Button reverseSortButton;
     private final List<AbstractWidget> widgets = new ArrayList<>();
+    private boolean widgetsManagedByScreen;
+    private boolean consumeNextRelease;
     //page meta data fields
     private int rows;
     private final int columns;
@@ -121,19 +124,24 @@ public class ScreenFramework implements PageManager, ContainerEventHandler, Rend
         //---WIDGET DATA---
         //------PAGES-----------
         //------prepare page data---------
-        this.pageX = param.pageParamAdjusted().x();
-        this.pageY = param.pageParamAdjusted().y();
-        this.pageXSize = param.pageParamAdjusted().width();
-        this.pageYSize = param.pageParamAdjusted().height();
+        IRectangleParam pageParam = param.pageParamAdjusted();
+        IRectangleParam configButtonParam = param.configButtonA();
+        var pageTabParam = param.pageTabParamAdjusted();
+        this.pageX = pageParam.x();
+        this.pageY = pageParam.y();
+        this.pageXSize = pageParam.width();
+        this.pageYSize = pageParam.height();
         this.pages = buildPages(param.pages());//is page a widget? but init page bar count indeed needs it.
         //page switch bar
-        this.pageBarCount = Math.min(param.pageTabCount(), getPages().size());
-        this.pageSwitchBar = new PageSwitchBar(this, param.pageTabParamAdjusted(), pageBarCount, param.textureMode());
-        this.pageBarScrollUpButtonParam = param.pageTabIncA();
-        this.pageBarScrollDownButtonParam = param.pageTabDecA();
+        int pageTabMaxLength = getPageTabMaxLength(pageTabParam, pageParam, configButtonParam);
+        this.pageBarCount = Math.min(pageTabParam.getMaxTabCount(getPages().size(), pageTabMaxLength), getPages().size());
+        firstPageIndex = Math.max(0, Math.min(firstPageIndex, Math.max(0, getPages().size() - pageBarCount)));
+        this.pageSwitchBar = new PageSwitchBar(this, pageTabParam, pageBarCount, param.textureMode());
+        this.pageBarScrollUpButtonParam = param.pageTabDecA();
+        this.pageBarScrollDownButtonParam = param.pageTabIncA();
         //other
         this.searchBoxParam = param.searchBoxA();
-        this.configButtonParam = param.configButtonA();
+        this.configButtonParam = configButtonParam;
         this.sortBoxParam = param.sortBoxA();
         this.reverseSortButtonParam = param.reverseSortButtonA();
 
@@ -148,6 +156,13 @@ public class ScreenFramework implements PageManager, ContainerEventHandler, Rend
         addWidgets();
 
         INSTANCE = this;
+    }
+
+    private static int getPageTabMaxLength(PageSwitchBarConfig.Param pageTabParam, IRectangleParam pageParam, IRectangleParam configButtonParam) {
+        if(pageTabParam.direction_isVertical()) {
+            return Math.max(0, configButtonParam.y() - pageParam.y());
+        }
+        return pageParam.width();
     }
 
     private void addWidgets() {
@@ -166,6 +181,7 @@ public class ScreenFramework implements PageManager, ContainerEventHandler, Rend
         this.sortTypeSwitchBox = new SortTypeSwitchBox(this,  sortBoxParam, getDisplayingPage().getSortTypes());
 
         this.searchBox.setValue(searching());
+        syncPageControlsVisibility();
 
         if (pageBarCount < getPages().size()) {
             Button up = pageBarScrollUpButtonParam.buildButton(Component.literal("^"), btn -> {
@@ -190,6 +206,14 @@ public class ScreenFramework implements PageManager, ContainerEventHandler, Rend
         widgets.forEach(installer);
     }
 
+    public void setWidgetsManagedByScreen(boolean widgetsManagedByScreen) {
+        this.widgetsManagedByScreen = widgetsManagedByScreen;
+    }
+
+    public void consumeNextMouseRelease() {
+        this.consumeNextRelease = true;
+    }
+
     public void renderBg(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         SFBgRenderer.renderBg(guiGraphics, partialTick, mouseX, mouseY);
         getDisplayingPage().renderBg(guiGraphics, partialTick, mouseX, mouseY);
@@ -203,6 +227,8 @@ public class ScreenFramework implements PageManager, ContainerEventHandler, Rend
         roughMouseY = mouseY;
 
         isHoveringOnPage = hasClickedOnPage(mouseX, mouseY);
+
+        renderWidgetsNotManagedByScreen(guiGraphics, mouseX, mouseY, partialTick);
 
         if(!sortTypeSwitchBox.isMouseOver(mouseX, mouseY)) {
             getDisplayingPage().renderTooltip(guiGraphics, mouseX, mouseY);
@@ -220,10 +246,19 @@ public class ScreenFramework implements PageManager, ContainerEventHandler, Rend
 
     }
 
+    private void renderWidgetsNotManagedByScreen(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+        if(widgetsManagedByScreen) {
+            return;
+        }
+        for(AbstractWidget widget : widgets) {
+            widget.render(guiGraphics, mouseX, mouseY, partialTick);
+        }
+    }
+
     protected boolean hasClickedOnPage(double mouseX, double mouseY) {
         return mouseX >= (double) getPageX() && mouseX <= (double) getPageX() + pageXSize
                 && mouseY >= (double) getPageY() && mouseY <= (double) getPageY() + pageYSize
-                && !sortTypeSwitchBox.isHovered();
+                && !sortTypeSwitchBox.isMouseOver(mouseX, mouseY);
     }
 
     public void pageSwitched(int index) {
@@ -231,8 +266,18 @@ public class ScreenFramework implements PageManager, ContainerEventHandler, Rend
         normalizeSortTypeForPage();
         this.sortTypeSwitchBox.setSortTypes(getDisplayingPage().getSortTypes());
         //getDisplayingPage().syncContentToServer();
+        syncPageControlsVisibility();
+    }
+
+    private void syncPageControlsVisibility() {
         this.searchBox.setVisible(getDisplayingPage().hasSearchbox());
-        this.sortTypeSwitchBox.visible = getDisplayingPage().hasSortTypeSwitchBar();
+        syncSortControlsVisibility();
+    }
+
+    private void syncSortControlsVisibility() {
+        boolean visible = getDisplayingPage().hasSortTypeSwitchBar();
+        this.sortTypeSwitchBox.visible = visible;
+        this.reverseSortButton.visible = visible;
     }
 
     public void switchSortTypeTo(SortType type) {
@@ -246,7 +291,7 @@ public class ScreenFramework implements PageManager, ContainerEventHandler, Rend
     private void normalizeSortTypeForPage() {
         List<SortType> sortTypes = getDisplayingPage().getSortTypes();
         if(!sortTypes.contains(sortType) && !sortTypes.isEmpty()) {
-            sortType = sortTypes.get(0);
+            sortType = sortTypes.getFirst();
         }
     }
 
@@ -262,7 +307,7 @@ public class ScreenFramework implements PageManager, ContainerEventHandler, Rend
     }
 
     public boolean overridePageHovering() {
-        return sortTypeSwitchBox.isHovered();
+        return sortTypeSwitchBox.isMouseOver(roughMouseX, roughMouseY);
     }
 
     @Nullable
@@ -339,6 +384,9 @@ public class ScreenFramework implements PageManager, ContainerEventHandler, Rend
                 return true;
             }
         }
+        if(mouseClickedOnWidgets(mouseX, mouseY, keyCode)) {
+            return true;
+        }
         //handle menu item quick move
         boolean flg = inputHandler.isActiveAndMatches(KeyMappings.QUICK_MOVE, InputConstants.Type.MOUSE.getOrCreate(keyCode));
         if (flg) {
@@ -396,6 +444,10 @@ public class ScreenFramework implements PageManager, ContainerEventHandler, Rend
 
         DisplayPage displayingPage = getDisplayingPage();
         displayingPage.release();
+        if(consumeNextRelease) {
+            consumeNextRelease = false;
+            return true;
+        }
         if (hasClickedOnPage(mouseX, mouseY)) {
             return displayingPage.mouseReleased(mouseX - getPageX(), mouseY - getPageY(), keyCode);
         }
@@ -405,15 +457,26 @@ public class ScreenFramework implements PageManager, ContainerEventHandler, Rend
 
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollY) {
         if (hasClickedOnPage(mouseX, mouseY)) {
-            return getDisplayingPage().mouseScrolled(mouseX - getPageX(), mouseY = getPageY(), scrollY);
+            return getDisplayingPage().mouseScrolled(mouseX - getPageX(), mouseY - getPageY(), scrollY);
         }
         return false;
     }
 
-    private boolean ignoreTextInput;
+    private boolean mouseClickedOnWidgets(double mouseX, double mouseY, int keyCode) {
+        if(sortTypeSwitchBox.mouseClicked(mouseX, mouseY, keyCode)) {
+            consumeNextMouseRelease();
+            return true;
+        }
+        for(AbstractWidget widget : widgets) {
+            if(widget != searchBox && widget != sortTypeSwitchBox && widget.mouseClicked(mouseX, mouseY, keyCode)) {
+                consumeNextMouseRelease();
+                return true;
+            }
+        }
+        return false;
+    }
 
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        this.ignoreTextInput = false;
 
         if (inputHandler.isActiveAndMatches(KeyMappings.STAR_ITEM, InputConstants.getKey(keyCode, scanCode))) {
             Slot clicked = findSlot(roughMouseX, roughMouseY);

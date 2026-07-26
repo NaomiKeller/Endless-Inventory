@@ -60,8 +60,8 @@ public class PageSwitchBar extends AbstractWidget {
         super(
                 param.tabParam().x(),
                 param.tabParam().y(),
-                param.direction_isVertical() ? param.tabParam().width() : param.tabParam().height() * adjustedMaxBars,
-                param.direction_isVertical() ? param.tabParam().height() * adjustedMaxBars : param.tabParam().width(),
+                param.direction_isVertical() ? param.tabParam().width() : param.tabParam().width() * adjustedMaxBars,
+                param.direction_isVertical() ? param.tabParam().height() * adjustedMaxBars : param.tabParam().height(),
                 Component.empty()
         );
         framework = screenFramework;
@@ -85,6 +85,7 @@ public class PageSwitchBar extends AbstractWidget {
             return false;
         }
         framework.pageSwitched(index);
+        framework.consumeNextMouseRelease();
         return true;
     }
 
@@ -129,7 +130,7 @@ public class PageSwitchBar extends AbstractWidget {
         tabX = getX();
         tabY = getY();
         for (int i = ScreenFramework.firstPageIndex; i < ScreenFramework.firstPageIndex + framework.pageBarCount; ++i) {
-            framework.getPages().get(i).renderPageIcon(guiGraphics, tabX + 15, tabY + 5, partialTick);
+            framework.getPages().get(i).renderPageIcon(guiGraphics, tabX + Math.max(2, tabWidth - 17), tabY + Math.max(2, (tabHeight - 18) / 2), partialTick);
             if (mouseX > tabX && mouseX < tabX + tabWidth && mouseY > tabY && mouseY < tabY + tabHeight) {
                 guiGraphics.renderTooltip(
                         Minecraft.getInstance().font,

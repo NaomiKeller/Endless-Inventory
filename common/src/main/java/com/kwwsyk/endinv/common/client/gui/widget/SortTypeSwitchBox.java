@@ -13,6 +13,8 @@ import java.util.List;
 
 public class SortTypeSwitchBox extends AbstractWidget {
 
+    private static final int DROPDOWN_Z_OFFSET = 200;
+
     public ScreenFramework framework;
     private final int singleBoxHeight;
     private List<SortType> sortTypes;
@@ -69,14 +71,18 @@ public class SortTypeSwitchBox extends AbstractWidget {
     public boolean mouseClicked(double mouseX, double mouseY, int button){
         if(active && visible && !this.clicked(mouseX,mouseY) && isOpen){
             setOpen(false);
+            framework.consumeNextMouseRelease();
             return true;
-        }else return super.mouseClicked(mouseX,mouseY,button);
+        }
+        boolean clicked = super.mouseClicked(mouseX,mouseY,button);
+        if(clicked) {
+            framework.consumeNextMouseRelease();
+        }
+        return clicked;
     }
 
     @Override
     protected void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        guiGraphics.pose().pushPose();
-        guiGraphics.pose().translate(0, 0, 1000);
         guiGraphics.fill(getX(), getY(), getX() + width, getY() + singleBoxHeight, 0xff888888);
         guiGraphics.fill(getX() + 1, getY() + 1, getX() + width - 1, getY() + singleBoxHeight - 1, 0xff000000);
         if (isHoveringOnSingleBox(mouseY, getY()))
@@ -86,7 +92,8 @@ public class SortTypeSwitchBox extends AbstractWidget {
         renderScrollingString(guiGraphics, Minecraft.getInstance().font, Component.literal(s),
                 getX(),getY(), getX()+width,getY()+singleBoxHeight,0xffffffff);
         if(isOpen){
-            guiGraphics.pose().translate(0, 0, 100.0F);
+            guiGraphics.pose().pushPose();
+            guiGraphics.pose().translate(0, 0, DROPDOWN_Z_OFFSET);
             int y1 = getY() +singleBoxHeight;
             for (SortType type : sortTypes) {
                 guiGraphics.fill(getX(), y1, getX() + width, y1 + singleBoxHeight, 0xff888888);
@@ -99,8 +106,8 @@ public class SortTypeSwitchBox extends AbstractWidget {
                         getX(),y1, getX()+width,y1+singleBoxHeight,0xffffffff);
                 y1+=singleBoxHeight;
             }
+            guiGraphics.pose().popPose();
         }
-        guiGraphics.pose().popPose();
     }
 
     public void renderTooltip(GuiGraphics guiGraphics, int mouseX, int mouseY) {
@@ -120,6 +127,14 @@ public class SortTypeSwitchBox extends AbstractWidget {
             }
             y1+=singleBoxHeight;
         }
+    }
+
+    public boolean covers(int x, int y, int width, int height) {
+        return visible && isOpen
+                && x < getX() + this.width
+                && x + width > getX()
+                && y < getY() + this.height
+                && y + height > getY();
     }
 
     private boolean isHoveringOnSingleBox(int mouseY,int minY){

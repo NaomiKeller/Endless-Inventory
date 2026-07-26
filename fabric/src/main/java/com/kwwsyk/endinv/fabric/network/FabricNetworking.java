@@ -26,6 +26,7 @@ public final class FabricNetworking {
         c2s.register(StarItemPayload.TYPE, StarItemPayload.STREAM_CODEC);
         c2s.register(ToggleCraftingPayload.TYPE, ToggleCraftingPayload.STREAM_CODEC);
         c2s.register(SyncedConfig.TYPE, SyncedConfig.STREAM_CODEC);
+        c2s.register(BulkQuickMoveFromPagePayload.TYPE, BulkQuickMoveFromPagePayload.STREAM_CODEC);
         if (FabricLoader.getInstance().isModLoaded("jei")) {
             c2s.register(JeiTransferRecipePayload.TYPE, JeiTransferRecipePayload.STREAM_CODEC);
         }

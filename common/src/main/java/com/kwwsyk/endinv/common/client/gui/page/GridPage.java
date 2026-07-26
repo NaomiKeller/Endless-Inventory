@@ -1,15 +1,14 @@
 package com.kwwsyk.endinv.common.client.gui.page;
 
 import com.kwwsyk.endinv.common.client.CachedSrcInv;
-import com.kwwsyk.endinv.common.client.gui.EndlessInventoryScreen;
 import com.kwwsyk.endinv.common.client.gui.ScreenFramework;
+import com.kwwsyk.endinv.common.client.gui.bg.IRectangleParam;
 import com.kwwsyk.endinv.common.client.gui.page.slotView.PageViewContainer;
 import com.kwwsyk.endinv.common.menu.page.PageType;
 import com.kwwsyk.endinv.common.util.ItemKey;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.Nullable;
@@ -62,7 +61,7 @@ public abstract class GridPage extends DisplayPage {//todo support item and flui
 
     public int getSlotByMouseOffset(double XOffset, double YOffset){
         XOffset = XOffset - MARGIN_SIDE_WIDTH; YOffset = YOffset - MARGIN_TOP_HEIGHT;
-        if(XOffset<0||YOffset<0||XOffset>18* framework.columns()||YOffset>18* framework.rows()) return -1;
+        if(XOffset<0||YOffset<0||XOffset>=18* framework.columns()||YOffset>=18* framework.rows()) return -1;
         return (int)XOffset/18 + framework.columns()*((int)YOffset/18);
     }
 
@@ -89,7 +88,12 @@ public abstract class GridPage extends DisplayPage {//todo support item and flui
         final int slotSize = 18;
         final int rowAt = slot / framework.columns();
         final int columnAt = slot % framework.columns();
-        return new Rect2i(leftPos+slotSize*columnAt, topPos+slotSize*rowAt, slotSize, slotSize);
+        return new Rect2i(
+                leftPos + MARGIN_SIDE_WIDTH + slotSize * columnAt,
+                topPos + MARGIN_TOP_HEIGHT + slotSize * rowAt,
+                slotSize,
+                slotSize
+        );
     }
 
     @Override
@@ -101,12 +105,8 @@ public abstract class GridPage extends DisplayPage {//todo support item and flui
         return (int)XOffset/18==(int)lastX/18 && (int)YOffset/18 == (int)lastY/18;
     }
 
-    protected boolean isHiddenBySortBox(int rowIndex, int columnIndex){
-        return rowIndex<=2 && columnIndex<=3 && Minecraft.getInstance().screen instanceof AbstractContainerScreen<?> screen
-                && (
-                screen instanceof EndlessInventoryScreen EIS && EIS.getFrameWork().sortTypeSwitchBox.isOpen() && columnIndex <=2
-                        || framework.sortTypeSwitchBox.isOpen()
-                );
+    public boolean isHiddenBySortBox(IRectangleParam rectangle){
+        return framework.sortTypeSwitchBox.covers(rectangle.x(), rectangle.y(), rectangle.width(), rectangle.height());
     }
 
     public void renderEmpty(GuiGraphics guiGraphics, int x, int y, ItemStack itemStack){

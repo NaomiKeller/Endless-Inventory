@@ -2,10 +2,10 @@ package com.kwwsyk.endinv.fabric.integrates.jei;
 
 import com.kwwsyk.endinv.common.client.gui.AttachingScreen;
 import com.kwwsyk.endinv.common.client.gui.ScreenFramework;
-import com.kwwsyk.endinv.common.client.gui.page.DisplayPage;
 import com.kwwsyk.endinv.fabric.client.events.ScreenAttachment;
 import com.mojang.logging.LogUtils;
 import mezz.jei.api.constants.VanillaTypes;
+import mezz.jei.api.gui.builder.IClickableIngredientFactory;
 import mezz.jei.api.gui.handlers.IGuiContainerHandler;
 import mezz.jei.api.ingredients.IIngredientType;
 import mezz.jei.api.ingredients.ITypedIngredient;
@@ -13,11 +13,9 @@ import mezz.jei.api.runtime.IClickableIngredient;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.world.item.ItemStack;
-import org.jetbrains.annotations.TestOnly;
 import org.slf4j.Logger;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
 public class AttachmentGuiHandler implements IGuiContainerHandler<AbstractContainerScreen<?>> {
@@ -35,94 +33,62 @@ public class AttachmentGuiHandler implements IGuiContainerHandler<AbstractContai
         return IGuiContainerHandler.super.getGuiExtraAreas(containerScreen);
     }
 
+    /**
+     * Return a clickable ingredient under the mouse that JEI could not normally detect, used for JEI recipe lookups.
+     * <p>
+     * This is useful for guis that don't have normal slots (which is how JEI normally detects items under the mouse).
+     * <p>
+     * This can also be used to let JEI look up liquids in tanks directly, by returning a FluidStack.
+     * Works with any ingredient type that has been registered with {@code IModIngredientRegistration}.
+     *
+     * @param builder
+     * @param containerScreen
+     * @param mouseX          the current X position of the mouse in screen coordinates.
+     * @param mouseY          the current Y position of the mouse in screen coordinates.
+     * @since 19.23.0
+     */
     @Override
-    public Optional<IClickableIngredient<?>> getClickableIngredientUnderMouse(AbstractContainerScreen<?> containerScreen, double mouseX, double mouseY) {
-        if(ScreenFramework.getInstance() != null){
-            try {
-                return Optional.of(new ItemClickEventWrapper(ScreenFramework.getInstance().getDisplayingPage(), mouseX, mouseY));
-            } catch (Exception e) {
-                return Optional.empty();
-            }
-        }
-        return Optional.empty();
+    public Optional<? extends IClickableIngredient<?>> getClickableIngredientUnderMouse(
+            IClickableIngredientFactory builder,
+            AbstractContainerScreen<?> containerScreen,
+            double mouseX, double mouseY
+    ) {
+        var sf = ScreenFramework.getInstance();
+        if (sf == null) return Optional.empty();
+
+        var page = sf.getDisplayingPage();
+
+        ItemStack hovered = page.getHoveredOrClickedItem(mouseX, mouseY);
+        if (hovered == null || hovered.isEmpty()) return Optional.empty();
+
+        Rect2i area = page.getInteractableAreaUnderMouse(mouseX, mouseY);
+        if (area == null) return Optional.empty();
+
+        return Optional.of(new ItemClickEventWrapper(hovered, area));
     }
 
 
-    public static class ItemClickEventWrapper implements IClickableIngredient<ItemStack>{
+    public static class ItemClickEventWrapper implements IClickableIngredient<ItemStack> {
+        private final ItemStack hovered;
+        private final Rect2i area;
 
-        DisplayPage page;
-        ItemStack hovered;
-        Rect2i hoveredSlotArea;
-
-        public ItemClickEventWrapper(DisplayPage page, double mouseX, double mouseY) {
-            this.page = page;
-            this.hovered = page.getHoveredOrClickedItem(mouseX,mouseY);
-            this.hoveredSlotArea = Objects.requireNonNull(page.getOneInteractableArea(mouseX - page.getPageLeft(), mouseY - page.getPageTop()));
-            try {
-                checkStatus(mouseX,mouseY);
-            } catch (Exception e) {
-                LOGGER.error("Check click area failed: ", e);
-            }
+        public ItemClickEventWrapper(ItemStack hovered, Rect2i area) {
+            this.hovered = hovered;
+            this.area = area;
         }
 
-        /**
-         * Get the typed ingredient that can be looked up by JEI for recipes.
-         *
-         * @since 11.5.0
-         * @deprecated use {@link #getIngredient()} and {@link #getIngredientType()} instead.
-         */
-        @Override @Deprecated @SuppressWarnings({"removal","nonextendable"})
+        @Override @SuppressWarnings("removal")
+        public IIngredientType<ItemStack> getIngredientType() { return VanillaTypes.ITEM_STACK; }
+        @Override @SuppressWarnings("removal")
+        public ItemStack getIngredient() { return hovered; }
+        @Override public Rect2i getArea() { return area; }
+
+        @Override @Deprecated @SuppressWarnings({"nonextendable"})
         public ITypedIngredient<ItemStack> getTypedIngredient() {
             return new ITypedIngredient<>() {
-                @Override
-                public IIngredientType<ItemStack> getType() {
-                    return getIngredientType();
-                }
-
-                @Override
-                public ItemStack getIngredient() {
-                    return ItemClickEventWrapper.this.getIngredient();
-                }
+                @Override public IIngredientType<ItemStack> getType() { return VanillaTypes.ITEM_STACK; }
+                @Override public ItemStack getIngredient() { return hovered; }
             };
-        }
-
-        /**
-         * @since 15.14.0
-         */
-        @Override
-        public IIngredientType<ItemStack> getIngredientType() {
-            return VanillaTypes.ITEM_STACK;
-        }
-
-        /**
-         * @since 15.14.0
-         */
-        @Override
-        public ItemStack getIngredient() {
-            return hovered;
-        }
-
-        /**
-         * Get the area that this clickable ingredient is drawn in, in absolute screen coordinates.
-         * This is used for click handling, to ensure the mouse-down and mouse-up are on the same ingredient.
-         *
-         * @since 11.5.0
-         */
-        @Override
-        public Rect2i getArea() {
-            return hoveredSlotArea;
-        }
-
-        @TestOnly
-        private void checkStatus(double mouseX, double mouseY){
-            Rect2i area = getArea();
-            if(!area.contains((int) mouseX, (int) mouseY))
-                throw new IllegalStateException(String.format(
-                        "The area does not contain clicked pos: clicked: [%.2f,%.2f], area: [from[%d,%d],to[%d,%d]]",
-                        mouseX,mouseY,
-                        area.getX(),area.getY(),
-                        area.getX()+area.getWidth(),area.getY()+area.getHeight()
-                ));
         }
     }
 }

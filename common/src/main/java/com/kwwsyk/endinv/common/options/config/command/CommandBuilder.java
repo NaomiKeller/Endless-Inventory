@@ -46,7 +46,7 @@ public final class CommandBuilder {
             case ComplexConfigEntryImpl<?> complex -> {
                 LiteralArgumentBuilder<CommandSourceStack> parent = Commands.literal(complex.key())
                         .executes(ctx -> {
-                            ctx.getSource().sendSuccess(() -> Component.literal("Section: " + complex.key()), false);
+                            ctx.getSource().sendSuccess(() -> Component.literal(String.join("\n", complex.print())), false);
                             return 1;
                         });
                 for (ConfigEntryImpl<?> field : complex.fields()) {

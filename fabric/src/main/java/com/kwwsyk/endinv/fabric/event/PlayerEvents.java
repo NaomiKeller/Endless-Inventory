@@ -86,7 +86,7 @@ public final class PlayerEvents {
 
         if (ServerConfigs.ENDINV_BEHAVIOR.TransferMode.get() == ContentTransferMode.ALL) {
             ServerLevelEndInv.getEndInvForPlayer(player).ifPresent(endInv -> {
-                ModInfo.getPacketDistributor().sendToPlayer(player, new EndInvContent(endInv.snapshotItemMap()));
+                ModInfo.getPacketDistributor().sendToPlayer(player, new EndInvContent(endInv.getItemMap()));
                 ModInfo.getPacketDistributor().sendToPlayer(player, EndInvMetadata.getWith(endInv));
             });
         }

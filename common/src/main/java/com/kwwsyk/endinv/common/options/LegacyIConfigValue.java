@@ -3,13 +3,14 @@ package com.kwwsyk.endinv.common.options;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-public interface IConfigValue<T> {
+@Deprecated
+public interface LegacyIConfigValue<T> {
     T get();
 
     void set(T t);
 
-    static <T> IConfigValue<T> of(Supplier<T> getter, Consumer<T> setter){
-        return new IConfigValue<T>() {
+    static <T> LegacyIConfigValue<T> of(Supplier<T> getter, Consumer<T> setter){
+        return new LegacyIConfigValue<T>() {
             @Override
             public T get() {
                 return getter.get();
@@ -22,8 +23,8 @@ public interface IConfigValue<T> {
         };
     }
 
-    static <T> IConfigValue<T> of(Supplier<T> getter, Consumer<T> setter, Runnable onset){
-        return new IConfigValue<T>() {
+    static <T> LegacyIConfigValue<T> of(Supplier<T> getter, Consumer<T> setter, Runnable onset){
+        return new LegacyIConfigValue<T>() {
             @Override
             public T get() {
                 return getter.get();

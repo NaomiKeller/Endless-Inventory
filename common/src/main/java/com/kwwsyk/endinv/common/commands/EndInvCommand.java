@@ -3,8 +3,11 @@ package com.kwwsyk.endinv.common.commands;
 import com.kwwsyk.endinv.common.EndlessInventory;
 import com.kwwsyk.endinv.common.ModRegistries;
 import com.kwwsyk.endinv.common.ServerLevelEndInv;
+import com.kwwsyk.endinv.common.autopick.options.PickupHelperOptions;
 import com.kwwsyk.endinv.common.data.EndlessInventoryData;
 import com.kwwsyk.endinv.common.menu.EndlessInventoryMenu;
+import com.kwwsyk.endinv.common.options.ServerConfigs;
+import com.kwwsyk.endinv.common.options.config.IConfigValue;
 import com.kwwsyk.endinv.common.util.Accessibility;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.BoolArgumentType;
@@ -15,6 +18,8 @@ import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.SimpleMenuProvider;
+
+import java.util.Map;
 
 /**
  * Registers and handles all commands related to the Endless Inventory system.
@@ -162,10 +167,93 @@ public class EndInvCommand {
                                 )
                         )
                 )
+                .then(
+                        Commands.literal("autoPick")
+                                .executes(
+                                        context-> {
+                                            boolean flag = true;
+                                            boolean flag1 = PICKUP_HELPER.EXP_DROPS.DIRECTED_DISTRIBUTE.get() == 0
+                                                    && PICKUP_HELPER.ITEM_DROPS.DIRECTED_DISTRIBUTE.get() == 0
+                                                    && !PICKUP_HELPER.ITEM_DROPS.DIRECTLY_SEND_TO_ENDINV.get();
+                                            for(var entry : DEFAULT_AUTOPICK_PLAN.entrySet()) {
+                                                flag &= entry.getKey().get().equals(entry.getValue());
+                                                flag1 &= !entry.getKey().get().equals(entry.getValue());
+                                            }
+                                            if(flag){
+                                                context.getSource().sendSystemMessage(
+                                                        Component.literal("AutoPick is in enabled status!")
+                                                );
+                                                return 0;
+                                            }
+                                            if(flag1){
+                                                context.getSource().sendSystemMessage(
+                                                        Component.literal("AutoPick is in disabled status!")
+                                                );
+                                                return 0;
+                                            }
+                                            context.getSource().sendSystemMessage(
+                                                    Component.literal("AutoPick is in custom configuration status!")
+                                            );
+                                            return 0;
+                                        }
+                                )
+                                .then(
+                                        Commands.literal("print")
+                                                .executes(
+                                                        context ->{
+                                                            context.getSource().sendSystemMessage(
+                                                                    Component.literal(String.join("\n", PICKUP_HELPER.ITEM_DROPS.print()))
+                                                            );
+                                                            context.getSource().sendSystemMessage(
+                                                                    Component.literal(String.join("\n", PICKUP_HELPER.EXP_DROPS.print()))
+                                                            );
+                                                            return 0;
+                                                        }
+                                                )
+                                )
+                                .then(
+                                        Commands.literal("enable")
+                                                .requires(src->src.hasPermission(1))
+                                                .executes(
+                                                        context -> {
+                                                            for(var entry : DEFAULT_AUTOPICK_PLAN.entrySet()) {
+                                                                entry.getKey().set(entry.getValue());
+                                                            }
+                                                            context.getSource().sendSystemMessage(
+                                                                    Component.literal("AutoPick has been enabled!")
+                                                            );
+                                                            return 1;
+                                                        }
+                                                )
+                                )
+                                .then(
+                                        Commands.literal("disable")
+                                                .requires(src->src.hasPermission(1))
+                                                .executes(
+                                                        context -> {
+                                                            for(var entry : DEFAULT_AUTOPICK_PLAN.entrySet()) {
+                                                                entry.getKey().set(!entry.getValue());
+                                                            }
+                                                            context.getSource().sendSystemMessage(
+                                                                    Component.literal("AutoPick has been disabled!")
+                                                            );
+                                                            return 1;
+                                                        }
+                                                )
+                                )
+                )
         );
     }
 
+    private static final PickupHelperOptions PICKUP_HELPER = ServerConfigs.PICKUP_HELPER;
 
+    private static final Map<IConfigValue<Boolean>, Boolean> DEFAULT_AUTOPICK_PLAN = Map.of(
+            PICKUP_HELPER.EXP_DROPS.PROTECT_DROPS, true,
+            PICKUP_HELPER.EXP_DROPS.TOUCH_DIRECTLY, true,
+            PICKUP_HELPER.ITEM_DROPS.PROTECT_DROPS, true,
+            PICKUP_HELPER.ITEM_DROPS.SEND_TO_INVENTORY, true,
+            PICKUP_HELPER.ITEM_DROPS.PICK_TO_ENDINV,true
+    );
 
     private static int byIndexRemove(CommandSourceStack source, int index, boolean forced) {
         //check index

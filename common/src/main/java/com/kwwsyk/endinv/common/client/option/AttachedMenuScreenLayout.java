@@ -15,7 +15,7 @@ import java.util.List;
 public abstract class AttachedMenuScreenLayout implements SFParamProvider{
 
     static final IRectangleParam PAGE_RECTANGLE = new ScreenRectangleWidgetParam(0,0,9*18 + 8 + 8, 17 + 15*18 + 12);
-    static final IRectangleParam SEARCH_BOX = new ScreenRectangleWidgetParam(1, 17 + 15*18 + 12, 8 + 9*18 + 8, 15);
+    static final IRectangleParam SEARCH_BOX = new ScreenRectangleWidgetParam(0, 17 + 15*18 + 12, 8 + 9*18 + 8, 20);
     static final IRectangleParam SORT_BOX = new ScreenRectangleWidgetParam(6, 5, 77, 12);
     static final IRectangleParam REVERSE_SORT_BUTTON = new ScreenRectangleWidgetParam(6 + 77 + 2, 5, 12, 12);
     static final IRectangleParam CONFIG_BUTTON = new ScreenRectangleWidgetParam(-20,-20,20,20);
@@ -81,19 +81,21 @@ public abstract class AttachedMenuScreenLayout implements SFParamProvider{
         @Override
         public AttachedMenuScreenLayout adjust(AbstractContainerScreen<?> screen) {
             int menuLeft = ClientModInfo.containerScreenHelper.getGuiLeft(screen);
-            int rows = calculateRows(screen.height - topPos - 15);
+            int rows = calculateRows(screen.height - topPos - 20);
             int columns = calculateColumns(menuLeft - leftPos - /*Reversed widget space*/30);
+            int pageWidth = textureMode == TextureMode.TRANSPARENT ? pageRectangleParam.width() : columns * 18 + 8 + 8;
+            int pageHeight = textureMode == TextureMode.TRANSPARENT ? pageRectangleParam.height() : rows * 18 + 17 + 12;
             return new AttachedMenuScreenLayout.LeftLayout(
                     new PageBasicLayoutConfig.Param(rows, columns, false,false),
-                    displayPages, pageSwitchBarParam, leftPos, topPos, textureMode,
+                    displayPages, adjustPageSwitchBarParam(pageHeight), leftPos, topPos, textureMode,
                     new ScreenRectangleWidgetParam(
                             0, 0,
-                            textureMode==TextureMode.TRANSPARENT ? pageRectangleParam.width() : columns * 18 + 8 + 8,
-                            textureMode==TextureMode.TRANSPARENT ? pageRectangleParam.height() : rows * 18 + 17 + 12
+                            pageWidth,
+                            pageHeight
                     ),
-                    adjustSearchBox(screen, textureMode == TextureMode.TRANSPARENT ? pageRectangleParam.height() : rows * 18 +17+12),
+                    adjustSearchBox(screen, pageWidth, pageHeight),
                     sortBoxParam,
-                    adjustConfigButton(Math.max(textureMode == TextureMode.TRANSPARENT ? pageRectangleParam.height() : rows * 18 +17+12, pageSwitchBarParam.maxBars()), screen),
+                    adjustConfigButton(pageHeight, screen),
                     reverseSortButtonParam
             );
         }
@@ -132,24 +134,26 @@ public abstract class AttachedMenuScreenLayout implements SFParamProvider{
         public AttachedMenuScreenLayout adjust(AbstractContainerScreen<?> screen) {
             int menuLeft = ClientModInfo.containerScreenHelper.getGuiLeft(screen);
             int menuRight = menuLeft + ClientModInfo.containerScreenHelper.getGuiXSize(screen);
-            int rows = calculateRows(screen.height - topPos - 15);
+            int rows = calculateRows(screen.height - topPos - 20);
             int columns = calculateColumns(screen.width - menuRight);
+            int pageWidth = textureMode == TextureMode.TRANSPARENT ? pageRectangleParam.width() : columns * 18 + 8 + 8;
+            int pageHeight = textureMode == TextureMode.TRANSPARENT ? pageRectangleParam.height() : rows * 18 + 17 + 12;
             int sfW = (pageSwitchBarParam.direction_isVertical() ? pageSwitchBarParam.tabParam().width() : 0)
-                    + (textureMode == TextureMode.TRANSPARENT ? pageRectangleParam.width() : pageParam.columns() * 18 + 8 + 8);
+                    + pageWidth;
             return new AttachedMenuScreenLayout.RightLayout(
                     new PageBasicLayoutConfig.Param(rows, columns, false, false),
                     displayPages,
-                    pageSwitchBarParam,
+                    adjustPageSwitchBarParam(pageHeight),
                     screen.width - sfW, topPos,
                     textureMode,
                     new ScreenRectangleWidgetParam(
                             0, 0,
-                            textureMode==TextureMode.TRANSPARENT ? pageRectangleParam.width() : columns * 18 + 8 + 8,
-                            textureMode==TextureMode.TRANSPARENT ? pageRectangleParam.height() : rows * 18 + 17 + 12
+                            pageWidth,
+                            pageHeight
                     ),
-                    adjustSearchBox(screen, textureMode == TextureMode.TRANSPARENT ? pageRectangleParam.height() : rows * 18 +17+12),
+                    adjustSearchBox(screen, pageWidth, pageHeight),
                     sortBoxParam,
-                    adjustConfigButton(textureMode == TextureMode.TRANSPARENT ? pageRectangleParam.height() : rows * 18 +17+12, screen),
+                    adjustConfigButton(pageHeight, screen),
                     reverseSortButtonParam
             );
         }
@@ -349,12 +353,36 @@ public abstract class AttachedMenuScreenLayout implements SFParamProvider{
         return Math.max(1, columns);
     }
 
-    protected IRectangleParam adjustSearchBox(AbstractContainerScreen<?> screen,int givenPageY){
-        return new ScreenRectangleWidgetParam(searchBoxParam.x(), givenPageY, searchBoxParam.width(), Mth.clamp(searchBoxParam.height(), 10, screen.height - topPos - givenPageY));
+    protected IRectangleParam adjustSearchBox(AbstractContainerScreen<?> screen, int givenPageX, int givenPageY){
+        return new ScreenRectangleWidgetParam(searchBoxParam.x(), givenPageY, givenPageX - searchBoxParam.x(), Mth.clamp(searchBoxParam.height(), 10, screen.height - topPos - givenPageY));
     }
 
-    protected IRectangleParam adjustConfigButton(int givenPageY, Screen screen){//todo
+    protected IRectangleParam adjustConfigButton(int givenPageY, Screen screen){
         return new ScreenRectangleWidgetParam(configButtonParam.x(), Math.min(givenPageY, screen.height - configButtonParam.height() + configButtonParam.y()), configButtonParam.width(), configButtonParam.height());
+    }
+
+    protected PageSwitchBarConfig.Param adjustPageSwitchBarParam(int availableLength){
+        IRectangleParam tab = pageSwitchBarParam.tabParam();
+        IRectangleParam buttonDec = pageSwitchBarParam.buttonDec();
+        IRectangleParam buttonInc = pageSwitchBarParam.buttonInc();
+        int shownTabs = pageSwitchBarParam.getMaxTabCount(displayPages.size(), availableLength);
+        if(pageSwitchBarParam.direction_isVertical()){
+            int buttonX = tab.x() + tab.width() - buttonDec.width();
+            return new PageSwitchBarConfig.Param(
+                    pageSwitchBarParam.maxBars(),
+                    tab,
+                    true,
+                    new ScreenRectangleWidgetParam(buttonX, tab.y() - buttonDec.height(), buttonDec.width(), buttonDec.height()),
+                    new ScreenRectangleWidgetParam(tab.x() + tab.width() - buttonInc.width(), tab.y() + shownTabs * tab.height(), buttonInc.width(), buttonInc.height())
+            );
+        }
+        return new PageSwitchBarConfig.Param(
+                pageSwitchBarParam.maxBars(),
+                tab,
+                false,
+                new ScreenRectangleWidgetParam(tab.x() - buttonDec.width(), tab.y(), buttonDec.width(), buttonDec.height()),
+                new ScreenRectangleWidgetParam(tab.x() + shownTabs * tab.width(), tab.y(), buttonInc.width(), buttonInc.height())
+        );
     }
 
     @Override
@@ -385,11 +413,6 @@ public abstract class AttachedMenuScreenLayout implements SFParamProvider{
     @Override
     public List<PageType> pages() {
         return displayPages;
-    }
-
-    @Override
-    public int pageTabCount() {
-        return pageSwitchBarParam.maxBars();
     }
 
     @Override

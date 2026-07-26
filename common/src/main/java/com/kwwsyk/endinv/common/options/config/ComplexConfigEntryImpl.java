@@ -113,6 +113,6 @@ public abstract non-sealed class ComplexConfigEntryImpl<C> extends ConfigEntryIm
 
     @Override
     public String toString(){
-        return key() + (defaultValue != null ? ", default value: " + defaultValue() : "Complex Config");
+        return key() + (defaultValue != null ? ", default value: " + defaultValue() : " Complex Config");
     }
 }

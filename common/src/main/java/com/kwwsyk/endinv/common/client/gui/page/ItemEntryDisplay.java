@@ -1,8 +1,8 @@
 package com.kwwsyk.endinv.common.client.gui.page;
 
-import com.kwwsyk.endinv.common.client.gui.EndlessInventoryScreen;
 import com.kwwsyk.endinv.common.client.gui.ScreenFramework;
 import com.kwwsyk.endinv.common.client.gui.bg.FromResource;
+import com.kwwsyk.endinv.common.client.gui.bg.IRectangleParam;
 import com.kwwsyk.endinv.common.client.gui.bg.SFBgRenderer;
 import com.kwwsyk.endinv.common.client.gui.bg.Transparent;
 import com.kwwsyk.endinv.common.client.gui.page.slotView.EntryPageViewContainer;
@@ -11,7 +11,6 @@ import com.kwwsyk.endinv.common.client.option.ClientConfigs;
 import com.kwwsyk.endinv.common.client.option.TextureMode;
 import com.kwwsyk.endinv.common.menu.page.PageType;
 import com.kwwsyk.endinv.common.util.ItemKey;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.renderer.Rect2i;
@@ -165,23 +164,26 @@ public class ItemEntryDisplay extends ItemDisplay{
     @Override
     public int getSlotByMouseOffset(double XOffset, double YOffset) {
         XOffset = XOffset - MARGIN_SIDE_WIDTH; YOffset = YOffset - MARGIN_TOP_HEIGHT;
-        if(XOffset<0||YOffset<0||XOffset>18* framework.columns()||YOffset>18* framework.rows()) return -1;
+        if(XOffset<0||YOffset<0||XOffset>=18* framework.columns()||YOffset>=18* framework.rows()) return -1;
         return (int)YOffset/18;
     }
 
     @Override
-    public Rect2i getSlotArea(int slot) {
+    public @Nullable Rect2i getSlotArea(int slot) {
+        if(slot<0) return null;
         final int slotHeight = 18;
         final int slotWidth = framework.columns() * 18;
-        return new Rect2i(leftPos, topPos+slotHeight*slot, slotWidth, slotHeight);
+        return new Rect2i(
+                leftPos + MARGIN_SIDE_WIDTH,
+                topPos + MARGIN_TOP_HEIGHT + slotHeight * slot,
+                slotWidth,
+                slotHeight
+        );
     }
 
     @Override
-    protected boolean isHiddenBySortBox(int rowIndex, int columnIndex) {
-        return rowIndex<=2 && Minecraft.getInstance().screen instanceof AbstractContainerScreen<?> screen && (
-                screen instanceof EndlessInventoryScreen EIS && EIS.getFrameWork().sortTypeSwitchBox.isOpen()
-                        || framework.sortTypeSwitchBox.isOpen()
-        );
+    public boolean isHiddenBySortBox(IRectangleParam rectangle) {
+        return super.isHiddenBySortBox(rectangle);
     }
 
 

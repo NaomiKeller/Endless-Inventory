@@ -214,7 +214,7 @@ public class ScreenAttachment {
     }
 
     @SubscribeEvent
-    public static void mouseScrolled(ScreenEvent.MouseScrolled.Post event){
+    public static void mouseScrolled(ScreenEvent.MouseScrolled.Pre event){
         var attached = checkAndGetAttached(event);
         if(attached!=null){
             attached.mouseScrolled(new IScreenEvent() {
@@ -231,6 +231,11 @@ public class ScreenAttachment {
                 @Override
                 public double getMouseX() {
                     return event.getMouseX();
+                }
+
+                @Override
+                public void setCanceled(boolean canceled) {
+                    event.setCanceled(canceled);
                 }
             });
         }

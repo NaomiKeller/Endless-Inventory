@@ -16,7 +16,6 @@ import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 public class PayloadReg {
 
 
-
     @SubscribeEvent
     public static void registerPayload(final RegisterPayloadHandlersEvent event){
         final PayloadRegistrar registrar = event.registrar("1");

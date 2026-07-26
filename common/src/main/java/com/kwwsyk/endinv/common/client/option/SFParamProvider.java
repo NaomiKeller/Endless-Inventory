@@ -15,7 +15,6 @@ public interface SFParamProvider {
     TextureMode textureMode();
 
     List<PageType> pages();
-    int pageTabCount();
 
     /*
     * Absolute coordinates

@@ -7,6 +7,10 @@ public interface IScreenEvent {
 
     default void addListener(AbstractWidget widget){}
 
+    default boolean rendersAddedWidgets(){
+        return false;
+    }
+
     default double getMouseX(){
         return 0;
     }

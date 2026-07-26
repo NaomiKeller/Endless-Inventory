@@ -61,12 +61,28 @@ public class ItemPageSlotView extends Slot implements ResourcePointer<ItemStack>
      */
     @Override
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+        if(isHiddenBySortBox()) {
+            renderWithoutDecorations(guiGraphics, mouseX, mouseY, partialTick);
+            return;
+        }
         ItemStack stack = get();
         if(hasClickedOn(mouseX, mouseY)) renderSlotHighlightBack(guiGraphics, mouseX, mouseY, partialTick);
         guiGraphics.renderItem(stack, x, y, 0);
         guiGraphics.renderItemDecorations(Minecraft.getInstance().font, stack, x, y, page.getDisplayAmount(stack));
         if(hasClickedOn(mouseX, mouseY)) renderSlotHighlightFront(guiGraphics, mouseX, mouseY, partialTick);
         if(stack.isEmpty() && !stack.is(Items.AIR)) page.renderEmpty(guiGraphics, x, y, stack);
+    }
+
+    protected boolean isHiddenBySortBox() {
+        return page.isHiddenBySortBox(this);
+    }
+
+    @Override
+    public void renderWithoutDecorations(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+        ItemStack stack = get();
+        if(hasClickedOn(mouseX, mouseY)) renderSlotHighlightBack(guiGraphics, mouseX, mouseY, partialTick);
+        guiGraphics.renderItem(stack, x, y, 0);
+        if(hasClickedOn(mouseX, mouseY)) renderSlotHighlightFront(guiGraphics, mouseX, mouseY, partialTick);
     }
 
     @Override

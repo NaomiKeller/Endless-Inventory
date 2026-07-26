@@ -98,8 +98,24 @@ public class PageSwitchBarConfig extends ComplexConfigEntryImpl<PageSwitchBarCon
             return new Param(maxBars, tabParam.applyOffset(leftPos, topPos), direction_isVertical, buttonDec.applyOffset(leftPos, topPos), buttonInc.applyOffset(leftPos, topPos));
         }
 
-        public int maxLength(){
-            return maxBars * tabParam.height();
+        public int maxLength(int pageCount){
+            return pageCount * tabLength();
+        }
+
+        public int getMaxTabCount(int pageCount, int maxPageLength){
+            if(pageCount <= 0) return 0;
+            int maxByConfig = maxBars < 0 ? pageCount : Math.min(maxBars, pageCount);
+            if(maxPageLength >= maxLength(maxByConfig)) return maxByConfig;
+            int maxByLength = Math.floorDiv(Math.max(0, maxPageLength - incButtonLength()), tabLength());
+            return Math.max(1, Math.min(maxByConfig, maxByLength));
+        }
+
+        private int tabLength() {
+            return direction_isVertical ? tabParam.height() : tabParam.width();
+        }
+
+        private int incButtonLength() {
+            return direction_isVertical ? buttonInc.height() : buttonInc.width();
         }
     }
 
