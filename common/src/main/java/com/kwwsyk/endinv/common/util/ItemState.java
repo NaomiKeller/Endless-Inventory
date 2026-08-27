@@ -16,6 +16,6 @@ public record ItemState(int count, long lastModTime) {
     }
 
     public ItemStack toStack(ItemKey key) {
-        return new ItemStack(key.item(), count, key.tag());
+        return key.toStack(count);
     }
 }

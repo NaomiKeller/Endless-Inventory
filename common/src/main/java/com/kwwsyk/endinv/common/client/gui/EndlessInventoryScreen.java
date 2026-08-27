@@ -18,6 +18,11 @@ import org.jetbrains.annotations.Nullable;
 @SuppressWarnings("removal")
 public class EndlessInventoryScreen extends AbstractContainerScreen<EndlessInventoryMenu> {
     private static final ResourceLocation CRAFTING_TEXTURE = new ResourceLocation("minecraft", "textures/gui/container/crafting_table.png");
+    //extra room reserved at the very bottom of the frame for the search box/config button, which
+    //used to sit in the top strip and outside the frame's right edge respectively; moved here so
+    //they're consistent with the attached-inventory layout instead of floating around the border.
+    static final int BOTTOM_BAR_HEIGHT = 20;
+    private static final int BOTTOM_BAR_GAP = 4;
     private ScreenFramework frameWork;
     private CycleButton<Boolean> craftingToggleButton;
     private boolean craftingVisible;
@@ -29,8 +34,11 @@ public class EndlessInventoryScreen extends AbstractContainerScreen<EndlessInven
 
     private void recalcDimensions() {
         int baseRows = menu.getBaseRows();
-        this.imageHeight = 114 + baseRows * 18;
-        this.inventoryLabelY = this.imageHeight - 94;
+        int baseImageHeight = 114 + baseRows * 18;
+        //label stays anchored to the (unmoved) vanilla inventory block; the bottom bar is appended
+        //after it, so it doesn't shift when the reserved space below changes.
+        this.inventoryLabelY = baseImageHeight - 94;
+        this.imageHeight = baseImageHeight + BOTTOM_BAR_GAP + BOTTOM_BAR_HEIGHT;
     }
 
     public void init(){
@@ -51,9 +59,10 @@ public class EndlessInventoryScreen extends AbstractContainerScreen<EndlessInven
 
     private void addCraftingToggleButton() {
         int width = 70;
+        //matches the height of the sort/reverse-sort buttons in the top strip it now shares
         this.craftingToggleButton = CycleButton.onOffBuilder()
                 .withInitialValue(false)
-                .create(0,0,width,20,Component.literal("Crafter"), (it,on)->{
+                .create(0,0,width,12,Component.literal("Crafter"), (it,on)->{
                     toggleCrafting();
                     if(it.getValue()!=craftingVisible) it.setValue(craftingVisible);
                 });
@@ -70,7 +79,7 @@ public class EndlessInventoryScreen extends AbstractContainerScreen<EndlessInven
         }
         int width = this.craftingToggleButton.getWidth();
         int x = this.leftPos + this.imageWidth - width - 8;
-        int y = this.topPos - 20;
+        int y = this.topPos + 5;
         this.craftingToggleButton.setX(x);
         this.craftingToggleButton.setY(y);
     }

@@ -5,6 +5,7 @@ import com.kwwsyk.endinv.common.menu.page.PageType;
 import com.kwwsyk.endinv.common.network.payloads.toServer.StarItemPayload;
 import com.kwwsyk.endinv.common.util.ItemKey;
 import com.kwwsyk.endinv.common.util.ItemStackLike;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.core.NonNullList;
@@ -63,15 +64,14 @@ public class StarredItemPage extends ItemPage{
     }
 
     public void initializeAsMap(@NotNull List<ItemStackLike> stacks){
-        for(int i=0; i<items.size(); ++i){
-            ItemStackLike itemStackLike = stacks.get(i);
-            if(itemStackLike != null){
-                items.set(i,new ItemPointer(new ItemKey(itemStackLike.item(), itemStackLike.tag())));
-                countArray[i]= itemStackLike.count();
-            }else {
-                items.set(i,ItemPointer.EMPTY);
-            }
-        }
+        for(int i=0; i<items.size(); ++i) {
+            if(i<stacks.size() && stacks.get(i)!=null){ ItemStackLike itemStackLike = stacks.get(i);
+                items.set(i,new ItemPointer(new ItemKey(itemStackLike.item(), itemStackLike.tag()))); 
+                countArray[i]= itemStackLike.count(); 
+            }else { 
+                items.set(i,ItemPointer.EMPTY); countArray[i]=0; 
+            } 
+        } 
     }
 
     public void requestRemoteContents(){
@@ -95,11 +95,22 @@ public class StarredItemPage extends ItemPage{
         int rowIndex = 0;
         int columnIndex = 0;
         for(int i=0; i<length; ++i){
-            ItemStack stack = items.get(i).get();
-            int count = countArray[i];
-            guiGraphics.renderItem(stack,leftPos+columnIndex*18,topPos+rowIndex*18+1,columnIndex+rowIndex*180);
-            if(!isHiddenBySortBox(rowIndex,columnIndex))
-                guiGraphics.renderItemDecorations(Minecraft.getInstance().font, stack,leftPos+columnIndex*18,topPos+rowIndex*18+1, getDisplayAmount(stack.copyWithCount(count)));
+            ItemPointer pointer = (ItemPointer) items.get(i);
+            ItemKey key = pointer.key();
+            if(key != null && !key.isEmpty()){
+                int x = leftPos+columnIndex*18;
+                int y = topPos+rowIndex*18+1;
+                ItemStack live = pointer.get();
+                int count = countArray[i];
+                //a starred item currently at 0 count is still absent from the live inventory snapshot,
+                //so pointer.get() comes back empty; fall back to the key itself so the bookmark's icon
+                //keeps showing instead of vanishing once the player runs out of the item.
+                ItemStack stack = live.isEmpty() ? key.toStack(1) : live;
+                guiGraphics.renderItem(stack,x,y,columnIndex+rowIndex*180);
+                if(!isHiddenBySortBox(rowIndex,columnIndex))
+                    guiGraphics.renderItemDecorations(Minecraft.getInstance().font, stack,x,y,
+                            live.isEmpty() ? ChatFormatting.RED+"0" : getDisplayAmount(stack.copyWithCount(count)));
+            }
             columnIndex++;
             if(columnIndex>= meta.columns()){
                 columnIndex=0;
@@ -111,11 +122,26 @@ public class StarredItemPage extends ItemPage{
 
     @Override
     public void handleStarItem(double XOffset, double YOffset) {
-        int slot = getSlotByMouseOffset(XOffset,YOffset);
-        if(slot>=0&&slot<items.size()) {
-            ItemStack clicked = items.get(slot).get();
-            starItem(clicked,false);
-        }
+        starItem(resolveStack(getSlotByMouseOffset(XOffset,YOffset)),false);
+    }
+
+    @Override
+    public ItemStack getItemByMouseOffset(double XOffset, double YOffset){
+        return resolveStack(getSlotByMouseOffset(XOffset,YOffset));
+    }
+
+    /**
+     * Resolve the ItemStack to show/act on for a slot, falling back to the starred key itself
+     * (count 1) when the live inventory snapshot has none of the item, so bookmarks for items
+     * the player is currently out of remain hoverable/un-starrable instead of looking empty.
+     */
+    private ItemStack resolveStack(int slot){
+        if(slot<0 || slot>=items.size()) return ItemStack.EMPTY;
+        ItemPointer pointer = (ItemPointer) items.get(slot);
+        ItemKey key = pointer.key();
+        if(key==null || key.isEmpty()) return ItemStack.EMPTY;
+        ItemStack live = pointer.get();
+        return live.isEmpty() ? key.toStack(1) : live;
     }
 
     public void release(){

@@ -39,7 +39,10 @@ public enum SortType {
                 case COUNT -> Comparator.comparingInt(ItemStack::getCount);
                 case SPACE_AND_NAME -> Comparator.comparing(it-> BuiltInRegistries.ITEM.getKey(it.getItem()).toString());
                 case ID -> REGISTRY_ORDER_COMPARATOR;
-                case LAST_MODIFIED -> Comparator.comparingLong(s -> srcInv.snapshotItemMap().get(ItemKey.asKey(s)).lastModTime());
+                //getItemMap() reads the live map directly; snapshotItemMap() deep-copies the whole
+                //inventory, and a Comparator gets invoked O(n log n) times for one sort, so this
+                //was copying the entire inventory that many times over for a single sort.
+                case LAST_MODIFIED -> Comparator.comparingLong(s -> srcInv.getItemMap().get(ItemKey.asKey(s)).lastModTime());
             };
         }
 

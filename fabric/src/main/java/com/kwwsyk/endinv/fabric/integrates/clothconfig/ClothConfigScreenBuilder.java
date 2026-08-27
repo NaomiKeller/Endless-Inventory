@@ -48,17 +48,30 @@ final class ClothConfigScreenBuilder {
                 .setSaveConsumer(value -> config.attaching().set(value))
                 .build());
 
-        category.addEntry(entryBuilder.startIntField(Component.translatable("endinv.setting.rows"), config.rows().get())
+        category.addEntry(entryBuilder.startIntField(Component.translatable("endinv.setting.rows"), config.attachedRows().get())
                 .setDefaultValue(DEFAULT_ROWS)
                 .setMin(0)
                 .setTooltip(Component.translatable("config.endinv.comment.row1"))
-                .setSaveConsumer(value -> config.rows().set(value))
+                .setSaveConsumer(value -> config.attachedRows().set(value))
                 .build());
 
-        category.addEntry(entryBuilder.startIntField(Component.translatable("endinv.setting.columns"), config.columns().get())
+        category.addEntry(entryBuilder.startIntField(Component.translatable("endinv.setting.columns"), config.attachedColumns().get())
                 .setDefaultValue(DEFAULT_COLUMNS)
                 .setMin(0)
-                .setSaveConsumer(value -> config.columns().set(value))
+                .setSaveConsumer(value -> config.attachedColumns().set(value))
+                .build());
+
+        category.addEntry(entryBuilder.startIntField(Component.translatable("endinv.setting.menu_rows"), config.menuRows().get())
+                .setDefaultValue(DEFAULT_ROWS)
+                .setMin(0)
+                .setTooltip(Component.translatable("config.endinv.comment.row1"))
+                .setSaveConsumer(value -> config.menuRows().set(value))
+                .build());
+
+        category.addEntry(entryBuilder.startIntField(Component.translatable("endinv.setting.menu_columns"), config.menuColumns().get())
+                .setDefaultValue(DEFAULT_COLUMNS)
+                .setMin(0)
+                .setSaveConsumer(value -> config.menuColumns().set(value))
                 .build());
 
         category.addEntry(entryBuilder.startBooleanToggle(Component.translatable("endinv.setting.auto_suit"), config.autoSuitColumn().get())

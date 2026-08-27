@@ -78,7 +78,7 @@ public final class CachedConfig {
     public static PageData resolveLayout(@Nullable AbstractContainerScreen<?> screen, boolean ofMenu) {
         IClientConfig config = ClientModInfo.getClientConfig();
 
-        int rows = config.rows().get();
+        int rows = ofMenu ? config.menuRows().get() : config.attachedRows().get();
         if (rows <= 0) {
             rows = config.calculateDefaultRowCount(ofMenu);
         }
@@ -86,7 +86,7 @@ public final class CachedConfig {
             rows = cachedLayout.rows() > 0 ? cachedLayout.rows() : PageData.DEFAULT.rows();
         }
 
-        int columns = config.columns().get();
+        int columns = ofMenu ? config.menuColumns().get() : config.attachedColumns().get();
         if (columns <= 0) {
             columns = PageData.DEFAULT.columns();
         }

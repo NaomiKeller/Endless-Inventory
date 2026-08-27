@@ -4,6 +4,7 @@ import com.google.gson.*;
 import com.kwwsyk.endinv.common.client.option.IClientConfig;
 import com.kwwsyk.endinv.common.client.option.TextureMode;
 import com.kwwsyk.endinv.common.menu.page.PageType;
+import com.kwwsyk.endinv.common.menu.page.PageTypeRegistry;
 import com.kwwsyk.endinv.common.options.IConfigValue;
 import com.kwwsyk.endinv.common.util.SortType;
 import net.fabricmc.loader.api.FabricLoader;
@@ -29,6 +30,8 @@ public final class FabricClientConfig implements IClientConfig {
     private static final String ATTACHING = "attaching";
     private static final String ROWS = "rows";
     private static final String COLUMNS = "columns";
+    private static final String MENU_ROWS = "menuRows";
+    private static final String MENU_COLUMNS = "menuColumns";
     private static final String AUTO_SUIT = "autoSuitColumn";
     private static final String TEXTURE = "texture";
     private static final String SCREEN_DEBUG = "screenDebug";
@@ -45,6 +48,8 @@ public final class FabricClientConfig implements IClientConfig {
     private boolean attachingMenu = true;
     private int rowCount = 0;
     private int columnCount = 9;
+    private int menuRowCount = 0;
+    private int menuColumnCount = 9;
     private boolean autoSuitColumn = true;
     private TextureMode textureMode = TextureMode.FROM_RESOURCE;
     private boolean screenDebug = false;
@@ -80,6 +85,12 @@ public final class FabricClientConfig implements IClientConfig {
             }
             if (json.has(COLUMNS)) {
                 columnCount = json.get(COLUMNS).getAsInt();
+            }
+            if (json.has(MENU_ROWS)) {
+                menuRowCount = json.get(MENU_ROWS).getAsInt();
+            }
+            if (json.has(MENU_COLUMNS)) {
+                menuColumnCount = json.get(MENU_COLUMNS).getAsInt();
             }
             if (json.has(AUTO_SUIT)) {
                 autoSuitColumn = json.get(AUTO_SUIT).getAsBoolean();
@@ -135,6 +146,8 @@ public final class FabricClientConfig implements IClientConfig {
             json.addProperty(ATTACHING, attachingMenu);
             json.addProperty(ROWS, rowCount);
             json.addProperty(COLUMNS, columnCount);
+            json.addProperty(MENU_ROWS, menuRowCount);
+            json.addProperty(MENU_COLUMNS, menuColumnCount);
             json.addProperty(AUTO_SUIT, autoSuitColumn);
             json.addProperty(TEXTURE, textureMode.name());
             json.addProperty(SCREEN_DEBUG, screenDebug);
@@ -163,13 +176,23 @@ public final class FabricClientConfig implements IClientConfig {
     }
 
     @Override
-    public IConfigValue<Integer> rows() {
+    public IConfigValue<Integer> attachedRows() {
         return tracked(() -> rowCount, value -> rowCount = value);
     }
 
     @Override
-    public IConfigValue<Integer> columns() {
+    public IConfigValue<Integer> attachedColumns() {
         return tracked(() -> columnCount, value -> columnCount = value);
+    }
+
+    @Override
+    public IConfigValue<Integer> menuRows() {
+        return tracked(() -> menuRowCount, value -> menuRowCount = value);
+    }
+
+    @Override
+    public IConfigValue<Integer> menuColumns() {
+        return tracked(() -> menuColumnCount, value -> menuColumnCount = value);
     }
 
     @Override
@@ -205,6 +228,9 @@ public final class FabricClientConfig implements IClientConfig {
             hiddenPages.remove(id);
         }
         save();
+        //getDisplayPages() caches its filtered list; without this, a toggled page only takes
+        //effect after a full game restart re-triggers the static registration block.
+        PageTypeRegistry.setChanged();
     }
 }
 

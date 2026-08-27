@@ -21,9 +21,11 @@ public class PageTypeRegistry {
     static {
         register(ALL_ITEMS,0);
         register(BLOCK_ITEMS,0x100);
-        register(WEAPONS,0x300);
-        register(TOOLS,0x200);
-        register(EQUIPMENTS);
+        register(GEAR,0x200);
+        register(STONE,0x300);
+        register(WOOD,0x400);
+        register(ORES_AND_MINERALS,0x500);
+        register(MOD_ITEMS,0x600);
         register(CONSUMABLE);
         register(ENCHANTED_BOOKS);
         register(BOOKMARK);

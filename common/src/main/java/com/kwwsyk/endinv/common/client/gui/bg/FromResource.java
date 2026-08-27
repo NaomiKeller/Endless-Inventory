@@ -30,6 +30,14 @@ public abstract class FromResource extends SFBgRendererImpl {
         return ClientModInfo.getClientConfig().textureMode().get() == TextureMode.DEDICATED_LOCATION ? DEDICATED_TABS : TABS_RESOURCE;
     }
 
+    //target visual gap between the tab column and the frame's border. These differ because the
+    //two border sprites (the simple 9-column box vs. the attached screen's stretched/capped
+    //border for non-9 column counts) carry different amounts of built-in edge padding, so the
+    //same raw offset doesn't produce the same visible gap in both places; tuned empirically.
+    //Also used by ScreenFramework to position the tab column so the two stay in sync.
+    public static final int MENU_TAB_GAP = 0;
+    public static final int ATTACHED_TAB_GAP = -7;
+
     public FromResource(ScreenFramework frameWork){
         super(frameWork);
     }
@@ -167,21 +175,24 @@ public abstract class FromResource extends SFBgRendererImpl {
         };
     }
 
+    //fully opaque: the unselected sprite has a beveled border baked into its art (lighter on
+    //top/left, darker on bottom/right), and a translucent tint only lightened it without hiding
+    //it. Full opacity replaces it outright instead of blending with it.
+    private static final int SELECTED_TINT = 0xFFDCDCDC;
+
     @Override
     public void renderBg(@NotNull GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {
         int pageX = pageSwitchTabParam.XPos();
         int pageY = pageSwitchTabParam.YPos();
         int selectedPageIndex = frameWork.getDisplayingPageIndex();
         for (int i = frameWork.firstPageIndex; i < frameWork.firstPageIndex + frameWork.pageBarCount; ++i) {
+            //always the same (unselected-style) sprite/size, regardless of state: the vanilla
+            //"selected" sprites are wider and only meant to expand toward one fixed side, which
+            //looked wrong once tabs could sit on either side of the frame. Selection is now shown
+            //with a brightness overlay instead, which works the same regardless of tab side.
+            guiGraphics.blit(getTabsTexture(),pageX+8,pageY,4,64,24,27);
             if (i == selectedPageIndex) {
-                if (i == 0) {
-                    guiGraphics.blit(getTabsTexture(),pageX,pageY,0,92,32,28);
-                } else if (i == frameWork.firstPageIndex + frameWork.pageBarCount-1) {
-                    guiGraphics.blit(getTabsTexture(),pageX,pageY,64,91,32,28);
-                } else
-                    guiGraphics.blit(getTabsTexture(),pageX,pageY,32,91,32,29);
-            } else {
-                guiGraphics.blit(getTabsTexture(),pageX+8,pageY,4,64,24,27);
+                guiGraphics.fill(pageX+8,pageY,pageX+32,pageY+27,SELECTED_TINT);
             }
             pageY+=28;
         }

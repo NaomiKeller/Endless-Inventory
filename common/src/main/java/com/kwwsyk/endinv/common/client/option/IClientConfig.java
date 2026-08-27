@@ -10,9 +10,15 @@ public interface IClientConfig {
 
     IConfigValue<Boolean> attaching();
 
-    IConfigValue<Integer> rows();
+    /** Rows/columns used by the standalone EndInv screen (opened with its own keybind, shown centered). */
+    IConfigValue<Integer> menuRows();
 
-    IConfigValue<Integer> columns();
+    IConfigValue<Integer> menuColumns();
+
+    /** Rows/columns used when EndInv is attached beside another screen (e.g. survival inventory, a chest). */
+    IConfigValue<Integer> attachedRows();
+
+    IConfigValue<Integer> attachedColumns();
 
     IConfigValue<Boolean> autoSuitColumn();
 
@@ -35,7 +41,10 @@ public interface IClientConfig {
     default int calculateDefaultRowCount(boolean ofMenu){
         Minecraft mc = Minecraft.getInstance();
         int height = mc.getWindow().getGuiScaledHeight();
-        return Math.max(Math.floorDiv(height-60,18)-(ofMenu?4:0),0);
+        //ofMenu reserves an extra row's worth of height versus the attached layout: 4 rows for the
+        //vanilla player-inventory block, plus 1 more for the bottom search/config bar appended
+        //below it (EndlessInventoryScreen.BOTTOM_BAR_HEIGHT + its gap, ~24px).
+        return Math.max(Math.floorDiv(height-60,18)-(ofMenu?5:0),0);
     }
 
     default int calculateSuitInColumnCount(AbstractContainerScreen<?> screen){

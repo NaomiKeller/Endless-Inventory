@@ -145,15 +145,29 @@ public abstract class DisplayPage{
     }
 
     public int getRowIndexForScroll(float scrollOffs) {
-        return Math.max((int)((double)(scrollOffs * (float)calculateRowCount()) + 0.5), 0);
+        int maxScrollableRow = getMaxScrollableRow();
+        return Math.max((int)((double)(scrollOffs * maxScrollableRow) + 0.5), 0);
     }
 
     public float getScrollForRowIndex(int rowIndex) {
-        return Mth.clamp((float)rowIndex / (float)calculateRowCount(), 0.0F, 1.0F);
+        int maxScrollableRow = getMaxScrollableRow();
+        if(maxScrollableRow == 0) return 0.0F;
+        return Mth.clamp((float)rowIndex / (float)maxScrollableRow, 0.0F, 1.0F);
+    }
+
+    /**
+     * The row index that corresponds to scrollOffs==1 (fully scrolled down): the last row of
+     * content minus the visible rows, so the bottom of the scroll shows the final page of items
+     * instead of running {@link #getRowIndexForScroll} past the end of the content into blank slots.
+     */
+    protected int getMaxScrollableRow(){
+        return Math.max(calculateRowCount() - meta.rows(), 0);
     }
 
     public int calculateRowCount(){
-        return Math.max(meta.getItemSize()/ meta.columns(), CachedSrcInv.INSTANCE.getItemSize()/ meta.columns());
+        int itemSize = Math.max(meta.getItemSize(), CachedSrcInv.INSTANCE.getItemSize());
+        //round up: a partial trailing row still needs to be reachable by scrolling
+        return (itemSize + meta.columns() - 1) / meta.columns();
     }
 
     protected float subtractInputFromScroll(float scrollOffs, double input) {

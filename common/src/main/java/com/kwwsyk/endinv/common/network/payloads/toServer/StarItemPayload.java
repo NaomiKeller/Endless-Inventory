@@ -12,12 +12,21 @@ import net.minecraft.world.item.ItemStack;
 public record StarItemPayload(ItemStack stack,boolean isAdding) implements ModPacketPayload {
 
     public static void encode(StarItemPayload payload, FriendlyByteBuf o){
-        o.writeItem(payload.stack);
+        //FriendlyByteBuf#writeItem encodes count as a single byte, silently wrapping/corrupting
+        //anything above 127 (and landing on 0 or negative for plenty of values, which then trips
+        //the isEmpty() guards downstream). EndInv stacks routinely exceed vanilla's stack limits,
+        //so send identity with a dummy count of 1 and the real count as a separate VarInt.
+        o.writeItem(payload.stack.copyWithCount(1));
+        o.writeVarInt(payload.stack.getCount());
         o.writeBoolean(payload.isAdding);
     }
 
     public static StarItemPayload decode(FriendlyByteBuf o){
-        return new StarItemPayload(o.readItem(),o.readBoolean());
+        ItemStack keyStack = o.readItem();
+        int count = o.readVarInt();
+        boolean isAdding = o.readBoolean();
+        ItemStack stack = keyStack.isEmpty() ? ItemStack.EMPTY : keyStack.copyWithCount(count);
+        return new StarItemPayload(stack, isAdding);
     }
 
     @Override

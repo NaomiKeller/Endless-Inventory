@@ -468,7 +468,10 @@ public abstract class ItemPage extends DisplayPage {
 
         @Override
         public ItemStack get() {
-            var state = srcInv.snapshotItemMap().get(key);
+            //getItemMap() reads the live map directly; snapshotItemMap() deep-copies the entire
+            //inventory on every call, and get() runs once per rendered slot per frame, so that
+            //copy was happening dozens of times a frame while the GUI was open.
+            var state = srcInv.getItemMap().get(key);
             if(state == null) return ItemStack.EMPTY;
             return state.toStack(key);
         }
@@ -479,7 +482,7 @@ public abstract class ItemPage extends DisplayPage {
         @Nullable
         public ItemState state(){
             if(key == null) return null;
-            return srcInv.snapshotItemMap().get(key);
+            return srcInv.getItemMap().get(key);
         }
         public boolean isEmpty(){
             return key == null || key.isEmpty() || get() == ItemStack.EMPTY;

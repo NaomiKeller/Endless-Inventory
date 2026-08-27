@@ -21,6 +21,8 @@ public class ClientConfig {
     public static final ModConfigSpec CONFIG_SPEC;
     public final ModConfigSpec.IntValue ROWS;
     public final ModConfigSpec.IntValue COLUMNS;
+    public final ModConfigSpec.IntValue MENU_ROWS;
+    public final ModConfigSpec.IntValue MENU_COLUMNS;
     public final ModConfigSpec.BooleanValue AUTO_SUIT_COLUMN;
     public final ModConfigSpec.EnumValue<TextureMode> TEXTURE;
     public final Map<String,ModConfigSpec.BooleanValue> PAGE2HIDING = new LinkedHashMap<>();
@@ -32,11 +34,16 @@ public class ClientConfig {
         ATTACHING = builder.comment("show endless inventory view when opening a menu.")
                 .define("attachingMenuScreen",true);
 
-        ROWS = builder.comment("Default rows of EndInv view, 0 for auto.")
+        ROWS = builder.comment("Default rows of EndInv view when attached beside another screen, 0 for auto.")
                 .translation("config.endinv.comment.row1")
                 .defineInRange("rows",0,0,Integer.MAX_VALUE);
-        COLUMNS = builder.comment("Default columns of EndInv view, 0 for auto.")
+        COLUMNS = builder.comment("Default columns of EndInv view when attached beside another screen, 0 for auto.")
                 .defineInRange("columns",9,0,Integer.MAX_VALUE);
+        MENU_ROWS = builder.comment("Default rows of EndInv view in the standalone menu screen, 0 for auto.")
+                .translation("config.endinv.comment.row1")
+                .defineInRange("menu_rows",0,0,Integer.MAX_VALUE);
+        MENU_COLUMNS = builder.comment("Default columns of EndInv view in the standalone menu screen, 0 for auto.")
+                .defineInRange("menu_columns",9,0,Integer.MAX_VALUE);
 
         AUTO_SUIT_COLUMN = builder.comment("auto suit in columns if GUI Size is too big.")
                 .define("auto_suit_column",true);
@@ -91,13 +98,23 @@ public class ClientConfig {
         }
 
         @Override
-        public IConfigValue<Integer> rows() {
+        public IConfigValue<Integer> attachedRows() {
             return convert(ROWS);
         }
 
         @Override
-        public IConfigValue<Integer> columns() {
+        public IConfigValue<Integer> attachedColumns() {
             return convert(COLUMNS);
+        }
+
+        @Override
+        public IConfigValue<Integer> menuRows() {
+            return convert(MENU_ROWS);
+        }
+
+        @Override
+        public IConfigValue<Integer> menuColumns() {
+            return convert(MENU_COLUMNS);
         }
 
         @Override
@@ -131,6 +148,9 @@ public class ClientConfig {
         public void setPageHiding(String id, boolean hiding) {
             Optional.ofNullable(PAGE2HIDING.get(id)).ifPresent(v->v.set(hiding));
             CONFIG_SPEC.save();
+            //getDisplayPages() caches its filtered list; without this, a toggled page only takes
+            //effect after a full game restart re-triggers the static registration block.
+            PageTypeRegistry.setChanged();
         }
 
         @Override

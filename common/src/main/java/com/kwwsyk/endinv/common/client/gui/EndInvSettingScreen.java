@@ -75,8 +75,10 @@ public class EndInvSettingScreen extends Screen {
             addInfoEntry(Component.translatable("endinv.info.owner_uuid"),INSTANCE::getOwnerUUID);
             addInfoEntry(Component.translatable("endinv.info.white_list_size"),()->"Size :"+INSTANCE.white_list.size());
         } else {
-            addConfigEntry("endinv.setting.rows", getClientConfig().rows());
-            addConfigEntry("endinv.setting.columns", getClientConfig().columns());
+            addConfigEntry("endinv.setting.rows", getClientConfig().attachedRows());
+            addConfigEntry("endinv.setting.columns", getClientConfig().attachedColumns());
+            addConfigEntry("endinv.setting.menu_rows", getClientConfig().menuRows());
+            addConfigEntry("endinv.setting.menu_columns", getClientConfig().menuColumns());
             addConfigEntry("endinv.setting.auto_suit", getClientConfig().autoSuitColumn());
             addConfigEntry("endinv.setting.attaching", getClientConfig().attaching());
             addConfigEntry("endinv.setting.texture", getClientConfig().textureMode());

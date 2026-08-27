@@ -45,15 +45,26 @@ public class CachedSrcInv extends SourceInventory {
                                                   boolean reverse,
                                                   @Nullable Predicate<ItemStack> classify,
                                                   String search){
-        var ret = getSortedKeyReference(sortType)
+        var filtered = getSortedKeyReference(sortType)
                 .filter(key -> {
                     ItemStack stack = key.toStack(itemMap.get(key).count());
                     return (classify == null || classify.test(stack)) && SearchUtil.matchesSearch(stack, search);
                 })
                 .map(ItemPage.ItemPointer::new)
                 .toList();
-        ret = ret.subList(Math.max(startIndex, 0), Math.min(startIndex + length, ret.size()));
-        return reverse ? Lists.reverse(ret) : ret;
+        //reverse the whole list before windowing, not after: reversing only the sliced window left
+        //a short tail once startIndex was past the halfway point of the list (fewer than `length`
+        //items remained on that side), which showed up as trailing blank slots once scrolled.
+        List<ItemPage.ItemPointer> ordered = reverse ? Lists.reverse(filtered) : filtered;
+        //startIndex is computed from the row-count estimate in DisplayPage#calculateRowCount(),
+        //which is based on the whole inventory's item count rather than this page's actual
+        //filtered/classified list. On a page with fewer items than the total (Gear, Stone,
+        //Consumables, ...), that estimate can overshoot this list's real size, so clamp the start
+        //to it too - not just the end - or subList throws when startIndex > ordered.size().
+        int size = ordered.size();
+        int from = Math.min(Math.max(startIndex, 0), size);
+        int to = Math.min(Math.max(startIndex + length, from), size);
+        return ordered.subList(from, to);
     }
 
     /**

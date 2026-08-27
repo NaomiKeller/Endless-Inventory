@@ -99,19 +99,34 @@ public class ScreenFramework implements PageManager{
         PageData layout = CachedConfig.resolveLayout(screen, true);
         this.columns = Math.max(1, layout.columns());
         this.rows = Math.max(1, layout.rows());
-        //renderer may need structure and widget data --here YES: needs row/col/left/top...
-        this.SFBgRenderer = new FromResource.MenuMode(this, new ScreenRectangleWidgetParam(leftPos - 32, topPos + 1, 32, 28));
-
         //------WIDGET DATA-------
+        //computed before the tab column's own position: when there's overflow, the whole column
+        //(tabs + up/down arrows) shifts down so the up arrow sits flush with the frame's top edge
+        //instead of poking out 16px above it, which could touch/clip the screen's own top edge.
         this.pages = buildPages();//is page a widget? but init page bar count indeed needs it.
-        //page switch bar's pos < leftPos in EIS
         this.pageBarCount = Math.min(ClientModInfo.getClientConfig().maxPageBarCount().get(), getPages().size());
-        this.pageBarScrollUpButtonParam = new ScreenRectangleWidgetParam(leftPos - 32, topPos - 16, 30, 14);
-        this.pageBarScrollDownButtonParam = new ScreenRectangleWidgetParam(leftPos - 32, topPos + 2 + 28 * pageBarCount, 30, 14);
+        boolean hasOverflow = pageBarCount < getPages().size();
+        int tabColumnY = hasOverflow ? topPos + 16 : topPos;
+
+        //renderer may need structure and widget data --here YES: needs row/col/left/top...
+        //shifted left so the tab icons aren't flush against the frame's border
+        this.SFBgRenderer = new FromResource.MenuMode(this, new ScreenRectangleWidgetParam(leftPos - 32 - FromResource.MENU_TAB_GAP, tabColumnY, 32, 28));
+
+        //page switch bar's pos < leftPos in EIS
+        //matches the tab sprite's own visible bounds (inset 8px into its 32px-wide slot, 24px
+        //wide - see FromResource#renderBg), not the full slot width, which was wider than what's
+        //actually drawn for each tab.
+        this.pageBarScrollUpButtonParam = new ScreenRectangleWidgetParam(leftPos - 24 - FromResource.MENU_TAB_GAP, tabColumnY - 16, 24, 14);
+        this.pageBarScrollDownButtonParam = new ScreenRectangleWidgetParam(leftPos - 24 - FromResource.MENU_TAB_GAP, tabColumnY + 2 + 28 * pageBarCount, 24, 14);
         //page switch bar --end--
-        this.configButtonParam = new ScreenRectangleWidgetParam(this.leftPos + this.imageWidth, Math.min(this.topPos + this.imageHeight, screen.height - 20), 18, 18);
-        this.searchBoxParam = new ScreenRectangleWidgetParam(this.leftPos + 89, this.topPos + 5, 80, 12);
         this.sortBoxParam = new ScreenRectangleWidgetParam(this.leftPos + 8, topPos + 5, 60, 12);
+        //search box and config button used to sit in the top strip / outside the right edge; moved
+        //to a bar along the bottom (EndlessInventoryScreen reserves BOTTOM_BAR_HEIGHT for this) to
+        //match the attached-inventory layout instead of floating around the frame's border.
+        int bottomBarY = this.topPos + this.imageHeight - EndlessInventoryScreen.BOTTOM_BAR_HEIGHT - 2;
+        int searchBoxWidth = Math.max(20, this.imageWidth - 22);
+        this.searchBoxParam = new ScreenRectangleWidgetParam(this.leftPos + 1, bottomBarY, searchBoxWidth, 16);
+        this.configButtonParam = new ScreenRectangleWidgetParam(this.leftPos + 1 + searchBoxWidth + 2, bottomBarY - 1, 18, 18);
 
         //------PAGES-----------
         //------prepare page data---------
@@ -139,25 +154,45 @@ public class ScreenFramework implements PageManager{
         PageData layout = CachedConfig.resolveLayout(screen, false);
         this.rows = layout.rows();//row and columns affects the structure
         this.columns = layout.columns();
-        this.leftPos = 20;
+        this.leftPos = 12;
         this.topPos = Math.max((screen.height - rows * 18 - 17 - 10) / 2, 20);
         this.imageWidth = 13 + 18 * columns;
         this.imageHeight = screen.height;
-        //renderer may need structure and widget data --here ?
-        this.SFBgRenderer = ClientModInfo.getClientConfig().textureMode().get() != TextureMode.TRANSPARENT ?
-                new FromResource.LeftLayout(this, new ScreenRectangleWidgetParam(leftPos - 32, topPos + 20, 32, 28)) :
-                new Transparent(this, new ScreenRectangleWidgetParam(leftPos - 32, topPos + 20, 32, 28));
-
         //---WIDGET DATA---
+        //computed before the tab column's own position: when there's overflow, the whole column
+        //(tabs + up/down arrows) shifts down so the up arrow sits flush with the frame's top edge
+        //instead of poking out 16px above it, which could touch/clip the screen's own top edge.
         this.pages = buildPages();//is page a widget? but init page bar count indeed needs it.
-        //page switch bar
         this.pageBarCount = Math.min(ClientModInfo.getClientConfig().maxPageBarCount().get(), getPages().size());
-        this.pageBarScrollUpButtonParam = new ScreenRectangleWidgetParam(0, topPos, 20, 14);
-        this.pageBarScrollDownButtonParam = new ScreenRectangleWidgetParam(0, topPos + 22 + 28 * pageBarCount, 20, 14);
+        boolean hasOverflow = pageBarCount < getPages().size();
+        int tabColumnY = hasOverflow ? topPos + 16 : topPos;
+
+        //renderer may need structure and widget data --here ?
+        //moved to the right side of the frame instead of the left: at leftPos=20 there isn't enough
+        //room on the left for a 32px-wide tab column plus a gap, so the previous left-side attempt
+        //went partly offscreen. The right side has the frame's own width to work with instead.
+        int tabX = leftPos + imageWidth + FromResource.ATTACHED_TAB_GAP;
+        this.SFBgRenderer = ClientModInfo.getClientConfig().textureMode().get() != TextureMode.TRANSPARENT ?
+                new FromResource.LeftLayout(this, new ScreenRectangleWidgetParam(tabX, tabColumnY, 32, 28)) :
+                new Transparent(this, new ScreenRectangleWidgetParam(tabX, tabColumnY, 32, 28));
+
+        //matches the tab sprite's own visible bounds (inset 8px into its 32px-wide slot, 24px
+        //wide - see FromResource#renderBg), not the full slot width, which was wider than what's
+        //actually drawn for each tab.
+        this.pageBarScrollUpButtonParam = new ScreenRectangleWidgetParam(tabX + 8, tabColumnY - 16, 24, 14);
+        this.pageBarScrollDownButtonParam = new ScreenRectangleWidgetParam(tabX + 8, tabColumnY + 2 + 28 * pageBarCount, 24, 14);
         //other
-        int searchBoxY = this.topPos + 17 + 18 * rows + 12;
-        this.searchBoxParam = new ScreenRectangleWidgetParam(this.leftPos + 1, searchBoxY, Math.min(200, imageWidth), Math.min(20, screen.height - searchBoxY));
-        this.configButtonParam = new ScreenRectangleWidgetParam(0, Math.min(searchBoxY, screen.height - 20), 20, 20);
+        //field/button heights match the standalone menu screen's bottom bar for consistency; the
+        //+12 is the grid's own bottom border height (see FromResource.PagePainter's 12px-tall cap
+        //blit), not padding, so the 2px gap has to be added after it, not replace it.
+        int searchBoxY = this.topPos + 17 + 18 * rows + 12 + 2;
+        //the config button used to sit at x=0, sharing that column with the page tab strip; with
+        //more tabs registered the strip now grows tall enough to cover it, so it's placed to the
+        //right of the search box instead (splitting the same width budget rather than growing it,
+        // to avoid pushing into the attached vanilla screen next to it).
+        int searchBoxWidth = Math.max(20, Math.min(200, imageWidth) - 22) + 3;
+        this.searchBoxParam = new ScreenRectangleWidgetParam(this.leftPos + 1, searchBoxY + 1, searchBoxWidth, Math.min(16, screen.height - searchBoxY));
+        this.configButtonParam = new ScreenRectangleWidgetParam(this.leftPos + 1 + searchBoxWidth + 2, searchBoxY, 18, Math.min(18, screen.height - searchBoxY));
         this.sortBoxParam = new ScreenRectangleWidgetParam(this.leftPos + 6, topPos + 5, 77, 12);
 
         //------PAGES-----------
@@ -260,7 +295,6 @@ public class ScreenFramework implements PageManager{
         ), Optional.empty(), mouseX, mouseY);
         if (reverseSortButton.isHovered())
             guiGraphics.renderTooltip(mc.font, Component.translatable("button.endinv.reverse"), mouseX, mouseY);
-
     }
 
     protected boolean hasClickedOnPage(double mouseX, double mouseY) {
@@ -440,7 +474,7 @@ public class ScreenFramework implements PageManager{
 
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollY) {
         if (hasClickedOnPage(mouseX, mouseY)) {
-            return getDisplayingPage().mouseScrolled(mouseX - getPageX(), mouseY = getPageY(), scrollY);
+            return getDisplayingPage().mouseScrolled(mouseX - getPageX(), mouseY - getPageY(), scrollY);
         }
         return false;
     }

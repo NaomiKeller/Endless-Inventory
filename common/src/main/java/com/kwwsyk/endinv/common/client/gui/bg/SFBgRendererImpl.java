@@ -38,7 +38,10 @@ public abstract class SFBgRendererImpl implements SFBgRenderer {
         int pageY = pageSwitchTabParam.YPos();
         int selectedPageIndex = frameWork.getDisplayingPageIndex();
         for (int i = frameWork.firstPageIndex; i < frameWork.firstPageIndex+ frameWork.pageBarCount; ++i) {
-            frameWork.getPages().get(i).renderPageIcon(guiGraphics, pageX + 15, pageY + 5, partialTick);
+            //centers the 16x16 icon within the tab's visible 24px-wide sprite (pageX+8..pageX+32,
+            //center pageX+20); now that selected/unselected tabs are the same size (see
+            //FromResource#renderBg), this centering is consistent for both states.
+            frameWork.getPages().get(i).renderPageIcon(guiGraphics, pageX + 12, pageY + 5, partialTick);
             if (mouseX > pageX && mouseX < pageX + 32 && mouseY > pageY && mouseY < pageY + 28) {
                 guiGraphics.pose().pushPose();
                 guiGraphics.pose().translate(0, 0, 550.0f);
