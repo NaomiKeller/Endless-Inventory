@@ -171,3 +171,31 @@ Notes
 - JEI recipe transfer mixin on Forge uses non-API internals; treat as experimental and report incompatibilities.
 
 Thanks for testing the pre-releases and reporting issues — your feedback directly shaped this update. Enjoy the inventory freedom!
+
+## 2026.8.27 Session recap
+
+Two kinds of work this session: **Fixes** repair things that were broken regardless of taste — worth eventually upstreaming to the original mod. **Features & UI** are personal layout/organization changes — a matter of preference, not correctness.
+
+### Fixes
+
+- **Favorited items you're out of now show up** — Favoriting an item and then using up your entire stock used to make the icon vanish from Bookmarks instead of staying visible with a red "0".
+  <details><summary>Technical note</summary>The network message carrying favorited items piggybacked on a Minecraft function that silently drops item data when the count is zero. Now sent as two separate pieces of data so identity survives at zero count.</details>
+- **Un-favoriting and hovering fixed for those same items** — Once an out-of-stock item disappeared from Bookmarks, un-favoriting or hovering it for a tooltip silently did nothing. Fixed alongside the display issue above.
+- **Scrolling to the bottom of a long list no longer goes blank** — Scrolling past the last item used to overshoot into an empty page; it now stops exactly at the final row.
+- **Reverse sort no longer leaves blank slots when scrolling** — With reverse sort on, scrolling a long list (especially sorted by count) could leave the tail end blank. Sort order and scroll position are now combined correctly.
+- **Favoriting a large stack (over 64) now actually saves** — Favoriting a stack bigger than a normal Minecraft stack (e.g. 300 iron ingots) could silently fail with nothing added to Bookmarks.
+  <details><summary>Technical note</summary>Same "count gets corrupted over the network" bug as the favorites issue above, but in the star-item message. Minecraft compressed the count into a single byte, so anything over 127 wrapped around and got rejected.</details>
+- **Fixed a scrolling crash on smaller pages** — Scrolling on a page with fewer items than the whole inventory (Gear, Stone, Consumables, etc.) could crash the game outright. Confirmed fixed by attempting to reproduce it and failing to.
+- **Fixed a real performance bug** — Every item icon drawn on screen was making a full copy of the entire inventory's data just to look up one item, dozens of times a frame. Now a cheap direct lookup.
+- **Hiding/showing pages in Settings works immediately** — Toggling a page on/off used to require a full game restart to take effect; now applies as soon as the settings screen closes and the inventory reopens.
+
+### Features & UI
+
+- **Weapons, Tools, and Armor merged into one "Gear" tab** — Visually grouped into sections (weapons, tools, each armor piece) with dividers, instead of three separate tabs.
+- **Four new pages** — **Stone**, **Wood**, and **Ores & Minerals** group building/mining materials by type; **Mod Items** collects everything added by other mods separately from vanilla content.
+- **"Block Items" now means actual solid blocks** — No longer includes glass panes, leaves, slabs, carpets, etc.; limited to solid, full-size cubes (stone, wood, wool, concrete, ...).
+- **Separate row/column sizing for each view** — The main inventory screen and the version attached to chests/other menus can now each have their own row/column count instead of sharing one setting.
+- **Reworked layout for both views** — Search bar and settings button moved to a consistent spot at the bottom of both views. The Crafter toggle moved from floating above the panel to inside it. Page tabs repositioned and spaced out so they no longer overlap the settings button.
+- **Simpler "selected tab" look** — The open tab now uses a brightness highlight instead of popping outward, so it looks right regardless of which side the tabs are on.
+
+*Fabric build 1.20.1-1.1.0.1 — built and tested against the Mizuno modpack instance.*
