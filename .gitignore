@@ -30,3 +30,7 @@ repo
 /forge/runModpack/saves/
 /forge/libs/
 /shots/
+
+# claude code / crash logs
+.claude/
+hs_err_pid*.log
