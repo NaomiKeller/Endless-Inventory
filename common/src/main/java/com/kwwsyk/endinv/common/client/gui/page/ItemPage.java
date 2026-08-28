@@ -461,6 +461,17 @@ public abstract class ItemPage extends DisplayPage {
         private final ItemKey key;
         // a field [int index] will be added to adjust newer data construct of srcInv
 
+        //get() runs once per visible slot every single frame regardless of interaction, and
+        //rebuilding a fresh ItemStack (allocation + NBT tag assignment) on every one of those
+        //calls added up fast on pages where most/all visible slots are filled (e.g. "All Items"),
+        //versus a page like Favorites where most slots are empty and skip construction entirely
+        //via ItemPointer.EMPTY below. ItemState is an immutable record and the map always swaps in
+        //a new instance on any real change (see SourceInventory's add/take methods), so comparing
+        //by reference is a safe, correct way to detect "nothing changed since last frame" without
+        //needing a separate dirty flag.
+        private ItemState cachedState;
+        private ItemStack cachedStack;
+
         public ItemPointer(ItemKey key){
             this.srcInv = CachedSrcInv.INSTANCE;
             this.key = key;
@@ -473,7 +484,11 @@ public abstract class ItemPage extends DisplayPage {
             //copy was happening dozens of times a frame while the GUI was open.
             var state = srcInv.getItemMap().get(key);
             if(state == null) return ItemStack.EMPTY;
-            return state.toStack(key);
+            if (state != cachedState) {
+                cachedStack = state.toStack(key);
+                cachedState = state;
+            }
+            return cachedStack;
         }
 
         public ItemKey key(){

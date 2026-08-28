@@ -29,6 +29,13 @@ public class CachedSrcInv extends SourceInventory {
     //controls whether itemSize data is valid when transfermode==all.
     private boolean validSize;
 
+    //bumped on every real content change (see setChanged()); lets getSortedKeys() below tell
+    //whether its cached list is still valid without needing a snapshot/equality check.
+    private long contentVersion = 0;
+    private long cachedSortedVersion = -1;
+    private SortType cachedSortType;
+    private List<ItemKey> cachedSortedKeys;
+
     private CachedSrcInv(){
         super(ModInfo.DEFAULT_UUID);
     }
@@ -37,6 +44,27 @@ public class CachedSrcInv extends SourceInventory {
         overwriteItems(new Object2ObjectLinkedOpenHashMap<>(itemMap));
         this.itemSize = getItemSize();//here assert transfermode==all //parallelable
         this.validSize = true;
+        //overwriteItems() replaces the map directly and doesn't go through setChanged(), so the
+        //sorted-key cache in getSortedKeys() needs its own invalidation here.
+        contentVersion++;
+    }
+
+    /**
+     * Sorting the whole inventory (the ID/COUNT/SPACE_AND_NAME/LAST_MODIFIED comparators, each an
+     * O(n log n) pass with a registry lookup or map read per comparison) doesn't depend on which
+     * page is asking or what's typed in search - it's the same result for every page using the
+     * same sort type. Recomputing it from scratch on every scroll notch (and every keystroke, for
+     * pages sharing the current sort) was the main remaining cost on large item counts like "All
+     * Items", now that {@link #getSortedKeyReference} itself no longer copies the whole map.
+     * Cached until the inventory's content actually changes or the sort type itself changes.
+     */
+    private List<ItemKey> getSortedKeys(SortType sortType){
+        if (cachedSortedKeys == null || cachedSortType != sortType || cachedSortedVersion != contentVersion) {
+            cachedSortedKeys = getSortedKeyReference(sortType).toList();
+            cachedSortType = sortType;
+            cachedSortedVersion = contentVersion;
+        }
+        return cachedSortedKeys;
     }
 
     public List<ItemPage.ItemPointer> getItemView(int startIndex,
@@ -45,7 +73,7 @@ public class CachedSrcInv extends SourceInventory {
                                                   boolean reverse,
                                                   @Nullable Predicate<ItemStack> classify,
                                                   String search){
-        var filtered = getSortedKeyReference(sortType)
+        var filtered = getSortedKeys(sortType).stream()
                 .filter(key -> {
                     ItemStack stack = key.toStack(itemMap.get(key).count());
                     return (classify == null || classify.test(stack)) && SearchUtil.matchesSearch(stack, search);
@@ -138,6 +166,7 @@ public class CachedSrcInv extends SourceInventory {
     public void setChanged() {
         super.setChanged();
         validSize = false;
+        contentVersion++;
     }
 
     public long updateLastModTime(){

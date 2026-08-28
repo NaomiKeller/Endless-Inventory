@@ -65,6 +65,10 @@ public abstract class SourceInventory {
         return this.uuid;
     }
 
+    public long getLastModTime(){
+        return this.lastModTime;
+    }
+
     public UUID giveNewUuid(){
         uuid=UUID.randomUUID();
         return uuid;
@@ -289,23 +293,28 @@ public abstract class SourceInventory {
                 .collect(Collectors.toCollection(ArrayList::new));
     }
 
+    //getItemMap() reads the live map directly; snapshotItemMap() deep-copies the whole inventory,
+    //and this is the source of every item list the client renders (scroll, search, sort, click all
+    //call back into it), so copying here was rebuilding the entire inventory's hash map from
+    //scratch on every one of those - by far the worst offender on pages like "All Items" that
+    //don't cut the item count down with a classifier first.
     public Stream<ItemKey> getSortedKeyReference(SortType sortType){
         return switch (sortType){
-            case ID -> this.snapshotItemMap().keySet()
+            case ID -> this.getItemMap().keySet()
                     .stream()
                     .sorted(Comparator.comparingInt(key -> BuiltInRegistries.ITEM.getId(key.item())));
-            case DEFAULT -> this.snapshotItemMap().keySet()
+            case DEFAULT -> this.getItemMap().keySet()
                     .stream();
-            case COUNT -> this.snapshotItemMap()
+            case COUNT -> this.getItemMap()
                     .entrySet()
                     .stream()
                     .sorted(Comparator.comparingInt(e -> e.getValue().count()))
                     .map(Map.Entry::getKey);
-            case SPACE_AND_NAME -> this.snapshotItemMap()
+            case SPACE_AND_NAME -> this.getItemMap()
                     .keySet()
                     .stream()
                     .sorted(Comparator.comparing(key -> BuiltInRegistries.ITEM.getKey(key.item()).toString()));
-            case LAST_MODIFIED -> this.snapshotItemMap()
+            case LAST_MODIFIED -> this.getItemMap()
                     .entrySet()
                     .stream()
                     .sorted(Comparator.comparing(e -> e.getValue().lastModTime()))
