@@ -199,3 +199,27 @@ Two kinds of work this session: **Fixes** repair things that were broken regardl
 - **Simpler "selected tab" look** — The open tab now uses a brightness highlight instead of popping outward, so it looks right regardless of which side the tabs are on.
 
 *Fabric build 1.20.1-1.1.0.1 — built and tested against the Mizuno modpack instance.*
+
+## 2026.8.28 Session recap
+
+### Fixes
+
+- **Button icons no longer turn into garbled text after some rebuilds** — `common/build.gradle` didn't force UTF-8 like the other subprojects, so whenever `common` recompiled under a different default system encoding, the unicode glyphs used for the settings/sort/scroll-arrow buttons (▲ ▼ ⚙ ⇅) got mangled into mojibake baked right into the compiled class.
+- **Attached-view tab-scroll arrows now match the tab width** — they were 1px wider than the tabs they scroll.
+- **Reverse-sort button keeps its background in the attached view** — its vanilla bevel was getting painted over by the grid background, which renders after the attached view's widgets instead of before (the standalone menu doesn't have this ordering quirk).
+- **Search field now updates results while typing, not just on backspace** — the attached view's typed characters go through the host screen's own text handling rather than this mod's own key handler, so nothing was triggering a refresh until some other key (like backspace) happened to go through a different, more reliable path. Now polled once per frame regardless of which input path changed the text.
+- **Fixed a doubled/thickened border line on the attached view's grid** — both the bottom cap and the right-side cap (for any column count other than 9) were resampling a texture pixel the grid body had already drawn on its own, doubling a highlight line into a visibly thicker seam.
+- **Fixed a 1px tab-column misalignment specific to exactly 9 columns** — the dedicated 9-column vanilla texture is 1px narrower than the generic width formula assumed, nudging the tab column and scroll arrows 1px right of the box's real edge.
+- **Page tab name tooltip no longer renders behind the item grid** — it was drawn before the grid's icons/counts instead of after.
+- **Settings screen no longer shows raw page ids** — the page-hiding list showed things like `bookmark` and `block_items` instead of their translated names.
+
+### Features & UI
+
+- **Page renames for consistency**: Block Items → Blocks, Food&Potion → Consumables, Bookmark → Favorites, All items → All Items.
+- **Mod Items page is hidden by default** on a fresh install, since an empty page (no other mods yet) reads as broken rather than just unpopulated.
+- **Search field placeholder text** ("Search...") added to both views.
+- **Sort dropdown overhaul**: entries relabeled (Default, Amount, Name, ID, Recents) instead of raw enum names; "Amount" now defaults to largest stack first and "Recents" defaults to most-recently-touched first (both still flip via Reverse Sort).
+- **General settings tab reworded throughout** for clarity — e.g. "Auto suit in columns" → "Shrink Columns to Fit Window", "Attaching menu screen" → "Show Attached View", "Texture mode" → "Texture Style" — and added tooltips that were missing entirely.
+- **Minor spacing/alignment polish**: search field width, and positioning of the sort dropdown, reverse-sort button, and crafter toggle on both views.
+
+*Fabric/Forge build 1.20.1-1.3.0-naomi — built and tested against the Mizuno modpack instance.*
