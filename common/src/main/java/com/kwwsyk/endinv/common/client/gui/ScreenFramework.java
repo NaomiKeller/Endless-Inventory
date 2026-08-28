@@ -339,6 +339,14 @@ public class ScreenFramework implements PageManager{
         ), Optional.empty(), mouseX, mouseY);
         if (reverseSortButton.isHovered())
             guiGraphics.renderTooltip(mc.font, Component.translatable("button.endinv.reverse"), mouseX, mouseY);
+
+        //drawn here rather than alongside the tab icons in SFBgRendererImpl#renderPageBarContent:
+        //that runs from renderBg(), which happens before the item grid's own icons/counts render,
+        //so a tooltip drawn there would get painted over by them.
+        int hoveredTabIndex = hasClickedOnPageSwitchBar(mouseX, mouseY);
+        if (hoveredTabIndex >= 0) {
+            guiGraphics.renderTooltip(mc.font, getPages().get(firstPageIndex + hoveredTabIndex).name, mouseX, mouseY);
+        }
     }
 
     protected boolean hasClickedOnPage(double mouseX, double mouseY) {

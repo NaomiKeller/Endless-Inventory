@@ -79,7 +79,7 @@ public class SortTypeSwitchBox extends AbstractWidget {
         if(isHoveringOnSingleBox(mouseY, getY()))
             guiGraphics.fillGradient(RenderType.guiOverlay(),getX(), getY(),getX()+width, getY() +singleBoxHeight,0x80ffffff,0x80ffffff,0);
         SortType sortType = CachedConfig.sortType();
-        String s = sortType.toString();
+        String s = Component.translatable(sortType.translationKey + ".label").getString();
         guiGraphics.drawString(Minecraft.getInstance().font, s,getX()+2, getY() +2,0xffffffff);
         if(isOpen){
             int y1 = getY() +singleBoxHeight;
@@ -90,7 +90,7 @@ public class SortTypeSwitchBox extends AbstractWidget {
                     guiGraphics.fillGradient(RenderType.guiOverlay(), getX(), y1, getX() + width, y1 + singleBoxHeight, 0x80ffffff, 0x80ffffff, 0);
                     guiGraphics.renderTooltip(Minecraft.getInstance().font,Component.translatable(type.translationKey),mouseX,mouseY);
                 }
-                s = type.toString();
+                s = Component.translatable(type.translationKey + ".label").getString();
                 guiGraphics.drawString(Minecraft.getInstance().font, s,getX()+2,y1+2,0xffffffff);
                 y1+=singleBoxHeight;
             }

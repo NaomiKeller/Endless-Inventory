@@ -2,7 +2,6 @@ package com.kwwsyk.endinv.common.client.gui.bg;
 
 import com.kwwsyk.endinv.common.client.ClientModInfo;
 import com.kwwsyk.endinv.common.client.gui.ScreenFramework;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 
@@ -41,7 +40,6 @@ public abstract class SFBgRendererImpl implements SFBgRenderer {
     protected void renderPageBarContent(GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY){
         int pageX = pageSwitchTabParam.XPos();
         int pageY = pageSwitchTabParam.YPos();
-        int selectedPageIndex = frameWork.getDisplayingPageIndex();
         for (int i = frameWork.firstPageIndex; i < frameWork.firstPageIndex+ frameWork.pageBarCount; ++i) {
             //fixed icon offset, matching vanilla's own advancement tabs: the icon doesn't
             //perfectly re-center between the unselected and (wider) selected sprite shapes, and
@@ -49,14 +47,11 @@ public abstract class SFBgRendererImpl implements SFBgRenderer {
             //attached view so it stays sensibly placed once the tab art itself is mirrored.
             int iconOffset = mirrorTabs ? 4 : 12;
             frameWork.getPages().get(i).renderPageIcon(guiGraphics, pageX + iconOffset, pageY + 5, partialTick);
-            if (mouseX > pageX && mouseX < pageX + 32 && mouseY > pageY && mouseY < pageY + 28) {
-                guiGraphics.pose().pushPose();
-                guiGraphics.pose().translate(0, 0, 550.0f);
-                guiGraphics.renderTooltip(Minecraft.getInstance().font, frameWork.getPages().get(i).name, mouseX, mouseY);
-                guiGraphics.pose().popPose();
-            }
             pageY += 28;
         }
+        //the tab-name tooltip itself isn't drawn here - this whole method runs from renderBg(),
+        //which happens before the item grid's own icons/counts render; a tooltip drawn here would
+        //get painted over by them. See ScreenFramework#render for where it's actually drawn.
     }
 
     @Override

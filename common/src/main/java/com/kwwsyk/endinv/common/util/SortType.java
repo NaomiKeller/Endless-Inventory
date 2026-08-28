@@ -36,13 +36,17 @@ public enum SortType {
         default Comparator<ItemStack> getComparator(SortType sortType, SourceInventory srcInv){
             return switch (sortType){
                 case DEFAULT -> (a,b)->0;
-                case COUNT -> Comparator.comparingInt(ItemStack::getCount);
+                //largest stacks first by default - reversed from a plain count comparison, which
+                //would put the smallest (often near-empty/unstackable) stacks first instead.
+                case COUNT -> Comparator.comparingInt(ItemStack::getCount).reversed();
                 case SPACE_AND_NAME -> Comparator.comparing(it-> BuiltInRegistries.ITEM.getKey(it.getItem()).toString());
                 case ID -> REGISTRY_ORDER_COMPARATOR;
                 //getItemMap() reads the live map directly; snapshotItemMap() deep-copies the whole
                 //inventory, and a Comparator gets invoked O(n log n) times for one sort, so this
                 //was copying the entire inventory that many times over for a single sort.
-                case LAST_MODIFIED -> Comparator.comparingLong(s -> srcInv.getItemMap().get(ItemKey.asKey(s)).lastModTime());
+                //most-recently-touched items first by default, reversed from a plain ascending
+                //timestamp comparison (oldest first).
+                case LAST_MODIFIED -> Comparator.comparingLong((ItemStack s) -> srcInv.getItemMap().get(ItemKey.asKey(s)).lastModTime()).reversed();
             };
         }
 
