@@ -44,7 +44,10 @@ public interface IClientConfig {
         //ofMenu reserves an extra row's worth of height versus the attached layout: 4 rows for the
         //vanilla player-inventory block, plus 1 more for the bottom search/config bar appended
         //below it (EndlessInventoryScreen.BOTTOM_BAR_HEIGHT + its gap, ~24px).
-        return Math.max(Math.floorDiv(height-60,18)-(ofMenu?5:0),0);
+        //The attached layout gets 1 row of safety margin: windowed Minecraft doesn't know about
+        //the OS taskbar, so a window sized/placed to reach the screen edge can report more usable
+        //height than is actually visible, cutting off its own bottom search/config bar.
+        return Math.max(Math.floorDiv(height-60,18)-(ofMenu?5:1),0);
     }
 
     default int calculateSuitInColumnCount(AbstractContainerScreen<?> screen){

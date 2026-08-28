@@ -243,19 +243,13 @@ public class ScreenFramework implements PageManager{
             //solid triangle glyphs, matching the mod's existing pattern of using plain Unicode
             //symbols for icon-style buttons (the reverse-sort "⇅" and settings "⚙" buttons)
             //rather than a texture asset.
-            Button up = Button.builder(Component.literal("▲"), btn -> {
-                        if (firstPageIndex > 0) firstPageIndex--;
-                    })
-                    .pos(pageBarScrollUpButtonParam.XPos(), pageBarScrollUpButtonParam.YPos())
-                    .size(pageBarScrollUpButtonParam.XSize(), pageBarScrollUpButtonParam.YSize())
-                    .build();
-            Button down = Button.builder(Component.literal("▼"), btn -> {
-                        if (firstPageIndex + pageBarCount < getPages().size())
-                            firstPageIndex++;
-                    })
-                    .pos(pageBarScrollDownButtonParam.XPos(), pageBarScrollDownButtonParam.YPos())
-                    .size(pageBarScrollDownButtonParam.XSize(), pageBarScrollDownButtonParam.YSize())
-                    .build();
+            Button up = nonFocusingButton(pageBarScrollUpButtonParam, Component.literal("▲"), btn -> {
+                if (firstPageIndex > 0) firstPageIndex--;
+            });
+            Button down = nonFocusingButton(pageBarScrollDownButtonParam, Component.literal("▼"), btn -> {
+                if (firstPageIndex + pageBarCount < getPages().size())
+                    firstPageIndex++;
+            });
             widgets.add(up);
             widgets.add(down);
         }
@@ -268,6 +262,23 @@ public class ScreenFramework implements PageManager{
 
     public void addWidgetToScreen(Consumer<AbstractWidget> installer) {
         widgets.forEach(installer);
+    }
+
+    /**
+     * A vanilla {@link Button} highlights whenever hovered <em>or</em> focused, and clicking a
+     * widget makes the host screen mark it "focused" until something else takes focus - so a
+     * plain button stays lit after being clicked, well past the actual click, looking like a
+     * persistent selection. For a transient paging control (the page tab scroll arrows) that
+     * reads as a bug, not feedback, so this variant never reports itself as focused and only
+     * highlights while the mouse is genuinely over it.
+     */
+    private static Button nonFocusingButton(ScreenRectangleWidgetParam bounds, Component label, Button.OnPress onPress) {
+        return new Button(bounds.XPos(), bounds.YPos(), bounds.XSize(), bounds.YSize(), label, onPress, supplier -> supplier.get()) {
+            @Override
+            public boolean isFocused() {
+                return false;
+            }
+        };
     }
 
     public void renderPre(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
