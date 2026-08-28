@@ -223,3 +223,20 @@ Two kinds of work this session: **Fixes** repair things that were broken regardl
 - **Minor spacing/alignment polish**: search field width, and positioning of the sort dropdown, reverse-sort button, and crafter toggle on both views.
 
 *Fabric/Forge build 1.20.1-1.3.0-naomi — built and tested against the Mizuno modpack instance.*
+
+## 2026.8.28 Performance pass
+
+Follow-up to the session above after a player reported the "All Items" page (and any page that keeps most of the grid filled) costing noticeably more FPS than a small page like Favorites, with the drop scaling with how much of the visible grid was filled - traced down to four separate hot-path issues, none of them related to other mods.
+
+### Fixes
+
+- **Sorting the inventory no longer copies the whole item map** — `getSortedKeyReference()` deep-copied the entire inventory into a new map on every call (every scroll notch, keystroke, and click), regardless of sort type. Now reads the live map directly, same fix already applied elsewhere.
+- **The sorted item list is now cached** — sorting doesn't depend on which page is open or what's typed in search, so redoing the full O(n log n) sort from scratch on every scroll/keystroke was wasted work. Cached until the inventory's content or the active sort type actually changes.
+- **The server no longer resends your entire inventory on every scroll/click/keystroke** — with the default "send everything" transfer mode, every one of those interactions triggered a fresh full-inventory copy, network packet, and resync, even when nothing had changed since the last one. Now skipped unless the content actually changed; still forces a correct resync on reconnect or reopening the screen, so nothing goes stale.
+- **Item icons no longer get rebuilt from scratch every single frame** — this was the largest remaining cost. Displaying an item slot rebuilt a brand new `ItemStack` on every rendered frame, regardless of whether anything changed, and this ran once per *visible* slot every frame whether or not you were interacting with the page at all. Pages that keep most slots filled (All Items) paid this cost constantly; pages with mostly empty slots (Favorites) barely noticed since empty slots have nothing to rebuild.
+
+### Note
+
+What's left after these fixes is Minecraft's own inherent cost of drawing many distinct item icons per frame, which scales with how many *visible* slots are filled - not a bug, just physics. A smaller row/column count directly reduces it if you want the extra margin. Reported drops that felt much larger than that (e.g. sudden 40-50fps cliffs) turned out to be a VSync frame-pacing artifact unrelated to the mod, not the rendering cost itself.
+
+*Fabric/Forge build 1.20.1-1.3.1-naomi — built and tested against the Mizuno modpack instance.*
