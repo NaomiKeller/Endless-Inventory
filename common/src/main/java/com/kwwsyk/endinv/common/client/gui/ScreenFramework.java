@@ -240,13 +240,16 @@ public class ScreenFramework implements PageManager{
         this.searchBox.setValue(searching());
 
         if (pageBarCount < getPages().size()) {
-            Button up = Button.builder(Component.literal("^"), btn -> {
+            //solid triangle glyphs, matching the mod's existing pattern of using plain Unicode
+            //symbols for icon-style buttons (the reverse-sort "⇅" and settings "⚙" buttons)
+            //rather than a texture asset.
+            Button up = Button.builder(Component.literal("▲"), btn -> {
                         if (firstPageIndex > 0) firstPageIndex--;
                     })
                     .pos(pageBarScrollUpButtonParam.XPos(), pageBarScrollUpButtonParam.YPos())
                     .size(pageBarScrollUpButtonParam.XSize(), pageBarScrollUpButtonParam.YSize())
                     .build();
-            Button down = Button.builder(Component.literal("v"), btn -> {
+            Button down = Button.builder(Component.literal("▼"), btn -> {
                         if (firstPageIndex + pageBarCount < getPages().size())
                             firstPageIndex++;
                     })
@@ -476,7 +479,26 @@ public class ScreenFramework implements PageManager{
         if (hasClickedOnPage(mouseX, mouseY)) {
             return getDisplayingPage().mouseScrolled(mouseX - getPageX(), mouseY - getPageY(), scrollY);
         }
+        if (pageBarCount < getPages().size() && hasHoveredPageSwitchBar(mouseX, mouseY)) {
+            //same direction convention as the item grid's own scroll: positive scrollY (wheel up)
+            //moves toward the start, matching what the "▲" button does.
+            if (scrollY > 0 && firstPageIndex > 0) firstPageIndex--;
+            else if (scrollY < 0 && firstPageIndex + pageBarCount < getPages().size()) firstPageIndex++;
+            return true;
+        }
         return false;
+    }
+
+    /**
+     * Whether the mouse is anywhere over the visible page tab column, for scroll-wheel paging.
+     * Unlike {@link #hasClickedOnPageSwitchBar}, this doesn't need to resolve a specific tab index.
+     */
+    protected boolean hasHoveredPageSwitchBar(double mouseX, double mouseY) {
+        double x = SFBgRenderer.pageSwitchBarParam().XPos();
+        double y = SFBgRenderer.pageSwitchBarParam().YPos();
+        double width = SFBgRenderer.pageSwitchBarParam().XSize();
+        double height = SFBgRenderer.pageSwitchBarParam().YSize() * pageBarCount;
+        return mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + height;
     }
 
     private boolean ignoreTextInput;

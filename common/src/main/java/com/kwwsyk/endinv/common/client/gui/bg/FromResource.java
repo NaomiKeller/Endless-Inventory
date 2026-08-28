@@ -190,9 +190,12 @@ public abstract class FromResource extends SFBgRendererImpl {
             //"selected" sprites are wider and only meant to expand toward one fixed side, which
             //looked wrong once tabs could sit on either side of the frame. Selection is now shown
             //with a brightness overlay instead, which works the same regardless of tab side.
-            guiGraphics.blit(getTabsTexture(),pageX+8,pageY,4,64,24,27);
+            //extended 1px further left than the source crop (stretched, not re-sampled, to avoid
+            //pulling in neighboring texture-atlas content) - the un-stretched version left a
+            //visible sliver of nothing on the tab's left edge.
+            guiGraphics.blit(getTabsTexture(), pageX+7, pageY, 25, 27, 4f, 64f, 24, 27, 256, 256);
             if (i == selectedPageIndex) {
-                guiGraphics.fill(pageX+8,pageY,pageX+32,pageY+27,SELECTED_TINT);
+                guiGraphics.fill(pageX+7,pageY,pageX+32,pageY+27,SELECTED_TINT);
             }
             pageY+=28;
         }
