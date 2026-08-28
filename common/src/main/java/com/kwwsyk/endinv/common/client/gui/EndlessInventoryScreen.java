@@ -78,8 +78,8 @@ public class EndlessInventoryScreen extends AbstractContainerScreen<EndlessInven
             return;
         }
         int width = this.craftingToggleButton.getWidth();
-        int x = this.leftPos + this.imageWidth - width - 8;
-        int y = this.topPos + 5;
+        int x = this.leftPos + this.imageWidth - width - 7;
+        int y = this.topPos + 4;
         this.craftingToggleButton.setX(x);
         this.craftingToggleButton.setY(y);
     }

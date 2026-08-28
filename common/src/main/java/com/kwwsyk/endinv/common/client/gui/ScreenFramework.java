@@ -28,6 +28,7 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen;
+import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -74,6 +75,14 @@ public class ScreenFramework implements PageManager{
     private int roughMouseX;
     private int roughMouseY;
     public EditBox searchBox;
+    //the attached view's typed characters go through the host screen's own vanilla text-input
+    //handling (this mod only gets to intercept it, via a Mixin, for the standalone menu screen
+    //where charTyped is overridden directly - see EndlessInventoryScreen#charTyped); when that
+    //interception doesn't fire, the search box's text still updates correctly, but nothing
+    //triggers refreshSearchResults(), leaving the grid stale until some other key (like backspace,
+    //handled through Fabric's own allowKeyPress hook) happens to trigger it directly. Polling for
+    //a value change every frame here catches every case regardless of which input path updated it.
+    private String lastSearchBoxValue = "";
     public SortTypeSwitchBox sortTypeSwitchBox;
     private Button reverseSortButton;
     private Button configButton;
@@ -119,12 +128,12 @@ public class ScreenFramework implements PageManager{
         this.pageBarScrollUpButtonParam = new ScreenRectangleWidgetParam(leftPos - 24 - FromResource.MENU_TAB_GAP, tabColumnY - 16, 24, 14);
         this.pageBarScrollDownButtonParam = new ScreenRectangleWidgetParam(leftPos - 24 - FromResource.MENU_TAB_GAP, tabColumnY + 2 + 28 * pageBarCount, 24, 14);
         //page switch bar --end--
-        this.sortBoxParam = new ScreenRectangleWidgetParam(this.leftPos + 8, topPos + 5, 60, 12);
+        this.sortBoxParam = new ScreenRectangleWidgetParam(this.leftPos + 7, topPos + 4, 60, 12);
         //search box and config button used to sit in the top strip / outside the right edge; moved
         //to a bar along the bottom (EndlessInventoryScreen reserves BOTTOM_BAR_HEIGHT for this) to
         //match the attached-inventory layout instead of floating around the frame's border.
         int bottomBarY = this.topPos + this.imageHeight - EndlessInventoryScreen.BOTTOM_BAR_HEIGHT - 2;
-        int searchBoxWidth = Math.max(20, this.imageWidth - 22);
+        int searchBoxWidth = Math.max(20, this.imageWidth - 21);
         this.searchBoxParam = new ScreenRectangleWidgetParam(this.leftPos + 1, bottomBarY, searchBoxWidth, 16);
         this.configButtonParam = new ScreenRectangleWidgetParam(this.leftPos + 1 + searchBoxWidth + 2, bottomBarY - 1, 18, 18);
 
@@ -156,7 +165,14 @@ public class ScreenFramework implements PageManager{
         this.columns = layout.columns();
         this.leftPos = 12;
         this.topPos = Math.max((screen.height - rows * 18 - 17 - 10) / 2, 20);
-        this.imageWidth = 13 + 18 * columns;
+        //the dedicated 9-column vanilla texture (used when columns==9 - see
+        //FromResource.PagePainter's columns==9 branch) measures 176px wide: a 7px left border, an
+        //18*9 body, and only a 7px right border (not 8, like the generic left-cap+body+right-cap
+        //assembly used for any other column count - see renderSpecialBg's own 7px-destination
+        //right-cap stretch). Both real widths are 7+18*columns+7=14+18*columns; left uncorrected,
+        //the tab column and scroll arrows sat 1px right of the box's real edge whenever columns
+        //was exactly 9, since this formula didn't yet account for either border matching.
+        this.imageWidth = 12 + 18 * columns;
         this.imageHeight = screen.height;
         //---WIDGET DATA---
         //computed before the tab column's own position: when there's overflow, the whole column
@@ -176,16 +192,16 @@ public class ScreenFramework implements PageManager{
                 new FromResource.LeftLayout(this, new ScreenRectangleWidgetParam(tabX, tabColumnY, 32, 28)) :
                 new Transparent(this, new ScreenRectangleWidgetParam(tabX, tabColumnY, 32, 28));
 
-        //matches the tab sprite's own visible bounds (inset 8px into its 32px-wide slot, 24px
-        //wide - see FromResource#renderBg), not the full slot width, which was wider than what's
-        //actually drawn for each tab.
-        this.pageBarScrollUpButtonParam = new ScreenRectangleWidgetParam(tabX + 8, tabColumnY - 16, 24, 14);
-        this.pageBarScrollDownButtonParam = new ScreenRectangleWidgetParam(tabX + 8, tabColumnY + 2 + 28 * pageBarCount, 24, 14);
+        //matches the attached view's unselected tab shape (flush at tabX, 25px wide - see
+        //FromResource#renderBg's mirrored positioning), not the wider 32px selected sprite.
+        this.pageBarScrollUpButtonParam = new ScreenRectangleWidgetParam(tabX, tabColumnY - 16, 24, 14);
+        this.pageBarScrollDownButtonParam = new ScreenRectangleWidgetParam(tabX, tabColumnY + 2 + 28 * pageBarCount, 24, 14);
         //other
         //field/button heights match the standalone menu screen's bottom bar for consistency; the
         //+12 is the grid's own bottom border height (see FromResource.PagePainter's 12px-tall cap
-        //blit), not padding, so the 2px gap has to be added after it, not replace it.
-        int searchBoxY = this.topPos + 17 + 18 * rows + 12 + 2;
+        //blit). Flush against it (no added gap) since the grid's bottom edge has no bevel of its
+        //own here - these widgets being flush against it is what makes that look intentional.
+        int searchBoxY = this.topPos + 17 + 18 * rows + 12;
         //the config button used to sit at x=0, sharing that column with the page tab strip; with
         //more tabs registered the strip now grows tall enough to cover it, so it's placed to the
         //right of the search box instead (splitting the same width budget rather than growing it,
@@ -193,7 +209,7 @@ public class ScreenFramework implements PageManager{
         int searchBoxWidth = Math.max(20, Math.min(200, imageWidth) - 22) + 3;
         this.searchBoxParam = new ScreenRectangleWidgetParam(this.leftPos + 1, searchBoxY + 1, searchBoxWidth, Math.min(16, screen.height - searchBoxY));
         this.configButtonParam = new ScreenRectangleWidgetParam(this.leftPos + 1 + searchBoxWidth + 2, searchBoxY, 18, Math.min(18, screen.height - searchBoxY));
-        this.sortBoxParam = new ScreenRectangleWidgetParam(this.leftPos + 6, topPos + 5, 77, 12);
+        this.sortBoxParam = new ScreenRectangleWidgetParam(this.leftPos + 7, topPos + 4, 77, 12);
 
         //------PAGES-----------
         //------prepare page data---------
@@ -235,9 +251,11 @@ public class ScreenFramework implements PageManager{
         this.searchBox = new EditBox(mc.font,
                 this.searchBoxParam.XPos(), this.searchBoxParam.YPos(), this.searchBoxParam.XSize(), this.searchBoxParam.YSize(),
                 Component.translatable("itemGroup.search"));
+        this.searchBox.setHint(Component.translatable("search.endinv.hint").withStyle(ChatFormatting.DARK_GRAY));
         this.sortTypeSwitchBox = new SortTypeSwitchBox(this, this, sortBoxParam);
 
         this.searchBox.setValue(searching());
+        this.lastSearchBoxValue = this.searchBox.getValue();
 
         if (pageBarCount < getPages().size()) {
             //solid triangle glyphs, matching the mod's existing pattern of using plain Unicode
@@ -288,6 +306,13 @@ public class ScreenFramework implements PageManager{
         SFBgRenderer.renderBg(guiGraphics, partialTick, mouseX, mouseY);
         getDisplayingPage().initRenderer(this, getPageX(), getPageY());
         getDisplayingPage().renderBg(SFBgRenderer, guiGraphics, partialTick, mouseX, mouseY);
+        //in the attached view, our widgets render as part of the host screen's own widget loop,
+        //which runs before this method (see AttachingScreen/ScreenEvents.afterRender) - so the
+        //reverse-sort button, sitting inside the grid's own top border, already rendered once
+        //before the border blit above painted over its background. Re-rendering it here draws it
+        //back on top; in the standalone menu this just runs slightly before its normal render
+        //call, which is harmless.
+        reverseSortButton.render(guiGraphics, mouseX, mouseY, partialTick);
     }
 
     private boolean isHoveringOnPage;
@@ -295,6 +320,11 @@ public class ScreenFramework implements PageManager{
     public void render(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         roughMouseX = mouseX;
         roughMouseY = mouseY;
+
+        if (!Objects.equals(searchBox.getValue(), lastSearchBoxValue)) {
+            lastSearchBoxValue = searchBox.getValue();
+            refreshSearchResults();
+        }
 
         isHoveringOnPage = hasClickedOnPage(mouseX, mouseY);
 

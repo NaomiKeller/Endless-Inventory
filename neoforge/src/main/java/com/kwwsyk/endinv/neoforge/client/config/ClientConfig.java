@@ -58,9 +58,11 @@ public class ClientConfig {
                 .defineInRange("max_page_bars",10,1,255);
 
         for (String id : PageTypeRegistry.getIdList()) {
+            //mod_items is hidden by default: a first-time user with no other mods installed would
+            //just see an empty page, which reads as broken rather than merely unpopulated yet.
             ModConfigSpec.BooleanValue pageEntry = builder
                     .comment("Hide page: " + id)
-                    .define("hide_pages." + id, false);
+                    .define("hide_pages." + id, id.equals("mod_items"));
             PAGE2HIDING.put(id,pageEntry);
         }
     }

@@ -14,6 +14,8 @@ public class Transparent extends SFBgRendererImpl {
     public Transparent(ScreenFramework frameWork, ScreenRectangleWidgetParam pageSwitchTabParam) {
         super(frameWork);
         this.pageSwitchTabParam = pageSwitchTabParam;
+        //Transparent is only ever used on the attached view's right-side tab column.
+        this.mirrorTabs = true;
     }
 
 

@@ -21,6 +21,11 @@ public abstract class SFBgRendererImpl implements SFBgRenderer {
     protected final int rows;
     protected final int columns;
 
+    //true for renderers used on the attached view's right-side tab column, so tab art/icon
+    //placement designed for a left-side column (bevel facing right, toward the panel) gets
+    //mirrored to face the correct direction on the other side instead.
+    protected boolean mirrorTabs = false;
+
     public SFBgRendererImpl(ScreenFramework frameWork){
         this.frameWork = frameWork;
         this.screen = frameWork.screen;
@@ -38,10 +43,12 @@ public abstract class SFBgRendererImpl implements SFBgRenderer {
         int pageY = pageSwitchTabParam.YPos();
         int selectedPageIndex = frameWork.getDisplayingPageIndex();
         for (int i = frameWork.firstPageIndex; i < frameWork.firstPageIndex+ frameWork.pageBarCount; ++i) {
-            //centers the 16x16 icon within the tab's visible 24px-wide sprite (pageX+8..pageX+32,
-            //center pageX+20); now that selected/unselected tabs are the same size (see
-            //FromResource#renderBg), this centering is consistent for both states.
-            frameWork.getPages().get(i).renderPageIcon(guiGraphics, pageX + 12, pageY + 5, partialTick);
+            //fixed icon offset, matching vanilla's own advancement tabs: the icon doesn't
+            //perfectly re-center between the unselected and (wider) selected sprite shapes, and
+            //vanilla doesn't either - it keeps one offset regardless of state. Mirrored for the
+            //attached view so it stays sensibly placed once the tab art itself is mirrored.
+            int iconOffset = mirrorTabs ? 4 : 12;
+            frameWork.getPages().get(i).renderPageIcon(guiGraphics, pageX + iconOffset, pageY + 5, partialTick);
             if (mouseX > pageX && mouseX < pageX + 32 && mouseY > pageY && mouseY < pageY + 28) {
                 guiGraphics.pose().pushPose();
                 guiGraphics.pose().translate(0, 0, 550.0f);

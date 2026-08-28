@@ -15,6 +15,7 @@
   "sorttype.endinv.name": "按命名空间与名称排序",
   "sorttype.endinv.id": "按注册顺序排序",
   "sorttype.endinv.last_modified": "最后修改",
+  "search.endinv.hint": "搜索...",
   "search.endinv.prefix.sharp": "#->按标签搜索",
   "search.endinv.prefix.at": "@->按命名空间搜索",
   "search.endinv.prefix.xor": "^->按工具提示内容搜索",

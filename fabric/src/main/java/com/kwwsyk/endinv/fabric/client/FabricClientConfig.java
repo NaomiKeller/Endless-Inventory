@@ -54,7 +54,9 @@ public final class FabricClientConfig implements IClientConfig {
     private TextureMode textureMode = TextureMode.FROM_RESOURCE;
     private boolean screenDebug = false;
     private int maxPageBars = 10;
-    private final Set<String> hiddenPages = new HashSet<>();
+    //mod_items is hidden by default: a first-time user with no other mods installed would just
+    //see an empty page, which reads as broken rather than merely unpopulated yet.
+    private final Set<String> hiddenPages = new HashSet<>(Set.of("mod_items"));
     private SortType sortType = SortType.DEFAULT;
     private boolean reverseSort = false;
     private String activePageId = PageType.DEFAULT_KEY;

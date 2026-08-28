@@ -40,6 +40,7 @@ final class ClothConfigScreenBuilder {
     private static void addGeneralEntries(ConfigEntryBuilder entryBuilder, ConfigCategory category, IClientConfig config) {
         category.addEntry(entryBuilder.startBooleanToggle(Component.translatable("endinv.setting.attaching"), config.attaching().get())
                 .setDefaultValue(ClientConfig.CONFIG.ATTACHING.getDefault())
+                .setTooltip(Component.translatable("config.endinv.comment.attaching"))
                 .setSaveConsumer(value -> config.attaching().set(value))
                 .build());
 
@@ -71,23 +72,27 @@ final class ClothConfigScreenBuilder {
 
         category.addEntry(entryBuilder.startBooleanToggle(Component.translatable("endinv.setting.auto_suit"), config.autoSuitColumn().get())
                 .setDefaultValue(ClientConfig.CONFIG.AUTO_SUIT_COLUMN.getDefault())
+                .setTooltip(Component.translatable("config.endinv.comment.auto_suit"))
                 .setSaveConsumer(value -> config.autoSuitColumn().set(value))
                 .build());
 
         category.addEntry(entryBuilder.startEnumSelector(Component.translatable("endinv.setting.texture"), TextureMode.class, config.textureMode().get())
                 .setDefaultValue(ClientConfig.CONFIG.TEXTURE.getDefault())
                 .setEnumNameProvider(mode -> Component.translatable("endinv.setting.entry." + mode.name()))
+                .setTooltip(Component.translatable("config.endinv.comment.texture"))
                 .setSaveConsumer(value -> config.textureMode().set(value))
                 .build());
 
         category.addEntry(entryBuilder.startIntField(Component.translatable("endinv.setting.max_page_bar"), config.maxPageBarCount().get())
                 .setDefaultValue(((Number) ClientConfig.CONFIG.MAX_PAGE_BARS.getDefault()).intValue())
                 .setMin(1)
+                .setTooltip(Component.translatable("config.endinv.comment.max_page_bar"))
                 .setSaveConsumer(value -> config.maxPageBarCount().set(value))
                 .build());
 
         category.addEntry(entryBuilder.startBooleanToggle(Component.translatable("endinv.setting.screen_debug"), config.screenDebugging().get())
                 .setDefaultValue(ClientConfig.CONFIG.ENABLE_DEBUG.getDefault())
+                .setTooltip(Component.translatable("config.endinv.comment.screen_debug"))
                 .setSaveConsumer(value -> config.screenDebugging().set(value))
                 .build());
     }
@@ -105,7 +110,7 @@ final class ClothConfigScreenBuilder {
                     .map(value -> value.getDefault())
                     .orElse(false);
 
-            pages.addEntry(entryBuilder.startBooleanToggle(Component.translatable("endinv.setting.hide_page", id), hidden)
+            pages.addEntry(entryBuilder.startBooleanToggle(Component.translatable("endinv.setting.hide_page", Component.translatable("page.endinv." + id)), hidden)
                     .setDefaultValue(defaultHidden)
                     .setSaveConsumer(value -> config.setPageHiding(id, value))
                     .build());
