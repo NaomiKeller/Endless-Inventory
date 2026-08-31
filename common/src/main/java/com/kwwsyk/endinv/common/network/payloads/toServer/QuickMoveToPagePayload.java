@@ -2,7 +2,6 @@ package com.kwwsyk.endinv.common.network.payloads.toServer;
 
 import com.kwwsyk.endinv.common.EndlessInventory;
 import com.kwwsyk.endinv.common.ServerLevelEndInv;
-import com.kwwsyk.endinv.common.menu.page.pageManager.PageMetaDataManager;
 import com.kwwsyk.endinv.common.network.payloads.ModPacketContext;
 import com.kwwsyk.endinv.common.network.payloads.ModPacketPayload;
 import com.mojang.logging.LogUtils;
@@ -35,10 +34,6 @@ public record QuickMoveToPagePayload(int slotId) implements ModPacketPayload {
     public void handle(ModPacketContext iPayloadContext) {
         ServerPlayer player = (ServerPlayer) iPayloadContext.player();
         Optional<EndlessInventory> oendinv = ServerLevelEndInv.getEndInvForPlayer(player);
-        {
-            Optional<PageMetaDataManager> optional = ServerLevelEndInv.checkAndGetManagerForPlayer(player);
-            LOGGER.info("Test: Optional AttachingManager Status: {}", optional);
-        }
         if(oendinv.isEmpty()){
             LOGGER.warn("{}: Player who has not an EndInv quick-moved item to EndInv's page.", id()+" payload");
         }else {
