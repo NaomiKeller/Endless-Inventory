@@ -45,6 +45,7 @@ public final class FabricNetworking {
         registerServerbound(ItemPageContext.class, ItemPageContext::encode, ItemPageContext::decode, "page_context");
         registerServerbound(OpenEndInvPayload.class, OpenEndInvPayload::encode, OpenEndInvPayload::decode, "open_endinv");
         registerServerbound(QuickMoveToPagePayload.class, QuickMoveToPagePayload::encode, QuickMoveToPagePayload::decode, "quick_move_page");
+        registerServerbound(BulkQuickMoveFromPagePayload.class, BulkQuickMoveFromPagePayload::encode, BulkQuickMoveFromPagePayload::decode, "bulk_quick_move");
         registerServerbound(StarItemPayload.class, StarItemPayload::encode, StarItemPayload::decode, "star_item");
         registerServerbound(ToggleCraftingPayload.class, ToggleCraftingPayload::encode, ToggleCraftingPayload::decode, "toggle_crafting");
         registerServerbound(SyncedConfig.class, SyncedConfig::encode, SyncedConfig::decode, SyncedConfig.DEFAULT.id());
@@ -77,6 +78,7 @@ public final class FabricNetworking {
         SERVERBOUND.put(ItemPageContext.class, new PayloadRegistration<>(AbstractModInitializer.withModLocation("page_context"), ItemPageContext::encode, ItemPageContext::decode));
         SERVERBOUND.put(OpenEndInvPayload.class, new PayloadRegistration<>(AbstractModInitializer.withModLocation("open_endinv"), OpenEndInvPayload::encode, OpenEndInvPayload::decode));
         SERVERBOUND.put(QuickMoveToPagePayload.class, new PayloadRegistration<>(AbstractModInitializer.withModLocation("quick_move_page"), QuickMoveToPagePayload::encode, QuickMoveToPagePayload::decode));
+        SERVERBOUND.put(BulkQuickMoveFromPagePayload.class, new PayloadRegistration<>(AbstractModInitializer.withModLocation("bulk_quick_move"), BulkQuickMoveFromPagePayload::encode, BulkQuickMoveFromPagePayload::decode));
         SERVERBOUND.put(StarItemPayload.class, new PayloadRegistration<>(AbstractModInitializer.withModLocation("star_item"), StarItemPayload::encode, StarItemPayload::decode));
         SERVERBOUND.put(ToggleCraftingPayload.class, new PayloadRegistration<>(AbstractModInitializer.withModLocation("toggle_crafting"), ToggleCraftingPayload::encode, ToggleCraftingPayload::decode));
         SERVERBOUND.put(SyncedConfig.class, new PayloadRegistration<>(AbstractModInitializer.withModLocation(SyncedConfig.DEFAULT.id()), SyncedConfig::encode, SyncedConfig::decode));

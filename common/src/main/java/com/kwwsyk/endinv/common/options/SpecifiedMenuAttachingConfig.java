@@ -219,7 +219,10 @@ public class SpecifiedMenuAttachingConfig {
                 String namespaceTxt = configEntry.substring(0,LCIndex).trim();
 
                 boolean value = parseBoolean(boolTxt);
-                ResourceLocation rl = ResourceLocation.parse(namespaceTxt);
+                //ResourceLocation.parse(String) doesn't exist on 1.20.1's actual ResourceLocation -
+                //it was added in a later Minecraft version. This only ever crashed once a real
+                //entry was added to specifiedMenuAttachability; an empty list never called this.
+                ResourceLocation rl = new ResourceLocation(namespaceTxt);
 
                 if(rl.getPath().equals("inventory") || rl.getPath().equals("inventory_menu")){
                     return new ParseStringResult(true, null, value);

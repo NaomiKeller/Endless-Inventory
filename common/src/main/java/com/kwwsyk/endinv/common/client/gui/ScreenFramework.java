@@ -365,6 +365,12 @@ public class ScreenFramework implements PageManager{
     }
 
     protected void pageSwitched(int index) {
+        //clear before switching, not after: switchPageWithIndex() -> initializeContents() builds
+        //the new page's initial content immediately, so the search text needs to already be empty
+        //for that build to show the page unfiltered instead of carrying over the old page's filter.
+        searchBox.setValue("");
+        CachedConfig.setSearching("");
+        lastSearchBoxValue = "";
         switchPageWithIndex(index + firstPageIndex);
         //getDisplayingPage().syncContentToServer();
         this.searchBox.setVisible(getDisplayingPage().hasSearchbox());
